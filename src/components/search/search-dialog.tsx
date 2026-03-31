@@ -94,11 +94,9 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const navigate = useCallback(
     (result: SearchResult) => {
       try { sounds.click(); } catch {}
-      const href = result.href;
-      onOpenChange(false);
-      setTimeout(() => router.push(href), 50);
+      window.location.href = result.href;
     },
-    [router, onOpenChange]
+    []
   );
 
   const handleKeyDown = useCallback(

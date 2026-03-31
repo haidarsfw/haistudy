@@ -259,7 +259,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     <MusicContext.Provider value={{ isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, setVolume: handleSetVolume, toggle, next, toggleShuffle, toggleLoop }}>
       <iframe
         ref={iframeRef}
-        style={{ position: 'fixed', top: '-9999px', left: '-9999px', width: '300px', height: '300px', border: 0 }}
+        style={{ position: 'fixed', bottom: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', overflow: 'hidden', border: 0 }}
         allow="autoplay"
         src={SOUNDCLOUD_PLAYLIST_URL}
       />
