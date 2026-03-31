@@ -187,10 +187,10 @@ export function MateriTab({
               )}
               <iframe
                 src={getEmbedUrl(previewItem.driveId, previewItem.type)}
-                className="absolute inset-0 w-full h-full"
+                className="absolute inset-0 w-full"
                 allowFullScreen
                 onLoad={() => setIsLoading(false)}
-                style={{ border: "none" }}
+                style={{ border: "none", height: "100%" }}
               />
             </div>
           </div>

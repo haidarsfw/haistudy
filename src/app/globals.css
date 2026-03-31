@@ -4,9 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
-img, video, iframe {
-  max-width: 100%;
-  height: auto;
+@layer base {
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 @theme inline {

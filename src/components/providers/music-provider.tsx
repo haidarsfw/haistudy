@@ -128,6 +128,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
 
       widget.bind(window.SC.Widget.Events.PLAY, () => {
         isSkippingRef.current = false;
+        isPlayingRef.current = true;
         setIsPlaying(true);
         widget.getCurrentSound((sound) => {
           setTrackTitle(sound?.title || "Unknown Track");
@@ -138,7 +139,10 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       });
 
       widget.bind(window.SC.Widget.Events.PAUSE, () => {
-        if (!isSkippingRef.current) setIsPlaying(false);
+        if (!isSkippingRef.current) {
+          isPlayingRef.current = false;
+          setIsPlaying(false);
+        }
       });
 
       widget.bind(window.SC.Widget.Events.FINISH, () => {
@@ -151,6 +155,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
             (shuffledPositionRef.current + 1) % shuffledOrderRef.current.length;
           const nextIndex = shuffledOrderRef.current[shuffledPositionRef.current];
           widget.skip(nextIndex);
+          setTimeout(() => widget.play(), 300);
         } else {
           widget.next();
           setTimeout(() => widget.play(), 300);
@@ -202,8 +207,12 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     const widget = widgetRef.current;
     if (!widget) return;
     if (isPlayingRef.current) {
+      isPlayingRef.current = false;
+      setIsPlaying(false);
       widget.pause();
     } else {
+      isPlayingRef.current = true;
+      setIsPlaying(true);
       widget.play();
     }
   }, []);
@@ -218,6 +227,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         (shuffledPositionRef.current + 1) % shuffledOrderRef.current.length;
       const nextIndex = shuffledOrderRef.current[shuffledPositionRef.current];
       widget.skip(nextIndex);
+      setTimeout(() => widget.play(), 300);
     } else {
       widget.next();
       setTimeout(() => widget.play(), 300);
