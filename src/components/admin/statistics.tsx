@@ -1,0 +1,216 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  BarChart3,
+  Users,
+  KeyRound,
+  Trophy,
+  Clock,
+  Loader2,
+} from "lucide-react";
+
+interface UserStat {
+  licenseKey: string;
+  name: string;
+  userName: string;
+  totalQuizScore: number;
+  totalOnlineMinutes: number;
+  isAdmin: boolean;
+  isTester: boolean;
+}
+
+export function Statistics() {
+  const [users, setUsers] = useState<UserStat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/users")
+      .then((r) => r.json())
+      .then((data) => setUsers(data.users || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const regularUsers = users.filter((u) => !u.isAdmin && !u.isTester);
+  const totalKeys = users.length;
+  const avgScore =
+    regularUsers.length > 0
+      ? Math.round(
+          regularUsers.reduce((sum, u) => sum + u.totalQuizScore, 0) /
+            regularUsers.length
+        )
+      : 0;
+  const avgMinutes =
+    regularUsers.length > 0
+      ? Math.round(
+          regularUsers.reduce((sum, u) => sum + u.totalOnlineMinutes, 0) /
+            regularUsers.length
+        )
+      : 0;
+
+  // Leaderboard: top 10 by quiz score
+  const leaderboard = [...regularUsers]
+    .sort((a, b) => b.totalQuizScore - a.totalQuizScore)
+    .slice(0, 10);
+
+  // Most active: top 10 by online minutes
+  const mostActive = [...regularUsers]
+    .sort((a, b) => b.totalOnlineMinutes - a.totalOnlineMinutes)
+    .slice(0, 10);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary cards */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{totalKeys}</p>
+              <p className="text-xs text-muted-foreground">Total Users</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{regularUsers.length}</p>
+              <p className="text-xs text-muted-foreground">Active Students</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Trophy className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{avgScore}</p>
+              <p className="text-xs text-muted-foreground">Avg Quiz Score</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Clock className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{avgMinutes}m</p>
+              <p className="text-xs text-muted-foreground">Avg Online Time</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Leaderboards */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Quiz Leaderboard */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Trophy className="h-4 w-4 text-yellow-500" />
+              Quiz Leaderboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {leaderboard.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Belum ada data
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.map((user, i) => (
+                  <div
+                    key={user.licenseKey}
+                    className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                  >
+                    <span
+                      className={`w-6 text-center text-sm font-bold ${
+                        i === 0
+                          ? "text-yellow-500"
+                          : i === 1
+                            ? "text-gray-400"
+                            : i === 2
+                              ? "text-amber-600"
+                              : "text-muted-foreground"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {user.userName}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="font-mono text-xs">
+                      {user.totalQuizScore}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Most Active */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-4 w-4 text-blue-500" />
+              Most Active
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {mostActive.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Belum ada data
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {mostActive.map((user, i) => {
+                  const hours = Math.floor(user.totalOnlineMinutes / 60);
+                  const mins = user.totalOnlineMinutes % 60;
+                  return (
+                    <div
+                      key={user.licenseKey}
+                      className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                    >
+                      <span className="w-6 text-center text-sm font-bold text-muted-foreground">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {user.userName}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="font-mono text-xs">
+                        {hours > 0 ? `${hours}h ${mins}m` : `${mins}m`}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

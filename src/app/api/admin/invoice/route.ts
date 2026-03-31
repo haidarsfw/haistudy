@@ -1,0 +1,105 @@
+import { NextResponse } from "next/server";
+import {
+  createServerClient,
+  isSupabaseServerConfigured,
+} from "@/lib/supabase/server";
+
+// ─── Mock counter ───
+let mockCounter = 90;
+
+// ─── GET /api/admin/invoice - Get current counter ───
+export async function GET() {
+  try {
+    if (!isSupabaseServerConfigured) {
+      return NextResponse.json({ value: mockCounter });
+    }
+
+    const supabase = createServerClient()!;
+    const { data, error } = await supabase
+      .from("invoice_counter")
+      .select("value")
+      .single();
+
+    if (error) {
+      // If no row exists yet, return default
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ value: 1 });
+      }
+      throw error;
+    }
+
+    return NextResponse.json({ value: data.value });
+  } catch (error) {
+    console.error("Invoice GET error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+// ─── POST /api/admin/invoice - Increment and return new value ───
+export async function POST() {
+  try {
+    if (!isSupabaseServerConfigured) {
+      mockCounter += 1;
+      return NextResponse.json({ value: mockCounter });
+    }
+
+    const supabase = createServerClient()!;
+
+    // Use RPC or manual increment
+    const { data: current } = await supabase
+      .from("invoice_counter")
+      .select("value")
+      .single();
+
+    const newValue = (current?.value || 0) + 1;
+
+    const { error } = await supabase
+      .from("invoice_counter")
+      .upsert({
+        id: "singleton",
+        value: newValue,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+    return NextResponse.json({ value: newValue });
+  } catch (error) {
+    console.error("Invoice POST error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+// ─── PUT /api/admin/invoice - Set counter to specific value ───
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { value } = body;
+
+    if (typeof value !== "number" || value < 0) {
+      return NextResponse.json(
+        { error: "value must be a non-negative number" },
+        { status: 400 }
+      );
+    }
+
+    if (!isSupabaseServerConfigured) {
+      mockCounter = value;
+      return NextResponse.json({ value: mockCounter });
+    }
+
+    const supabase = createServerClient()!;
+    const { error } = await supabase
+      .from("invoice_counter")
+      .upsert({
+        id: "singleton",
+        value,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+    return NextResponse.json({ value });
+  } catch (error) {
+    console.error("Invoice PUT error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}

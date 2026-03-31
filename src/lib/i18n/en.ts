@@ -1,0 +1,409 @@
+const en: Record<string, string> = {
+  // Sidebar
+  "nav.dashboard": "Dashboard",
+  "nav.subjects": "Subjects",
+  "nav.schedule": "Exam Schedule",
+  "nav.analytics": "Study Analytics",
+  "nav.bookmarks": "Bookmarks",
+  "nav.notes": "Notes",
+  "nav.feedback": "Feedback",
+  "nav.settings": "Settings",
+  "nav.admin": "Admin",
+  "nav.logout": "Logout",
+
+  // Header
+  "header.search": "Search...",
+  "header.voice": "Voice",
+  "header.dark": "Dark",
+  "header.light": "Light",
+  "header.settings": "Settings",
+  "header.notifications": "Notifications",
+  "header.pomodoro": "Pomodoro",
+
+  // Dashboard
+  "dashboard.online": "Online",
+  "dashboard.nobody_online": "Nobody is online right now",
+  "dashboard.others": "others",
+  "dashboard.people": "people",
+  "dashboard.study_tip": "Study Tip",
+  "dashboard.fun_fact": "Fun Fact",
+
+  // Greeting
+  "greeting.morning": "Good Morning",
+  "greeting.afternoon": "Good Afternoon",
+  "greeting.evening": "Good Evening",
+  "greeting.night": "Good Night",
+  "greeting.exam_in": "in",
+
+  // Settings
+  "settings.title": "Settings",
+  "settings.description": "Personalize your look and study preferences.",
+  "settings.appearance": "Appearance",
+  "settings.language": "Language",
+  "settings.study": "Study",
+  "settings.privacy": "Privacy",
+  "settings.referral": "Referral",
+  "settings.session": "Session",
+
+  // Subject tabs
+  "tab.materi": "Materials",
+  "tab.rangkuman": "Summary",
+  "tab.kisi_kisi": "Topics",
+  "tab.flashcards": "Flashcards",
+  "tab.quiz": "Quiz",
+  "tab.forum": "Forum",
+  "tab.catatan": "Notes",
+  "tab.materi_short": "Mat",
+  "tab.rangkuman_short": "Sum",
+  "tab.kisi_kisi_short": "Topics",
+  "tab.flashcards_short": "Flash",
+  "tab.quiz_short": "Quiz",
+  "tab.forum_short": "Forum",
+  "tab.catatan_short": "Notes",
+
+  // Common
+  "common.loading": "Loading...",
+  "common.error": "An error occurred",
+  "common.retry": "Retry",
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.close": "Close",
+  "common.delete": "Delete",
+  "common.edit": "Edit",
+  "common.search": "Search",
+  "common.no_results": "No results found",
+  "common.preview_mode": "Preview Mode",
+  "common.exit": "Exit",
+  "common.buy_access": "Buy Access",
+
+  // Schedule
+  "schedule.title": "Exam Schedule",
+  "schedule.subtitle": "Countdown and midterm exam schedule",
+  "schedule.exam_title": "Exam Schedule",
+  "schedule.note": "Schedule may change at any time. Always check official announcements from Binus for the latest information.",
+  "schedule.not_announced": "Not yet announced",
+  "schedule.session": "session",
+  "schedule.until": "to",
+
+  // Notification
+  "notification.title": "Notifications",
+  "notification.read_all": "Read all",
+  "notification.empty": "No notifications yet",
+  "notification.mentioned_you": "mentioned you",
+  "notification.mentioned_all": "mentioned @all",
+  "notification.replied_thread": "replied to thread",
+  "notification.default": "Notification",
+  "notification.announcement": "New announcement",
+  "notification.new_thread": "created a new thread",
+  "notification.voted_poll": "voted on a poll",
+  "notification.poll_result": "Poll results",
+  "notification.replied_comment": "replied to a comment",
+
+  // Dashboard extra
+  "dashboard.continue_studying": "Continue Studying",
+  "dashboard.view_all": "View All",
+  "dashboard.progress": "Study Progress",
+  "dashboard.quick_note": "Quick Note",
+  "dashboard.quick_note_placeholder": "Write a quick note...",
+  "dashboard.exam_countdown": "Next Exam",
+  "dashboard.all_exams_passed": "All exams have passed",
+  "dashboard.exam_not_announced": "Exam schedule not announced",
+
+  // Settings subcomponents
+  "settings.theme_color": "Color Theme",
+  "settings.font_label": "Font",
+  "settings.language_label": "Language",
+  "settings.dark_mode": "Dark Mode",
+  "settings.auto_schedule": "Auto Schedule",
+  "settings.dark_label": "Dark:",
+  "settings.reminder_title": "Study Reminder",
+  "settings.reminder_desc": "Set a time to remind you to study. The alarm will ring at the specified time.",
+  "settings.reminder_alarm_active": "Alarm will ring at",
+  "settings.reminder_alarm_daily": "every day.",
+  "settings.hide_status": "Hide Status",
+  "settings.hide_status_desc": "Your online status will be hidden from others",
+  "settings.referral_title": "Referral",
+  "settings.referral_share": "Share this code with friends.",
+  "settings.referral_count": "people have used your code!",
+  "settings.referral_empty": "No one has used it yet.",
+  "settings.session_info": "Session Info",
+  "settings.session_key": "Key:",
+  "settings.session_name": "Name:",
+  "settings.session_class": "Class:",
+  "settings.manage_profile": "Manage from profile",
+  "settings.cooldown_wait": "Wait {minutes} minutes before changing again",
+  "settings.referral_copied": "Referral code copied!",
+  "settings.copy_failed": "Failed to copy",
+
+  // Common extras
+  "common.copied": "Copied",
+  "common.copy": "Copy",
+
+  // Page: Analytics
+  "analytics.title": "Study Statistics",
+  "analytics.subtitle": "Monitor your learning progress and study streaks.",
+  "analytics.total_progress": "Total Progress",
+  "analytics.streak_days": "Streak Days",
+  "analytics.streak_record": "Streak Record",
+  "analytics.per_subject": "Progress Per Subject",
+  "analytics.materials": "Materials:",
+  "analytics.flashcards": "Flashcards:",
+  "analytics.quiz": "Quiz:",
+
+  // Page: Bookmarks
+  "bookmarks.title": "Bookmarks",
+  "bookmarks.items_saved": "items saved",
+  "bookmarks.empty": "No bookmarks yet. Save materials, flashcards, or topics from any subject.",
+  "bookmarks.tab_materi": "Materials",
+  "bookmarks.tab_flashcard": "Flashcards",
+  "bookmarks.tab_kisi": "Topics",
+
+  // Page: Notes
+  "notes.title": "Notes",
+  "notes.general_placeholder": "Write general notes...",
+  "notes.general_title": "General Notes",
+  "notes.per_subject": "Notes Per Subject",
+  "notes.has_notes": "Has notes",
+  "notes.no_notes": "No notes yet",
+  "notes.saving": "Saving...",
+  "notes.saved": "Saved",
+
+  // Page: Subjects
+  "subjects.title": "Subjects",
+
+  // Voice
+  "voice.screen_share": "Share Screen",
+  "voice.coming_soon": "Coming soon",
+
+  // Search
+  "search.placeholder": "Search materials, flashcards, quizzes...",
+  "search.no_results": "No results found for",
+  "search.min_chars": "Type at least 2 characters to search",
+
+  // Feedback
+  "feedback.title": "Feedback",
+  "feedback.subtitle": "Help us improve haistudy with your suggestions and feedback.",
+  "feedback.category": "Category",
+  "feedback.message": "Message",
+  "feedback.placeholder": "Write your suggestion, feedback, or bug report here...",
+  "feedback.submit": "Send Feedback",
+  "feedback.sending": "Sending...",
+  "feedback.thanks": "Thank you!",
+  "feedback.thanks_desc": "Your feedback has been received. We will review it as soon as possible.",
+  "feedback.send_again": "Send another",
+  "feedback.cat_bug": "Bug / Error",
+  "feedback.cat_feature": "Feature Request",
+  "feedback.cat_other": "Other",
+
+  // Mobile nav
+  "mobile_nav.home": "Home",
+  "mobile_nav.subjects": "Subjects",
+  "mobile_nav.bookmark": "Bookmarks",
+  "mobile_nav.chat": "Chat",
+  "mobile_nav.ai": "AI",
+  "mobile_nav.more": "More",
+  "mobile_nav.more_title": "Menu",
+
+  // Reminder extras
+  "settings.reminder_audio_test": "This is how the alarm sounds!",
+  "settings.reminder_audio_error": "Audio not available",
+  "common.test": "Test",
+
+  // Session badges
+  "settings.admin_badge": "Admin",
+  "settings.tester_badge": "Tester",
+
+  // Bookmark toast
+  "bookmarks.deleted": "Bookmark removed",
+  "bookmarks.added": "Added to bookmarks",
+
+  // Analytics
+  "common.done": "Done",
+
+  // Voice
+  "voice.livekit_not_configured": "LiveKit is not configured. Audio is unavailable, but you can still see who is in the room.",
+
+  // Pricing section
+  "pricing.title": "Access Plans",
+  "pricing.subtitle": "One-time payment, full access during the UTS period",
+  "pricing.buy": "Buy Access",
+  "pricing.select": "Select Plan",
+  "pricing.more_info": "More info",
+  "pricing.share_name": "Share",
+  "pricing.normal_name": "Normal",
+  "pricing.vip_name": "VIP",
+  "pricing.share_badge": "Budget",
+  "pricing.normal_badge": "Popular",
+  "pricing.vip_badge": "Premium",
+  "pricing.share_desc": "Budget plan \u2014 full access, must share with a friend.",
+  "pricing.normal_desc": "Full access with no requirements.",
+  "pricing.vip_desc": "All Normal features + AI priority & exclusive badge.",
+  "pricing.per_duration": "30 days",
+  "pricing.share_callout": "Requirement: share the link with 1 friend (LE86: 1 friend outside the class)",
+  "pricing.share_details": "Content identical to the Normal plan. Contact admin for additional devices.",
+  "pricing.normal_details": "Access all features immediately. No sharing required. Contact admin for additional devices.",
+  "pricing.vip_details": "AI priority, VIP badge, faster support. Max 2 devices. Contact admin for more.",
+  "pricing.feat_all_subjects": "Access all subjects",
+  "pricing.feat_quiz_flash": "Quiz & Flashcards",
+  "pricing.feat_ai": "AI Study Assistant",
+  "pricing.feat_ai_priority": "AI Study Assistant (priority)",
+  "pricing.feat_forum": "Forum & Chat",
+  "pricing.feat_voice": "Voice Rooms",
+  "pricing.feat_max_device": "Max 2 devices",
+  "pricing.feat_all_normal": "All Normal features",
+  "pricing.feat_vip_badge": "VIP badge in chat & forum",
+  "pricing.feat_fast_support": "Faster support",
+  "pricing.feat_upcoming": "Upcoming exclusive features",
+
+  // Voice room
+  "voice.locked": "Locked",
+  "voice.full": "Full",
+  "voice.join": "Join",
+  "voice.here": "Here",
+  "voice.max_participants": "Max Participants",
+  "voice.live": "Live",
+  "voice.room_locked": "Room locked",
+  "voice.room_unlocked": "Room unlocked",
+  "voice.open_room": "Unlock",
+  "voice.lock_room": "Lock",
+  "voice.delete_room": "Delete Room",
+  "voice.connected": "Connected",
+  "voice.unlocked": "Unlocked",
+  "voice.participants": "Participants",
+  "voice.screen_shared_by": "Screen shared by",
+
+  // Login form
+  "login.validating": "Validating...",
+  "login.enter": "Login",
+  "login.enter_key": "Enter license key",
+  "login.enter_license_key": "Enter license key...",
+  "login.too_many_attempts": "Too many attempts. Try again in",
+  "login.connection_failed": "Connection failed. Check your internet.",
+  "login.login_failed": "Login failed",
+  "login.have_referral": "Have a referral code?",
+  "login.referral_optional": "Referral Code (optional)",
+  "login.enter_referral": "Enter referral code...",
+  "login.wait_before_retry": "Wait before trying again",
+
+  // Confirm dialogs
+  "confirm.reject_purchase": "Reject this purchase request?",
+  "confirm.delete_license": "Delete this license key? This cannot be undone.",
+  "confirm.delete_announcement": "Delete this announcement?",
+  "confirm.delete_poll": "Delete this poll?",
+  "confirm.delete_thread": "Delete this thread? All comments will also be deleted.",
+  "confirm.confirm": "Confirm",
+  "confirm.cancel": "Cancel",
+
+  // Dashboard badges
+  "badge.admin": "Admin",
+  "badge.tester": "Tester",
+  "badge.vip": "VIP",
+
+  // Rangkuman
+  "rangkuman.not_available": "Summary not yet available for this subject.",
+
+  // Sound effects
+  "settings.sound_effects": "Sound Effects",
+  "settings.sound_effects_desc": "Play sounds for interactions",
+
+  // Feedback extras
+  "feedback.attach_image": "Attach Screenshot",
+  "feedback.uploading": "Uploading...",
+
+  // Onboarding
+  "onboarding.next": "Next",
+  "onboarding.prev": "Back",
+  "onboarding.skip": "Skip Tutorial",
+  "onboarding.finish": "Start Learning!",
+  "onboarding.welcome_title": "Welcome to haistudy!",
+  "onboarding.welcome_desc": "Let's get to know the features that will help you study more effectively for midterms.",
+  "onboarding.sidebar_title": "Navigation",
+  "onboarding.sidebar_desc": "Use the sidebar to switch between pages. Dashboard, Subjects, Schedule, and more are here.",
+  "onboarding.subjects_title": "Subjects",
+  "onboarding.subjects_desc": "Choose a subject to access materials, summaries, topics, flashcards, quiz, and discussion forum.",
+  "onboarding.voice_title": "Voice Room",
+  "onboarding.voice_desc": "Click the mic button to study with friends via voice call right from the browser.",
+  "onboarding.search_title": "Search",
+  "onboarding.search_desc": "Search materials, flashcards, or any topic quickly. Use Ctrl+K or Cmd+K shortcut.",
+  "onboarding.settings_title": "Settings",
+  "onboarding.settings_desc": "Set theme, font, language, dark mode, and study preferences to your liking.",
+  "onboarding.dashboard_title": "Your Dashboard",
+  "onboarding.dashboard_desc": "This is your home base. View your progress, study tips, exam countdown, and quick notes all in one place.",
+  "onboarding.chat_title": "Live Chat",
+  "onboarding.chat_desc": "Chat with classmates in real-time. Share notes, ask questions, and study together.",
+  "onboarding.ai_title": "AI Study Assistant",
+  "onboarding.ai_desc": "Ask any question about your course materials. The AI answers based on the content in this platform.",
+  "onboarding.pomodoro_title": "Pomodoro Timer",
+  "onboarding.pomodoro_desc": "Use the built-in timer for focused study sessions. 25 minutes focus, 5 minutes break.",
+  "onboarding.notifications_title": "Notifications",
+  "onboarding.notifications_desc": "Get notified when someone mentions you, replies to your thread, or sends an important message.",
+  "onboarding.done_title": "Ready to Learn!",
+  "onboarding.done_desc": "You are ready to use haistudy. Happy studying and good luck on your midterms!",
+
+  // Post-tutorial
+  "onboarding.post_contact_title": "Stay Connected (Optional)",
+  "onboarding.post_contact_desc": "Add your phone or email so we can reach you with important updates.",
+  "onboarding.post_contact_skip": "Skip",
+  "onboarding.post_contact_save": "Save",
+  "onboarding.post_contact_phone": "Phone Number",
+  "onboarding.post_contact_email": "Email",
+  "onboarding.post_settings_title": "Personalize Your Experience",
+  "onboarding.post_settings_desc": "Choose your preferred theme, font, language, and display settings.",
+  "onboarding.post_settings_done": "Start Learning!",
+
+  // Support
+  "nav.support": "Contact Support",
+  "support.title": "Contact Support",
+  "support.tab_help": "Help",
+  "support.tab_chat": "Chat",
+  "support.whatsapp": "Chat now",
+  "support.instagram": "Send message",
+  "support.live_chat": "Admin Chat",
+  "support.placeholder": "Type your message...",
+  "support.send": "Send",
+  "support.empty": "No messages yet. Start the conversation!",
+  "support.quick_links": "Quick Contact",
+  "support.faq_title": "Frequently Asked Questions",
+  "support.faq_1_q": "How do I use the AI Assistant?",
+  "support.faq_1_a": "Click the AI chat icon at the bottom-right corner. You can ask anything about exam materials and the AI will help explain.",
+  "support.faq_2_q": "How do I join a Voice Room?",
+  "support.faq_2_a": "Click the microphone icon in the header or sidebar. Choose an available room or create a new one, then click to join.",
+  "support.faq_3_q": "How do I create a Forum thread?",
+  "support.faq_3_a": "Open the Forum page from the sidebar, then click 'Create Thread'. Fill in the title and content, then submit.",
+  "support.faq_4_q": "How do I change the theme or font?",
+  "support.faq_4_a": "Open Settings from the sidebar or gear icon in the header. There you can change theme (dark/light), font, language, and other settings.",
+  "support.faq_5_q": "How do I bookmark materials?",
+  "support.faq_5_a": "While reading a material, click the bookmark icon at the top-right corner. Bookmarked materials can be accessed from the Bookmarks page.",
+  "support.faq_6_q": "Is my data safe?",
+  "support.faq_6_a": "Yes, all data is stored securely. We do not share your personal data with third parties.",
+  "support.help_links": "More Help",
+  "support.help_chat_desc": "Chat directly with admin",
+  "support.report_bug": "Report a Bug",
+  "support.report_bug_desc": "Report a bug/error",
+  "support.help_footer": "Need more help? Contact us via WhatsApp or use the Chat feature to speak directly with an admin.",
+  "support.chat_welcome_title": "Chat with Admin",
+  "support.chat_welcome_desc": "Admin will reply ASAP. Send your questions or concerns here.",
+  "support.chat_faster_note": "For faster response, contact via WhatsApp or Instagram.",
+
+  // Music Player
+  "music.title": "Music",
+  "music.now_playing": "Now playing",
+  "music.loading": "Loading music...",
+
+  // AI Chat History
+  "ai.new_chat": "New Chat",
+  "ai.assistant_subtitle": "UTS Study Assistant",
+  "ai.mode_fast": "Fast",
+  "ai.mode_reasoning": "Reasoning",
+
+  // Preview Mode
+  "preview.action_blocked": "This feature is locked",
+  "preview.buy_access_desc": "Buy access to use this feature",
+  "preview.chat_blocked": "Buy access to send messages",
+  "preview.ai_blocked": "Buy access to ask the AI",
+  "preview.voice_blocked": "Buy access to join voice rooms",
+  "preview.forum_blocked": "Buy access to post in forum",
+  "preview.feedback_blocked": "Buy access to send feedback",
+};
+
+export default en;

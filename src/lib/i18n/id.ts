@@ -1,0 +1,409 @@
+const id: Record<string, string> = {
+  // Sidebar
+  "nav.dashboard": "Dashboard",
+  "nav.subjects": "Mata Kuliah",
+  "nav.schedule": "Jadwal UTS",
+  "nav.analytics": "Statistik Belajar",
+  "nav.bookmarks": "Bookmark",
+  "nav.notes": "Catatan",
+  "nav.feedback": "Saran",
+  "nav.settings": "Settings",
+  "nav.admin": "Admin",
+  "nav.logout": "Logout",
+
+  // Header
+  "header.search": "Search...",
+  "header.voice": "Voice",
+  "header.dark": "Gelap",
+  "header.light": "Terang",
+  "header.settings": "Pengaturan",
+  "header.notifications": "Notifikasi",
+  "header.pomodoro": "Pomodoro",
+
+  // Dashboard
+  "dashboard.online": "Online",
+  "dashboard.nobody_online": "Tidak ada yang online saat ini",
+  "dashboard.others": "lainnya",
+  "dashboard.people": "orang",
+  "dashboard.study_tip": "Tips Belajar",
+  "dashboard.fun_fact": "Fun Fact",
+
+  // Greeting
+  "greeting.morning": "Selamat Pagi",
+  "greeting.afternoon": "Selamat Siang",
+  "greeting.evening": "Selamat Sore",
+  "greeting.night": "Selamat Malam",
+  "greeting.exam_in": "dalam",
+
+  // Settings
+  "settings.title": "Pengaturan",
+  "settings.description": "Personalisasi tampilan dan preferensi belajarmu.",
+  "settings.appearance": "Tampilan",
+  "settings.language": "Bahasa",
+  "settings.study": "Belajar",
+  "settings.privacy": "Privasi",
+  "settings.referral": "Referral",
+  "settings.session": "Sesi",
+
+  // Subject tabs
+  "tab.materi": "Materi",
+  "tab.rangkuman": "Rangkuman",
+  "tab.kisi_kisi": "Kisi-Kisi",
+  "tab.flashcards": "Flashcards",
+  "tab.quiz": "Quiz",
+  "tab.forum": "Forum",
+  "tab.catatan": "Catatan",
+  "tab.materi_short": "Materi",
+  "tab.rangkuman_short": "Rangkum",
+  "tab.kisi_kisi_short": "Kisi",
+  "tab.flashcards_short": "Flash",
+  "tab.quiz_short": "Quiz",
+  "tab.forum_short": "Forum",
+  "tab.catatan_short": "Notes",
+
+  // Common
+  "common.loading": "Memuat...",
+  "common.error": "Terjadi kesalahan",
+  "common.retry": "Coba lagi",
+  "common.save": "Simpan",
+  "common.cancel": "Batal",
+  "common.close": "Tutup",
+  "common.delete": "Hapus",
+  "common.edit": "Edit",
+  "common.search": "Cari",
+  "common.no_results": "Tidak ada hasil",
+  "common.preview_mode": "Mode Preview",
+  "common.exit": "Keluar",
+  "common.buy_access": "Beli Akses",
+
+  // Schedule
+  "schedule.title": "Jadwal UTS",
+  "schedule.subtitle": "Countdown dan jadwal ujian tengah semester",
+  "schedule.exam_title": "Jadwal Ujian",
+  "schedule.note": "Jadwal dapat berubah sewaktu-waktu. Pastikan selalu cek pengumuman resmi dari Binus untuk informasi terbaru.",
+  "schedule.not_announced": "Belum diumumkan",
+  "schedule.session": "sesi",
+  "schedule.until": "s/d",
+
+  // Notification
+  "notification.title": "Notifikasi",
+  "notification.read_all": "Baca semua",
+  "notification.empty": "Belum ada notifikasi",
+  "notification.mentioned_you": "menyebut kamu",
+  "notification.mentioned_all": "menyebut @all",
+  "notification.replied_thread": "membalas thread",
+  "notification.default": "Notifikasi",
+  "notification.announcement": "Pengumuman baru",
+  "notification.new_thread": "membuat thread baru",
+  "notification.voted_poll": "memilih di polling",
+  "notification.poll_result": "Hasil polling",
+  "notification.replied_comment": "membalas komentar",
+
+  // Dashboard extra
+  "dashboard.continue_studying": "Lanjut Belajar",
+  "dashboard.view_all": "Lihat Semua",
+  "dashboard.progress": "Progress Belajar",
+  "dashboard.quick_note": "Catatan Cepat",
+  "dashboard.quick_note_placeholder": "Tulis catatan cepat...",
+  "dashboard.exam_countdown": "Ujian Terdekat",
+  "dashboard.all_exams_passed": "Semua ujian sudah berlalu",
+  "dashboard.exam_not_announced": "Jadwal UTS belum diumumkan",
+
+  // Settings subcomponents
+  "settings.theme_color": "Tema Warna",
+  "settings.font_label": "Font",
+  "settings.language_label": "Bahasa / Language",
+  "settings.dark_mode": "Dark Mode",
+  "settings.auto_schedule": "Jadwal Otomatis",
+  "settings.dark_label": "Gelap:",
+  "settings.reminder_title": "Pengingat Belajar",
+  "settings.reminder_desc": "Atur waktu untuk mengingatkanmu belajar. Alarm akan berbunyi di waktu yang ditentukan.",
+  "settings.reminder_alarm_active": "Alarm akan berbunyi pukul",
+  "settings.reminder_alarm_daily": "setiap hari.",
+  "settings.hide_status": "Sembunyikan Status",
+  "settings.hide_status_desc": "Status online tidak terlihat orang lain",
+  "settings.referral_title": "Referral",
+  "settings.referral_share": "Bagikan kode ini ke teman.",
+  "settings.referral_count": "orang sudah pakai kode kamu!",
+  "settings.referral_empty": "Belum ada yang menggunakan.",
+  "settings.session_info": "Info Sesi",
+  "settings.session_key": "Key:",
+  "settings.session_name": "Nama:",
+  "settings.session_class": "Kelas:",
+  "settings.manage_profile": "Kelola dari profil",
+  "settings.cooldown_wait": "Tunggu {minutes} menit sebelum mengubah lagi",
+  "settings.referral_copied": "Kode referral disalin!",
+  "settings.copy_failed": "Gagal menyalin",
+
+  // Common extras
+  "common.copied": "Disalin",
+  "common.copy": "Salin",
+
+  // Page: Analytics
+  "analytics.title": "Statistik Belajar",
+  "analytics.subtitle": "Pantau progres belajar dan streak belajarmu.",
+  "analytics.total_progress": "Total Progres",
+  "analytics.streak_days": "Hari Beruntun",
+  "analytics.streak_record": "Rekor Streak",
+  "analytics.per_subject": "Progres Per Mata Kuliah",
+  "analytics.materials": "Materi:",
+  "analytics.flashcards": "Flashcard:",
+  "analytics.quiz": "Quiz:",
+
+  // Page: Bookmarks
+  "bookmarks.title": "Bookmark",
+  "bookmarks.items_saved": "item tersimpan",
+  "bookmarks.empty": "Belum ada bookmark. Simpan materi, flashcard, atau kisi-kisi dari mata kuliah mana saja.",
+  "bookmarks.tab_materi": "Materi",
+  "bookmarks.tab_flashcard": "Flashcard",
+  "bookmarks.tab_kisi": "Kisi-Kisi",
+
+  // Page: Notes
+  "notes.title": "Catatan",
+  "notes.general_placeholder": "Tulis catatan umum...",
+  "notes.general_title": "Catatan Umum",
+  "notes.per_subject": "Catatan Per Mata Kuliah",
+  "notes.has_notes": "Ada catatan",
+  "notes.no_notes": "Belum ada catatan",
+  "notes.saving": "Menyimpan...",
+  "notes.saved": "Tersimpan",
+
+  // Page: Subjects
+  "subjects.title": "Mata Kuliah",
+
+  // Voice
+  "voice.screen_share": "Bagikan Layar",
+  "voice.coming_soon": "Segera hadir",
+
+  // Search
+  "search.placeholder": "Cari materi, flashcard, quiz...",
+  "search.no_results": "Tidak ditemukan hasil untuk",
+  "search.min_chars": "Ketik minimal 2 karakter untuk mencari",
+
+  // Feedback
+  "feedback.title": "Saran & Masukan",
+  "feedback.subtitle": "Bantu kami meningkatkan haistudy dengan saran dan masukan kamu.",
+  "feedback.category": "Kategori",
+  "feedback.message": "Pesan",
+  "feedback.placeholder": "Tulis saran, masukan, atau laporan bug kamu di sini...",
+  "feedback.submit": "Kirim Masukan",
+  "feedback.sending": "Mengirim...",
+  "feedback.thanks": "Terima kasih!",
+  "feedback.thanks_desc": "Masukan kamu sudah kami terima. Kami akan review secepatnya.",
+  "feedback.send_again": "Kirim lagi",
+  "feedback.cat_bug": "Bug / Error",
+  "feedback.cat_feature": "Saran Fitur",
+  "feedback.cat_other": "Lainnya",
+
+  // Mobile nav
+  "mobile_nav.home": "Beranda",
+  "mobile_nav.subjects": "Mata Kuliah",
+  "mobile_nav.bookmark": "Bookmark",
+  "mobile_nav.chat": "Chat",
+  "mobile_nav.ai": "AI",
+  "mobile_nav.more": "Lainnya",
+  "mobile_nav.more_title": "Menu",
+
+  // Reminder extras
+  "settings.reminder_audio_test": "Begini suara alarm-nya!",
+  "settings.reminder_audio_error": "Audio tidak tersedia",
+  "common.test": "Test",
+
+  // Session badges
+  "settings.admin_badge": "Admin",
+  "settings.tester_badge": "Tester",
+
+  // Bookmark toast
+  "bookmarks.deleted": "Bookmark dihapus",
+  "bookmarks.added": "Ditambahkan ke bookmark",
+
+  // Analytics
+  "common.done": "Selesai",
+
+  // Voice
+  "voice.livekit_not_configured": "LiveKit belum dikonfigurasi. Audio tidak tersedia, tapi kamu tetap bisa melihat siapa yang di room.",
+
+  // Pricing section
+  "pricing.title": "Paket Akses",
+  "pricing.subtitle": "Satu kali bayar, akses penuh selama periode UTS",
+  "pricing.buy": "Beli Akses",
+  "pricing.select": "Pilih Paket",
+  "pricing.more_info": "Selengkapnya",
+  "pricing.share_name": "Share",
+  "pricing.normal_name": "Normal",
+  "pricing.vip_name": "VIP",
+  "pricing.share_badge": "Hemat",
+  "pricing.normal_badge": "Populer",
+  "pricing.vip_badge": "Premium",
+  "pricing.share_desc": "Paket hemat \u2014 akses penuh, wajib share ke teman.",
+  "pricing.normal_desc": "Akses penuh tanpa syarat apapun.",
+  "pricing.vip_desc": "Semua fitur Normal + prioritas AI & badge eksklusif.",
+  "pricing.per_duration": "30 hari",
+  "pricing.share_callout": "Syarat: share link ke 1 teman (LE86: 1 teman di luar kelas)",
+  "pricing.share_details": "Konten identik dengan paket Normal. Hubungi admin jika butuh device lebih.",
+  "pricing.normal_details": "Langsung akses semua fitur. Tidak perlu share. Hubungi admin jika butuh device lebih.",
+  "pricing.vip_details": "AI prioritas, VIP badge, support cepat. Max 2 device. Hubungi admin jika butuh lebih.",
+  "pricing.feat_all_subjects": "Akses semua mata kuliah",
+  "pricing.feat_quiz_flash": "Quiz & Flashcards",
+  "pricing.feat_ai": "AI Study Assistant",
+  "pricing.feat_ai_priority": "AI Study Assistant (prioritas)",
+  "pricing.feat_forum": "Forum & Chat",
+  "pricing.feat_voice": "Voice Rooms",
+  "pricing.feat_max_device": "Max 2 device",
+  "pricing.feat_all_normal": "Semua fitur Normal",
+  "pricing.feat_vip_badge": "VIP badge di chat & forum",
+  "pricing.feat_fast_support": "Support lebih cepat",
+  "pricing.feat_upcoming": "Fitur eksklusif mendatang",
+
+  // Voice room
+  "voice.locked": "Terkunci",
+  "voice.full": "Penuh",
+  "voice.join": "Gabung",
+  "voice.here": "Di sini",
+  "voice.max_participants": "Max Peserta",
+  "voice.live": "Live",
+  "voice.room_locked": "Room terkunci",
+  "voice.room_unlocked": "Room terbuka",
+  "voice.open_room": "Buka",
+  "voice.lock_room": "Kunci",
+  "voice.delete_room": "Hapus Room",
+  "voice.connected": "Terhubung",
+  "voice.unlocked": "Terbuka",
+  "voice.participants": "Peserta",
+  "voice.screen_shared_by": "Screen dibagikan oleh",
+
+  // Login form
+  "login.validating": "Memvalidasi...",
+  "login.enter": "Masuk",
+  "login.enter_key": "Masukkan license key",
+  "login.enter_license_key": "Masukkan license key...",
+  "login.too_many_attempts": "Terlalu banyak percobaan. Coba lagi dalam",
+  "login.connection_failed": "Koneksi gagal. Periksa internet Anda.",
+  "login.login_failed": "Login gagal",
+  "login.have_referral": "Punya kode referral?",
+  "login.referral_optional": "Kode Referral (opsional)",
+  "login.enter_referral": "Masukkan kode referral...",
+  "login.wait_before_retry": "Tunggu sebelum mencoba lagi",
+
+  // Confirm dialogs
+  "confirm.reject_purchase": "Tolak purchase request ini?",
+  "confirm.delete_license": "Hapus license key ini? Ini tidak bisa dibatalkan.",
+  "confirm.delete_announcement": "Hapus announcement ini?",
+  "confirm.delete_poll": "Hapus poll ini?",
+  "confirm.delete_thread": "Hapus thread ini? Semua komentar juga akan dihapus.",
+  "confirm.confirm": "Konfirmasi",
+  "confirm.cancel": "Batal",
+
+  // Dashboard badges
+  "badge.admin": "Admin",
+  "badge.tester": "Tester",
+  "badge.vip": "VIP",
+
+  // Rangkuman
+  "rangkuman.not_available": "Rangkuman belum tersedia untuk mata kuliah ini.",
+
+  // Sound effects
+  "settings.sound_effects": "Efek Suara",
+  "settings.sound_effects_desc": "Mainkan suara untuk interaksi",
+
+  // Feedback extras
+  "feedback.attach_image": "Lampirkan Screenshot",
+  "feedback.uploading": "Mengunggah...",
+
+  // Onboarding
+  "onboarding.next": "Lanjut",
+  "onboarding.prev": "Kembali",
+  "onboarding.skip": "Lewati Tutorial",
+  "onboarding.finish": "Mulai Belajar!",
+  "onboarding.welcome_title": "Selamat Datang di haistudy!",
+  "onboarding.welcome_desc": "Yuk, kenalan dulu dengan fitur-fitur yang akan membantu kamu belajar lebih efektif untuk UTS.",
+  "onboarding.sidebar_title": "Navigasi",
+  "onboarding.sidebar_desc": "Gunakan sidebar untuk berpindah antar halaman. Dashboard, Mata Kuliah, Jadwal, dan lainnya ada di sini.",
+  "onboarding.subjects_title": "Mata Kuliah",
+  "onboarding.subjects_desc": "Pilih mata kuliah untuk mengakses materi, rangkuman, kisi-kisi, flashcards, quiz, dan forum diskusi.",
+  "onboarding.voice_title": "Voice Room",
+  "onboarding.voice_desc": "Klik tombol mic untuk belajar bareng teman via voice call langsung dari browser.",
+  "onboarding.search_title": "Pencarian",
+  "onboarding.search_desc": "Cari materi, flashcard, atau topik apapun dengan cepat. Gunakan shortcut Ctrl+K atau Cmd+K.",
+  "onboarding.settings_title": "Pengaturan",
+  "onboarding.settings_desc": "Atur tema, font, bahasa, dark mode, dan preferensi belajar lainnya sesuai selera kamu.",
+  "onboarding.dashboard_title": "Dashboard Kamu",
+  "onboarding.dashboard_desc": "Ini adalah pusat belajarmu. Lihat progress, tips belajar, countdown ujian, dan catatan cepat di satu tempat.",
+  "onboarding.chat_title": "Chat Langsung",
+  "onboarding.chat_desc": "Ngobrol dengan teman sekelas secara real-time. Sharing catatan, tanya jawab, dan belajar bareng.",
+  "onboarding.ai_title": "AI Asisten Belajar",
+  "onboarding.ai_desc": "Tanya apapun tentang materi kuliahmu. AI menjawab berdasarkan konten yang ada di platform ini.",
+  "onboarding.pomodoro_title": "Timer Pomodoro",
+  "onboarding.pomodoro_desc": "Gunakan timer bawaan untuk sesi belajar fokus. 25 menit fokus, 5 menit istirahat.",
+  "onboarding.notifications_title": "Notifikasi",
+  "onboarding.notifications_desc": "Dapat notifikasi ketika seseorang menyebut kamu, membalas thread, atau mengirim pesan penting.",
+  "onboarding.done_title": "Siap Belajar!",
+  "onboarding.done_desc": "Kamu sudah siap menggunakan haistudy. Selamat belajar dan semoga sukses UTS-nya!",
+
+  // Post-tutorial
+  "onboarding.post_contact_title": "Tetap Terhubung (Opsional)",
+  "onboarding.post_contact_desc": "Tambahkan nomor HP atau email agar kami bisa menghubungimu untuk info penting.",
+  "onboarding.post_contact_skip": "Lewati",
+  "onboarding.post_contact_save": "Simpan",
+  "onboarding.post_contact_phone": "Nomor HP",
+  "onboarding.post_contact_email": "Email",
+  "onboarding.post_settings_title": "Personalisasi Tampilanmu",
+  "onboarding.post_settings_desc": "Pilih tema, font, bahasa, dan pengaturan tampilan sesuai selera kamu.",
+  "onboarding.post_settings_done": "Mulai Belajar!",
+
+  // Support
+  "nav.support": "Layanan Pelanggan",
+  "support.title": "Layanan Pelanggan",
+  "support.tab_help": "Bantuan",
+  "support.tab_chat": "Chat",
+  "support.whatsapp": "Chat langsung",
+  "support.instagram": "Kirim pesan",
+  "support.live_chat": "Chat Admin",
+  "support.placeholder": "Tulis pesan kamu...",
+  "support.send": "Kirim",
+  "support.empty": "Belum ada pesan. Mulai percakapan!",
+  "support.quick_links": "Kontak Cepat",
+  "support.faq_title": "Pertanyaan Umum",
+  "support.faq_1_q": "Bagaimana cara menggunakan AI Assistant?",
+  "support.faq_1_a": "Klik ikon chat AI di pojok kanan bawah layar. Kamu bisa bertanya apa saja tentang materi UTS dan AI akan membantu menjelaskan.",
+  "support.faq_2_q": "Bagaimana cara join Voice Room?",
+  "support.faq_2_a": "Klik ikon mikrofon di header atau sidebar. Pilih room yang tersedia atau buat room baru, lalu klik untuk bergabung.",
+  "support.faq_3_q": "Bagaimana cara membuat thread di Forum?",
+  "support.faq_3_a": "Buka halaman Forum dari sidebar, lalu klik tombol 'Buat Thread'. Isi judul dan konten, kemudian kirim.",
+  "support.faq_4_q": "Bagaimana cara mengganti tema atau font?",
+  "support.faq_4_a": "Buka Settings dari sidebar atau ikon gear di header. Di sana kamu bisa mengubah tema (gelap/terang), font, bahasa, dan pengaturan lainnya.",
+  "support.faq_5_q": "Bagaimana cara bookmark materi?",
+  "support.faq_5_a": "Saat membaca materi, klik ikon bookmark di pojok kanan atas materi. Materi yang di-bookmark bisa diakses dari halaman Bookmarks.",
+  "support.faq_6_q": "Apakah data saya aman?",
+  "support.faq_6_a": "Ya, semua data disimpan dengan aman. Kami tidak membagikan data pribadi kamu kepada pihak ketiga.",
+  "support.help_links": "Bantuan Lainnya",
+  "support.help_chat_desc": "Tanya langsung ke admin",
+  "support.report_bug": "Laporkan Bug",
+  "support.report_bug_desc": "Laporkan bug/error",
+  "support.help_footer": "Butuh bantuan lain? Hubungi kami melalui WhatsApp atau gunakan fitur Chat untuk berbicara langsung dengan admin.",
+  "support.chat_welcome_title": "Chat dengan Admin",
+  "support.chat_welcome_desc": "Admin akan membalas pesanmu secepatnya. Kirim pertanyaan atau keluhan di sini.",
+  "support.chat_faster_note": "Untuk respon lebih cepat, hubungi via WhatsApp atau Instagram.",
+
+  // Music Player
+  "music.title": "Musik",
+  "music.now_playing": "Sedang diputar",
+  "music.loading": "Memuat musik...",
+
+  // AI Chat History
+  "ai.new_chat": "Chat Baru",
+  "ai.assistant_subtitle": "Asisten belajar UTS",
+  "ai.mode_fast": "Cepat",
+  "ai.mode_reasoning": "Reasoning",
+
+  // Preview Mode
+  "preview.action_blocked": "Fitur ini terkunci",
+  "preview.buy_access_desc": "Beli akses untuk menggunakan fitur ini",
+  "preview.chat_blocked": "Beli akses untuk mengirim pesan",
+  "preview.ai_blocked": "Beli akses untuk bertanya ke AI",
+  "preview.voice_blocked": "Beli akses untuk join voice room",
+  "preview.forum_blocked": "Beli akses untuk posting di forum",
+  "preview.feedback_blocked": "Beli akses untuk mengirim feedback",
+};
+
+export default id;
