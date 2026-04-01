@@ -63,8 +63,8 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
         onOpenChange(false);
       }
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, [open, onOpenChange]);
 
   // Close on Escape
@@ -173,7 +173,6 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                         <li key={`${result.type}-${result.subjectId}-${result.title}-${i}`} data-index={i}>
                           <a
                             href={result.href}
-                            onMouseDown={() => { try { sounds.click(); } catch {} }}
                             onMouseEnter={() => setSelected(i)}
                             className={`flex w-full items-start gap-3 px-4 py-2.5 text-left no-underline transition-colors ${
                               i === selected

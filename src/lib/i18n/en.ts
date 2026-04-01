@@ -271,6 +271,8 @@ const en: Record<string, string> = {
   "voice.unlocked": "Unlocked",
   "voice.participants": "Participants",
   "voice.screen_shared_by": "Screen shared by",
+  "voice.your_screen_share": "Your screen share",
+  "voice.screen_share_not_supported": "Screen share is not supported on this device",
 
   // Login form
   "login.validating": "Validating...",

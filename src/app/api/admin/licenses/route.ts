@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { validateAdmin } from "@/lib/auth/admin-guard";
 import type { LicenseKey, Activation, Device } from "@/types";
 
 // ─── Mock store ───
@@ -150,6 +151,11 @@ function mapDeviceRow(row: Record<string, unknown>): Device {
 // ─── GET /api/admin/licenses ───
 export async function GET() {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     if (!isSupabaseServerConfigured) {
       const licenses = Array.from(mockLicenses.values());
       const activations = Array.from(mockActivations.values());
@@ -189,6 +195,11 @@ export async function GET() {
 // ─── POST /api/admin/licenses - Create license key ───
 export async function POST(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { key, name, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier } = body;
 
@@ -264,6 +275,11 @@ export async function POST(request: Request) {
 // ─── PUT /api/admin/licenses - Update license key ───
 export async function PUT(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { key, ...updates } = body;
 
@@ -326,6 +342,11 @@ export async function PUT(request: Request) {
 // ─── DELETE /api/admin/licenses - Delete license key ───
 export async function DELETE(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { key } = body;
 

@@ -402,6 +402,25 @@ export function useChat() {
     [session]
   );
 
+  // Clear all messages (admin only)
+  const clearChat = useCallback(async () => {
+    if (!session?.isAdmin) return;
+    const res = await fetch("/api/chat/messages", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clearAll: true }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Gagal menghapus semua pesan");
+    }
+
+    if (!isSupabaseConfigured) {
+      setMessages([]);
+    }
+  }, [session]);
+
   // Derived: pinned messages
   const pinnedMessages = messages.filter((m) => pinnedIds.includes(m.id));
 
@@ -415,6 +434,7 @@ export function useChat() {
     sendImage,
     sendAudio,
     deleteMessage,
+    clearChat,
     pinMessage,
     unpinMessage,
   };

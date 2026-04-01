@@ -51,6 +51,7 @@ export function VoiceRoom({
   const isMutedRef = useRef(isMuted);
   isMutedRef.current = isMuted;
   const isCreator = room.creatorId === currentLicenseKey;
+  const isIOSSafari = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   // LiveKit connection via livekit-client
   useEffect(() => {
@@ -65,7 +66,7 @@ export function VoiceRoom({
         // Suppress benign DataChannel errors from LiveKit SDK internals
         const origError = console.error;
         console.error = (...args: unknown[]) => {
-          if (typeof args[0] === "string" && args[0].includes("DataChannel error")) return;
+          if (typeof args[0] === "string" && (args[0].includes("DataChannel error") || args[0].includes("createOffer"))) return;
           origError.apply(console, args);
         };
 
@@ -119,7 +120,11 @@ export function VoiceRoom({
           if (track.kind === "audio") {
             const element = track.attach();
             element.id = `audio-${track.sid}`;
+            element.autoplay = true;
+            element.setAttribute("playsinline", "");
             roomRef.current?.appendChild(element);
+            // Safari autoplay: explicitly start playback
+            element.play().catch(() => {});
           } else if (track.kind === "video" && track.source === "screen_share") {
             // Screen share from remote participant
             if (screenVideoRef.current) {
@@ -328,21 +333,19 @@ export function VoiceRoom({
           </div>
         )}
 
-        {/* Remote screen share display */}
-        {screenShareName && !isScreenSharing && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Monitor className="h-3.5 w-3.5" />
-              <span>{t("voice.screen_shared_by")} {screenShareName}</span>
-            </div>
-            <video
-              ref={screenVideoRef}
-              autoPlay
-              playsInline
-              className="w-full rounded-lg border border-border bg-black aspect-video"
-            />
+        {/* Remote screen share display — always in DOM so ref is never null */}
+        <div className={screenShareName && !isScreenSharing ? "space-y-2" : "hidden"}>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Monitor className="h-3.5 w-3.5" />
+            <span>{t("voice.screen_shared_by")} {screenShareName}</span>
           </div>
-        )}
+          <video
+            ref={screenVideoRef}
+            autoPlay
+            playsInline
+            className="w-full rounded-lg border border-border bg-black aspect-video"
+          />
+        </div>
 
         {/* Audio controls */}
         <AudioControls
@@ -351,12 +354,12 @@ export function VoiceRoom({
           isScreenSharing={isScreenSharing}
           onToggleMute={onToggleMute}
           onToggleDeafen={toggleDeafen}
-          onToggleScreenShare={isLiveKitConfigured ? toggleScreenShare : undefined}
+          onToggleScreenShare={isLiveKitConfigured && !isIOSSafari ? toggleScreenShare : undefined}
           onLeave={handleLeave}
         />
 
         {/* Hidden audio elements container */}
-        <div ref={roomRef} className="sr-only" />
+        <div ref={roomRef} style={{ position: "fixed", width: 0, height: 0, overflow: "visible", opacity: 0, pointerEvents: "none" }} />
       </CardContent>
     </Card>
   );

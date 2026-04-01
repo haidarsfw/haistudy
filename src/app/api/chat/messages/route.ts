@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import type { ChatMessage } from "@/types";
 import { CHAT_MAX_MESSAGES } from "@/lib/constants";
 
@@ -212,11 +213,32 @@ export async function POST(request: Request) {
   }
 }
 
-// ─── DELETE /api/chat/messages - Soft delete message ───
+// ─── DELETE /api/chat/messages - Soft delete message or clear all (admin) ───
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { messageId, requesterId, isAdmin } = body;
+    const isAdmin = await isAdminFromCookies();
+
+    // Admin: clear all messages
+    if (body.clearAll) {
+      if (!isAdmin) {
+        return NextResponse.json({ error: "Admin only" }, { status: 403 });
+      }
+      if (!isSupabaseServerConfigured) {
+        mockMessages.length = 0;
+        return NextResponse.json({ success: true, cleared: true });
+      }
+      const supabase = createServerClient()!;
+      const { error } = await supabase
+        .from("chat_messages")
+        .update({ deleted: true, content: "", media_url: null })
+        .neq("deleted", true);
+      if (error) throw error;
+      return NextResponse.json({ success: true, cleared: true });
+    }
+
+    // Single message delete
+    const { messageId, requesterId } = body;
 
     if (!messageId || !requesterId) {
       return NextResponse.json(

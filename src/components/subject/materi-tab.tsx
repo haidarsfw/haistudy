@@ -57,6 +57,13 @@ export function MateriTab({
     };
   }, [previewItem]);
 
+  // Loading timeout — hide spinner after 15s even if iframe never fires onLoad
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => setIsLoading(false), 15_000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
   if (items.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">

@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { validateAdmin } from "@/lib/auth/admin-guard";
 
 // ─── Mock data ───
 interface UserRow {
@@ -54,6 +55,11 @@ const mockUsers: UserRow[] = [
 // ─── GET /api/admin/users ───
 export async function GET() {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     if (!isSupabaseServerConfigured) {
       return NextResponse.json({ users: mockUsers });
     }

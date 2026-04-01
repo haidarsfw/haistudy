@@ -271,6 +271,8 @@ const id: Record<string, string> = {
   "voice.unlocked": "Terbuka",
   "voice.participants": "Peserta",
   "voice.screen_shared_by": "Screen dibagikan oleh",
+  "voice.your_screen_share": "Screen share kamu",
+  "voice.screen_share_not_supported": "Screen share tidak didukung di perangkat ini",
 
   // Login form
   "login.validating": "Memvalidasi...",

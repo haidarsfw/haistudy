@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import type { ChatMessage } from "@/types";
 import { MAX_PINNED_MESSAGES } from "@/lib/constants";
 
@@ -37,7 +38,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { messageId, pinnedBy, isAdmin } = body;
+    const { messageId, pinnedBy } = body;
 
     if (!messageId || !pinnedBy) {
       return NextResponse.json(
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const isAdmin = await isAdminFromCookies();
     if (!isAdmin) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
@@ -100,7 +102,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { messageId, isAdmin } = body;
+    const { messageId } = body;
 
     if (!messageId) {
       return NextResponse.json(
@@ -109,6 +111,7 @@ export async function DELETE(request: Request) {
       );
     }
 
+    const isAdmin = await isAdminFromCookies();
     if (!isAdmin) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }

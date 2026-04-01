@@ -101,7 +101,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 250 }}
-            className="fixed right-0 bottom-0 z-50 flex w-full flex-col border-t border-border bg-background shadow-xl max-h-[calc(100vh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-auto sm:right-0 sm:h-[calc(100vh-3.5rem)] sm:w-[380px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0"
+            className="fixed right-0 bottom-0 z-50 flex w-full flex-col overflow-hidden border-t border-border bg-background shadow-xl h-[80dvh] max-h-[calc(100dvh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-auto sm:right-0 sm:h-[calc(100vh-3.5rem)] sm:w-[380px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0"
           >
             {/* Header */}
             <div className="flex items-center gap-3 border-b border-border px-4 py-3">

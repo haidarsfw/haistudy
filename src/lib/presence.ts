@@ -68,11 +68,26 @@ export async function setupPresence(opts: {
   const onVisibilityChange = () => startHeartbeat();
   document.addEventListener("visibilitychange", onVisibilityChange);
 
+  // Mark offline on tab close (sendBeacon fires reliably during unload)
+  const onBeforeUnload = () => {
+    try {
+      navigator.sendBeacon(
+        "/api/presence",
+        new Blob(
+          [JSON.stringify({ action: "offline", userId: opts.userId })],
+          { type: "application/json" }
+        )
+      );
+    } catch {}
+  };
+  window.addEventListener("beforeunload", onBeforeUnload);
+
   // Cleanup function
   return () => {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
     document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener("beforeunload", onBeforeUnload);
 
     // Best-effort offline signal via sendBeacon (reliable during tab close)
     try {
@@ -107,8 +122,16 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     .eq("online", true)
     .order("last_seen", { ascending: false });
 
+  // Filter stale entries (last_seen older than 2 minutes)
+  const STALE_MS = 2 * 60 * 1000;
+  const now = Date.now();
+  const freshData = (data || []).filter((row: Record<string, unknown>) => {
+    const lastSeen = new Date(row.last_seen as string).getTime();
+    return now - lastSeen < STALE_MS;
+  });
+
   // Map snake_case DB columns → camelCase TypeScript interface
-  return (data || []).map((row: Record<string, unknown>) => ({
+  return freshData.map((row: Record<string, unknown>) => ({
     id: (row.user_id as string) || (row.id as string) || "",
     userName: (row.user_name as string) || "Unknown",
     deviceType: ((row.device_type as string) || "desktop") as
