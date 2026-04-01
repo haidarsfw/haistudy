@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useTranslation } from "@/components/providers/language-provider";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import {
   AlertTriangle,
   Wrench,
 } from "lucide-react";
-import { toast } from "sonner";
+
 import type { Announcement } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -114,10 +115,42 @@ export function AdminAnnouncements() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Megaphone className="h-5 w-5 text-primary" />
-          Announcements
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Megaphone className="h-5 w-5 text-primary" />
+            Announcements
+            <Badge variant="secondary" className="ml-1">{announcements.length}</Badge>
+          </CardTitle>
+          {announcements.length > 0 && (
+            <ConfirmDialog
+              trigger={
+                <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive gap-1">
+                  <Trash2 className="h-3 w-3" />
+                  Hapus Semua
+                </Button>
+              }
+              description={`Hapus semua ${announcements.length} announcement? Aksi ini tidak bisa dibatalkan.`}
+              onConfirm={async () => {
+                try {
+                  // Delete all announcements one by one (or a bulk endpoint)
+                  await Promise.all(
+                    announcements.map((a) =>
+                      fetch("/api/admin/announcements", {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: a.id }),
+                      })
+                    )
+                  );
+                  setAnnouncements([]);
+                  toast.success("Semua announcement dihapus");
+                } catch {
+                  toast.error("Gagal menghapus announcement");
+                }
+              }}
+            />
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Create new */}

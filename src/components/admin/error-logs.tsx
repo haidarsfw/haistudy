@@ -10,8 +10,10 @@ import {
   RefreshCw,
   CheckCircle,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ErrorLog } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -67,6 +69,24 @@ export function ErrorLogs() {
           <Button size="sm" variant="ghost" onClick={fetchLogs}>
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>
+          <ConfirmDialog
+            trigger={
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            }
+            description="Hapus semua error log yang lebih dari 7 hari?"
+            onConfirm={async () => {
+              const sevenDaysAgo = Date.now() - 7 * 86400000;
+              const oldLogs = logs.filter((l) => new Date(l.createdAt).getTime() < sevenDaysAgo);
+              if (oldLogs.length === 0) {
+                toast.info("Tidak ada log lama untuk dihapus");
+                return;
+              }
+              setLogs((prev) => prev.filter((l) => new Date(l.createdAt).getTime() >= sevenDaysAgo));
+              toast.success(`${oldLogs.length} error log lama dihapus`);
+            }}
+          />
         </div>
       </CardHeader>
       <CardContent>

@@ -27,11 +27,19 @@ export function Statistics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/users")
-      .then((r) => r.json())
-      .then((data) => setUsers(data.users || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const fetchUsers = () => {
+      fetch("/api/admin/users")
+        .then((r) => r.json())
+        .then((data) => setUsers(data.users || []))
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    };
+
+    fetchUsers();
+
+    // Poll every 30s for real-time updates
+    const interval = setInterval(fetchUsers, 30_000);
+    return () => clearInterval(interval);
   }, []);
 
   const regularUsers = users.filter((u) => !u.isAdmin && !u.isTester);
@@ -112,7 +120,12 @@ export function Statistics() {
               <Clock className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{avgMinutes}m</p>
+              <p className="text-2xl font-bold">
+                {avgMinutes >= 60
+                  ? `${Math.floor(avgMinutes / 60)}h ${avgMinutes % 60}m`
+                  : `${avgMinutes}m`
+                }
+              </p>
               <p className="text-xs text-muted-foreground">Avg Online Time</p>
             </div>
           </CardContent>

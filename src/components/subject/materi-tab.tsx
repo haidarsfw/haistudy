@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ExternalLink, FileText, Presentation, X, Loader2 } from "lucide-react";
 import type { MateriItem } from "@/types";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
@@ -35,19 +35,26 @@ export function MateriTab({
 }: MateriTabProps) {
   const [previewItem, setPreviewItem] = useState<MateriItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [preloadedDriveId, setPreloadedDriveId] = useState<string | null>(null);
+  const preloadIframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const openPreview = useCallback((item: MateriItem) => {
     if (item.driveId === "PLACEHOLDER") return;
-    setIsLoading(true);
+    // If this is the preloaded item, skip the loading spinner
+    if (item.driveId === preloadedDriveId) {
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
     setPreviewItem(item);
-  }, []);
+  }, [preloadedDriveId]);
 
   const closePreview = useCallback(() => {
     setPreviewItem(null);
     setIsLoading(false);
   }, []);
 
-  // Preconnect to Google domains on mount (not on click) for faster iframe loads
+  // Preconnect to Google domains + pre-load first item's iframe in background
   useEffect(() => {
     const origins = [
       "https://docs.google.com",
@@ -77,21 +84,39 @@ export function MateriTab({
       }
     });
 
-    // Prefetch the first non-placeholder item's embed URL
+    // Pre-load the first non-placeholder item's iframe in the background
     const firstItem = items.find((i) => i.driveId !== "PLACEHOLDER");
     if (firstItem) {
       const embedUrl = getEmbedUrl(firstItem.driveId, firstItem.type);
-      if (!document.querySelector(`link[rel="prefetch"][href="${embedUrl}"]`)) {
-        const prefetch = document.createElement("link");
-        prefetch.rel = "prefetch";
-        prefetch.href = embedUrl;
-        prefetch.as = "document";
-        document.head.appendChild(prefetch);
-        links.push(prefetch);
-      }
+
+      // Create a hidden iframe that loads in the background
+      const iframe = document.createElement("iframe");
+      iframe.src = embedUrl;
+      iframe.style.position = "absolute";
+      iframe.style.width = "1px";
+      iframe.style.height = "1px";
+      iframe.style.opacity = "0";
+      iframe.style.pointerEvents = "none";
+      iframe.style.overflow = "hidden";
+      iframe.style.border = "none";
+      iframe.setAttribute("loading", "eager");
+      iframe.setAttribute("tabindex", "-1");
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.onload = () => {
+        setPreloadedDriveId(firstItem.driveId);
+      };
+      document.body.appendChild(iframe);
+      preloadIframeRef.current = iframe;
     }
 
-    return () => links.forEach((l) => l.remove());
+    return () => {
+      links.forEach((l) => l.remove());
+      // Clean up preloaded iframe
+      if (preloadIframeRef.current) {
+        preloadIframeRef.current.remove();
+        preloadIframeRef.current = null;
+      }
+    };
   }, [items]);
 
   // Lock body scroll when preview modal is open
@@ -104,10 +129,10 @@ export function MateriTab({
     };
   }, [previewItem]);
 
-  // Loading timeout — hide spinner after 15s even if iframe never fires onLoad
+  // Loading timeout — hide spinner after 6s even if iframe never fires onLoad
   useEffect(() => {
     if (!isLoading) return;
-    const timer = setTimeout(() => setIsLoading(false), 8_000);
+    const timer = setTimeout(() => setIsLoading(false), 6_000);
     return () => clearTimeout(timer);
   }, [isLoading]);
 

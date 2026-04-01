@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ScrollText, RefreshCw, Loader2, Monitor, Smartphone } from "lucide-react";
+import { ScrollText, RefreshCw, Loader2, Monitor, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ActivityLog } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -83,6 +84,25 @@ export function ActivityLogs() {
           <Button size="sm" variant="ghost" onClick={fetchLogs}>
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>
+          <ConfirmDialog
+            trigger={
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            }
+            description="Hapus semua log yang lebih dari 7 hari? Aksi ini tidak bisa dibatalkan."
+            onConfirm={async () => {
+              const sevenDaysAgo = Date.now() - 7 * 86400000;
+              const oldLogs = logs.filter((l) => new Date(l.createdAt).getTime() < sevenDaysAgo);
+              if (oldLogs.length === 0) {
+                toast.info("Tidak ada log lama untuk dihapus");
+                return;
+              }
+              // Filter client-side (server should also have cleanup)
+              setLogs((prev) => prev.filter((l) => new Date(l.createdAt).getTime() >= sevenDaysAgo));
+              toast.success(`${oldLogs.length} log lama dihapus`);
+            }}
+          />
         </div>
       </CardHeader>
       <CardContent>

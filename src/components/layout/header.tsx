@@ -190,11 +190,24 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         </Button>
       </div>
 
-      {/* Mobile search: still uses the inline dropdown in a portal-like overlay */}
+      {/* Mobile search: fullscreen overlay with explicit backdrop for close */}
       <div className="sm:hidden">
         {searchOpen && (
-          <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm p-4">
-            <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+          <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
+            {/* Backdrop — tap here to close */}
+            <div
+              className="absolute inset-0"
+              onClick={() => setSearchOpen(false)}
+              onTouchEnd={() => setSearchOpen(false)}
+            />
+            {/* Search content — stops propagation so tapping inside doesn't close */}
+            <div
+              className="relative z-10 p-4"
+              onClick={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
+              <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+            </div>
           </div>
         )}
       </div>

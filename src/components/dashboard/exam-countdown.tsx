@@ -143,15 +143,15 @@ function TimeUnit({
 }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="relative overflow-hidden h-7">
+      <div className="relative overflow-hidden h-9">
         <AnimatePresence mode="popLayout">
           <motion.span
             key={value}
-            initial={{ y: -28, opacity: 0 }}
+            initial={{ y: -36, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 28, opacity: 0 }}
+            exit={{ y: 36, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className={`block font-mono text-xl font-bold tabular-nums ${
+            className={`block font-mono text-3xl font-bold tabular-nums ${
               urgent ? "text-destructive" : "text-foreground"
             }`}
           >

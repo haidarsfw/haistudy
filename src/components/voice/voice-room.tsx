@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ParticipantList } from "./participant-list";
 import { AudioControls } from "./audio-controls";
-import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2, X, Maximize2 } from "lucide-react";
+import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2, X, Maximize2, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -24,6 +24,38 @@ interface VoiceRoomProps {
   onLeave: () => void;
   onUpdate?: (roomId: string, updates: { maxParticipants?: number; isLocked?: boolean }) => void;
   onDelete?: (roomId: string) => void;
+}
+
+/**
+ * Attempt to play an audio element with retries.
+ * Browsers sometimes block the first play() call; we retry a few times
+ * with exponential backoff.
+ */
+async function tryPlayAudio(el: HTMLAudioElement, retries = 3): Promise<void> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await el.play();
+      return; // success
+    } catch {
+      // Wait before retrying (100ms, 300ms, 600ms)
+      await new Promise((r) => setTimeout(r, (i + 1) * 200));
+    }
+  }
+  // All retries failed — audio is likely blocked by browser policy
+  console.warn("Audio play blocked after retries — user interaction required");
+}
+
+/**
+ * Resume all audio elements that we've attached to the DOM.
+ * Called from user-initiated click handler so it has gesture context.
+ */
+function resumeAllAudio() {
+  document.querySelectorAll('audio[data-lk-audio]').forEach((el) => {
+    const audio = el as HTMLAudioElement;
+    if (audio.paused) {
+      audio.play().catch(() => {});
+    }
+  });
 }
 
 export function VoiceRoom({
@@ -48,7 +80,10 @@ export function VoiceRoom({
   const [isScreenExpanded, setIsScreenExpanded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
-  const [audioBlocked, setAudioBlocked] = useState(false);
+  // Always start as blocked — user MUST tap "Enable Audio" button
+  // This guarantees startAudio() is called from a genuine user gesture
+  const [audioBlocked, setAudioBlocked] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
   const wasMutedBeforeDeafen = useRef(false);
   const isMutedRef = useRef(isMuted);
   isMutedRef.current = isMuted;
@@ -56,15 +91,16 @@ export function VoiceRoom({
   const canScreenShare = typeof navigator !== "undefined" &&
     typeof navigator.mediaDevices?.getDisplayMedia === "function";
 
-  // LiveKit connection via livekit-client
+  // LiveKit connection — complete rewrite for reliable two-way audio
   useEffect(() => {
     if (!isLiveKitConfigured || !livekitToken || !livekitUrl) return;
 
     let roomInstance: import("livekit-client").Room | null = null;
+    let mounted = true;
 
     const connect = async () => {
       try {
-        const { Room: LKRoom, RoomEvent } = await import("livekit-client");
+        const { Room: LKRoom, RoomEvent, Track } = await import("livekit-client");
 
         // Suppress benign DataChannel errors from LiveKit SDK internals
         const origError = console.error;
@@ -76,75 +112,70 @@ export function VoiceRoom({
         roomInstance = new LKRoom({
           adaptiveStream: true,
           dynacast: true,
-          audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
+          audioCaptureDefaults: {
+            autoGainControl: true,
+            noiseSuppression: true,
+            echoCancellation: true,
+          },
           publishDefaults: {
             audioPreset: { maxBitrate: 48_000 },
             screenShareEncoding: { maxBitrate: 5_000_000, maxFramerate: 15 },
           },
         });
 
-        await roomInstance.connect(livekitUrl, livekitToken);
-        lkRoomRef.current = roomInstance;
+        // ═══════════════════════════════════════════════════════
+        // Set up ALL event listeners BEFORE connect()
+        // This ensures we never miss any events during connection
+        // ═══════════════════════════════════════════════════════
 
-        // Use LiveKit's built-in startAudio() to unlock browser autoplay
-        // This handles Safari/Chrome restrictions properly
-        try {
-          await roomInstance.startAudio();
-          setAudioBlocked(false);
-        } catch {
-          // startAudio failed — will be handled by AudioPlaybackStatusChanged event
-        }
-
-        // Listen for audio playback status changes (Safari blocks audio without user interaction)
+        // Audio playback status changes (browser autoplay policy)
         roomInstance.on(RoomEvent.AudioPlaybackStatusChanged, () => {
-          if (!roomInstance) return;
-          setAudioBlocked(!roomInstance.canPlaybackAudio);
-        });
-
-        // Enable microphone (handle permission denied gracefully)
-        if (roomInstance.state === "connected") {
-          try {
-            await roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current);
-          } catch (micError) {
-            const errName = (micError as Error)?.name || "";
-            if (errName === "NotAllowedError") {
-              console.warn("Microphone permission denied by user");
-            } else {
-              console.warn("Failed to enable microphone:", micError);
-            }
-          }
-        }
-
-        // Handle local track publish/unpublish for screen share self-preview
-        roomInstance.on(RoomEvent.LocalTrackPublished, (pub) => {
-          if (pub.track?.source === "screen_share" && pub.track.kind === "video") {
-            if (localScreenRef.current) {
-              pub.track.attach(localScreenRef.current);
-            }
-            setIsScreenSharing(true);
+          if (!mounted || !roomInstance) return;
+          const canPlay = roomInstance.canPlaybackAudio;
+          console.log("[Voice] AudioPlaybackStatusChanged — canPlaybackAudio:", canPlay);
+          if (canPlay) {
+            setAudioBlocked(false);
           }
         });
 
-        roomInstance.on(RoomEvent.LocalTrackUnpublished, (pub) => {
-          if (pub.track?.source === "screen_share") {
-            pub.track?.detach();
-            setIsScreenSharing(false);
-          }
-        });
-
-        // Handle remote tracks (audio + video/screen share)
+        // Handle remote tracks — AUDIO is the critical part
         roomInstance.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
-          if (track.kind === "audio") {
-            // Attach audio element to document.body with display:none
-            // LiveKit manages playback via startAudio() — no manual element.play() needed
+          if (!mounted) return;
+
+          if (track.kind === Track.Kind.Audio) {
+            console.log("[Voice] TrackSubscribed audio from:", participant.identity);
+
+            // Create audio element via LiveKit's attach() — it sets up the MediaStream
             const element = track.attach();
+
+            // Tag it so we can find it later
+            element.setAttribute("data-lk-audio", "true");
             element.id = `audio-${track.sid}`;
+
+            // Critical: do NOT use display:none — some browsers deprioritize hidden media
+            // Instead use position absolute + opacity 0 so it's "rendered" but invisible
+            element.style.position = "absolute";
+            element.style.width = "1px";
+            element.style.height = "1px";
+            element.style.opacity = "0";
+            element.style.pointerEvents = "none";
+            element.style.overflow = "hidden";
+
+            // Ensure playback settings
             element.autoplay = true;
             element.setAttribute("playsinline", "");
             element.volume = 1.0;
-            element.style.display = "none";
+            element.muted = false;
+
+            // Append to body (not inside a React-managed tree to avoid cleanup issues)
             document.body.appendChild(element);
-          } else if (track.kind === "video" && track.source === "screen_share") {
+
+            // Explicitly try to play — this might fail due to autoplay policy
+            // but that's OK — the "Enable Audio" button handles that
+            tryPlayAudio(element).catch(() => {
+              console.log("[Voice] Auto-play blocked for track", track.sid);
+            });
+          } else if (track.kind === Track.Kind.Video && track.source === Track.Source.ScreenShare) {
             // Screen share from remote participant
             if (screenVideoRef.current) {
               track.attach(screenVideoRef.current);
@@ -154,28 +185,111 @@ export function VoiceRoom({
         });
 
         roomInstance.on(RoomEvent.TrackUnsubscribed, (track) => {
+          if (!mounted) return;
+          // Detach and remove all elements for this track
           track.detach().forEach((el) => el.remove());
-          if (track.source === "screen_share") {
+          if (track.source === Track.Source.ScreenShare) {
             setScreenShareName(null);
           }
         });
 
-        // Re-enable mic after reconnection
-        roomInstance.on(RoomEvent.Reconnected, () => {
-          if (roomInstance && roomInstance.state === "connected") {
-            roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current).catch(() => {});
+        // Handle local track publish/unpublish for screen share self-preview
+        roomInstance.on(RoomEvent.LocalTrackPublished, (pub) => {
+          if (!mounted) return;
+          if (pub.track?.source === Track.Source.ScreenShare && pub.track.kind === Track.Kind.Video) {
+            if (localScreenRef.current) {
+              pub.track.attach(localScreenRef.current);
+            }
+            setIsScreenSharing(true);
           }
         });
+
+        roomInstance.on(RoomEvent.LocalTrackUnpublished, (pub) => {
+          if (!mounted) return;
+          if (pub.track?.source === Track.Source.ScreenShare) {
+            pub.track?.detach();
+            setIsScreenSharing(false);
+          }
+        });
+
+        // Re-enable mic + resume audio after reconnection
+        roomInstance.on(RoomEvent.Reconnected, () => {
+          if (!mounted || !roomInstance || roomInstance.state !== "connected") return;
+          roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current).catch(() => {});
+          // Re-play all audio elements after reconnection
+          resumeAllAudio();
+        });
+
+        // ═══════════════════════════════════════════════════════
+        // Now connect (all listeners are already registered)
+        // ═══════════════════════════════════════════════════════
+
+        await roomInstance.connect(livekitUrl, livekitToken);
+
+        if (!mounted) {
+          roomInstance.disconnect();
+          return;
+        }
+
+        lkRoomRef.current = roomInstance;
+        setIsConnected(true);
+
+        console.log("[Voice] Connected to room. canPlaybackAudio:", roomInstance.canPlaybackAudio);
+
+        // If browser already allows playback (e.g. Chrome with past interaction), unblock
+        if (roomInstance.canPlaybackAudio) {
+          setAudioBlocked(false);
+        }
+
+        // Enable microphone (handle permission denied gracefully)
+        try {
+          await roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current);
+        } catch (micError) {
+          const errName = (micError as Error)?.name || "";
+          if (errName === "NotAllowedError") {
+            console.warn("[Voice] Microphone permission denied by user");
+          } else {
+            console.warn("[Voice] Failed to enable microphone:", micError);
+          }
+        }
+
+        // Also handle any already-subscribed tracks (participants who joined before us)
+        roomInstance.remoteParticipants.forEach((participant) => {
+          participant.audioTrackPublications.forEach((pub) => {
+            if (pub.isSubscribed && pub.track) {
+              // Check if we already have an audio element for this track
+              const existingEl = document.getElementById(`audio-${pub.track.sid}`);
+              if (!existingEl) {
+                const element = pub.track.attach();
+                element.setAttribute("data-lk-audio", "true");
+                element.id = `audio-${pub.track.sid}`;
+                element.style.position = "absolute";
+                element.style.width = "1px";
+                element.style.height = "1px";
+                element.style.opacity = "0";
+                element.style.pointerEvents = "none";
+                element.autoplay = true;
+                element.setAttribute("playsinline", "");
+                element.volume = 1.0;
+                element.muted = false;
+                document.body.appendChild(element);
+                tryPlayAudio(element).catch(() => {});
+              }
+            }
+          });
+        });
+
       } catch (error) {
-        console.error("LiveKit connection error:", error);
+        console.error("[Voice] LiveKit connection error:", error);
       }
     };
 
     connect();
 
     return () => {
-      // Clean up audio elements from document.body
-      document.querySelectorAll('audio[id^="audio-"]').forEach((el) => el.remove());
+      mounted = false;
+      // Clean up ALL our audio elements from document.body
+      document.querySelectorAll('audio[data-lk-audio]').forEach((el) => el.remove());
       if (roomInstance) {
         roomInstance.disconnect();
       }
@@ -187,9 +301,41 @@ export function VoiceRoom({
     const room = lkRoomRef.current;
     if (!room || room.state !== "connected") return;
     room.localParticipant.setMicrophoneEnabled(!isMuted).catch((err) => {
-      console.warn("Failed to toggle mic:", err);
+      console.warn("[Voice] Failed to toggle mic:", err);
     });
   }, [isMuted]);
+
+  // Handle "Enable Audio" button click — MUST be from user gesture
+  const handleEnableAudio = useCallback(async () => {
+    const room = lkRoomRef.current;
+    if (!room) return;
+
+    try {
+      // startAudio() MUST be called from a click/tap handler
+      // This is the LiveKit-recommended way to unlock browser audio
+      await room.startAudio();
+      console.log("[Voice] startAudio() succeeded from user gesture");
+    } catch (e) {
+      console.warn("[Voice] startAudio() failed:", e);
+    }
+
+    // Also manually resume all audio elements — belt and suspenders
+    resumeAllAudio();
+
+    // Also try to resume AudioContext if it exists
+    try {
+      // Access the internal AudioContext and resume it
+      // @ts-expect-error — accessing internal property
+      const ctx = room.audioContext || (window as unknown as Record<string, unknown>).AudioContext;
+      if (ctx && typeof ctx === "object" && "resume" in ctx) {
+        await (ctx as AudioContext).resume();
+      }
+    } catch {
+      // ignore
+    }
+
+    setAudioBlocked(false);
+  }, []);
 
   const toggleScreenShare = useCallback(async () => {
     if (!lkRoomRef.current) return;
@@ -205,9 +351,9 @@ export function VoiceRoom({
     } catch (error) {
       const errName = (error as Error)?.name || "";
       if (errName === "NotAllowedError") {
-        console.warn("Screen share permission denied by user");
+        console.warn("[Voice] Screen share permission denied by user");
       } else {
-        console.error("Screen share error:", error);
+        console.error("[Voice] Screen share error:", error);
       }
       setIsScreenSharing(false);
     }
@@ -217,9 +363,8 @@ export function VoiceRoom({
   const toggleDeafen = useCallback(() => {
     const newDeafened = !isDeafened;
 
-    // Mute/unmute all remote audio elements (attached to document.body)
-    const audioEls = document.querySelectorAll('audio[id^="audio-"]');
-    audioEls.forEach((el) => {
+    // Mute/unmute all remote audio elements
+    document.querySelectorAll('audio[data-lk-audio]').forEach((el) => {
       (el as HTMLAudioElement).muted = newDeafened;
     });
 
@@ -238,9 +383,10 @@ export function VoiceRoom({
   // Leave room: disconnect LiveKit, clean up audio elements, then notify parent
   const handleLeave = useCallback(() => {
     // Remove all audio elements we appended to document.body
-    document.querySelectorAll('audio[id^="audio-"]').forEach((el) => el.remove());
+    document.querySelectorAll('audio[data-lk-audio]').forEach((el) => el.remove());
     lkRoomRef.current?.disconnect();
     lkRoomRef.current = null;
+    setIsConnected(false);
     onLeave();
   }, [onLeave]);
 
@@ -333,6 +479,27 @@ export function VoiceRoom({
           </div>
         )}
 
+        {/* ═══ "TAP TO ENABLE AUDIO" — Always shown until user taps ═══ */}
+        {/* This MUST be presented as a button so startAudio() runs from genuine user gesture */}
+        {audioBlocked && isConnected && (
+          <button
+            onClick={handleEnableAudio}
+            className="w-full rounded-xl border-2 border-dashed border-green-500/40 bg-green-500/5 hover:bg-green-500/15 p-4 flex items-center justify-center gap-3 transition-all cursor-pointer active:scale-[0.98] animate-pulse"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
+              <Volume2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-green-700 dark:text-green-300">
+                {t("voice.enable_audio") || "Tap untuk Aktifkan Audio"}
+              </p>
+              <p className="text-[11px] text-green-600/70 dark:text-green-400/70">
+                {t("voice.audio_blocked") || "Browser memblokir audio otomatis. Tap tombol ini untuk mendengar suara."}
+              </p>
+            </div>
+          </button>
+        )}
+
         {/* Participants */}
         <div>
           <h4 className="mb-2 text-sm font-medium text-muted-foreground">
@@ -404,33 +571,6 @@ export function VoiceRoom({
           />
         </div>
 
-        {/* "Tap to enable audio" overlay — shown when browser blocks autoplay */}
-        {audioBlocked && (
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 flex items-center gap-3">
-            <HeadphoneOff className="h-5 w-5 text-amber-500 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                {t("voice.audio_blocked") || "Audio diblokir oleh browser"}
-              </p>
-            </div>
-            <button
-              onClick={async () => {
-                if (lkRoomRef.current) {
-                  try {
-                    await lkRoomRef.current.startAudio();
-                    setAudioBlocked(false);
-                  } catch (e) {
-                    console.warn("Failed to start audio:", e);
-                  }
-                }
-              }}
-              className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 transition-colors"
-            >
-              {t("voice.enable_audio") || "Aktifkan Audio"}
-            </button>
-          </div>
-        )}
-
         {/* Audio controls */}
         <AudioControls
           isMuted={isMuted}
@@ -442,7 +582,7 @@ export function VoiceRoom({
           onLeave={handleLeave}
         />
 
-        {/* Hidden audio elements container */}
+        {/* Hidden audio elements container (not used directly, but ref kept for legacy compat) */}
         <div ref={roomRef} style={{ position: "absolute", width: "1px", height: "1px", overflow: "hidden", opacity: 0, pointerEvents: "none" }} />
       </CardContent>
     </Card>

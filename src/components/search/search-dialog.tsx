@@ -9,6 +9,7 @@ import {
   HelpCircle,
   Search,
   GraduationCap,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { searchContent, type SearchResult } from "@/lib/search";
@@ -54,43 +55,34 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Reset state + focus on open — use ref callback for immediate focus
   useEffect(() => {
     if (open) {
       setQuery("");
       setResults([]);
       setSelected(0);
-      // Use progressive focus strategy for mobile keyboard activation
-      const focusInput = () => {
-        if (inputRef.current) {
-          inputRef.current.focus({ preventScroll: false });
-        }
-      };
-      // Desktop: immediate focus via rAF
-      requestAnimationFrame(() => {
-        requestAnimationFrame(focusInput);
-      });
-      // Mobile: needs more delay for keyboard to appear after DOM mount
-      const mobileTimer = setTimeout(focusInput, 300);
-      return () => clearTimeout(mobileTimer);
     }
   }, [open]);
 
-  // Close on click outside — use "mousedown" instead of "click"
-  // "click" fires AFTER the event that opened the dialog, causing immediate close
-  useEffect(() => {
-    if (!open) return;
-    // Mount guard: ignore mousedown events for the first 200ms
-    // This prevents the initial click (that opened the dialog) from closing it
-    const mountedAt = Date.now();
-    function handleMouseDown(e: MouseEvent) {
-      if (Date.now() - mountedAt < 200) return;
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        onOpenChange(false);
+  // Ref callback — fires immediately when the element mounts
+  // This preserves the user gesture context chain better than useEffect + setTimeout
+  const inputRefCallback = useCallback(
+    (el: HTMLInputElement | null) => {
+      inputRef.current = el;
+      if (el && open) {
+        // Use requestAnimationFrame to ensure DOM is painted
+        // but still close enough to user gesture for mobile keyboard
+        requestAnimationFrame(() => {
+          el.focus({ preventScroll: false });
+          // Double-tap: some mobile browsers need a second focus after layout
+          setTimeout(() => {
+            el.focus({ preventScroll: false });
+          }, 50);
+        });
       }
-    }
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
-  }, [open, onOpenChange]);
+    },
+    [open]
+  );
 
   // Close on Escape
   useEffect(() => {
@@ -160,18 +152,34 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           >
             <Search className="h-4 w-4 shrink-0 text-primary" />
             <input
-              ref={inputRef}
+              ref={inputRefCallback}
               type="search"
               inputMode="search"
+              autoFocus
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              enterKeyHint="search"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={t("search.placeholder")}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
             />
-            <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-muted px-1.5 text-[10px] text-muted-foreground">
-              ESC
-            </kbd>
+            {/* Mobile: show explicit close button instead of keyboard shortcut */}
+            {isMobile ? (
+              <button
+                onClick={() => onOpenChange(false)}
+                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : (
+              <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-muted px-1.5 text-[10px] text-muted-foreground">
+                ESC
+              </kbd>
+            )}
           </motion.div>
 
           {/* Dropdown results */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquarePlus, CheckCircle2, Eye, Clock, Image as ImageIcon } from "lucide-react";
+import { MessageSquarePlus, CheckCircle2, Eye, Clock, Image as ImageIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
+import { toast } from "sonner";
 
 interface FeedbackItem {
   id: string;
@@ -97,10 +99,36 @@ export function FeedbackList() {
 
   return (
     <div className="space-y-3">
-      <h3 className="font-heading text-sm font-semibold flex items-center gap-2">
-        <MessageSquarePlus className="h-4 w-4 text-primary" />
-        Feedback ({items.length})
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-heading text-sm font-semibold flex items-center gap-2">
+          <MessageSquarePlus className="h-4 w-4 text-primary" />
+          Feedback ({items.length})
+        </h3>
+        {items.length > 0 && (
+          <ConfirmDialog
+            trigger={
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive gap-1">
+                <Trash2 className="h-3 w-3" />
+                Hapus Semua
+              </Button>
+            }
+            description={`Hapus semua ${items.length} feedback? Aksi ini tidak bisa dibatalkan.`}
+            onConfirm={async () => {
+              try {
+                await fetch("/api/feedback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ action: "clearAll" }),
+                });
+                setItems([]);
+                toast.success("Semua feedback dihapus");
+              } catch {
+                toast.error("Gagal menghapus feedback");
+              }
+            }}
+          />
+        )}
+      </div>
       {items.map((item) => {
         const StatusIcon = statusIcon[item.status] || Clock;
         return (
