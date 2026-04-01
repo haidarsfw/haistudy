@@ -43,8 +43,16 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selected, setSelected] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 480);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -127,9 +135,9 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
         <div ref={containerRef} className="relative">
           {/* Inline search input */}
           <motion.div
-            initial={{ opacity: 0, width: "16rem" }}
-            animate={{ opacity: 1, width: "24rem" }}
-            exit={{ opacity: 0, width: "16rem" }}
+            initial={{ opacity: 0, width: isMobile ? "calc(100vw - 2rem)" : "16rem" }}
+            animate={{ opacity: 1, width: isMobile ? "calc(100vw - 2rem)" : "24rem" }}
+            exit={{ opacity: 0, width: isMobile ? "calc(100vw - 2rem)" : "16rem" }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             className="flex items-center gap-2 rounded-lg border border-primary/30 bg-background px-3 py-1.5 shadow-sm"
           >
@@ -155,8 +163,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-background shadow-lg z-50 overflow-hidden"
-              style={{ minWidth: "24rem" }}
+              className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-background shadow-lg z-50 overflow-hidden w-full min-w-0"
             >
               <div className="max-h-[320px] overflow-y-auto">
                 {query.trim().length >= 2 && results.length === 0 && (

@@ -14,7 +14,10 @@ export function useProfile() {
 
   // Load from localStorage + backend
   useEffect(() => {
-    if (!session?.licenseKey) return;
+    if (!session?.licenseKey) {
+      setLoading(false);
+      return;
+    }
 
     // Load cached first
     try {

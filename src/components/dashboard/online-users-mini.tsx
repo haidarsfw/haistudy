@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Users, ChevronDown, Monitor, Smartphone, Tablet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnlineUsers } from "@/hooks/use-online-users";
+import { useSettings } from "@/hooks/use-settings";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerItem } from "@/lib/motion";
 
@@ -24,8 +25,10 @@ const deviceIcons: Record<string, typeof Monitor> = {
 export function OnlineUsersMini() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
+  const { settings } = useSettings();
   const [expanded, setExpanded] = useState(false);
 
+  const currentUserHidden = settings?.hideStatus ?? false;
   const visibleUsers = users.filter((u) => !u.hideStatus);
 
   return (
@@ -64,9 +67,9 @@ export function OnlineUsersMini() {
               <div
                 key={user.id}
                 className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${DOT_COLORS[i % DOT_COLORS.length]}`}
-                title={user.userName || "?"}
+                title={currentUserHidden ? "?" : (user.userName || "?")}
               >
-                {(user.userName || "?").charAt(0).toUpperCase()}
+                {currentUserHidden ? "?" : (user.userName || "?").charAt(0).toUpperCase()}
               </div>
             ))}
             {visibleUsers.length > 5 && (
@@ -104,7 +107,7 @@ export function OnlineUsersMini() {
                   >
                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
                     <span className="font-medium truncate flex-1">
-                      {user.userName || "Anonymous"}
+                      {currentUserHidden ? "People" : (user.userName || "Anonymous")}
                     </span>
                     <DeviceIcon className="h-3 w-3 text-muted-foreground shrink-0" />
                   </div>

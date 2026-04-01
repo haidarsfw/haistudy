@@ -30,7 +30,7 @@ export function AudioControls({
   onLeave,
 }: AudioControlsProps) {
   const { t } = useTranslation();
-  const isIOSSafari = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  // Screen share availability is determined by parent via onToggleScreenShare prop
 
   return (
     <div className="flex items-center justify-center gap-3">
@@ -82,7 +82,7 @@ export function AudioControls({
           >
             <Monitor className="h-5 w-5" />
           </TooltipTrigger>
-          <TooltipContent>{isIOSSafari ? t("voice.screen_share_not_supported") : t("voice.coming_soon")}</TooltipContent>
+          <TooltipContent>{t("voice.screen_share_not_supported")}</TooltipContent>
         </Tooltip>
       )}
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Play, Pause, RotateCcw, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { sounds } from "@/lib/sounds";
 
 const FOCUS_MINUTES = 25;
 const BREAK_MINUTES = 5;
@@ -24,6 +25,7 @@ export function PomodoroTimer() {
   };
 
   const reset = useCallback(() => {
+    sounds.toggle();
     setIsRunning(false);
     setPhase("focus");
     setSeconds(FOCUS_MINUTES * 60);
@@ -31,7 +33,11 @@ export function PomodoroTimer() {
   }, []);
 
   const toggleRun = useCallback(() => {
-    setIsRunning((prev) => !prev);
+    setIsRunning((prev) => {
+      if (prev) sounds.toggle(); // pause
+      else sounds.click(); // start
+      return !prev;
+    });
   }, []);
 
   // Timer tick
@@ -44,7 +50,8 @@ export function PomodoroTimer() {
     intervalRef.current = setInterval(() => {
       setSeconds((prev) => {
         if (prev <= 1) {
-          // Phase complete
+          // Phase complete — play notification
+          sounds.notification();
           if (phase === "focus") {
             setSessions((s) => s + 1);
             setPhase("break");

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Users, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useOnlineUsers } from "@/hooks/use-online-users";
+import { useSettings } from "@/hooks/use-settings";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getSubjectById } from "@/data/subjects";
 import { staggerContainer, staggerItem } from "@/lib/motion";
@@ -16,7 +17,9 @@ const deviceIcons: Record<string, typeof Monitor> = {
 export function OnlineUsers() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
+  const { settings } = useSettings();
 
+  const currentUserHidden = settings?.hideStatus ?? false;
   const visibleUsers = users.filter((u) => !u.hideStatus);
 
   return (
@@ -63,11 +66,11 @@ export function OnlineUsers() {
 
                 {/* Name */}
                 <span className="font-medium truncate flex-1">
-                  {user.userName || "Anonymous"}
+                  {currentUserHidden ? "People" : (user.userName || "Anonymous")}
                 </span>
 
                 {/* Subject badge */}
-                {subject && (
+                {subject && !currentUserHidden && (
                   <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
                     {subject.name}
                   </span>

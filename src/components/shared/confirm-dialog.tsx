@@ -44,7 +44,14 @@ export function ConfirmDialog({
       >
         {trigger}
       </div>
-      <AlertDialogContent>
+      <AlertDialogContent
+        onKeyDown={(e: React.KeyboardEvent) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleConfirm();
+          }
+        }}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{title || t("confirm.confirm")}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

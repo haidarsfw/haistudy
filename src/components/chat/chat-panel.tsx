@@ -12,6 +12,7 @@ import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { PinnedMessages } from "./pinned-messages";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ChatMessage } from "@/types";
 import { toast } from "sonner";
 import { sounds } from "@/lib/sounds";
@@ -131,18 +132,6 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     }
   };
 
-  const handleClearChat = async () => {
-    if (!confirm("Hapus semua pesan? Tindakan ini tidak bisa dibatalkan.")) return;
-    try {
-      await clearChat();
-      toast.success("Semua pesan dihapus");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Gagal menghapus pesan"
-      );
-    }
-  };
-
   const onlineUserNames = users
     .filter((u) => !u.hideStatus)
     .map((u) => u.userName);
@@ -190,15 +179,27 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
                 </p>
               </div>
               {session.isAdmin && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => { sounds.click(); handleClearChat(); }}
-                  title="Hapus semua pesan"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <ConfirmDialog
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                      title="Hapus semua pesan"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  }
+                  description="Hapus semua pesan? Tindakan ini tidak bisa dibatalkan."
+                  onConfirm={async () => {
+                    try {
+                      await clearChat();
+                      toast.success("Semua pesan dihapus");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Gagal menghapus pesan");
+                    }
+                  }}
+                />
               )}
               <Button
                 variant="ghost"

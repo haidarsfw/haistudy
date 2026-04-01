@@ -55,7 +55,10 @@ export function MessageList({
   const groupedMessages: Array<{ date: string; messages: ChatMessage[] }> = [];
   let currentDate = "";
 
-  for (const msg of messages) {
+  // Filter out deleted messages (no ghost "Pesan telah dihapus" text)
+  const visibleMessages = messages.filter((m) => !m.deleted);
+
+  for (const msg of visibleMessages) {
     const msgDate = new Date(msg.createdAt).toLocaleDateString("id-ID", {
       weekday: "long",
       day: "numeric",
@@ -68,7 +71,7 @@ export function MessageList({
     groupedMessages[groupedMessages.length - 1].messages.push(msg);
   }
 
-  if (messages.length === 0) {
+  if (visibleMessages.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="text-center">

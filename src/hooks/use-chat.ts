@@ -416,9 +416,9 @@ export function useChat() {
       throw new Error(err.error || "Gagal menghapus semua pesan");
     }
 
-    if (!isSupabaseConfigured) {
-      setMessages([]);
-    }
+    // Always clear local state after successful server-side clear
+    setMessages([]);
+    setPinnedIds([]);
   }, [session]);
 
   // Derived: pinned messages

@@ -65,7 +65,10 @@ export async function setupPresence(opts: {
     sendHeartbeat(true); // syncMinutes = true triggers server-side increment
   }, ONLINE_MINUTES_SYNC_MS);
 
-  const onVisibilityChange = () => startHeartbeat();
+  const onVisibilityChange = () => {
+    startHeartbeat();
+    if (!document.hidden) sendHeartbeat(); // immediate heartbeat when tab becomes visible
+  };
   document.addEventListener("visibilitychange", onVisibilityChange);
 
   // Mark offline on tab close (sendBeacon fires reliably during unload)
@@ -123,7 +126,7 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     .order("last_seen", { ascending: false });
 
   // Filter stale entries (last_seen older than 2 minutes)
-  const STALE_MS = 2 * 60 * 1000;
+  const STALE_MS = 3 * 60 * 1000;
   const now = Date.now();
   const freshData = (data || []).filter((row: Record<string, unknown>) => {
     const lastSeen = new Date(row.last_seen as string).getTime();

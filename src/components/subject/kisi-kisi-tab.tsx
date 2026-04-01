@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
 import type { KisiKisiItem } from "@/types";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
@@ -15,6 +15,20 @@ export function KisiKisiTab({ items, note, subjectId }: KisiKisiTabProps) {
   const [expanded, setExpanded] = useState<Set<string>>(
     new Set(items.map((i) => i.topic))
   );
+
+  // Block copy/paste shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        ["c", "u", "p", "s"].includes(e.key.toLowerCase())
+      ) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   const toggle = (topic: string) => {
     setExpanded((prev) => {
@@ -37,7 +51,10 @@ export function KisiKisiTab({ items, note, subjectId }: KisiKisiTabProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 py-4">
+    <div
+      className="copy-protected flex flex-col gap-3 py-4"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {note && (
         <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-2 text-xs text-primary">
           {note}

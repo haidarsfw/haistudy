@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ParticipantList } from "./participant-list";
 import { AudioControls } from "./audio-controls";
-import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2 } from "lucide-react";
+import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2, X, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -45,13 +45,15 @@ export function VoiceRoom({
   const lkRoomRef = useRef<import("livekit-client").Room | null>(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [screenShareName, setScreenShareName] = useState<string | null>(null);
+  const [isScreenExpanded, setIsScreenExpanded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
   const wasMutedBeforeDeafen = useRef(false);
   const isMutedRef = useRef(isMuted);
   isMutedRef.current = isMuted;
   const isCreator = room.creatorId === currentLicenseKey;
-  const isIOSSafari = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const canScreenShare = typeof navigator !== "undefined" &&
+    typeof navigator.mediaDevices?.getDisplayMedia === "function";
 
   // LiveKit connection via livekit-client
   useEffect(() => {
@@ -71,18 +73,15 @@ export function VoiceRoom({
         };
 
         roomInstance = new LKRoom({
-          audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true },
+          audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
           publishDefaults: {
             audioPreset: { maxBitrate: 48_000 },
-            screenShareEncoding: { maxBitrate: 3_000_000, maxFramerate: 30 },
+            screenShareEncoding: { maxBitrate: 5_000_000, maxFramerate: 15 },
           },
         });
 
         await roomInstance.connect(livekitUrl, livekitToken);
         lkRoomRef.current = roomInstance;
-
-        // Wait for engine to fully initialize before publishing
-        await new Promise((r) => setTimeout(r, 500));
 
         // Enable microphone (handle permission denied gracefully)
         if (roomInstance.state === "connected") {
@@ -118,10 +117,18 @@ export function VoiceRoom({
         // Handle remote tracks (audio + video/screen share)
         roomInstance.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (track.kind === "audio") {
+            // Resume AudioContext if suspended (iOS Safari user-gesture requirement)
+            try {
+              const ctx = new AudioContext();
+              if (ctx.state === "suspended") ctx.resume().catch(() => {});
+              ctx.close().catch(() => {});
+            } catch {}
+
             const element = track.attach();
             element.id = `audio-${track.sid}`;
             element.autoplay = true;
             element.setAttribute("playsinline", "");
+            element.volume = 1.0;
             roomRef.current?.appendChild(element);
             // Safari autoplay: explicitly start playback
             element.play().catch(() => {});
@@ -138,6 +145,13 @@ export function VoiceRoom({
           track.detach().forEach((el) => el.remove());
           if (track.source === "screen_share") {
             setScreenShareName(null);
+          }
+        });
+
+        // Re-enable mic after reconnection
+        roomInstance.on(RoomEvent.Reconnected, () => {
+          if (roomInstance && roomInstance.state === "connected") {
+            roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current).catch(() => {});
           }
         });
       } catch (error) {
@@ -171,6 +185,7 @@ export function VoiceRoom({
         audio: true,
         selfBrowserSurface: "include",
         systemAudio: "include",
+        resolution: { width: 1920, height: 1080 },
       });
       // State update handled by LocalTrackPublished/Unpublished events
     } catch (error) {
@@ -334,16 +349,42 @@ export function VoiceRoom({
         )}
 
         {/* Remote screen share display — always in DOM so ref is never null */}
-        <div className={screenShareName && !isScreenSharing ? "space-y-2" : "hidden"}>
+        <div className={screenShareName && !isScreenSharing
+          ? (isScreenExpanded
+            ? "fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4"
+            : "space-y-2")
+          : "hidden"
+        }>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Monitor className="h-3.5 w-3.5" />
             <span>{t("voice.screen_shared_by")} {screenShareName}</span>
+            {!isScreenExpanded && (
+              <button
+                onClick={() => setIsScreenExpanded(true)}
+                className="ml-auto rounded p-1 hover:bg-muted transition-colors"
+                title="Perbesar"
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {isScreenExpanded && (
+              <button
+                onClick={() => setIsScreenExpanded(false)}
+                className="ml-auto rounded-full bg-white/10 p-2 hover:bg-white/20 transition-colors text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </div>
           <video
             ref={screenVideoRef}
             autoPlay
             playsInline
-            className="w-full rounded-lg border border-border bg-black aspect-video"
+            className={isScreenExpanded
+              ? "max-w-full max-h-[calc(100vh-6rem)] object-contain rounded-lg"
+              : "w-full rounded-lg border border-border bg-black aspect-video cursor-pointer"
+            }
+            onClick={() => !isScreenExpanded && setIsScreenExpanded(true)}
           />
         </div>
 
@@ -354,12 +395,12 @@ export function VoiceRoom({
           isScreenSharing={isScreenSharing}
           onToggleMute={onToggleMute}
           onToggleDeafen={toggleDeafen}
-          onToggleScreenShare={isLiveKitConfigured && !isIOSSafari ? toggleScreenShare : undefined}
+          onToggleScreenShare={isLiveKitConfigured && canScreenShare ? toggleScreenShare : undefined}
           onLeave={handleLeave}
         />
 
         {/* Hidden audio elements container */}
-        <div ref={roomRef} style={{ position: "fixed", width: 0, height: 0, overflow: "visible", opacity: 0, pointerEvents: "none" }} />
+        <div ref={roomRef} style={{ position: "absolute", width: "1px", height: "1px", overflow: "hidden", opacity: 0, pointerEvents: "none" }} />
       </CardContent>
     </Card>
   );

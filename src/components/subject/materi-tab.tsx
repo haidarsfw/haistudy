@@ -24,7 +24,7 @@ const typeIcons: Record<string, typeof FileText> = {
 /** Build embed URL - Google Slides use /embed, others use Drive preview */
 function getEmbedUrl(driveId: string, type: string): string {
   if (type === "drive-gslides" || type === "slides") {
-    return `https://docs.google.com/presentation/d/${driveId}/embed?start=false&loop=false&delayms=0`;
+    return `https://docs.google.com/presentation/d/${driveId}/embed?start=false&loop=false&delayms=0&rm=minimal`;
   }
   return `https://drive.google.com/file/d/${driveId}/preview`;
 }
@@ -196,6 +196,7 @@ export function MateriTab({
                 src={getEmbedUrl(previewItem.driveId, previewItem.type)}
                 className="absolute inset-0 w-full"
                 allowFullScreen
+                loading="lazy"
                 onLoad={() => setIsLoading(false)}
                 style={{ border: "none", height: "100%" }}
               />
