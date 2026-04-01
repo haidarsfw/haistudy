@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Users, ChevronDown, Monitor, Smartphone, Tablet } from "lucide-react";
+import { Users, ChevronDown, Monitor, Smartphone, Tablet, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSettings } from "@/hooks/use-settings";
+import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerItem } from "@/lib/motion";
 
@@ -26,10 +27,13 @@ export function OnlineUsersMini() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
   const { settings } = useSettings();
+  const { session } = useSession();
   const [expanded, setExpanded] = useState(false);
 
+  const isAdmin = session?.isAdmin ?? false;
   const currentUserHidden = settings?.hideStatus ?? false;
-  const visibleUsers = users.filter((u) => !u.hideStatus);
+  // Admin sees all users; non-admin sees only non-hidden
+  const visibleUsers = isAdmin ? users : users.filter((u) => !u.hideStatus);
 
   return (
     <motion.div
@@ -67,9 +71,9 @@ export function OnlineUsersMini() {
               <div
                 key={user.id}
                 className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${DOT_COLORS[i % DOT_COLORS.length]}`}
-                title={currentUserHidden ? "?" : (user.userName || "?")}
+                title={currentUserHidden && !isAdmin ? "?" : (user.userName || "?")}
               >
-                {currentUserHidden ? "?" : (user.userName || "?").charAt(0).toUpperCase()}
+                {currentUserHidden && !isAdmin ? "?" : (user.userName || "?").charAt(0).toUpperCase()}
               </div>
             ))}
             {visibleUsers.length > 5 && (
@@ -106,9 +110,12 @@ export function OnlineUsersMini() {
                     className="flex items-center gap-2 text-xs"
                   >
                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="font-medium truncate flex-1">
-                      {currentUserHidden ? "People" : (user.userName || "Anonymous")}
+                    <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""}`}>
+                      {currentUserHidden && !isAdmin ? "People" : (user.userName || "Anonymous")}
                     </span>
+                    {user.hideStatus && isAdmin && (
+                      <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+                    )}
                     <DeviceIcon className="h-3 w-3 text-muted-foreground shrink-0" />
                   </div>
                 );

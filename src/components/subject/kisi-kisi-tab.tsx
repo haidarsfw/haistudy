@@ -81,20 +81,20 @@ export function KisiKisiTab({ items, note, subjectId }: KisiKisiTabProps) {
               <span className="font-heading text-base font-semibold flex-1">
                 {item.topic}
               </span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground shrink-0">
                 {item.items.length} item
               </span>
+              <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+                <BookmarkButton
+                  item={{
+                    id: `kisi-${subjectId}-${item.topic}`,
+                    type: "kisi-kisi",
+                    subjectId,
+                    title: item.topic,
+                  }}
+                />
+              </div>
             </button>
-            <div className="absolute right-2 top-2">
-              <BookmarkButton
-                item={{
-                  id: `kisi-${subjectId}-${item.topic}`,
-                  type: "kisi-kisi",
-                  subjectId,
-                  title: item.topic,
-                }}
-              />
-            </div>
 
             {/* Items */}
             {isExpanded && (

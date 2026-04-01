@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquarePlus, CheckCircle2, Eye, Clock } from "lucide-react";
+import { MessageSquarePlus, CheckCircle2, Eye, Clock, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { MediaPreviewer } from "@/components/shared/media-previewer";
 
 interface FeedbackItem {
   id: string;
@@ -10,6 +18,7 @@ interface FeedbackItem {
   name: string;
   category: "bug" | "feature" | "other";
   message: string;
+  imageUrls: string[];
   status: "unread" | "read" | "resolved";
   createdAt: string;
 }
@@ -35,6 +44,8 @@ const statusIcon: Record<string, typeof Clock> = {
 export function FeedbackList() {
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<FeedbackItem | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const fetchFeedback = async () => {
     try {
@@ -95,7 +106,8 @@ export function FeedbackList() {
         return (
           <div
             key={item.id}
-            className={`rounded-xl border bg-card p-4 space-y-2 ${
+            onClick={() => setSelectedItem(item)}
+            className={`rounded-xl border bg-card p-4 space-y-2 cursor-pointer hover:bg-muted/30 transition-colors ${
               item.status === "unread" ? "border-primary/30" : "border-border"
             }`}
           >
@@ -117,7 +129,13 @@ export function FeedbackList() {
                 </span>
               </div>
             </div>
-            <p className="text-sm text-foreground leading-relaxed">{item.message}</p>
+            <p className="text-sm text-foreground leading-relaxed line-clamp-3">{item.message}</p>
+            {item.imageUrls?.length > 0 && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <ImageIcon className="h-3 w-3" />
+                <span>{item.imageUrls.length} gambar</span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">
                 {new Date(item.createdAt).toLocaleDateString("id-ID", {
@@ -154,6 +172,95 @@ export function FeedbackList() {
           </div>
         );
       })}
+
+      {/* Detail popup */}
+      <Dialog open={!!selectedItem} onOpenChange={(open) => { if (!open) setSelectedItem(null); }}>
+        {selectedItem && (
+          <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                    categoryColor[selectedItem.category]
+                  }`}
+                >
+                  {categoryLabel[selectedItem.category]}
+                </span>
+                <span className="text-xs text-muted-foreground capitalize">
+                  {selectedItem.status}
+                </span>
+              </div>
+              <DialogTitle>{selectedItem.name}</DialogTitle>
+              <DialogDescription>
+                {new Date(selectedItem.createdAt).toLocaleDateString("id-ID", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                {selectedItem.message}
+              </p>
+
+              {selectedItem.imageUrls?.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-medium text-muted-foreground">Lampiran</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedItem.imageUrls.map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt={`Lampiran ${i + 1}`}
+                        className="rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity object-cover aspect-video w-full"
+                        onClick={() => setPreviewImage(url)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2 border-t border-border">
+                {selectedItem.status === "unread" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => {
+                      updateStatus(selectedItem.id, "read");
+                      setSelectedItem({ ...selectedItem, status: "read" });
+                    }}
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    Tandai Dibaca
+                  </Button>
+                )}
+                {selectedItem.status !== "resolved" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs text-green-600"
+                    onClick={() => {
+                      updateStatus(selectedItem.id, "resolved");
+                      setSelectedItem({ ...selectedItem, status: "resolved" });
+                    }}
+                  >
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Selesai
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      <MediaPreviewer src={previewImage} onClose={() => setPreviewImage(null)} />
     </div>
   );
 }

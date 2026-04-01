@@ -117,19 +117,15 @@ export function VoiceRoom({
         // Handle remote tracks (audio + video/screen share)
         roomInstance.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (track.kind === "audio") {
-            // Resume AudioContext if suspended (iOS Safari user-gesture requirement)
-            try {
-              const ctx = new AudioContext();
-              if (ctx.state === "suspended") ctx.resume().catch(() => {});
-              ctx.close().catch(() => {});
-            } catch {}
-
+            // Attach audio element to document.body with display:none
+            // (safe for <audio> — browsers don't throttle hidden audio unlike clipped containers)
             const element = track.attach();
             element.id = `audio-${track.sid}`;
             element.autoplay = true;
             element.setAttribute("playsinline", "");
             element.volume = 1.0;
-            roomRef.current?.appendChild(element);
+            element.style.display = "none";
+            document.body.appendChild(element);
             // Safari autoplay: explicitly start playback
             element.play().catch(() => {});
           } else if (track.kind === "video" && track.source === "screen_share") {
@@ -162,6 +158,8 @@ export function VoiceRoom({
     connect();
 
     return () => {
+      // Clean up audio elements from document.body
+      document.querySelectorAll('audio[id^="audio-"]').forEach((el) => el.remove());
       if (roomInstance) {
         roomInstance.disconnect();
       }
@@ -203,9 +201,9 @@ export function VoiceRoom({
   const toggleDeafen = useCallback(() => {
     const newDeafened = !isDeafened;
 
-    // Mute/unmute all remote audio elements
-    const audioEls = roomRef.current?.querySelectorAll("audio");
-    audioEls?.forEach((el) => {
+    // Mute/unmute all remote audio elements (attached to document.body)
+    const audioEls = document.querySelectorAll('audio[id^="audio-"]');
+    audioEls.forEach((el) => {
       (el as HTMLAudioElement).muted = newDeafened;
     });
 
@@ -221,8 +219,10 @@ export function VoiceRoom({
     setIsDeafened(newDeafened);
   }, [isDeafened, isMuted, onToggleMute]);
 
-  // Leave room: disconnect LiveKit then notify parent
+  // Leave room: disconnect LiveKit, clean up audio elements, then notify parent
   const handleLeave = useCallback(() => {
+    // Remove all audio elements we appended to document.body
+    document.querySelectorAll('audio[id^="audio-"]').forEach((el) => el.remove());
     lkRoomRef.current?.disconnect();
     lkRoomRef.current = null;
     onLeave();

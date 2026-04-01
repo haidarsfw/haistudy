@@ -31,6 +31,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     pinnedIds,
     isLoading,
     isSending,
+    unreadCount,
     sendMessage,
     sendImage,
     sendAudio,
@@ -38,6 +39,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     clearChat,
     pinMessage,
     unpinMessage,
+    markAsRead,
   } = useChat();
   const { users } = useOnlineUsers();
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
@@ -56,12 +58,15 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     return () => { document.body.style.overflow = prev; };
   }, [isOpen]);
 
-  // Track unread - when panel is open, messages are "read"
+  // Track unread — mark as read when panel is open, pass unread count when closed
   useEffect(() => {
-    if (isOpen && messages.length > 0) {
+    if (isOpen) {
+      markAsRead();
       onUnreadChange?.(0);
+    } else {
+      onUnreadChange?.(unreadCount);
     }
-  }, [isOpen, messages.length, onUnreadChange]);
+  }, [isOpen, unreadCount, markAsRead, onUnreadChange]);
 
   const handleSend = async (
     content: string,

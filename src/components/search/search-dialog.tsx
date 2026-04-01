@@ -59,7 +59,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       setQuery("");
       setResults([]);
       setSelected(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const focusInput = () => inputRef.current?.focus();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          focusInput();
+          setTimeout(focusInput, 150);
+        });
+      });
     }
   }, [open]);
 
@@ -144,7 +150,8 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             <Search className="h-4 w-4 shrink-0 text-primary" />
             <input
               ref={inputRef}
-              type="text"
+              type="search"
+              inputMode="search"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
               onKeyDown={handleKeyDown}

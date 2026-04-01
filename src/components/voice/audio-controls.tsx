@@ -78,11 +78,13 @@ export function AudioControls({
       ) : (
         <Tooltip>
           <TooltipTrigger
+            type="button"
+            title={t("voice.screen_share_not_supported")}
             className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-input bg-background opacity-50 cursor-not-allowed"
           >
             <Monitor className="h-5 w-5" />
           </TooltipTrigger>
-          <TooltipContent>{t("voice.screen_share_not_supported")}</TooltipContent>
+          <TooltipContent side="top" sideOffset={8}>{t("voice.screen_share_not_supported")}</TooltipContent>
         </Tooltip>
       )}
 

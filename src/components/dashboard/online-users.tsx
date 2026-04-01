@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, Monitor, Smartphone, Tablet } from "lucide-react";
+import { Users, Monitor, Smartphone, Tablet, Lock } from "lucide-react";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSettings } from "@/hooks/use-settings";
+import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getSubjectById } from "@/data/subjects";
 import { staggerContainer, staggerItem } from "@/lib/motion";
@@ -18,9 +19,11 @@ export function OnlineUsers() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
   const { settings } = useSettings();
+  const { session } = useSession();
 
+  const isAdmin = session?.isAdmin ?? false;
   const currentUserHidden = settings?.hideStatus ?? false;
-  const visibleUsers = users.filter((u) => !u.hideStatus);
+  const visibleUsers = isAdmin ? users : users.filter((u) => !u.hideStatus);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -65,12 +68,17 @@ export function OnlineUsers() {
                 <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
 
                 {/* Name */}
-                <span className="font-medium truncate flex-1">
-                  {currentUserHidden ? "People" : (user.userName || "Anonymous")}
+                <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""}`}>
+                  {currentUserHidden && !isAdmin ? "People" : (user.userName || "Anonymous")}
                 </span>
 
+                {/* Lock icon for hidden users (admin view) */}
+                {user.hideStatus && isAdmin && (
+                  <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+                )}
+
                 {/* Subject badge */}
-                {subject && !currentUserHidden && (
+                {subject && (!currentUserHidden || isAdmin) && (
                   <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
                     {subject.name}
                   </span>

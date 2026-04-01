@@ -24,7 +24,7 @@ const typeIcons: Record<string, typeof FileText> = {
 /** Build embed URL - Google Slides use /embed, others use Drive preview */
 function getEmbedUrl(driveId: string, type: string): string {
   if (type === "drive-gslides" || type === "slides") {
-    return `https://docs.google.com/presentation/d/${driveId}/embed?start=false&loop=false&delayms=0&rm=minimal`;
+    return `https://docs.google.com/presentation/d/${driveId}/embed?start=false&loop=false&delayms=0&rm=minimal&chrome=false`;
   }
   return `https://drive.google.com/file/d/${driveId}/preview`;
 }
@@ -38,6 +38,13 @@ export function MateriTab({
 
   const openPreview = useCallback((item: MateriItem) => {
     if (item.driveId === "PLACEHOLDER") return;
+    // Preconnect to Google Docs for faster iframe load
+    if (!document.querySelector('link[href="https://docs.google.com"]')) {
+      const link = document.createElement("link");
+      link.rel = "preconnect";
+      link.href = "https://docs.google.com";
+      document.head.appendChild(link);
+    }
     setIsLoading(true);
     setPreviewItem(item);
   }, []);
@@ -196,7 +203,7 @@ export function MateriTab({
                 src={getEmbedUrl(previewItem.driveId, previewItem.type)}
                 className="absolute inset-0 w-full"
                 allowFullScreen
-                loading="lazy"
+                sandbox="allow-scripts allow-same-origin allow-popups"
                 onLoad={() => setIsLoading(false)}
                 style={{ border: "none", height: "100%" }}
               />

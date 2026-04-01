@@ -17,6 +17,19 @@ export function useChat() {
   const [isSending, setIsSending] = useState(false);
   const lastSendTime = useRef(0);
 
+  // Unread tracking with localStorage persistence
+  const LAST_READ_KEY = "hs-chat-last-read";
+  const [lastReadAt, setLastReadAt] = useState<string>(() => {
+    if (typeof window === "undefined") return new Date(0).toISOString();
+    return localStorage.getItem(LAST_READ_KEY) || new Date(0).toISOString();
+  });
+
+  const markAsRead = useCallback(() => {
+    const now = new Date().toISOString();
+    setLastReadAt(now);
+    try { localStorage.setItem(LAST_READ_KEY, now); } catch {}
+  }, []);
+
   // Fetch initial messages
   const fetchMessages = useCallback(async () => {
     try {
@@ -424,12 +437,19 @@ export function useChat() {
   // Derived: pinned messages
   const pinnedMessages = messages.filter((m) => pinnedIds.includes(m.id));
 
+  // Derived: unread count (messages after lastReadAt, excluding own and deleted)
+  const deviceId = typeof window !== "undefined" ? getDeviceId() : "";
+  const unreadCount = messages.filter(
+    (m) => !m.deleted && m.createdAt > lastReadAt && m.authorId !== deviceId
+  ).length;
+
   return {
     messages,
     pinnedMessages,
     pinnedIds,
     isLoading,
     isSending,
+    unreadCount,
     sendMessage,
     sendImage,
     sendAudio,
@@ -437,5 +457,6 @@ export function useChat() {
     clearChat,
     pinMessage,
     unpinMessage,
+    markAsRead,
   };
 }
