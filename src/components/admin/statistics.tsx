@@ -44,28 +44,33 @@ export function Statistics() {
 
   const regularUsers = users.filter((u) => !u.isAdmin && !u.isTester);
   const totalKeys = users.length;
+  
+  // Use regularUsers for averages if available, otherwise use all users
+  const statsPool = regularUsers.length > 0 ? regularUsers : users;
   const avgScore =
-    regularUsers.length > 0
+    statsPool.length > 0
       ? Math.round(
-          regularUsers.reduce((sum, u) => sum + u.totalQuizScore, 0) /
-            regularUsers.length
+          statsPool.reduce((sum, u) => sum + u.totalQuizScore, 0) /
+            statsPool.length
         )
       : 0;
   const avgMinutes =
-    regularUsers.length > 0
+    statsPool.length > 0
       ? Math.round(
-          regularUsers.reduce((sum, u) => sum + u.totalOnlineMinutes, 0) /
-            regularUsers.length
+          statsPool.reduce((sum, u) => sum + u.totalOnlineMinutes, 0) /
+            statsPool.length
         )
       : 0;
 
-  // Leaderboard: top 10 by quiz score
-  const leaderboard = [...regularUsers]
+  // Leaderboard: top 10 by quiz score (all users)
+  const leaderboard = [...users]
+    .filter((u) => u.totalQuizScore > 0)
     .sort((a, b) => b.totalQuizScore - a.totalQuizScore)
     .slice(0, 10);
 
-  // Most active: top 10 by online minutes
-  const mostActive = [...regularUsers]
+  // Most active: top 10 by online minutes (all users)
+  const mostActive = [...users]
+    .filter((u) => u.totalOnlineMinutes > 0)
     .sort((a, b) => b.totalOnlineMinutes - a.totalOnlineMinutes)
     .slice(0, 10);
 

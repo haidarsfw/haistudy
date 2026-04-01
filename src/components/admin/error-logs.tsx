@@ -99,7 +99,7 @@ export function ErrorLogs() {
             Tidak ada error
           </p>
         ) : (
-          <ScrollArea className="max-h-[400px]">
+          <ScrollArea className="h-[400px]">
             <div className="space-y-2">
               {logs.map((log) => (
                 <div

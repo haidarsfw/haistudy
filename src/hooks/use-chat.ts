@@ -6,7 +6,6 @@ import { useSession } from "@/components/providers/session-provider";
 import { RATE_LIMITS } from "@/lib/constants";
 import { getDeviceId } from "@/lib/auth/device";
 import { uploadToCloudinary } from "@/lib/cloudinary";
-import { parseMentions, hasMentions } from "@/lib/mentions";
 import type { ChatMessage } from "@/types";
 
 export function useChat() {
@@ -189,36 +188,7 @@ export function useChat() {
 
         lastSendTime.current = Date.now();
 
-        // Send mention notifications
-        if (hasMentions(content)) {
-          const mentions = parseMentions(content);
-          if (mentions.length > 0) {
-            // For @all, admin only
-            const hasAll = mentions.some((m) => m.isAll);
-            if (hasAll && !session.isAdmin) {
-              // Skip @all for non-admin
-            } else {
-              // Fire and forget notification creation
-              fetch("/api/notifications", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  notifications: mentions
-                    .filter((m) => !m.isAll || session.isAdmin)
-                    .map((m) => ({
-                      // For individual mentions, we pass the username
-                      // The server-side or client-side resolution happens at display time
-                      licenseKey: `@${m.username}`, // placeholder - resolved by notification system
-                      type: m.isAll ? "mention_all" : "mention",
-                      senderName: session.name,
-                      preview: content.slice(0, 100),
-                      context: "chat" as const,
-                    })),
-                }),
-              }).catch(() => {});
-            }
-          }
-        }
+        // Mention notifications are now handled server-side in the chat API
 
         // In mock mode, refetch
         if (!isSupabaseConfigured) {

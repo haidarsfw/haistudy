@@ -104,33 +104,51 @@ export function LoginForm() {
         // Success
         resetRateLimit();
 
-        // Fetch settings from server to get selectedClass + theme (cross-device sync)
+        // Use settings embedded in validate response (fast path)
         let selectedClass = "";
-        try {
-          const settingsRes = await fetch(
-            `/api/settings?licenseKey=${encodeURIComponent(data.session.licenseKey)}`
-          );
-          const settingsData = await settingsRes.json();
-          if (settingsData.settings) {
-            selectedClass = settingsData.settings.selectedClass || "";
-            // Persist theme to localStorage so ThemeProvider reads it on mount
-            if (settingsData.settings.darkMode !== undefined) {
-              localStorage.setItem("dark", JSON.stringify(settingsData.settings.darkMode));
-            }
-            if (settingsData.settings.theme) {
-              localStorage.setItem("theme", JSON.stringify(settingsData.settings.theme));
-            }
-            if (settingsData.settings.font) {
-              localStorage.setItem("font", JSON.stringify(settingsData.settings.font));
-            }
-            if (settingsData.settings.darkModeSchedule) {
-              localStorage.setItem("darkModeSchedule", JSON.stringify(settingsData.settings.darkModeSchedule));
-            }
+        const embeddedSettings = data.settings;
+
+        if (embeddedSettings) {
+          // Settings came with the validate response — no extra API call needed
+          selectedClass = embeddedSettings.selectedClass || "";
+          if (embeddedSettings.darkMode !== undefined) {
+            localStorage.setItem("dark", JSON.stringify(embeddedSettings.darkMode));
           }
-        } catch {
-          // Fallback to localStorage
-          const existingSession = JSON.parse(localStorage.getItem("hs-session-data") || "null");
-          selectedClass = existingSession?.selectedClass || "";
+          if (embeddedSettings.theme) {
+            localStorage.setItem("theme", JSON.stringify(embeddedSettings.theme));
+          }
+          if (embeddedSettings.font) {
+            localStorage.setItem("font", JSON.stringify(embeddedSettings.font));
+          }
+          if (embeddedSettings.darkModeSchedule) {
+            localStorage.setItem("darkModeSchedule", JSON.stringify(embeddedSettings.darkModeSchedule));
+          }
+        } else {
+          // Fallback: fetch settings separately (mock mode / legacy)
+          try {
+            const settingsRes = await fetch(
+              `/api/settings?licenseKey=${encodeURIComponent(data.session.licenseKey)}`
+            );
+            const settingsData = await settingsRes.json();
+            if (settingsData.settings) {
+              selectedClass = settingsData.settings.selectedClass || "";
+              if (settingsData.settings.darkMode !== undefined) {
+                localStorage.setItem("dark", JSON.stringify(settingsData.settings.darkMode));
+              }
+              if (settingsData.settings.theme) {
+                localStorage.setItem("theme", JSON.stringify(settingsData.settings.theme));
+              }
+              if (settingsData.settings.font) {
+                localStorage.setItem("font", JSON.stringify(settingsData.settings.font));
+              }
+              if (settingsData.settings.darkModeSchedule) {
+                localStorage.setItem("darkModeSchedule", JSON.stringify(settingsData.settings.darkModeSchedule));
+              }
+            }
+          } catch {
+            const existingSession = JSON.parse(localStorage.getItem("hs-session-data") || "null");
+            selectedClass = existingSession?.selectedClass || "";
+          }
         }
 
         const sessionWithClass = {

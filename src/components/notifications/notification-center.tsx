@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
 import {
@@ -26,10 +26,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useTranslation } from "@/components/providers/language-provider";
+import { openChatToMessage } from "@/lib/events";
 import type { Notification } from "@/types";
 
 function NotificationItem({
@@ -111,6 +111,12 @@ function NotificationItem({
   const handleClick = () => {
     if (notification.type === "announcement") {
       onAnnouncementClick(notification);
+    } else if (
+      (notification.type === "mention" || notification.type === "mention_all") &&
+      notification.context === "chat"
+    ) {
+      // Open chat panel and scroll to the mentioned message
+      openChatToMessage(notification.messageId);
     }
     if (!notification.read) onRead(notification.id);
   };
@@ -172,10 +178,29 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
   const { notifications, unreadCount, markAsRead, dismissNotification } = useNotifications();
   const { t } = useTranslation();
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Notification | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  // When user clicks an announcement notification, show the dialog BUT keep the popover open
+  const handleAnnouncementClick = useCallback((n: Notification) => {
+    setSelectedAnnouncement(n);
+    // Don't close popover — we want user to see other notifications after dismissing dialog
+  }, []);
+
+  // When dialog closes, bring focus back to popover conceptually
+  const handleDialogClose = useCallback((open: boolean) => {
+    if (!open) setSelectedAnnouncement(null);
+  }, []);
+
+  // Prevent popover from closing when a dialog is open
+  const handlePopoverOpenChange = useCallback((open: boolean) => {
+    // Only allow closing if no dialog is open
+    if (!open && selectedAnnouncement) return;
+    setPopoverOpen(open);
+  }, [selectedAnnouncement]);
 
   return (
     <>
-    <Popover>
+    <Popover open={popoverOpen} onOpenChange={handlePopoverOpenChange}>
       {hoverExpand ? (
         <PopoverTrigger
           render={
@@ -222,8 +247,8 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
         </div>
         <Separator />
 
-        {/* Notifications list */}
-        <ScrollArea className="max-h-[360px]">
+        {/* Notifications list — bounded height with scroll */}
+        <div className="max-h-[min(60vh,400px)] overflow-y-auto overscroll-contain">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8">
               <Bell className="h-8 w-8 text-muted-foreground/30" />
@@ -239,20 +264,20 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                   notification={notif}
                   onRead={(id) => markAsRead([id])}
                   onDismiss={dismissNotification}
-                  onAnnouncementClick={setSelectedAnnouncement}
+                  onAnnouncementClick={handleAnnouncementClick}
                   t={t}
                 />
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
 
     {/* Centered announcement detail dialog */}
     <Dialog
       open={!!selectedAnnouncement}
-      onOpenChange={(open) => { if (!open) setSelectedAnnouncement(null); }}
+      onOpenChange={handleDialogClose}
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

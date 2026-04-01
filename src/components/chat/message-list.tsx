@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./message-bubble";
+import { APP_EVENTS } from "@/lib/events";
 import type { ChatMessage } from "@/types";
 
 interface MessageListProps {
@@ -43,6 +44,28 @@ export function MessageList({
   useEffect(() => {
     bottomRef.current?.scrollIntoView();
   }, []);
+
+  // Scroll to a specific message (from mention notification click)
+  const scrollToMessage = useCallback((e: Event) => {
+    const messageId = (e as CustomEvent).detail?.messageId;
+    if (!messageId) return;
+
+    // Find the element with the matching data-message-id
+    const el = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Add highlight animation
+      el.classList.add("ring-2", "ring-primary/50", "bg-primary/5", "rounded-lg");
+      setTimeout(() => {
+        el.classList.remove("ring-2", "ring-primary/50", "bg-primary/5", "rounded-lg");
+      }, 2500);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener(APP_EVENTS.SCROLL_TO_MESSAGE, scrollToMessage);
+    return () => window.removeEventListener(APP_EVENTS.SCROLL_TO_MESSAGE, scrollToMessage);
+  }, [scrollToMessage]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -97,18 +120,19 @@ export function MessageList({
 
             {/* Messages */}
             {group.messages.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                isOwn={msg.authorId === currentDeviceId}
-                isAdmin={isAdmin}
-                isPinned={pinnedIds.includes(msg.id)}
-                onReply={onReply}
-                onDelete={onDelete}
-                onPin={onPin}
-                onUnpin={onUnpin}
-                onImageClick={onImageClick}
-              />
+              <div key={msg.id} data-message-id={msg.id} className="transition-all duration-300">
+                <MessageBubble
+                  message={msg}
+                  isOwn={msg.authorId === currentDeviceId}
+                  isAdmin={isAdmin}
+                  isPinned={pinnedIds.includes(msg.id)}
+                  onReply={onReply}
+                  onDelete={onDelete}
+                  onPin={onPin}
+                  onUnpin={onUnpin}
+                  onImageClick={onImageClick}
+                />
+              </div>
             ))}
           </div>
         ))}

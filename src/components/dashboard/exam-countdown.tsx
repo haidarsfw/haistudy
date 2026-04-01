@@ -114,18 +114,18 @@ export function ExamCountdown() {
         </p>
       )}
 
-      {/* Timer digits */}
-      <div className="mt-3 flex items-baseline gap-1 justify-center">
+      {/* Timer digits — scales with card width */}
+      <div className="mt-4 py-4 md:py-6 flex items-baseline gap-1.5 md:gap-2 lg:gap-3 justify-center">
         {timeLeft.days > 0 && (
           <>
             <TimeUnit value={timeLeft.days} label="hari" urgent={isUrgent} />
-            <span className="text-lg font-light text-muted-foreground">:</span>
+            <span className="text-lg md:text-2xl lg:text-3xl font-light text-muted-foreground">:</span>
           </>
         )}
         <TimeUnit value={timeLeft.hours} label="jam" urgent={isUrgent} />
-        <span className="text-lg font-light text-muted-foreground">:</span>
+        <span className="text-lg md:text-2xl lg:text-3xl font-light text-muted-foreground">:</span>
         <TimeUnit value={timeLeft.minutes} label="min" urgent={isUrgent} />
-        <span className="text-lg font-light text-muted-foreground">:</span>
+        <span className="text-lg md:text-2xl lg:text-3xl font-light text-muted-foreground">:</span>
         <TimeUnit value={timeLeft.seconds} label="dtk" urgent={isUrgent} />
       </div>
     </motion.div>
@@ -143,7 +143,7 @@ function TimeUnit({
 }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="relative overflow-hidden h-9">
+      <div className="relative overflow-hidden h-9 md:h-11 lg:h-14">
         <AnimatePresence mode="popLayout">
           <motion.span
             key={value}
@@ -151,7 +151,7 @@ function TimeUnit({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 36, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className={`block font-mono text-3xl font-bold tabular-nums ${
+            className={`block font-mono text-3xl md:text-4xl lg:text-5xl font-bold tabular-nums ${
               urgent ? "text-destructive" : "text-foreground"
             }`}
           >
@@ -159,7 +159,7 @@ function TimeUnit({
           </motion.span>
         </AnimatePresence>
       </div>
-      <span className="text-[9px] text-muted-foreground uppercase tracking-wider">
+      <span className="text-[9px] md:text-[10px] lg:text-xs text-muted-foreground uppercase tracking-wider">
         {label}
       </span>
     </div>

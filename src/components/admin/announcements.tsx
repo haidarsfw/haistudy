@@ -129,10 +129,10 @@ export function AdminAnnouncements() {
                   Hapus Semua
                 </Button>
               }
-              description={`Hapus semua ${announcements.length} announcement? Aksi ini tidak bisa dibatalkan.`}
+              description={`Hapus semua ${announcements.length} announcement dan bersihkan dari notifikasi semua user? Aksi ini tidak bisa dibatalkan.`}
               onConfirm={async () => {
                 try {
-                  // Delete all announcements one by one (or a bulk endpoint)
+                  // Delete all announcements
                   await Promise.all(
                     announcements.map((a) =>
                       fetch("/api/admin/announcements", {
@@ -142,8 +142,14 @@ export function AdminAnnouncements() {
                       })
                     )
                   );
+                  // Also clear announcement notifications for all users
+                  await fetch("/api/notifications", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "clearAnnouncements" }),
+                  }).catch(() => {}); // non-critical
                   setAnnouncements([]);
-                  toast.success("Semua announcement dihapus");
+                  toast.success("Semua announcement dan notifikasi user dihapus");
                 } catch {
                   toast.error("Gagal menghapus announcement");
                 }

@@ -115,7 +115,7 @@ export function ActivityLogs() {
             Belum ada activity
           </p>
         ) : (
-          <ScrollArea className="max-h-[400px]">
+          <ScrollArea className="h-[400px]">
             <div className="space-y-1.5">
               {groupedLogs.map((log) => (
                 <div

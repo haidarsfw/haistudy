@@ -131,6 +131,7 @@ export interface Notification {
   threadId: string | null;
   subjectId: string | null;
   threadTitle: string | null;
+  messageId: string | null;
   read: boolean;
   createdAt: string;
 }

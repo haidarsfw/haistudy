@@ -186,24 +186,35 @@ export async function POST(request: Request) {
       { onConflict: "license_key", ignoreDuplicates: true }
     );
 
-    // 8. Handle referral
-    if (referralCode && !activation.referred_by) {
-      const { data: referrer } = await supabase
-        .from("activations")
-        .select("license_key")
-        .eq("referral_code", referralCode)
-        .single();
+    // 8. Fetch settings for embedding in response (eliminates second API call)
+    const { data: settingsData } = await supabase
+      .from("user_settings")
+      .select("*")
+      .eq("license_key", normalizedKey)
+      .single();
 
-      if (referrer && referrer.license_key !== normalizedKey) {
-        await supabase.from("referrals").insert({
-          referrer_key: referrer.license_key,
-          referred_key: normalizedKey,
-        });
-        await supabase
-          .from("activations")
-          .update({ referred_by: referralCode, referral_count: activation.referral_count + 1 })
-          .eq("id", activation.id);
-      }
+    // 9. Handle referral (fire and forget — non-blocking)
+    if (referralCode && !activation.referred_by) {
+      (async () => {
+        try {
+          const { data: referrer } = await supabase
+            .from("activations")
+            .select("license_key")
+            .eq("referral_code", referralCode)
+            .single();
+
+          if (referrer && referrer.license_key !== normalizedKey) {
+            await supabase.from("referrals").insert({
+              referrer_key: referrer.license_key,
+              referred_key: normalizedKey,
+            });
+            await supabase
+              .from("activations")
+              .update({ referred_by: referralCode, referral_count: activation!.referral_count + 1 })
+              .eq("id", activation!.id);
+          }
+        } catch { /* non-critical */ }
+      })();
     }
 
     // Build session
@@ -218,7 +229,17 @@ export async function POST(request: Request) {
       packageTier: (license.package_tier as "share" | "normal" | "vip") || "normal",
     };
 
-    // Log login activity with device info
+    // Build embedded settings
+    const embeddedSettings = settingsData ? {
+      darkMode: settingsData.dark_mode ?? true,
+      theme: settingsData.theme ?? "forest",
+      font: settingsData.font ?? "jakarta",
+      language: settingsData.language ?? "id",
+      selectedClass: settingsData.selected_class ?? "",
+      darkModeSchedule: settingsData.dark_mode_schedule ?? null,
+    } : null;
+
+    // Log login activity (fire and forget — non-blocking)
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip") ||
@@ -227,16 +248,20 @@ export async function POST(request: Request) {
     const logDeviceType = detectDeviceType(userAgent);
     const logDeviceLabel = detectDeviceLabel(userAgent);
 
-    await supabase.from("activity_logs").insert({
-      user_name: session.name,
-      action: "login",
-      details: `${logDeviceLabel} ${logDeviceType} login`,
-      ip_address: ip,
-      device_type: logDeviceType,
-      device_label: logDeviceLabel,
-    });
+    (async () => {
+      try {
+        await supabase.from("activity_logs").insert({
+          user_name: session.name,
+          action: "login",
+          details: `${logDeviceLabel} ${logDeviceType} login`,
+          ip_address: ip,
+          device_type: logDeviceType,
+          device_label: logDeviceLabel,
+        });
+      } catch { /* non-critical */ }
+    })();
 
-    return buildSessionResponse(session);
+    return buildSessionResponse(session, embeddedSettings);
   } catch (error) {
     console.error("Auth validate error:", error);
     return NextResponse.json(
@@ -279,7 +304,7 @@ function handleMockValidation(key: string, _deviceId: string) {
     packageTier: (key === "ADMIN1" ? "vip" : "normal") as "share" | "normal" | "vip",
   };
 
-  return buildSessionResponse(session);
+  return buildSessionResponse(session, null);
 }
 
 // ─── Build response with session cookies ───
@@ -293,8 +318,8 @@ function buildSessionResponse(session: {
   selectedClass: string;
   isPreview?: boolean;
   packageTier: "share" | "normal" | "vip";
-}) {
-  const response = NextResponse.json({ valid: true, session });
+}, settings: Record<string, unknown> | null) {
+  const response = NextResponse.json({ valid: true, session, settings });
 
   // Set session cookie for proxy route protection
   response.cookies.set("hs-session", session.licenseKey, {

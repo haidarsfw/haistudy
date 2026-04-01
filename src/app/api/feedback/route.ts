@@ -69,6 +69,25 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { licenseKey, name, category, message, action, feedbackId } = body;
 
+    // Admin action: clear all feedback
+    if (action === "clearAll") {
+      if (!isSupabaseServerConfigured) {
+        feedbackStore.length = 0;
+        return NextResponse.json({ success: true });
+      }
+
+      const supabase = createServerClient()!;
+      const { error } = await supabase
+        .from("feedback")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // delete all rows
+      if (error) {
+        console.error("Feedback clearAll error:", error);
+        return NextResponse.json({ error: "Failed to clear" }, { status: 500 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
     // Admin actions: mark as read/resolved
     if (action === "updateStatus" && feedbackId) {
       if (!isSupabaseServerConfigured) {

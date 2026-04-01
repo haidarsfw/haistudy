@@ -60,6 +60,7 @@ export function useNotifications() {
             threadId: row.thread_id,
             subjectId: row.subject_id,
             threadTitle: row.thread_title,
+            messageId: row.message_id || null,
             read: row.read,
             createdAt: row.created_at,
           };

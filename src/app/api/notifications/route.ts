@@ -22,6 +22,7 @@ function mapRowToNotification(row: Record<string, unknown>): Notification {
     threadId: (row.thread_id as string) || null,
     subjectId: (row.subject_id as string) || null,
     threadTitle: (row.thread_title as string) || null,
+    messageId: (row.message_id as string) || null,
     read: row.read as boolean,
     createdAt: row.created_at as string,
   };
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
         threadId?: string;
         subjectId?: string;
         threadTitle?: string;
+        messageId?: string;
       }>;
     };
 
@@ -100,6 +102,7 @@ export async function POST(request: Request) {
           threadId: n.threadId || null,
           subjectId: n.subjectId || null,
           threadTitle: n.threadTitle || null,
+          messageId: n.messageId || null,
           read: false,
           createdAt: new Date().toISOString(),
         };
@@ -119,6 +122,7 @@ export async function POST(request: Request) {
       thread_id: n.threadId || null,
       subject_id: n.subjectId || null,
       thread_title: n.threadTitle || null,
+      message_id: n.messageId || null,
     }));
 
     const { error } = await supabase.from("notifications").insert(rows);
@@ -176,6 +180,64 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Notifications PATCH error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+// ─── DELETE /api/notifications - Clear announcement notifications ───
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json();
+    const { action, notificationId, licenseKey } = body;
+
+    if (action === "clearAnnouncements") {
+      // Admin action: clear ALL announcement notifications for ALL users
+      if (!isSupabaseServerConfigured) {
+        // Mock: remove announcement-type notifications from all users
+        for (const [key, notifs] of mockNotifications.entries()) {
+          mockNotifications.set(
+            key,
+            notifs.filter((n) => n.type !== "announcement")
+          );
+        }
+        return NextResponse.json({ success: true });
+      }
+
+      const supabase = createServerClient()!;
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("type", "announcement");
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    }
+
+    // Single notification dismiss
+    if (notificationId && licenseKey) {
+      if (!isSupabaseServerConfigured) {
+        const notifs = getMockNotifications(licenseKey);
+        mockNotifications.set(
+          licenseKey,
+          notifs.filter((n) => n.id !== notificationId)
+        );
+        return NextResponse.json({ success: true });
+      }
+
+      const supabase = createServerClient()!;
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json(
+      { error: "Invalid request" },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error("Notifications DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

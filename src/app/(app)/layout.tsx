@@ -25,6 +25,7 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
 import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
+import { APP_EVENTS } from "@/lib/events";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -89,6 +90,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isSettingsOpen, isSupportOpen, isVoiceOpen, isAiOpen, isChatOpen, router]);
+
+  // Listen for app events to open chat from notifications
+  useEffect(() => {
+    const handleOpenChat = () => {
+      setIsChatOpen(true);
+    };
+    window.addEventListener(APP_EVENTS.OPEN_CHAT, handleOpenChat);
+    return () => window.removeEventListener(APP_EVENTS.OPEN_CHAT, handleOpenChat);
+  }, []);
 
   const handleChatToggle = useCallback(() => {
     setIsChatOpen((prev) => !prev);
