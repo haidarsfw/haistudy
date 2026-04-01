@@ -85,20 +85,21 @@ export function OnboardingOverlay() {
 
   // Calculate tooltip position relative to spotlight
   const getTooltipStyle = (): React.CSSProperties => {
+    const viewW = typeof window !== "undefined" ? window.innerWidth : 375;
+    const viewH = typeof window !== "undefined" ? window.innerHeight : 700;
+    const isMobileView = viewW < 640;
+    const tooltipWidth = isMobileView ? Math.min(280, viewW - 24) : Math.min(320, viewW - 32);
+    const tooltipHeight = 220;
+
     if (isCentered) {
       return {
         position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        top: Math.max(16, (viewH - tooltipHeight) / 2),
+        left: Math.max(12, (viewW - tooltipWidth) / 2),
       };
     }
 
     const s = spotlight!;
-    const viewW = window.innerWidth;
-    const viewH = window.innerHeight;
-    const tooltipWidth = Math.min(320, viewW - 32);
-    const tooltipHeight = 220;
     const gap = 12;
 
     let top = s.top + s.height + gap;
@@ -170,10 +171,9 @@ export function OnboardingOverlay() {
 
         {/* Tooltip card */}
         <motion.div
-          key={currentStep}
-          initial={{ opacity: 0, y: 12, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -12 }}
+          layout
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={springSmooth}
           style={getTooltipStyle()}
           className="w-[280px] sm:w-[320px] max-w-[calc(100vw-24px)] rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-2xl pointer-events-auto z-[5]"

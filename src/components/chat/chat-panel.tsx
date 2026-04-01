@@ -46,6 +46,14 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     setDeviceId(getDeviceId());
   }, []);
 
+  // Lock body scroll when panel is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [isOpen]);
+
   // Track unread - when panel is open, messages are "read"
   useEffect(() => {
     if (isOpen && messages.length > 0) {

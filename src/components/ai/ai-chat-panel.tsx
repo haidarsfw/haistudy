@@ -35,6 +35,14 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [aiModel, setAiModel] = useState<"fast" | "reasoning">("fast");
 
+  // Lock body scroll when panel is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [isOpen]);
+
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {

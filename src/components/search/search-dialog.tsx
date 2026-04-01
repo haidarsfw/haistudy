@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
 import {
   BookOpen,
   FileText,
@@ -40,7 +39,6 @@ interface SearchDialogProps {
 }
 
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
-  const router = useRouter();
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -173,10 +171,11 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       const Icon = typeIcons[result.type];
                       return (
                         <li key={`${result.type}-${result.subjectId}-${result.title}-${i}`} data-index={i}>
-                          <button
-                            onClick={() => navigate(result)}
+                          <a
+                            href={result.href}
+                            onMouseDown={() => { try { sounds.click(); } catch {} }}
                             onMouseEnter={() => setSelected(i)}
-                            className={`flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors ${
+                            className={`flex w-full items-start gap-3 px-4 py-2.5 text-left no-underline transition-colors ${
                               i === selected
                                 ? "bg-primary/10 text-foreground"
                                 : "text-foreground hover:bg-muted/50"
@@ -198,7 +197,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                                 </p>
                               )}
                             </div>
-                          </button>
+                          </a>
                         </li>
                       );
                     })}

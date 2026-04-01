@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ParticipantList } from "./participant-list";
 import { AudioControls } from "./audio-controls";
-import { Headphones, WifiOff, Monitor, Settings, Lock, Unlock, Trash2 } from "lucide-react";
+import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -46,6 +46,10 @@ export function VoiceRoom({
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [screenShareName, setScreenShareName] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [isDeafened, setIsDeafened] = useState(false);
+  const wasMutedBeforeDeafen = useRef(false);
+  const isMutedRef = useRef(isMuted);
+  isMutedRef.current = isMuted;
   const isCreator = room.creatorId === currentLicenseKey;
 
   // LiveKit connection via livekit-client
@@ -74,7 +78,7 @@ export function VoiceRoom({
         // Enable microphone (handle permission denied gracefully)
         if (roomInstance.state === "connected") {
           try {
-            await roomInstance.localParticipant.setMicrophoneEnabled(true);
+            await roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current);
           } catch (micError) {
             const errName = (micError as Error)?.name || "";
             if (errName === "NotAllowedError") {
@@ -137,24 +141,14 @@ export function VoiceRoom({
     };
   }, [isLiveKitConfigured, livekitToken, livekitUrl]);
 
-  // Handle mute/unmute via LiveKit
+  // Sync mute state with LiveKit
   useEffect(() => {
-    if (!isLiveKitConfigured || !livekitToken) return;
-
-    const updateMute = async () => {
-      try {
-        const { Room: LKRoom } = await import("livekit-client");
-        // The room instance is managed in the connection effect
-        // We rely on the Room's localParticipant being available
-        const rooms = LKRoom.prototype;
-        void rooms; // LiveKit mute handled via component state for now
-      } catch {
-        // LiveKit not available
-      }
-    };
-
-    updateMute();
-  }, [isMuted, isLiveKitConfigured, livekitToken]);
+    const room = lkRoomRef.current;
+    if (!room || room.state !== "connected") return;
+    room.localParticipant.setMicrophoneEnabled(!isMuted).catch((err) => {
+      console.warn("Failed to toggle mic:", err);
+    });
+  }, [isMuted]);
 
   const toggleScreenShare = useCallback(async () => {
     if (!lkRoomRef.current) return;
@@ -176,6 +170,35 @@ export function VoiceRoom({
       setIsScreenSharing(false);
     }
   }, [isScreenSharing]);
+
+  // Toggle deafen (mute mic + block all incoming audio)
+  const toggleDeafen = useCallback(() => {
+    const newDeafened = !isDeafened;
+
+    // Mute/unmute all remote audio elements
+    const audioEls = roomRef.current?.querySelectorAll("audio");
+    audioEls?.forEach((el) => {
+      (el as HTMLAudioElement).muted = newDeafened;
+    });
+
+    if (newDeafened) {
+      // Save current mute state and force mute mic
+      wasMutedBeforeDeafen.current = isMuted;
+      if (!isMuted) onToggleMute();
+    } else {
+      // Restore mic to pre-deafen state
+      if (!wasMutedBeforeDeafen.current && isMuted) onToggleMute();
+    }
+
+    setIsDeafened(newDeafened);
+  }, [isDeafened, isMuted, onToggleMute]);
+
+  // Leave room: disconnect LiveKit then notify parent
+  const handleLeave = useCallback(() => {
+    lkRoomRef.current?.disconnect();
+    lkRoomRef.current = null;
+    onLeave();
+  }, [onLeave]);
 
   return (
     <Card className="border-primary/30">
@@ -316,14 +339,16 @@ export function VoiceRoom({
         {/* Audio controls */}
         <AudioControls
           isMuted={isMuted}
+          isDeafened={isDeafened}
           isScreenSharing={isScreenSharing}
           onToggleMute={onToggleMute}
+          onToggleDeafen={toggleDeafen}
           onToggleScreenShare={isLiveKitConfigured ? toggleScreenShare : undefined}
-          onLeave={onLeave}
+          onLeave={handleLeave}
         />
 
         {/* Hidden audio elements container */}
-        <div ref={roomRef} className="hidden" />
+        <div ref={roomRef} className="sr-only" />
       </CardContent>
     </Card>
   );

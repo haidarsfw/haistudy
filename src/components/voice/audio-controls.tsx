@@ -6,22 +6,26 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Mic, MicOff, PhoneOff, Monitor, MonitorOff } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Monitor, MonitorOff, Headphones, HeadphoneOff } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";
 
 interface AudioControlsProps {
   isMuted: boolean;
+  isDeafened?: boolean;
   isScreenSharing?: boolean;
   onToggleMute: () => void;
+  onToggleDeafen?: () => void;
   onToggleScreenShare?: () => void;
   onLeave: () => void;
 }
 
 export function AudioControls({
   isMuted,
+  isDeafened = false,
   isScreenSharing = false,
   onToggleMute,
+  onToggleDeafen,
   onToggleScreenShare,
   onLeave,
 }: AudioControlsProps) {
@@ -41,6 +45,21 @@ export function AudioControls({
           <Mic className="h-5 w-5" />
         )}
       </Button>
+
+      {onToggleDeafen && (
+        <Button
+          size="lg"
+          variant={isDeafened ? "destructive" : "outline"}
+          className="h-12 w-12 rounded-full p-0"
+          onClick={() => { sounds.toggle(); onToggleDeafen(); }}
+        >
+          {isDeafened ? (
+            <HeadphoneOff className="h-5 w-5" />
+          ) : (
+            <Headphones className="h-5 w-5" />
+          )}
+        </Button>
+      )}
 
       {onToggleScreenShare ? (
         <Button
