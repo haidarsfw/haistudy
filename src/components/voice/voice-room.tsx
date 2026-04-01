@@ -61,6 +61,14 @@ export function VoiceRoom({
     const connect = async () => {
       try {
         const { Room: LKRoom, RoomEvent } = await import("livekit-client");
+
+        // Suppress benign DataChannel errors from LiveKit SDK internals
+        const origError = console.error;
+        console.error = (...args: unknown[]) => {
+          if (typeof args[0] === "string" && args[0].includes("DataChannel error")) return;
+          origError.apply(console, args);
+        };
+
         roomInstance = new LKRoom({
           audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true },
           publishDefaults: {
