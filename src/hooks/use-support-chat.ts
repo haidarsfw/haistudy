@@ -11,6 +11,7 @@ interface SupportMessage {
   is_admin: boolean;
   sender_name: string;
   created_at: string;
+  is_system?: boolean;
 }
 
 export function useSupportChat() {

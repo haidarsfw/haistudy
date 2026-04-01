@@ -13,6 +13,7 @@ import { AdminAnnouncements } from "./announcements";
 import { PurchaseQueue } from "./purchase-queue";
 import { DangerZone } from "./danger-zone";
 import { FeedbackList } from "./feedback-list";
+import { AdminSupportChat } from "./admin-support-chat";
 import {
   Zap,
   KeyRound,
@@ -21,6 +22,7 @@ import {
   Megaphone,
   ShoppingCart,
   MessageSquarePlus,
+  Headphones,
 } from "lucide-react";
 
 const TABS = [
@@ -31,6 +33,7 @@ const TABS = [
   { label: "Broadcast", icon: Megaphone, value: 4 },
   { label: "Purchase", icon: ShoppingCart, value: 5 },
   { label: "Feedback", icon: MessageSquarePlus, value: 6 },
+  { label: "Support", icon: Headphones, value: 7 },
 ] as const;
 
 interface AdminTabsProps {
@@ -102,6 +105,9 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
           </TabsContent>
           <TabsContent value={6}>
             <FeedbackList />
+          </TabsContent>
+          <TabsContent value={7}>
+            <AdminSupportChat />
           </TabsContent>
         </motion.div>
       </AnimatePresence>

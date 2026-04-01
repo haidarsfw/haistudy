@@ -255,6 +255,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
               onCancelReply={() => setReplyTo(null)}
               disabled={isSending}
               onlineUserNames={onlineUserNames}
+              isAdmin={session?.isAdmin || false}
             />
           </motion.div>
         </>

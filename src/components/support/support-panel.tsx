@@ -274,6 +274,18 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
                       </div>
                     ) : (
                       messages.map((msg) => {
+                        // System message (e.g. resolved)
+                        if (msg.is_system) {
+                          return (
+                            <div key={msg.id} className="flex justify-center">
+                              <div className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1.5 text-[10px] text-green-600 dark:text-green-400 font-medium">
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                {msg.content}
+                              </div>
+                            </div>
+                          );
+                        }
+
                         const isOwn = msg.sender_name === session?.name && !msg.is_admin;
                         return (
                           <div

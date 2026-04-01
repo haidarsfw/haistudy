@@ -20,7 +20,7 @@ export default function TermsPage() {
         Terms of Service
       </h1>
       <p className="text-sm text-muted-foreground mb-8">
-        Terakhir diperbarui: 24 Maret 2026
+        Terakhir diperbarui: 2 April 2026
       </p>
 
       <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-sm text-foreground/80">
@@ -68,6 +68,7 @@ export default function TermsPage() {
               ujian).
             </li>
             <li>Mengirim konten yang melanggar hukum, spam, atau SARA di forum/chat.</li>
+            <li>Menyalahgunakan fitur @mention atau @all untuk spam.</li>
             <li>
               Mencoba meretas, mendecompile, atau merusak sistem platform.
             </li>
@@ -123,10 +124,23 @@ export default function TermsPage() {
 
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            7. Kontak
+            7. Layanan Pelanggan
           </h2>
           <p>
-            Untuk pertanyaan atau laporan pelanggaran, hubungi admin melalui{" "}
+            haistudy menyediakan fitur live chat dalam platform untuk komunikasi
+            langsung dengan admin. Percakapan support disimpan sampai masalah
+            dianggap selesai (resolved) oleh admin. Data chat support hanya
+            digunakan untuk membantu menyelesaikan masalah pengguna.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
+            8. Kontak
+          </h2>
+          <p>
+            Untuk pertanyaan atau laporan pelanggaran, hubungi admin melalui
+            fitur Live Chat di dalam platform, atau melalui{" "}
             <a
               href="https://instagram.com/haidarsfw"
               target="_blank"

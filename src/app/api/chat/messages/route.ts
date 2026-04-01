@@ -210,77 +210,89 @@ export async function POST(request: Request) {
 
     const createdMessage = mapRowToMessage(data);
 
-    // ─── Server-side mention notification processing ───
+    // ─── Server-side mention notification processing (awaited) ───
     const trimmedContent = (content || "").trim();
     if (type === "text" && hasMentions(trimmedContent)) {
-      (async () => {
-        try {
-          const mentions = parseMentions(trimmedContent);
-          if (mentions.length === 0) return;
-
+      try {
+        const mentions = parseMentions(trimmedContent);
+        if (mentions.length > 0) {
           const hasAll = mentions.some((m) => m.isAll);
 
           // Only admin can @all
-          if (hasAll && !isAdmin) return;
+          if (!hasAll || isAdmin) {
+            // Fetch all active users for resolution
+            // Try both user_name and name columns for compatibility
+            const { data: allUsers, error: usersError } = await supabase
+              .from("activations")
+              .select("license_key, user_name, name");
 
-          // Fetch all active users for resolution
-          const { data: allUsers } = await supabase
-            .from("activations")
-            .select("license_key, user_name");
-
-          if (!allUsers?.length) return;
-
-          const preview = trimmedContent.length > 100
-            ? trimmedContent.slice(0, 100) + "…"
-            : trimmedContent;
-
-          const notifRows: Array<{
-            license_key: string;
-            type: string;
-            sender_name: string;
-            preview: string;
-            context: string;
-            message_id: string;
-          }> = [];
-
-          if (hasAll) {
-            // @all — notify everyone except sender
-            for (const user of allUsers) {
-              if (user.user_name?.toLowerCase() === authorName?.toLowerCase()) continue;
-              notifRows.push({
-                license_key: user.license_key,
-                type: "mention_all",
-                sender_name: authorName,
-                preview,
-                context: "chat",
-                message_id: createdMessage.id,
-              });
+            if (usersError) {
+              console.error("Mention: Failed to fetch users:", usersError.message);
             }
-          } else {
-            // Individual @username mentions
-            const mentionedNames = new Set(mentions.map((m) => m.username));
-            for (const user of allUsers) {
-              if (user.user_name?.toLowerCase() === authorName?.toLowerCase()) continue;
-              if (mentionedNames.has(user.user_name?.toLowerCase())) {
-                notifRows.push({
-                  license_key: user.license_key,
-                  type: "mention",
-                  sender_name: authorName,
-                  preview,
-                  context: "chat",
-                  message_id: createdMessage.id,
-                });
+
+            if (allUsers && allUsers.length > 0) {
+              const preview = trimmedContent.length > 100
+                ? trimmedContent.slice(0, 100) + "…"
+                : trimmedContent;
+
+              const notifRows: Array<{
+                license_key: string;
+                type: string;
+                sender_name: string;
+                preview: string;
+                context: string;
+                message_id: string;
+              }> = [];
+
+              if (hasAll) {
+                // @all — notify everyone except sender
+                for (const user of allUsers) {
+                  const uName = (user.user_name || user.name || "").toLowerCase();
+                  if (uName === authorName?.toLowerCase()) continue;
+                  notifRows.push({
+                    license_key: user.license_key,
+                    type: "mention_all",
+                    sender_name: authorName,
+                    preview,
+                    context: "chat",
+                    message_id: createdMessage.id,
+                  });
+                }
+              } else {
+                // Individual @username mentions
+                const mentionedNames = new Set(mentions.map((m) => m.username));
+                for (const user of allUsers) {
+                  const uName = (user.user_name || user.name || "").toLowerCase();
+                  if (uName === authorName?.toLowerCase()) continue;
+                  // Match against user_name/name — also try first name only
+                  const firstName = uName.split(" ")[0];
+                  if (mentionedNames.has(uName) || mentionedNames.has(firstName)) {
+                    notifRows.push({
+                      license_key: user.license_key,
+                      type: "mention",
+                      sender_name: authorName,
+                      preview,
+                      context: "chat",
+                      message_id: createdMessage.id,
+                    });
+                  }
+                }
+              }
+
+              if (notifRows.length > 0) {
+                const { error: insertError } = await supabase.from("notifications").insert(notifRows);
+                if (insertError) {
+                  console.error("Mention: Failed to insert notifications:", insertError.message);
+                } else {
+                  console.log(`Mention: Created ${notifRows.length} notification(s) for message ${createdMessage.id}`);
+                }
               }
             }
           }
-
-          if (notifRows.length > 0) {
-            await supabase.from("notifications").insert(notifRows);
-          }
-        } catch (e) {
-          console.error("Mention notification error:", e);
         }
-      })();
+      } catch (e) {
+        console.error("Mention notification error:", e);
+      }
     }
 
     return NextResponse.json({ message: createdMessage });

@@ -9,6 +9,8 @@ import {
   Zap,
   Bot,
   Star,
+  Bell,
+  LifeBuoy,
 } from "lucide-react";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
@@ -35,17 +37,27 @@ const FEATURES = [
   {
     icon: Bot,
     title: "AI Study Assistant",
-    desc: "Tanya materi kapan saja - AI menjawab berdasarkan konten kuliah.",
+    desc: "Tanya materi kapan saja - AI menjawab berdasarkan konten kuliah dan fitur platform.",
   },
   {
     icon: MessageCircle,
     title: "Forum & Chat",
-    desc: "Diskusi per mata kuliah dan global chat real-time antar teman.",
+    desc: "Diskusi per mata kuliah, global chat real-time, @mention, voice message, dan reply.",
   },
   {
     icon: Headphones,
     title: "Voice Room",
     desc: "Belajar bareng via voice call langsung dari browser.",
+  },
+  {
+    icon: Bell,
+    title: "Notifikasi Real-time",
+    desc: "Dapatkan notifikasi instan: mention, pengumuman, balasan forum. Klik untuk langsung navigate.",
+  },
+  {
+    icon: LifeBuoy,
+    title: "Live Chat Support",
+    desc: "Hubungi admin langsung via live chat di dalam platform. Respon cepat dan history tersimpan.",
   },
 ];
 
@@ -77,11 +89,15 @@ const FAQ = [
   },
   {
     q: "Apakah AI-nya akurat?",
-    a: "AI menjawab berdasarkan materi kuliah yang ada di platform (flashcards, rangkuman, kisi-kisi). AI hanya membahas materi UTS dan penggunaan haistudy. Untuk kepastian, selalu cek dengan materi dosen.",
+    a: "AI menjawab berdasarkan materi kuliah yang ada di platform (flashcards, rangkuman, kisi-kisi) serta informasi lengkap tentang fitur-fitur haistudy. AI hanya membahas materi UTS dan penggunaan haistudy. Untuk kepastian, selalu cek dengan materi dosen.",
   },
   {
     q: "Apa fitur voice room?",
     a: "Voice room memungkinkan kamu belajar bareng via panggilan suara langsung dari browser. Bisa buat room sendiri, lock room, dan share screen.",
+  },
+  {
+    q: "Bagaimana cara menghubungi admin?",
+    a: "Buka menu Layanan Pelanggan di sidebar, lalu pilih tab Chat untuk live chat langsung dengan admin. Kamu juga bisa menghubungi via WhatsApp atau Instagram.",
   },
 ];
 

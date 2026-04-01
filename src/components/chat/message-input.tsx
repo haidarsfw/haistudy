@@ -21,6 +21,7 @@ interface MessageInputProps {
   onCancelReply: () => void;
   disabled?: boolean;
   onlineUserNames?: string[];
+  isAdmin?: boolean;
 }
 
 export function MessageInput({
@@ -31,6 +32,7 @@ export function MessageInput({
   onCancelReply,
   disabled,
   onlineUserNames = [],
+  isAdmin = false,
 }: MessageInputProps) {
   const { isPreview, guard } = usePreviewGuard();
   const [text, setText] = useState("");
@@ -114,7 +116,8 @@ export function MessageInput({
   };
 
   const getFilteredUsers = () => {
-    const names = ["all", ...onlineUserNames];
+    // Only admin can use @all
+    const names = isAdmin ? ["all", ...onlineUserNames] : [...onlineUserNames];
     if (!mentionFilter) return names.slice(0, 8);
     return names
       .filter((n) => n.toLowerCase().startsWith(mentionFilter))

@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
       <h1 className="font-heading text-2xl font-bold mb-6">Privacy Policy</h1>
       <p className="text-sm text-muted-foreground mb-8">
-        Terakhir diperbarui: 24 Maret 2026
+        Terakhir diperbarui: 2 April 2026
       </p>
 
       <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-sm text-foreground/80">
@@ -54,6 +54,14 @@ export default function PrivacyPage() {
               <strong>Pesan chat & forum</strong> - konten yang kamu kirim di
               forum dan global chat.
             </li>
+            <li>
+              <strong>Pesan support chat</strong> - percakapan dengan admin
+              melalui fitur live chat support.
+            </li>
+            <li>
+              <strong>Notifikasi</strong> - data notifikasi (mention,
+              pengumuman) untuk pengiriman notifikasi yang relevan.
+            </li>
           </ul>
         </section>
 
@@ -76,10 +84,11 @@ export default function PrivacyPage() {
             3. Penyimpanan Data
           </h2>
           <p>
-            Data disimpan di Firebase Realtime Database (cloud) dan localStorage
+            Data disimpan di Supabase cloud database dan localStorage
             browser (lokal). Data lokal seperti progress belajar, pengaturan
             tema, dan font disimpan di browser dan tidak dikirim ke server
-            kecuali untuk sinkronisasi antar perangkat.
+            kecuali untuk sinkronisasi antar perangkat. Media (gambar, audio)
+            yang dikirim melalui chat disimpan di Cloudinary CDN.
           </p>
         </section>
 
@@ -116,9 +125,10 @@ export default function PrivacyPage() {
             6. Keamanan
           </h2>
           <p>
-            Kami menggunakan Firebase Security Rules untuk membatasi akses data.
+            Kami menggunakan Supabase Row Level Security (RLS) untuk membatasi akses data.
             License key divalidasi di sisi server dan perangkat diverifikasi
-            melalui fingerprinting. Namun, tidak ada sistem yang 100% aman - kami
+            melalui fingerprinting. Koneksi real-time diamankan melalui
+            WebSocket terenkripsi. Namun, tidak ada sistem yang 100% aman - kami
             tidak bertanggung jawab atas kebocoran data akibat faktor di luar
             kendali kami.
           </p>
@@ -129,7 +139,8 @@ export default function PrivacyPage() {
             7. Kontak
           </h2>
           <p>
-            Untuk pertanyaan terkait privasi, hubungi admin melalui{" "}
+            Untuk pertanyaan terkait privasi, hubungi admin melalui
+            fitur Live Chat di dalam platform, atau melalui{" "}
             <a
               href="https://instagram.com/haidarsfw"
               target="_blank"
