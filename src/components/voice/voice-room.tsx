@@ -66,20 +66,24 @@ export function VoiceRoom({
         });
 
         await roomInstance.connect(livekitUrl, livekitToken);
+        lkRoomRef.current = roomInstance;
+
+        // Wait for engine to fully initialize before publishing
+        await new Promise((r) => setTimeout(r, 500));
 
         // Enable microphone (handle permission denied gracefully)
-        try {
-          await roomInstance.localParticipant.setMicrophoneEnabled(true);
-        } catch (micError) {
-          const errName = (micError as Error)?.name || "";
-          if (errName === "NotAllowedError") {
-            console.warn("Microphone permission denied by user");
-          } else {
-            console.warn("Failed to enable microphone:", micError);
+        if (roomInstance.state === "connected") {
+          try {
+            await roomInstance.localParticipant.setMicrophoneEnabled(true);
+          } catch (micError) {
+            const errName = (micError as Error)?.name || "";
+            if (errName === "NotAllowedError") {
+              console.warn("Microphone permission denied by user");
+            } else {
+              console.warn("Failed to enable microphone:", micError);
+            }
           }
         }
-
-        lkRoomRef.current = roomInstance;
 
         // Handle local track publish/unpublish for screen share self-preview
         roomInstance.on(RoomEvent.LocalTrackPublished, (pub) => {
