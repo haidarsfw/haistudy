@@ -48,6 +48,7 @@ export function VoiceRoom({
   const [isScreenExpanded, setIsScreenExpanded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
   const wasMutedBeforeDeafen = useRef(false);
   const isMutedRef = useRef(isMuted);
   isMutedRef.current = isMuted;
@@ -73,6 +74,8 @@ export function VoiceRoom({
         };
 
         roomInstance = new LKRoom({
+          adaptiveStream: true,
+          dynacast: true,
           audioCaptureDefaults: { autoGainControl: true, noiseSuppression: true, echoCancellation: true },
           publishDefaults: {
             audioPreset: { maxBitrate: 48_000 },
@@ -82,6 +85,21 @@ export function VoiceRoom({
 
         await roomInstance.connect(livekitUrl, livekitToken);
         lkRoomRef.current = roomInstance;
+
+        // Use LiveKit's built-in startAudio() to unlock browser autoplay
+        // This handles Safari/Chrome restrictions properly
+        try {
+          await roomInstance.startAudio();
+          setAudioBlocked(false);
+        } catch {
+          // startAudio failed — will be handled by AudioPlaybackStatusChanged event
+        }
+
+        // Listen for audio playback status changes (Safari blocks audio without user interaction)
+        roomInstance.on(RoomEvent.AudioPlaybackStatusChanged, () => {
+          if (!roomInstance) return;
+          setAudioBlocked(!roomInstance.canPlaybackAudio);
+        });
 
         // Enable microphone (handle permission denied gracefully)
         if (roomInstance.state === "connected") {
@@ -118,7 +136,7 @@ export function VoiceRoom({
         roomInstance.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (track.kind === "audio") {
             // Attach audio element to document.body with display:none
-            // (safe for <audio> — browsers don't throttle hidden audio unlike clipped containers)
+            // LiveKit manages playback via startAudio() — no manual element.play() needed
             const element = track.attach();
             element.id = `audio-${track.sid}`;
             element.autoplay = true;
@@ -126,8 +144,6 @@ export function VoiceRoom({
             element.volume = 1.0;
             element.style.display = "none";
             document.body.appendChild(element);
-            // Safari autoplay: explicitly start playback
-            element.play().catch(() => {});
           } else if (track.kind === "video" && track.source === "screen_share") {
             // Screen share from remote participant
             if (screenVideoRef.current) {
@@ -387,6 +403,33 @@ export function VoiceRoom({
             onClick={() => !isScreenExpanded && setIsScreenExpanded(true)}
           />
         </div>
+
+        {/* "Tap to enable audio" overlay — shown when browser blocks autoplay */}
+        {audioBlocked && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 flex items-center gap-3">
+            <HeadphoneOff className="h-5 w-5 text-amber-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                {t("voice.audio_blocked") || "Audio diblokir oleh browser"}
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                if (lkRoomRef.current) {
+                  try {
+                    await lkRoomRef.current.startAudio();
+                    setAudioBlocked(false);
+                  } catch (e) {
+                    console.warn("Failed to start audio:", e);
+                  }
+                }
+              }}
+              className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 transition-colors"
+            >
+              {t("voice.enable_audio") || "Aktifkan Audio"}
+            </button>
+          </div>
+        )}
 
         {/* Audio controls */}
         <AudioControls

@@ -43,14 +43,18 @@ export function useOnlineUsers() {
           () => debouncedRefresh()
         )
         .subscribe((status) => {
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          if (status === "SUBSCRIBED") {
+            // Channel is live — do an immediate fresh fetch
+            refresh();
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             // Recover from subscription errors
+            console.warn("Presence channel error:", status);
             refresh();
           }
         });
 
-      // Polling fallback every 30s as safety net if realtime drops silently
-      const pollInterval = setInterval(refresh, 30_000);
+      // Polling fallback every 10s as safety net if realtime drops silently
+      const pollInterval = setInterval(refresh, 10_000);
 
       return () => {
         if (debounceRef.current) clearTimeout(debounceRef.current);

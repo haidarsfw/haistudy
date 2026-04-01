@@ -38,13 +38,6 @@ export function MateriTab({
 
   const openPreview = useCallback((item: MateriItem) => {
     if (item.driveId === "PLACEHOLDER") return;
-    // Preconnect to Google Docs for faster iframe load
-    if (!document.querySelector('link[href="https://docs.google.com"]')) {
-      const link = document.createElement("link");
-      link.rel = "preconnect";
-      link.href = "https://docs.google.com";
-      document.head.appendChild(link);
-    }
     setIsLoading(true);
     setPreviewItem(item);
   }, []);
@@ -53,6 +46,53 @@ export function MateriTab({
     setPreviewItem(null);
     setIsLoading(false);
   }, []);
+
+  // Preconnect to Google domains on mount (not on click) for faster iframe loads
+  useEffect(() => {
+    const origins = [
+      "https://docs.google.com",
+      "https://drive.google.com",
+      "https://lh3.googleusercontent.com",
+      "https://accounts.google.com",
+      "https://fonts.googleapis.com",
+    ];
+    const links: HTMLLinkElement[] = [];
+    origins.forEach((origin) => {
+      // preconnect
+      if (!document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) {
+        const preconnect = document.createElement("link");
+        preconnect.rel = "preconnect";
+        preconnect.href = origin;
+        preconnect.crossOrigin = "anonymous";
+        document.head.appendChild(preconnect);
+        links.push(preconnect);
+      }
+      // dns-prefetch
+      if (!document.querySelector(`link[rel="dns-prefetch"][href="${origin}"]`)) {
+        const dns = document.createElement("link");
+        dns.rel = "dns-prefetch";
+        dns.href = origin;
+        document.head.appendChild(dns);
+        links.push(dns);
+      }
+    });
+
+    // Prefetch the first non-placeholder item's embed URL
+    const firstItem = items.find((i) => i.driveId !== "PLACEHOLDER");
+    if (firstItem) {
+      const embedUrl = getEmbedUrl(firstItem.driveId, firstItem.type);
+      if (!document.querySelector(`link[rel="prefetch"][href="${embedUrl}"]`)) {
+        const prefetch = document.createElement("link");
+        prefetch.rel = "prefetch";
+        prefetch.href = embedUrl;
+        prefetch.as = "document";
+        document.head.appendChild(prefetch);
+        links.push(prefetch);
+      }
+    }
+
+    return () => links.forEach((l) => l.remove());
+  }, [items]);
 
   // Lock body scroll when preview modal is open
   useEffect(() => {
@@ -67,7 +107,7 @@ export function MateriTab({
   // Loading timeout — hide spinner after 15s even if iframe never fires onLoad
   useEffect(() => {
     if (!isLoading) return;
-    const timer = setTimeout(() => setIsLoading(false), 15_000);
+    const timer = setTimeout(() => setIsLoading(false), 8_000);
     return () => clearTimeout(timer);
   }, [isLoading]);
 
@@ -203,7 +243,7 @@ export function MateriTab({
                 src={getEmbedUrl(previewItem.driveId, previewItem.type)}
                 className="absolute inset-0 w-full"
                 allowFullScreen
-                sandbox="allow-scripts allow-same-origin allow-popups"
+                loading="eager"
                 onLoad={() => setIsLoading(false)}
                 style={{ border: "none", height: "100%" }}
               />

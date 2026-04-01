@@ -33,6 +33,7 @@ export function AudioControls({
   // Screen share availability is determined by parent via onToggleScreenShare prop
 
   return (
+    <>
     <div className="flex items-center justify-center gap-3">
       <Button
         size="lg"
@@ -97,5 +98,12 @@ export function AudioControls({
         <PhoneOff className="h-5 w-5" />
       </Button>
     </div>
+    {/* Mobile-only visible label for screen share unavailability */}
+    {!onToggleScreenShare && (
+      <p className="text-[10px] text-muted-foreground text-center sm:hidden -mt-1">
+        {t("voice.screen_share_not_supported")}
+      </p>
+    )}
+    </>
   );
 }

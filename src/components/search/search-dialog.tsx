@@ -59,26 +59,37 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       setQuery("");
       setResults([]);
       setSelected(0);
-      const focusInput = () => inputRef.current?.focus();
+      // Use progressive focus strategy for mobile keyboard activation
+      const focusInput = () => {
+        if (inputRef.current) {
+          inputRef.current.focus({ preventScroll: false });
+        }
+      };
+      // Desktop: immediate focus via rAF
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          focusInput();
-          setTimeout(focusInput, 150);
-        });
+        requestAnimationFrame(focusInput);
       });
+      // Mobile: needs more delay for keyboard to appear after DOM mount
+      const mobileTimer = setTimeout(focusInput, 300);
+      return () => clearTimeout(mobileTimer);
     }
   }, [open]);
 
-  // Close on click outside
+  // Close on click outside — use "mousedown" instead of "click"
+  // "click" fires AFTER the event that opened the dialog, causing immediate close
   useEffect(() => {
     if (!open) return;
-    function handleClick(e: MouseEvent) {
+    // Mount guard: ignore mousedown events for the first 200ms
+    // This prevents the initial click (that opened the dialog) from closing it
+    const mountedAt = Date.now();
+    function handleMouseDown(e: MouseEvent) {
+      if (Date.now() - mountedAt < 200) return;
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onOpenChange(false);
       }
     }
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [open, onOpenChange]);
 
   // Close on Escape

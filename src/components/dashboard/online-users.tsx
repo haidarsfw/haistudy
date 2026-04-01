@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { Users, Monitor, Smartphone, Tablet, Lock } from "lucide-react";
 import { useOnlineUsers } from "@/hooks/use-online-users";
-import { useSettings } from "@/hooks/use-settings";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getSubjectById } from "@/data/subjects";
@@ -18,12 +17,11 @@ const deviceIcons: Record<string, typeof Monitor> = {
 export function OnlineUsers() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
-  const { settings } = useSettings();
   const { session } = useSession();
 
   const isAdmin = session?.isAdmin ?? false;
-  const currentUserHidden = settings?.hideStatus ?? false;
-  const visibleUsers = isAdmin ? users : users.filter((u) => !u.hideStatus);
+  // All users are always shown; hidden users are masked for non-admin
+  const visibleUsers = users;
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -65,11 +63,11 @@ export function OnlineUsers() {
                 variants={staggerItem}
               >
                 {/* Online dot */}
-                <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                <div className={`h-2 w-2 rounded-full shrink-0 ${user.hideStatus && !isAdmin ? "bg-zinc-400" : "bg-emerald-500"}`} />
 
                 {/* Name */}
-                <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""}`}>
-                  {currentUserHidden && !isAdmin ? "People" : (user.userName || "Anonymous")}
+                <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${user.hideStatus && !isAdmin ? "italic text-muted-foreground" : ""}`}>
+                  {user.hideStatus && !isAdmin ? "People (hide)" : (user.userName || "Anonymous")}
                 </span>
 
                 {/* Lock icon for hidden users (admin view) */}
@@ -78,7 +76,7 @@ export function OnlineUsers() {
                 )}
 
                 {/* Subject badge */}
-                {subject && (!currentUserHidden || isAdmin) && (
+                {subject && !(user.hideStatus && !isAdmin) && (
                   <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
                     {subject.name}
                   </span>

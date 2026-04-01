@@ -273,6 +273,8 @@ const en: Record<string, string> = {
   "voice.screen_shared_by": "Screen shared by",
   "voice.your_screen_share": "Your screen share",
   "voice.screen_share_not_supported": "Screen share is not supported on this device",
+  "voice.audio_blocked": "Audio is blocked by your browser",
+  "voice.enable_audio": "Enable Audio",
 
   // Login form
   "login.validating": "Validating...",

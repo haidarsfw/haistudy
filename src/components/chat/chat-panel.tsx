@@ -180,7 +180,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
               <div className="flex-1">
                 <h2 className="text-sm font-semibold">Global Chat</h2>
                 <p className="text-[10px] text-muted-foreground">
-                  {users.filter((u) => !u.hideStatus).length} online
+                  {users.length} online
                 </p>
               </div>
               {session.isAdmin && (

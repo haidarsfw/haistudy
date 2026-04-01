@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Users, ChevronDown, Monitor, Smartphone, Tablet, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnlineUsers } from "@/hooks/use-online-users";
-import { useSettings } from "@/hooks/use-settings";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerItem } from "@/lib/motion";
@@ -26,14 +25,12 @@ const deviceIcons: Record<string, typeof Monitor> = {
 export function OnlineUsersMini() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
-  const { settings } = useSettings();
   const { session } = useSession();
   const [expanded, setExpanded] = useState(false);
 
   const isAdmin = session?.isAdmin ?? false;
-  const currentUserHidden = settings?.hideStatus ?? false;
-  // Admin sees all users; non-admin sees only non-hidden
-  const visibleUsers = isAdmin ? users : users.filter((u) => !u.hideStatus);
+  // All users are always shown in count; hidden users are masked for non-admin
+  const visibleUsers = users;
 
   return (
     <motion.div
@@ -67,15 +64,18 @@ export function OnlineUsersMini() {
       {visibleUsers.length > 0 && (
         <div className="flex items-center gap-2 mt-2">
           <div className="flex -space-x-1.5">
-            {visibleUsers.slice(0, 5).map((user, i) => (
-              <div
-                key={user.id}
-                className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${DOT_COLORS[i % DOT_COLORS.length]}`}
-                title={currentUserHidden && !isAdmin ? "?" : (user.userName || "?")}
-              >
-                {currentUserHidden && !isAdmin ? "?" : (user.userName || "?").charAt(0).toUpperCase()}
-              </div>
-            ))}
+            {visibleUsers.slice(0, 5).map((user, i) => {
+              const masked = user.hideStatus && !isAdmin;
+              return (
+                <div
+                  key={user.id}
+                  className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`}
+                  title={masked ? "?" : (user.userName || "?")}
+                >
+                  {masked ? "?" : (user.userName || "?").charAt(0).toUpperCase()}
+                </div>
+              );
+            })}
             {visibleUsers.length > 5 && (
               <div className="h-6 w-6 rounded-full border-2 border-card bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground">
                 +{visibleUsers.length - 5}
@@ -104,14 +104,15 @@ export function OnlineUsersMini() {
             <div className="mt-3 border-t border-border pt-2 space-y-1.5 max-h-48 overflow-y-auto">
               {visibleUsers.map((user) => {
                 const DeviceIcon = deviceIcons[user.deviceType] || Monitor;
+                const masked = user.hideStatus && !isAdmin;
                 return (
                   <div
                     key={user.id}
                     className="flex items-center gap-2 text-xs"
                   >
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""}`}>
-                      {currentUserHidden && !isAdmin ? "People" : (user.userName || "Anonymous")}
+                    <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
+                    <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
+                      {masked ? "People (hide)" : (user.userName || "Anonymous")}
                     </span>
                     {user.hideStatus && isAdmin && (
                       <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />

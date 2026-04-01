@@ -87,7 +87,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         data-onboarding="search-mobile"
         variant="ghost"
         size="icon-sm"
-        onClick={() => setSearchOpen(true)}
+        onClick={(e) => { e.stopPropagation(); setSearchOpen(true); }}
         className="sm:hidden text-muted-foreground hover:text-foreground"
       >
         <Search className="h-4 w-4" />
