@@ -49,6 +49,9 @@ export function PostTutorialContact({ onDone }: PostTutorialContactProps) {
             <p className="mt-1 text-sm text-muted-foreground">
               {t("onboarding.post_contact_desc")}
             </p>
+            <p className="mt-1.5 text-[10px] text-muted-foreground/70 leading-relaxed">
+              Informasi ini digunakan untuk layanan support langsung, pemberitahuan update, dan memastikan kepemilikan akun kamu.
+            </p>
           </div>
 
           <div className="space-y-3">

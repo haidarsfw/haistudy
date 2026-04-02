@@ -221,10 +221,9 @@ export async function POST(request: Request) {
           // Only admin can @all
           if (!hasAll || isAdmin) {
             // Fetch all active users for resolution
-            // Try both user_name and name columns for compatibility
             const { data: allUsers, error: usersError } = await supabase
               .from("activations")
-              .select("license_key, user_name, name");
+              .select("license_key, user_name");
 
             if (usersError) {
               console.error("Mention: Failed to fetch users:", usersError.message);
@@ -247,7 +246,7 @@ export async function POST(request: Request) {
               if (hasAll) {
                 // @all — notify everyone except sender
                 for (const user of allUsers) {
-                  const uName = (user.user_name || user.name || "").toLowerCase();
+                  const uName = (user.user_name || "").toLowerCase();
                   if (uName === authorName?.toLowerCase()) continue;
                   notifRows.push({
                     license_key: user.license_key,
@@ -262,7 +261,7 @@ export async function POST(request: Request) {
                 // Individual @username mentions
                 const mentionedNames = new Set(mentions.map((m) => m.username));
                 for (const user of allUsers) {
-                  const uName = (user.user_name || user.name || "").toLowerCase();
+                  const uName = (user.user_name || "").toLowerCase();
                   if (uName === authorName?.toLowerCase()) continue;
                   // Match against user_name/name — also try first name only
                   const firstName = uName.split(" ")[0];

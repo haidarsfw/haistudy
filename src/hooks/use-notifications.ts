@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
+import { sounds } from "@/lib/sounds";
 import type { Notification } from "@/types";
 
 export function useNotifications() {
@@ -65,6 +66,8 @@ export function useNotifications() {
             createdAt: row.created_at,
           };
           setNotifications((prev) => [notif, ...prev]);
+          // Play notification sound for mention/announcement
+          sounds.notification();
         }
       )
       .subscribe();

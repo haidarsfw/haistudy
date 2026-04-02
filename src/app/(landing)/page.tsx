@@ -9,8 +9,6 @@ import {
   Zap,
   Bot,
   Star,
-  Bell,
-  LifeBuoy,
 } from "lucide-react";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
@@ -36,28 +34,18 @@ const FEATURES = [
   },
   {
     icon: Bot,
-    title: "AI Study Assistant",
-    desc: "Tanya materi kapan saja - AI menjawab berdasarkan konten kuliah dan fitur platform.",
+    title: "AI Assistant & Live Support",
+    desc: "Tanya materi kapan saja lewat AI, atau hubungi admin langsung via live chat support.",
   },
   {
     icon: MessageCircle,
-    title: "Forum & Chat",
-    desc: "Diskusi per mata kuliah, global chat real-time, @mention, voice message, dan reply.",
+    title: "Forum, Chat & Notifikasi",
+    desc: "Global chat real-time, @mention, voice message, reply, dan notifikasi instan.",
   },
   {
     icon: Headphones,
     title: "Voice Room",
     desc: "Belajar bareng via voice call langsung dari browser.",
-  },
-  {
-    icon: Bell,
-    title: "Notifikasi Real-time",
-    desc: "Dapatkan notifikasi instan: mention, pengumuman, balasan forum. Klik untuk langsung navigate.",
-  },
-  {
-    icon: LifeBuoy,
-    title: "Live Chat Support",
-    desc: "Hubungi admin langsung via live chat di dalam platform. Respon cepat dan history tersimpan.",
   },
 ];
 
@@ -65,7 +53,7 @@ const FEATURES = [
 const FAQ = [
   {
     q: "Apa itu haistudy?",
-    a: "haistudy adalah platform belajar pintar untuk mahasiswa Binus University. Fokus persiapan UTS angkatan B29 Business Management dengan materi lengkap, quiz interaktif, flashcards, AI assistant, voice room, dan fitur kolaborasi.",
+    a: "haistudy adalah platform belajar pintar untuk mahasiswa BINUS University. Fokus persiapan UTS angkatan B29 Business Management dengan materi lengkap, quiz interaktif, flashcards, AI assistant, voice room, dan fitur kolaborasi.",
   },
   {
     q: "Bagaimana cara mendapatkan akses?",
@@ -249,7 +237,7 @@ export default function LandingPage() {
 
           <ScrollReveal delay={0.2}>
             <p className="mt-4 max-w-md text-lg text-muted-foreground mx-auto lg:mx-0">
-              Platform belajar pintar untuk mahasiswa Binus. Saat ini fokus
+              Platform belajar pintar untuk mahasiswa BINUS. Saat ini fokus
               persiapan UTS B29 dengan materi lengkap, quiz interaktif, dan
               fitur belajar bersama.
             </p>
@@ -287,7 +275,7 @@ export default function LandingPage() {
             Semua yang Kamu Butuhkan
           </h2>
           <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-            Fitur lengkap yang dirancang khusus untuk mahasiswa Binus B29
+            Fitur lengkap yang dirancang khusus untuk mahasiswa BINUS B29
           </p>
 
           <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
