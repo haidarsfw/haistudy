@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { StickyNote, BookOpen, Save, Loader2 } from "lucide-react";
+import { StickyNote, BookOpen, Save, Loader2, Cloud, CloudOff } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -19,25 +19,66 @@ export default function NotesPage() {
   const { t } = useTranslation();
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [synced, setSynced] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const serverSyncRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const loadedRef = useRef(false);
 
   const storageKey = session
     ? `${GENERAL_NOTES_KEY}-${session.licenseKey}`
     : GENERAL_NOTES_KEY;
 
-  // Load general notes
+  // Load notes — server first, then localStorage fallback
   useEffect(() => {
+    if (loadedRef.current || !session) return;
+    loadedRef.current = true;
+
+    const local = localStorage.getItem(storageKey) || "";
+    if (local) setContent(local);
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`);
+        const data = await res.json();
+        const serverNote = data.settings?.notes?.__generalNote || "";
+        if (serverNote && serverNote.length >= local.length) {
+          setContent(serverNote);
+          localStorage.setItem(storageKey, serverNote);
+        } else if (local && !serverNote) {
+          syncToServer(local);
+        }
+        setSynced(true);
+      } catch {}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, storageKey]);
+
+  const syncToServer = useCallback(async (text: string) => {
+    if (!session) return;
     try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) setContent(saved);
-    } catch {}
-  }, [storageKey]);
+      const res = await fetch(`/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`);
+      const data = await res.json();
+      const allNotes = data.settings?.notes || {};
+      const updated = { ...allNotes, __generalNote: text };
+      await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ licenseKey: session.licenseKey, settings: { notes: updated } }),
+      });
+      setSynced(true);
+    } catch {
+      setSynced(false);
+    }
+  }, [session]);
 
   // Auto-save with debounce
   const handleChange = useCallback(
     (value: string) => {
       setContent(value);
+      setSynced(false);
+
+      // Local save with short debounce
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
         setSaving(true);
@@ -45,8 +86,14 @@ export default function NotesPage() {
         setLastSaved(new Date());
         setTimeout(() => setSaving(false), 300);
       }, 800);
+
+      // Server sync with longer debounce
+      if (serverSyncRef.current) clearTimeout(serverSyncRef.current);
+      serverSyncRef.current = setTimeout(() => {
+        syncToServer(value);
+      }, 2000);
     },
-    [storageKey]
+    [storageKey, syncToServer]
   );
 
   // Check which subjects have notes
@@ -85,6 +132,11 @@ export default function NotesPage() {
             {t("notes.general_title")}
           </h2>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {synced ? (
+              <Cloud className="h-3.5 w-3.5 text-green-500" />
+            ) : (
+              <CloudOff className="h-3.5 w-3.5 text-muted-foreground/50" />
+            )}
             {saving && (
               <span className="flex items-center gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />

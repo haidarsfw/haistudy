@@ -144,7 +144,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen }: SidebarProps) {
   return (
     <aside
       data-onboarding="sidebar"
-      className={`hidden sm:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0 transition-[width] duration-200 ${
+      className={`hidden sm:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-[100dvh] sticky top-0 transition-[width] duration-200 ${
         collapsed ? "w-16" : "w-64"
       }`}
     >

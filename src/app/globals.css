@@ -9,6 +9,13 @@
     max-width: 100%;
     height: auto;
   }
+
+  /* Lock all scroll when overlay panel (chat, AI, support, voice) is open */
+  html.panel-open,
+  html.panel-open body,
+  html.panel-open main {
+    overflow: hidden !important;
+  }
 }
 
 @theme inline {

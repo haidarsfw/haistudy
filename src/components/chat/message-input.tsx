@@ -200,7 +200,7 @@ export function MessageInput({
       {showMentions && (
         <div className="mb-2 rounded-md border border-border bg-popover p-1 shadow-md">
           {getFilteredUsers().map((name) => {
-            const role = userRoleMap?.get(name.toLowerCase()) || (name === "all" ? "admin" : "normal");
+            const role = userRoleMap?.get(name.toLowerCase()) || (name === "all" ? "normal" : "normal");
             const colorClass = ROLE_COLORS[role] || ROLE_COLORS.normal;
             return (
               <button

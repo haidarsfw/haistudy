@@ -53,11 +53,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const anyPanelOpen = isChatOpen || isAiOpen || isVoiceOpen || isSupportOpen;
   useEffect(() => {
     if (anyPanelOpen) {
-      document.body.style.overflow = "hidden";
+      document.documentElement.classList.add("panel-open");
     } else {
-      document.body.style.overflow = "";
+      document.documentElement.classList.remove("panel-open");
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => { document.documentElement.classList.remove("panel-open"); };
   }, [anyPanelOpen]);
 
   useEffect(() => {
