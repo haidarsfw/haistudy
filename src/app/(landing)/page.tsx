@@ -265,7 +265,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ── */}
-      <section className="relative bg-muted px-4 py-16 sm:py-20">
+      <section className="section-glow-border relative bg-muted/30 px-4 py-16 sm:py-20">
+        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+          <div className="landing-orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-primary/[0.08] blur-[80px]" />
+        </div>
         <div className="mx-auto max-w-4xl">
           <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Semua yang Kamu Butuhkan

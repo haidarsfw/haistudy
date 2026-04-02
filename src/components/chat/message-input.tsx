@@ -22,7 +22,15 @@ interface MessageInputProps {
   disabled?: boolean;
   onlineUserNames?: string[];
   isAdmin?: boolean;
+  userRoleMap?: Map<string, "admin" | "vip" | "tester" | "normal">;
 }
+
+const ROLE_COLORS: Record<string, string> = {
+  admin: "text-red-500",
+  vip: "text-amber-400",
+  tester: "text-green-500",
+  normal: "text-blue-500",
+};
 
 export function MessageInput({
   onSend,
@@ -33,6 +41,7 @@ export function MessageInput({
   disabled,
   onlineUserNames = [],
   isAdmin = false,
+  userRoleMap,
 }: MessageInputProps) {
   const { isPreview, guard } = usePreviewGuard();
   const [text, setText] = useState("");
@@ -190,20 +199,24 @@ export function MessageInput({
       {/* Mention autocomplete */}
       {showMentions && (
         <div className="mb-2 rounded-md border border-border bg-popover p-1 shadow-md">
-          {getFilteredUsers().map((name) => (
-            <button
-              key={name}
-              onClick={() => insertMention(name)}
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-            >
-              <span className="font-medium text-primary">@{name}</span>
-              {name === "all" && (
-                <span className="text-xs text-muted-foreground">
-                  (semua orang)
-                </span>
-              )}
-            </button>
-          ))}
+          {getFilteredUsers().map((name) => {
+            const role = userRoleMap?.get(name.toLowerCase()) || (name === "all" ? "admin" : "normal");
+            const colorClass = ROLE_COLORS[role] || ROLE_COLORS.normal;
+            return (
+              <button
+                key={name}
+                onClick={() => insertMention(name)}
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+              >
+                <span className={`font-medium ${colorClass}`}>@{name}</span>
+                {name === "all" && (
+                  <span className="text-xs text-muted-foreground">
+                    (semua orang)
+                  </span>
+                )}
+              </button>
+            );
+          })}
           {getFilteredUsers().length === 0 && (
             <p className="px-2 py-1.5 text-xs text-muted-foreground">
               Tidak ditemukan

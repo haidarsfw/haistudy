@@ -94,6 +94,11 @@ export function StudyProgressMini() {
 
   useEffect(() => {
     setProgress(calcOverallProgress());
+
+    // Re-calc when progress synced from server
+    const handleSync = () => setProgress(calcOverallProgress());
+    window.addEventListener("hs-progress-synced", handleSync);
+    return () => window.removeEventListener("hs-progress-synced", handleSync);
   }, []);
 
   return (

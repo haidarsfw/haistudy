@@ -57,6 +57,7 @@ export async function GET(request: Request) {
       hideStatusChangedAt: data.hide_status_changed_at ?? null,
       darkModeSchedule: data.dark_mode_schedule ?? DEFAULT_SETTINGS.darkModeSchedule,
       progress: data.progress ?? {},
+      notes: data.notes ?? {},
     };
 
     return NextResponse.json({
@@ -161,6 +162,7 @@ export async function PUT(request: Request) {
         hide_status_changed_at: settings.hideStatusChangedAt,
         dark_mode_schedule: settings.darkModeSchedule,
         progress: settings.progress,
+        notes: settings.notes ?? {},
         updated_at: now,
       },
       { onConflict: "license_key" }

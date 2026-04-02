@@ -91,6 +91,7 @@ export interface UserSettings {
     end: string; // HH:MM
   };
   progress: Record<string, SubjectProgress>;
+  notes?: Record<string, string>; // subjectId -> note content, synced to DB
 }
 
 export interface OnlineUser {

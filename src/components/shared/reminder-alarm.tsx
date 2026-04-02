@@ -13,7 +13,6 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
   const [isRinging, setIsRinging] = useState(false);
   const [hasFiredToday, setHasFiredToday] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startAlarm = useCallback(() => {
@@ -23,23 +22,31 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
       const ctx = new AudioContext();
       audioCtxRef.current = ctx;
 
-      // Create repeating beep pattern
-      const playBeep = () => {
+      // Assertive alarm: rapid triple-beep pattern at higher frequency, repeating
+      const playAlarmPattern = () => {
         if (!audioCtxRef.current) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 800;
-        gain.gain.value = 0.4;
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-        osc.stop(ctx.currentTime + 0.3);
-        oscillatorRef.current = osc;
+        const now = ctx.currentTime;
+
+        // Triple beep pattern (beep-beep-beep with short gaps)
+        for (let i = 0; i < 3; i++) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          // Alternate between two frequencies for urgency
+          osc.type = "square";
+          osc.frequency.value = i % 2 === 0 ? 1200 : 900;
+          gain.gain.setValueAtTime(0.35, now + i * 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.18 + 0.12);
+          osc.start(now + i * 0.18);
+          osc.stop(now + i * 0.18 + 0.12);
+        }
       };
 
-      playBeep();
-      intervalRef.current = setInterval(playBeep, 600);
+      playAlarmPattern();
+      // Repeat every 800ms (fast tempo) until dismissed
+      intervalRef.current = setInterval(playAlarmPattern, 800);
     } catch {
       // Audio not available - visual only
     }
@@ -127,13 +134,13 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
                 rotate: [0, -15, 15, -10, 10, -5, 5, 0],
               }}
               transition={{
-                duration: 0.8,
+                duration: 0.5,
                 repeat: Infinity,
-                repeatDelay: 0.5,
+                repeatDelay: 0.2,
               }}
-              className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/15"
+              className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive/15"
             >
-              <Bell className="h-10 w-10 text-primary" />
+              <Bell className="h-10 w-10 text-destructive" />
             </motion.div>
 
             <div>
@@ -145,7 +152,7 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
               </p>
             </div>
 
-            <Button size="lg" className="w-full gap-2" onClick={dismiss}>
+            <Button size="lg" variant="destructive" className="w-full gap-2" onClick={dismiss}>
               <X className="h-4 w-4" />
               Tutup Alarm
             </Button>

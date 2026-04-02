@@ -23,6 +23,7 @@ import { AnnouncementBanner } from "@/components/shared/announcement-banner";
 import { SupportPanel } from "@/components/support/support-panel";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
+import { useProgressSync } from "@/hooks/use-progress-sync";
 import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
 import { APP_EVENTS } from "@/lib/events";
@@ -44,6 +45,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { notifications } = useNotifications();
   const { settings, isLoading: settingsLoading } = useSettings();
   const voiceRoom = useVoiceRoom();
+
+  // Sync study progress from server into localStorage for dashboard widgets
+  useProgressSync();
+
+  // Lock body scroll when any overlay panel is open
+  const anyPanelOpen = isChatOpen || isAiOpen || isVoiceOpen || isSupportOpen;
+  useEffect(() => {
+    if (anyPanelOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [anyPanelOpen]);
 
   useEffect(() => {
     if (!isLoading && !session) {
@@ -174,23 +189,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-    <div className="flex min-h-screen bg-background overflow-x-clip max-w-[100vw]">
+    <div className="flex h-[100dvh] bg-background overflow-x-clip max-w-[100vw]">
       <PreviewWatermark />
-      <Sidebar onSettingsOpen={handleSettingsOpen} onSupportOpen={() => setIsSupportOpen(true)} />
+      <Sidebar onSettingsOpen={handleSettingsOpen} onSupportOpen={() => {
+        if (session?.isAdmin) { router.push("/admin?tab=7"); } else { setIsSupportOpen(true); }
+      }} />
 
       {/* Main content area */}
-      <div className="flex min-h-screen flex-1 flex-col min-w-0">
+      <div className="flex h-[100dvh] flex-1 flex-col min-w-0">
         <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} />
         <AnnouncementBanner />
         <SessionTimeout />
-        <main className="flex-1 overflow-x-clip pb-14 sm:pb-0">{children}</main>
+        <main className="flex-1 overflow-y-auto overflow-x-clip pb-14 sm:pb-0">{children}</main>
       </div>
 
       <MobileNav
         onChatToggle={handleChatToggle}
         isChatOpen={isChatOpen}
         onAiToggle={handleAiToggle}
-        onSupportOpen={() => setIsSupportOpen(true)}
+        onSupportOpen={() => {
+          if (session?.isAdmin) { router.push("/admin?tab=7"); } else { setIsSupportOpen(true); }
+        }}
         onSettingsOpen={handleSettingsOpen}
       />
 

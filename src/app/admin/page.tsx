@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,18 @@ import { ArrowLeft } from "lucide-react";
 
 export default function AdminPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { session } = useSession();
   const [activeTab, setActiveTab] = useState(0);
+
+  // Deep-link: /admin?tab=7 opens the Support tab directly
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      const n = parseInt(tabParam, 10);
+      if (!isNaN(n) && n >= 0 && n <= 7) setActiveTab(n);
+    }
+  }, [searchParams]);
 
   const handleBack = useCallback(() => {
     router.push("/dashboard");

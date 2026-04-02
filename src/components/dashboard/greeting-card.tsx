@@ -204,6 +204,10 @@ export function GreetingCard() {
 
   useEffect(() => {
     setOverallProgress(calcOverallProgress());
+
+    const handleSync = () => setOverallProgress(calcOverallProgress());
+    window.addEventListener("hs-progress-synced", handleSync);
+    return () => window.removeEventListener("hs-progress-synced", handleSync);
   }, []);
 
   const greetingKey = useMemo(() => getGreetingKey(), []);

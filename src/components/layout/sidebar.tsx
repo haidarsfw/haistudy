@@ -154,21 +154,13 @@ export function Sidebar({ onSettingsOpen, onSupportOpen }: SidebarProps) {
           collapsed ? "justify-center px-2 py-5" : "justify-between px-6 py-5"
         }`}
       >
-        {!collapsed ? (
+        {!collapsed && (
           <button
             onClick={() => { sounds.click(); router.push("/dashboard"); }}
             className="font-heading text-xl font-extrabold tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
           >
             <span className="text-primary">hai</span>
             <span className="text-sidebar-foreground">study</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => { sounds.click(); router.push("/dashboard"); }}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-primary hover:bg-sidebar-accent/50 transition-colors font-heading text-sm font-extrabold cursor-pointer"
-            title="Dashboard"
-          >
-            h
           </button>
         )}
         <button

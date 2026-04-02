@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, MessageCircle, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -141,6 +141,20 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     .filter((u) => !u.hideStatus)
     .map((u) => u.userName);
 
+  // Build role map from messages for mention coloring
+  const userRoleMap = useMemo(() => {
+    const map = new Map<string, "admin" | "vip" | "tester" | "normal">();
+    for (const m of messages) {
+      const name = m.authorName.toLowerCase();
+      if (map.has(name)) continue;
+      if (m.isAdmin) map.set(name, "admin");
+      else if (m.packageTier === "vip") map.set(name, "vip");
+      else if (m.isTester) map.set(name, "tester");
+      else map.set(name, "normal");
+    }
+    return map;
+  }, [messages]);
+
   if (!session) return null;
 
   return (
@@ -256,6 +270,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
               disabled={isSending}
               onlineUserNames={onlineUserNames}
               isAdmin={session?.isAdmin || false}
+              userRoleMap={userRoleMap}
             />
           </motion.div>
         </>

@@ -77,6 +77,15 @@ export function useNotifications() {
     };
   }, [session]);
 
+  // Polling fallback — every 10s re-fetch to catch any missed realtime events
+  useEffect(() => {
+    if (!session) return;
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 10_000);
+    return () => clearInterval(interval);
+  }, [session, fetchNotifications]);
+
   // Mark notifications as read
   const markAsRead = useCallback(
     async (notificationIds?: string[]) => {
