@@ -134,7 +134,7 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
   });
 
   // Map snake_case DB columns → camelCase TypeScript interface
-  return freshData.map((row: Record<string, unknown>) => ({
+  const rawUsers = freshData.map((row: Record<string, unknown>) => ({
     id: (row.user_id as string) || (row.id as string) || "",
     userName: (row.user_name as string) || "Unknown",
     deviceType: ((row.device_type as string) || "desktop") as
@@ -147,6 +147,29 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     lastSeen: (row.last_seen as string) || new Date().toISOString(),
     deviceCount: 1,
   }));
+
+  // Stack users with the same licenseKey (same person, multiple devices)
+  const grouped = new Map<string, OnlineUser>();
+  for (const user of rawUsers) {
+    const key = user.licenseKey || user.id;
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.deviceCount += 1;
+      // Collect unique device types
+      if (!existing.deviceTypes?.includes(user.deviceType)) {
+        existing.deviceTypes = existing.deviceTypes || [existing.deviceType];
+        existing.deviceTypes.push(user.deviceType);
+      }
+      // Keep the most recent lastSeen
+      if (user.lastSeen > existing.lastSeen) {
+        existing.lastSeen = user.lastSeen;
+      }
+    } else {
+      grouped.set(key, { ...user, deviceTypes: [user.deviceType] });
+    }
+  }
+
+  return Array.from(grouped.values());
 }
 
 // Mock data for development

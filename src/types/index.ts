@@ -98,6 +98,7 @@ export interface OnlineUser {
   id: string;
   userName: string;
   deviceType: "desktop" | "mobile" | "tablet";
+  deviceTypes?: ("desktop" | "mobile" | "tablet")[];
   currentSubject: string | null;
   hideStatus: boolean;
   licenseKey: string;

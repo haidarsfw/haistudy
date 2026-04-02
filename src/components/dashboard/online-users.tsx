@@ -51,10 +51,11 @@ export function OnlineUsers() {
           animate="visible"
         >
           {visibleUsers.slice(0, 12).map((user) => {
-            const DeviceIcon = deviceIcons[user.deviceType] || Monitor;
+            const devices = user.deviceTypes || [user.deviceType];
             const subject = user.currentSubject
               ? getSubjectById(user.currentSubject)
               : null;
+            const masked = user.hideStatus && !isAdmin;
 
             return (
               <motion.div
@@ -63,11 +64,14 @@ export function OnlineUsers() {
                 variants={staggerItem}
               >
                 {/* Online dot */}
-                <div className={`h-2 w-2 rounded-full shrink-0 ${user.hideStatus && !isAdmin ? "bg-zinc-400" : "bg-emerald-500"}`} />
+                <div className={`h-2 w-2 rounded-full shrink-0 ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
 
-                {/* Name */}
-                <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${user.hideStatus && !isAdmin ? "italic text-muted-foreground" : ""}`}>
-                  {user.hideStatus && !isAdmin ? "People (hide)" : (user.userName || "Anonymous")}
+                {/* Name + device count */}
+                <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
+                  {masked ? "People (hide)" : (user.userName || "Anonymous")}
+                  {user.deviceCount > 1 && (
+                    <span className="text-muted-foreground font-normal ml-1">({user.deviceCount})</span>
+                  )}
                 </span>
 
                 {/* Lock icon for hidden users (admin view) */}
@@ -76,14 +80,19 @@ export function OnlineUsers() {
                 )}
 
                 {/* Subject badge */}
-                {subject && !(user.hideStatus && !isAdmin) && (
+                {subject && !masked && (
                   <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
                     {subject.name}
                   </span>
                 )}
 
-                {/* Device icon */}
-                <DeviceIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                {/* Device icons */}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {devices.map((dt, i) => {
+                    const Icon = deviceIcons[dt] || Monitor;
+                    return <Icon key={`${dt}-${i}`} className="h-3 w-3 text-muted-foreground" />;
+                  })}
+                </div>
               </motion.div>
             );
           })}

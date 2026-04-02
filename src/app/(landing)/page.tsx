@@ -173,7 +173,7 @@ function DeviceMockup() {
 
 export default function LandingPage() {
   return (
-    <div className="landing-noise flex min-h-screen flex-col bg-gradient-to-b from-background via-background to-muted/20 overflow-x-hidden">
+    <div className="landing-noise flex min-h-screen flex-col bg-background overflow-x-hidden">
       <div className="fixed top-4 right-4 z-50 flex items-center gap-3 rounded-full bg-card/60 backdrop-blur-md border border-border/50 px-3 py-2 shadow-lg">
         <LandingColorPicker />
         <div className="h-4 w-px bg-border/50" />

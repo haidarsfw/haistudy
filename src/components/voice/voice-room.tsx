@@ -104,9 +104,14 @@ export function VoiceRoom({
 
         // Suppress benign DataChannel errors from LiveKit SDK internals
         const origError = console.error;
+        const origWarn = console.warn;
         console.error = (...args: unknown[]) => {
-          if (typeof args[0] === "string" && (args[0].includes("DataChannel error") || args[0].includes("createOffer"))) return;
+          if (typeof args[0] === "string" && (args[0].includes("DataChannel error") || args[0].includes("DataChannel") || args[0].includes("createOffer"))) return;
           origError.apply(console, args);
+        };
+        console.warn = (...args: unknown[]) => {
+          if (typeof args[0] === "string" && (args[0].includes("DataChannel error") || args[0].includes("DataChannel") || args[0].includes("Unknown DataChannel"))) return;
+          origWarn.apply(console, args);
         };
 
         roomInstance = new LKRoom({
