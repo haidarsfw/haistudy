@@ -59,10 +59,13 @@ export function AdminSupportChat() {
       const res = await fetch("/api/support?all=true");
       if (res.ok) {
         const data = await res.json();
+        console.log("[AdminSupport] Fetched conversations:", data.conversations?.length ?? 0);
         setConversations(data.conversations || []);
+      } else {
+        console.error("[AdminSupport] API error:", res.status, await res.text());
       }
-    } catch {
-      // silent
+    } catch (err) {
+      console.error("[AdminSupport] Fetch error:", err);
     } finally {
       setLoading(false);
     }

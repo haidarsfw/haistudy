@@ -215,6 +215,7 @@ export async function POST(request: Request) {
     if (type === "text" && hasMentions(trimmedContent)) {
       try {
         const mentions = parseMentions(trimmedContent);
+        console.log(`Mention: Detected ${mentions.length} mention(s) in message:`, mentions.map(m => m.username));
         if (mentions.length > 0) {
           const hasAll = mentions.some((m) => m.isAll);
 
@@ -228,6 +229,8 @@ export async function POST(request: Request) {
             if (usersError) {
               console.error("Mention: Failed to fetch users:", usersError.message);
             }
+
+            console.log(`Mention: Found ${allUsers?.length ?? 0} users. Sender: "${authorName}"`);
 
             if (allUsers && allUsers.length > 0) {
               const preview = trimmedContent.length > 100
@@ -260,12 +263,15 @@ export async function POST(request: Request) {
               } else {
                 // Individual @username mentions
                 const mentionedNames = new Set(mentions.map((m) => m.username));
+                console.log("Mention: Looking for usernames:", [...mentionedNames]);
                 for (const user of allUsers) {
                   const uName = (user.user_name || "").toLowerCase();
                   if (uName === authorName?.toLowerCase()) continue;
-                  // Match against user_name/name — also try first name only
+                  // Match against user_name — also try first name only
                   const firstName = uName.split(" ")[0];
+                  console.log(`Mention: Checking user "${uName}" (firstName: "${firstName}") against mentions`);
                   if (mentionedNames.has(uName) || mentionedNames.has(firstName)) {
+                    console.log(`Mention: MATCH found for "${uName}" (license: ${user.license_key})`);
                     notifRows.push({
                       license_key: user.license_key,
                       type: "mention",
@@ -279,14 +285,19 @@ export async function POST(request: Request) {
               }
 
               if (notifRows.length > 0) {
+                console.log(`Mention: Inserting ${notifRows.length} notification(s)...`);
                 const { error: insertError } = await supabase.from("notifications").insert(notifRows);
                 if (insertError) {
                   console.error("Mention: Failed to insert notifications:", insertError.message);
                 } else {
-                  console.log(`Mention: Created ${notifRows.length} notification(s) for message ${createdMessage.id}`);
+                  console.log(`Mention: SUCCESS - Created ${notifRows.length} notification(s) for message ${createdMessage.id}`);
                 }
+              } else {
+                console.log("Mention: No matching users found for notification");
               }
             }
+          } else {
+            console.log("Mention: @all blocked for non-admin user");
           }
         }
       } catch (e) {
