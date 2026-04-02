@@ -35,6 +35,7 @@ interface MessageBubbleProps {
   onPin: (messageId: string) => void;
   onUnpin: (messageId: string) => void;
   onImageClick?: (src: string) => void;
+  userRoleMap?: Map<string, "admin" | "vip" | "tester" | "normal">;
 }
 
 export function MessageBubble({
@@ -47,6 +48,7 @@ export function MessageBubble({
   onPin,
   onUnpin,
   onImageClick,
+  userRoleMap,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -64,12 +66,31 @@ export function MessageBubble({
     locale: idLocale,
   });
 
-  // Render mention highlights
+  // Render mention highlights with role-based colors
+  const getMentionClasses = (mentionName: string) => {
+    const name = mentionName.slice(1).toLowerCase(); // remove @ prefix
+    const role = userRoleMap?.get(name);
+    switch (role) {
+      case "admin":
+        return "font-semibold text-red-500 dark:text-red-400";
+      case "vip":
+        return "font-semibold text-amber-500 dark:text-amber-300 drop-shadow-[0_0_6px_oklch(0.7_0.15_80/0.5)]";
+      case "tester":
+        return "font-semibold text-emerald-500 dark:text-emerald-400";
+      case "normal":
+        return "font-semibold text-blue-500 dark:text-blue-400";
+      default:
+        // @all or unknown — use blue
+        if (name === "all") return "font-semibold text-blue-500 dark:text-blue-400";
+        return "font-semibold text-blue-500 dark:text-blue-400";
+    }
+  };
+
   const renderContent = (text: string) => {
     const parts = text.split(/(@\w+)/g);
     return parts.map((part, i) =>
       part.startsWith("@") ? (
-        <span key={i} className="font-semibold text-primary">
+        <span key={i} className={getMentionClasses(part)}>
           {part}
         </span>
       ) : (

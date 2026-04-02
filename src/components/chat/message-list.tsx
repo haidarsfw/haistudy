@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./message-bubble";
 import { APP_EVENTS } from "@/lib/events";
@@ -94,6 +94,21 @@ export function MessageList({
     groupedMessages[groupedMessages.length - 1].messages.push(msg);
   }
 
+  // Build a map of authorName -> role for mention coloring
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const userRoleMap = useMemo(() => {
+    const map = new Map<string, "admin" | "vip" | "tester" | "normal">();
+    for (const m of messages) {
+      const name = m.authorName.toLowerCase();
+      if (map.has(name)) continue;
+      if (m.isAdmin) map.set(name, "admin");
+      else if (m.packageTier === "vip") map.set(name, "vip");
+      else if (m.isTester) map.set(name, "tester");
+      else map.set(name, "normal");
+    }
+    return map;
+  }, [messages]);
+
   if (visibleMessages.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
@@ -131,6 +146,7 @@ export function MessageList({
                   onPin={onPin}
                   onUnpin={onUnpin}
                   onImageClick={onImageClick}
+                  userRoleMap={userRoleMap}
                 />
               </div>
             ))}

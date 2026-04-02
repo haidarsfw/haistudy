@@ -265,7 +265,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ── */}
-      <section className="relative bg-muted/30 px-4 py-16 sm:py-20">
+      <section className="relative bg-muted px-4 py-16 sm:py-20">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Semua yang Kamu Butuhkan
