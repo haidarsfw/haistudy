@@ -18,6 +18,14 @@
   }
 }
 
+/* iPad / tablet landscape adjustments — shorter viewport */
+@media (orientation: landscape) and (max-height: 600px) and (min-width: 768px) {
+  .landing-glow {
+    width: 300px !important;
+    height: 300px !important;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
