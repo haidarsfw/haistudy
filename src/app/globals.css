@@ -141,6 +141,11 @@
   --sidebar-accent-foreground: oklch(0.30 0.005 250);
   --sidebar-border: oklch(0.86 0.005 250);
   --sidebar-ring: oklch(0.50 0.10 145);
+
+  /* Opaque section background (light mode)
+     background = oklch(0.965), muted = oklch(0.93)
+     result ≈ 0.965 + (0.93-0.965)*0.3 = 0.9545 */
+  --section-bg: oklch(0.955 0.002 250);
 }
 
 .dark {
@@ -202,6 +207,11 @@
   --sidebar-accent-foreground: oklch(0.90 0.003 250);
   --sidebar-border: oklch(0.30 0.003 250);
   --sidebar-ring: oklch(0.65 0.12 145);
+
+  /* Opaque section background: visual equivalent of muted/30 on background
+     background = oklch(0.15), muted = oklch(0.25)
+     result ≈ 0.15 + (0.25-0.15)*0.3 = 0.18 */
+  --section-bg: oklch(0.18 0.003 250);
 }
 
 /* ============================================
