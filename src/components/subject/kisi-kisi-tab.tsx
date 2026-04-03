@@ -69,9 +69,12 @@ export function KisiKisiTab({ items, note, subjectId }: KisiKisiTabProps) {
             className="relative rounded-xl border border-border bg-card overflow-hidden"
           >
             {/* Topic header */}
-            <button
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => toggle(item.topic)}
-              className="flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-muted/50 transition-colors"
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(item.topic); } }}
+              className="flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-muted/50 transition-colors cursor-pointer select-none"
             >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -94,7 +97,7 @@ export function KisiKisiTab({ items, note, subjectId }: KisiKisiTabProps) {
                   }}
                 />
               </div>
-            </button>
+            </div>
 
             {/* Items */}
             {isExpanded && (
