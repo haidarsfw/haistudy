@@ -24,7 +24,7 @@ BATASAN TOPIK (WAJIB DIPATUHI):
 TENTANG HAISTUDY:
 - haistudy adalah platform belajar pintar (study companion) untuk mahasiswa Binus University, khusus program Business Management angkatan B29.
 - Dikembangkan oleh Haidar Shofwan (Instagram: @haidarsfw).
-- Website: haistudy.vercel.app
+- Website: https://haistudy.site
 - Tujuan: Membantu persiapan UTS dengan materi lengkap, quiz interaktif, flashcards, dan fitur kolaborasi.
 - Akses berbayar melalui license key dengan 3 paket: Share, Normal, dan VIP.
 - Tersedia dalam Bahasa Indonesia dan English (bisa diubah di Settings).

@@ -120,7 +120,7 @@ ${newKey}
 (Copy kode di atas)
 
 🌍 AKSES WEBSITE:
-haistudy.vercel.app
+https://haistudy.site
 
 ⚠️ LANGKAH AKTIVASI (PENTING!):
 Agar akunmu terverifikasi dan tidak kena banned, lakukan ini sekarang:

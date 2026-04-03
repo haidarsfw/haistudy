@@ -134,64 +134,86 @@ export async function POST(request: Request) {
       );
     }
 
-    // 6. Device validation (skip if unlimited)
-    if (!license.unlimited_devices) {
-      const { data: devices } = await supabase
-        .from("devices")
-        .select("*")
-        .eq("activation_id", activation.id);
+    // 6–7–8. Run device validation + settings in parallel (they're independent)
+    const [deviceResult, settingsResult] = await Promise.all([
+      // --- Device validation ---
+      (async () => {
+        if (license.unlimited_devices) return { ok: true, error: null };
 
-      const existingDevices = devices || [];
-      const thisDevice = existingDevices.find((d) => d.device_id === deviceId);
-
-      if (!thisDevice) {
-        // New device - check limit
-        if (existingDevices.length >= (license.max_devices || 2)) {
-          return NextResponse.json(
-            {
-              valid: false,
-              error: `License sudah digunakan di ${existingDevices.length} device (max: ${license.max_devices || 2})`,
-              deviceLimitReached: true,
-            },
-            { status: 403 }
-          );
-        }
-
-        // Register new device
-        await supabase.from("devices").insert({
-          activation_id: activation.id,
-          device_id: deviceId,
-          device_type: deviceType,
-          is_primary: existingDevices.length === 0,
-          verified: existingDevices.length === 0, // First device auto-verified
-        });
-      } else {
-        // Update last seen
-        await supabase
+        const { data: devices } = await supabase
           .from("devices")
-          .update({ last_seen: now.toISOString() })
-          .eq("id", thisDevice.id);
-      }
+          .select("*")
+          .eq("activation_id", activation.id);
+
+        const existingDevices = devices || [];
+        const thisDevice = existingDevices.find((d) => d.device_id === deviceId);
+
+        if (!thisDevice) {
+          if (existingDevices.length >= (license.max_devices || 2)) {
+            return {
+              ok: false,
+              error: `License sudah digunakan di ${existingDevices.length} device (max: ${license.max_devices || 2})`,
+            };
+          }
+          await supabase.from("devices").insert({
+            activation_id: activation.id,
+            device_id: deviceId,
+            device_type: deviceType,
+            is_primary: existingDevices.length === 0,
+            verified: existingDevices.length === 0,
+          });
+        } else {
+          await supabase
+            .from("devices")
+            .update({ last_seen: now.toISOString() })
+            .eq("id", thisDevice.id);
+        }
+        return { ok: true, error: null };
+      })(),
+
+      // --- User settings upsert + fetch (single operation) ---
+      (async () => {
+        const { data } = await supabase
+          .from("user_settings")
+          .upsert(
+            {
+              license_key: normalizedKey,
+              dark_mode: true,
+              theme: "forest",
+              font: "jakarta",
+              language: "id",
+            },
+            { onConflict: "license_key", ignoreDuplicates: true }
+          )
+          .select()
+          .single();
+
+        // If upsert with ignoreDuplicates returns nothing, fetch existing
+        if (!data) {
+          const { data: existing } = await supabase
+            .from("user_settings")
+            .select("*")
+            .eq("license_key", normalizedKey)
+            .single();
+          return existing;
+        }
+        return data;
+      })(),
+    ]);
+
+    // Check device validation result
+    if (!deviceResult.ok) {
+      return NextResponse.json(
+        {
+          valid: false,
+          error: deviceResult.error,
+          deviceLimitReached: true,
+        },
+        { status: 403 }
+      );
     }
 
-    // 7. Ensure user_settings row exists with correct defaults
-    await supabase.from("user_settings").upsert(
-      {
-        license_key: normalizedKey,
-        dark_mode: true,
-        theme: "forest",
-        font: "jakarta",
-        language: "id",
-      },
-      { onConflict: "license_key", ignoreDuplicates: true }
-    );
-
-    // 8. Fetch settings for embedding in response (eliminates second API call)
-    const { data: settingsData } = await supabase
-      .from("user_settings")
-      .select("*")
-      .eq("license_key", normalizedKey)
-      .single();
+    const settingsData = settingsResult;
 
     // 9. Handle referral (fire and forget — non-blocking)
     if (referralCode && !activation.referred_by) {

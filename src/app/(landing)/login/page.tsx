@@ -38,7 +38,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="mt-4 text-center text-xs text-muted-foreground">
           Belum punya license key?{" "}
-          <Link href="/" className="text-primary hover:underline">
+          <Link href="/#pricing" className="text-primary hover:underline">
             Dapatkan di sini
           </Link>
         </p>
@@ -46,3 +46,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

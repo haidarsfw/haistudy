@@ -87,6 +87,14 @@ const FAQ = [
     q: "Bagaimana cara menghubungi admin?",
     a: "Buka menu Layanan Pelanggan di sidebar, lalu pilih tab Chat untuk live chat langsung dengan admin. Kamu juga bisa menghubungi via WhatsApp atau Instagram.",
   },
+  {
+    q: "Apakah akun boleh di-sharing atau dipinjamkan?",
+    a: "TIDAK. Platform haistudy dilindungi oleh sistem keamanan otomatis yang melacak pola pemakaian device secara real-time. Jika terdeteksi aktivitas sharing (login di device orang lain atau di luar device yang didaftarkan), maka akun akan otomatis dibanned dan License Key hangus secara permanen tanpa peringatan.",
+  },
+  {
+    q: "Apakah ada refund jika tidak jadi menggunakan?",
+    a: "Tidak ada pengembalian dana (refund) setelah License Key diterbitkan. Pastikan kamu sudah melihat Preview Gratis dan yakin sebelum melakukan pembelian. Jika ada kendala teknis, silakan hubungi admin via WhatsApp atau Instagram.",
+  },
 ];
 
 const TESTIMONIALS = [
@@ -381,6 +389,17 @@ export default function LandingPage() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Disclaimer ── */}
+      <section className="px-4 py-6 border-t border-border/50">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+            haistudy adalah platform belajar independen yang dibuat oleh mahasiswa.
+            Platform ini tidak terafiliasi, berafiliasi, didukung, atau disetujui oleh BINUS University.
+            Seluruh materi kuliah, merek dagang, dan hak cipta terkait adalah milik pemiliknya masing-masing.
+          </p>
         </div>
       </section>
 

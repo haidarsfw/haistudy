@@ -95,7 +95,7 @@ export function PurchaseQueue() {
       // Open WhatsApp
       let phone = purchase.whatsapp.replace(/\D/g, "");
       if (phone.startsWith("0")) phone = "62" + phone.slice(1);
-      const message = `Halo ${purchase.name}! License key haistudy kamu sudah siap:\n\n🔐 ${newKey}\n\nSilakan login di haistudy.vercel.app`;
+      const message = `Halo ${purchase.name}! License key haistudy kamu sudah siap:\n\n🔐 ${newKey}\n\nSilakan login di https://haistudy.site`;
       window.open(
         `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`,
         "_blank"

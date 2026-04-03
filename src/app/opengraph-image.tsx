@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "haistudy | Platform Belajar UTS Binus B29";
+export const alt = "haistudy — Platform Belajar Pintar Mahasiswa BINUS";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -45,7 +45,7 @@ export default function OgImage() {
             textAlign: "center",
           }}
         >
-          Platform Belajar UTS Binus B29
+          Platform Belajar Pintar Mahasiswa BINUS
         </div>
 
         {/* Features */}
@@ -56,7 +56,7 @@ export default function OgImage() {
             gap: 32,
           }}
         >
-          {["5 Mata Kuliah", "Quiz Interaktif", "AI Assistant", "Voice Room"].map(
+          {["Materi Lengkap", "Quiz Interaktif", "AI Assistant", "Voice Room"].map(
             (f) => (
               <div
                 key={f}
@@ -83,10 +83,11 @@ export default function OgImage() {
             color: "#8b7a6b",
           }}
         >
-          Business Management - BINUS University
+          haistudy.site
         </div>
       </div>
     ),
     { ...size }
   );
 }
+
