@@ -2,6 +2,10 @@ import { foundaiModule1 } from './foundai-m1';
 import { foundaiModule2 } from './foundai-m2';
 import { foundaiModule3 } from './foundai-m3';
 import { foundaiModule4 } from './foundai-m4';
+import { cbkwnModule1 } from './cbkwn-m1';
+import { cbkwnModule2 } from './cbkwn-m2';
+import { cbkwnModule3 } from './cbkwn-m3';
+import { cbkwnModule4 } from './cbkwn-m4';
 
 /**
  * Rangkuman (summary) content per subject.
@@ -56,25 +60,10 @@ export const rangkumanContent: Record<string, Record<string, string>> = {
   },
 
   cbkwn: {
-    "Module 1: Konsep Kewarganegaraan": `
-      <h1>Konsep Kewarganegaraan</h1>
-      <h2>Definisi</h2>
-      <bullet><b>Warga Negara:</b> Individu yang memiliki ikatan hukum dengan suatu negara.</bullet>
-      <bullet><b>Kewarganegaraan:</b> Status hukum seseorang sebagai anggota suatu negara.</bullet>
-      <h2>Dasar Hukum</h2>
-      <bullet><b>UUD 1945:</b> Undang-Undang Dasar sebagai hukum tertinggi di Indonesia.</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
-    "Module 2: Pancasila": `
-      <h1>Pancasila sebagai Ideologi</h1>
-      <h2>Lima Sila</h2>
-      <bullet><b>Sila 1:</b> Ketuhanan Yang Maha Esa</bullet>
-      <bullet><b>Sila 2:</b> Kemanusiaan yang Adil dan Beradab</bullet>
-      <bullet><b>Sila 3:</b> Persatuan Indonesia</bullet>
-      <bullet><b>Sila 4:</b> Kerakyatan yang Dipimpin oleh Hikmat Kebijaksanaan</bullet>
-      <bullet><b>Sila 5:</b> Keadilan Sosial bagi Seluruh Rakyat Indonesia</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
+    "Modul 1: Pengantar Kewarganegaraan & Nilai Norma": cbkwnModule1,
+    "Modul 2: Negara, Konstitusi, Hak & Kewajiban": cbkwnModule2,
+    "Modul 3: Penegakan Hukum, Demokrasi, & Wawasan Nusantara": cbkwnModule3,
+    "Modul 4: Suplemen Penyempurna": cbkwnModule4,
   },
 
   akuntansi: {
