@@ -301,7 +301,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Pricing ── */}
-      <PricingSection />
+      <div id="pricing">
+        <PricingSection />
+      </div>
 
       {/* ── Testimonials ── */}
       <section className="section-glow-border relative px-4 py-16 sm:py-20" style={{ backgroundColor: 'var(--section-bg)' }}>
