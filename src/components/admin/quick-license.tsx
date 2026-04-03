@@ -22,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 const PACKAGE_OPTIONS = [
   { id: "share", label: "Share (Rp20.000)", tier: "share" as const },
@@ -44,8 +45,9 @@ export function QuickLicense() {
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch invoice counter
+  // Fetch invoice counter on mount + subscribe to realtime changes
   useEffect(() => {
+    // Initial fetch
     fetch("/api/admin/invoice")
       .then((r) => r.json())
       .then((data) => {
@@ -53,6 +55,33 @@ export function QuickLicense() {
         setTempInvoice(String(data.value));
       })
       .catch(console.error);
+
+    // Subscribe to realtime changes on invoice_counter table
+    const supabase = createBrowserClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel("invoice-counter-sync")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "invoice_counter",
+        },
+        (payload) => {
+          const newValue = (payload.new as { value?: number })?.value;
+          if (typeof newValue === "number") {
+            setInvoiceNumber(newValue);
+            setTempInvoice(String(newValue));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleGenerate = useCallback(async () => {
