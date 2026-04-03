@@ -3,46 +3,70 @@
  * Converts custom markup tags to React elements.
  *
  * Supported tags: <h1>, <h2>, <h3>, <bullet>, <subtitle>, <b>, <i>
+ * Supports LaTeX math via $...$ (inline) using KaTeX
  */
 
 import React from "react";
+import katex from "katex";
 
 interface ParsedElement {
   type: "h1" | "h2" | "h3" | "bullet" | "subtitle" | "text";
   content: React.ReactNode;
 }
 
+function renderMath(latex: string, key: number): React.ReactNode {
+  try {
+    const html = katex.renderToString(latex, {
+      throwOnError: false,
+      displayMode: false,
+      trust: true,
+    });
+    return (
+      <span
+        key={key}
+        className="katex-inline"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  } catch {
+    return <code key={key}>{latex}</code>;
+  }
+}
+
 function parseInline(text: string): React.ReactNode {
-  // Parse <b> and <i> tags within text
+  // Parse <b>, <i>, and $...$ (math) tags within text
   const parts: React.ReactNode[] = [];
   let remaining = text;
   let keyIdx = 0;
 
   while (remaining.length > 0) {
-    // Find next <b> or <i>
+    // Find next <b>, <i>, or $...$
     const boldMatch = remaining.match(/<b>([\s\S]*?)<\/b>/);
     const italicMatch = remaining.match(/<i>([\s\S]*?)<\/i>/);
+    const mathMatch = remaining.match(/\$([^$]+)\$/);
 
-    let nextMatch: RegExpMatchArray | null = null;
-    let tag: "b" | "i" = "b";
+    // Determine which match comes first
+    const candidates: { match: RegExpMatchArray; tag: "b" | "i" | "math" }[] =
+      [];
+    if (boldMatch && boldMatch.index !== undefined)
+      candidates.push({ match: boldMatch, tag: "b" });
+    if (italicMatch && italicMatch.index !== undefined)
+      candidates.push({ match: italicMatch, tag: "i" });
+    if (mathMatch && mathMatch.index !== undefined)
+      candidates.push({ match: mathMatch, tag: "math" });
 
-    if (boldMatch && italicMatch) {
-      if ((boldMatch.index ?? Infinity) <= (italicMatch.index ?? Infinity)) {
-        nextMatch = boldMatch;
-        tag = "b";
-      } else {
-        nextMatch = italicMatch;
-        tag = "i";
-      }
-    } else if (boldMatch) {
-      nextMatch = boldMatch;
-      tag = "b";
-    } else if (italicMatch) {
-      nextMatch = italicMatch;
-      tag = "i";
+    if (candidates.length === 0) {
+      parts.push(remaining);
+      break;
     }
 
-    if (!nextMatch || nextMatch.index === undefined) {
+    // Sort by position
+    candidates.sort((a, b) => (a.match.index ?? 0) - (b.match.index ?? 0));
+    const first = candidates[0];
+    const nextMatch = first.match;
+    const tag = first.tag;
+
+    if (nextMatch.index === undefined) {
       parts.push(remaining);
       break;
     }
@@ -53,14 +77,17 @@ function parseInline(text: string): React.ReactNode {
     }
 
     // The styled content
-    const innerContent = parseInline(nextMatch[1]);
-    if (tag === "b") {
+    if (tag === "math") {
+      parts.push(renderMath(nextMatch[1], keyIdx++));
+    } else if (tag === "b") {
+      const innerContent = parseInline(nextMatch[1]);
       parts.push(
         <strong key={keyIdx++} className="font-semibold">
           {innerContent}
         </strong>
       );
     } else {
+      const innerContent = parseInline(nextMatch[1]);
       parts.push(
         <em key={keyIdx++} className="italic">
           {innerContent}

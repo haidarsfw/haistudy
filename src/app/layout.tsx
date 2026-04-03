@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { MusicProvider } from "@/components/providers/music-provider";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-heading",

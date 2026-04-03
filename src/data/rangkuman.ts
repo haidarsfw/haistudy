@@ -6,6 +6,10 @@ import { cbkwnModule1 } from './cbkwn-m1';
 import { cbkwnModule2 } from './cbkwn-m2';
 import { cbkwnModule3 } from './cbkwn-m3';
 import { cbkwnModule4 } from './cbkwn-m4';
+import { statistikModule1 } from './statistik-m1';
+import { statistikModule2 } from './statistik-m2';
+import { statistikModule3 } from './statistik-m3';
+import { statistikModule4 } from './statistik-m4';
 
 /**
  * Rangkuman (summary) content per subject.
@@ -14,27 +18,10 @@ import { cbkwnModule4 } from './cbkwn-m4';
 
 export const rangkumanContent: Record<string, Record<string, string>> = {
   statistik: {
-    "Module 1: Introduction to Statistics": `
-      <h1>Introduction to Statistics</h1>
-      <h2>Definisi Statistik</h2>
-      <bullet><b>Statistik:</b> Ilmu yang mempelajari pengumpulan, pengolahan, analisis, dan penyajian data.</bullet>
-      <bullet><b>Populasi:</b> Seluruh objek yang menjadi target penelitian.</bullet>
-      <bullet><b>Sampel:</b> Bagian dari populasi yang dipilih untuk diteliti.</bullet>
-      <h2>Jenis Data</h2>
-      <bullet><b>Data Kualitatif:</b> Data non-numerik (kategori, label).</bullet>
-      <bullet><b>Data Kuantitatif:</b> Data numerik (diskrit atau kontinu).</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
-    "Module 2: Data Collection": `
-      <h1>Data Collection & Presentation</h1>
-      <h2>Metode Pengumpulan Data</h2>
-      <bullet><b>Survei:</b> Pengumpulan data melalui kuesioner atau wawancara.</bullet>
-      <bullet><b>Observasi:</b> Pengamatan langsung terhadap objek penelitian.</bullet>
-      <h2>Penyajian Data</h2>
-      <bullet><b>Tabel Frekuensi:</b> Mengelompokkan data ke dalam kelas-kelas interval.</bullet>
-      <bullet><b>Histogram:</b> Grafik batang untuk distribusi frekuensi.</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
+    "Modul 1: Pengantar Statistika & Deskripsi Data": statistikModule1,
+    "Modul 2: Ukuran Numerik & Probabilitas": statistikModule2,
+    "Modul 3: Distribusi Probabilitas": statistikModule3,
+    "Modul 4: Pendalaman Materi": statistikModule4,
   },
 
   biseko: {
