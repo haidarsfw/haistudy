@@ -1,7 +1,11 @@
+import { foundaiModule1 } from './foundai-m1';
+import { foundaiModule2 } from './foundai-m2';
+import { foundaiModule3 } from './foundai-m3';
+import { foundaiModule4 } from './foundai-m4';
+
 /**
  * Rangkuman (summary) content per subject.
  * Uses custom HTML-like tags: <h1>, <h2>, <h3>, <bullet>, <subtitle>, <b>, <i>
- * Content will be filled in later - these are structural placeholders.
  */
 
 export const rangkumanContent: Record<string, Record<string, string>> = {
@@ -97,26 +101,10 @@ export const rangkumanContent: Record<string, Record<string, string>> = {
   },
 
   foundai: {
-    "Module 1: What is AI?": `
-      <h1>What is Artificial Intelligence?</h1>
-      <h2>Definisi AI</h2>
-      <bullet><b>Artificial Intelligence:</b> Simulasi kecerdasan manusia oleh sistem komputer.</bullet>
-      <bullet><b>Turing Test:</b> Uji kemampuan mesin untuk menunjukkan perilaku cerdas setara manusia.</bullet>
-      <h2>Jenis AI</h2>
-      <bullet><b>Narrow AI:</b> AI yang dirancang untuk tugas spesifik (contoh: voice assistant).</bullet>
-      <bullet><b>General AI:</b> AI yang memiliki kemampuan kognitif setara manusia (belum tercapai).</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
-    "Module 2: Machine Learning": `
-      <h1>Machine Learning Basics</h1>
-      <h2>Konsep ML</h2>
-      <bullet><b>Machine Learning:</b> Subset AI di mana sistem belajar dari data tanpa diprogram eksplisit.</bullet>
-      <h2>Tipe Machine Learning</h2>
-      <bullet><b>Supervised Learning:</b> Model dilatih dengan data berlabel (input → output yang diketahui).</bullet>
-      <bullet><b>Unsupervised Learning:</b> Model menemukan pola dari data tanpa label.</bullet>
-      <bullet><b>Reinforcement Learning:</b> Agen belajar melalui reward dan punishment.</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
+    "Modul 1: Pengantar AI & Machine Learning": foundaiModule1,
+    "Modul 2: AI & Data dan NLP": foundaiModule2,
+    "Modul 3: Speech Recognition, CV, & Video": foundaiModule3,
+    "Modul 4: Materi Tambahan & Studi Kasus": foundaiModule4,
   },
 };
 
