@@ -42,7 +42,6 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
   const [timer, setTimer] = useState(QUIZ_TIMER_SECONDS);
   const [result, setResult] = useState<QuizResult | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
-  const explanationRef = useRef<HTMLDivElement>(null);
 
   const current = questions[currentIdx];
   const total = questions.length;
@@ -89,9 +88,10 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         sounds.wrong();
       }
       setAnswers((prev) => ({ ...prev, [current.id]: optionIdx }));
-      // Scroll to bottom anchor after AnimatePresence finishes rendering
+      // Scroll parent <main> to bottom after animation renders explanation + Next button
       setTimeout(() => {
-        explanationRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        const main = document.querySelector("main");
+        if (main) main.scrollTo({ top: main.scrollHeight, behavior: "smooth" });
       }, 500);
     },
     [state, current, answers]
@@ -401,8 +401,6 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         )}
       </AnimatePresence>
 
-      {/* Scroll anchor — placed AFTER animated elements so scroll target is below the Next button */}
-      <div ref={hasAnswered ? explanationRef : undefined} className="h-1" />
     </div>
   );
 }

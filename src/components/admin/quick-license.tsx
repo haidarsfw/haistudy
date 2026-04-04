@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,19 +38,21 @@ export function QuickLicense() {
   const [freeReason, setFreeReason] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState(90);
   const [editingInvoice, setEditingInvoice] = useState(false);
+  const editingRef = useRef(false);
   const [tempInvoice, setTempInvoice] = useState("90");
   const [generatedKey, setGeneratedKey] = useState("");
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch invoice counter on mount + poll every 2s for cross-device sync
+  // Fetch invoice counter on mount + poll every 3s for cross-device sync
   useEffect(() => {
     const fetchCounter = () => {
+      if (editingRef.current) return; // Don't overwrite while user is editing
       fetch(`/api/admin/invoice?t=${Date.now()}`)
         .then((r) => r.json())
         .then((data) => {
-          if (typeof data.value === "number") {
+          if (typeof data.value === "number" && !editingRef.current) {
             setInvoiceNumber(data.value);
             setTempInvoice(String(data.value));
           }
@@ -59,7 +61,7 @@ export function QuickLicense() {
     };
 
     fetchCounter();
-    const interval = setInterval(fetchCounter, 2_000);
+    const interval = setInterval(fetchCounter, 3_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -167,6 +169,8 @@ Selamat belajar! 🚀`;
         body: JSON.stringify({ value }),
       });
       setInvoiceNumber(value);
+      setTempInvoice(String(value));
+      editingRef.current = false;
       setEditingInvoice(false);
       toast.success("Invoice counter diperbarui");
     } catch {
@@ -217,6 +221,7 @@ Selamat belajar! 🚀`;
               <button
                 onClick={() => {
                   setTempInvoice(String(invoiceNumber));
+                  editingRef.current = true;
                   setEditingInvoice(true);
                 }}
                 className="flex items-center gap-1 text-sm font-medium hover:text-primary"
