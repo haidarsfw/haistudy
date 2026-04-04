@@ -17,6 +17,14 @@ import { bisekoModule4 } from './biseko-m4';
 import { bisekoModule5 } from './biseko-m5';
 import { bisekoModule6 } from './biseko-m6';
 import { bisekoModule7 } from './biseko-m7';
+import { akuntansiModule1 } from './akuntansi-m1';
+import { akuntansiModule2 } from './akuntansi-m2';
+import { akuntansiModule3 } from './akuntansi-m3';
+import { akuntansiModule4 } from './akuntansi-m4';
+import { akuntansiModule5 } from './akuntansi-m5';
+import { akuntansiModule6 } from './akuntansi-m6';
+import { akuntansiModule7 } from './akuntansi-m7';
+import { akuntansiModule8 } from './akuntansi-m8';
 
 /**
  * Rangkuman (summary) content per subject.
@@ -49,26 +57,14 @@ export const rangkumanContent: Record<string, Record<string, string>> = {
   },
 
   akuntansi: {
-    "Module 1: Introduction to Accounting": `
-      <h1>Introduction to Accounting</h1>
-      <h2>Definisi Akuntansi</h2>
-      <bullet><b>Akuntansi:</b> Proses mengidentifikasi, mengukur, dan mengkomunikasikan informasi keuangan.</bullet>
-      <bullet><b>Tujuan:</b> Menyediakan informasi yang berguna untuk pengambilan keputusan ekonomi.</bullet>
-      <h2>Prinsip Dasar</h2>
-      <bullet><b>Going Concern:</b> Asumsi bahwa perusahaan akan terus beroperasi.</bullet>
-      <bullet><b>Historical Cost:</b> Aset dicatat berdasarkan harga perolehan.</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
-    "Module 2: Accounting Equation": `
-      <h1>Accounting Equation</h1>
-      <h2>Persamaan Dasar</h2>
-      <bullet><b>Assets = Liabilities + Equity</b></bullet>
-      <bullet><b>Double-Entry System:</b> Setiap transaksi mempengaruhi minimal dua akun.</bullet>
-      <h2>Debit dan Kredit</h2>
-      <bullet><b>Debit:</b> Sisi kiri akun - menambah aset/beban, mengurangi liabilitas/ekuitas/pendapatan.</bullet>
-      <bullet><b>Kredit:</b> Sisi kanan akun - mengurangi aset/beban, menambah liabilitas/ekuitas/pendapatan.</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
+    "Modul 1: Pengantar Laporan Keuangan": akuntansiModule1,
+    "Modul 2: Sistem Informasi Akuntansi": akuntansiModule2,
+    "Modul 3: Konsep Akuntansi Akrual": akuntansiModule3,
+    "Modul 4: Operasi Perdagangan dan Laporan Laba Rugi Multi-Langkah": akuntansiModule4,
+    "Modul 5: Kecurangan, Pengendalian Internal, dan Kas": akuntansiModule5,
+    "Modul 6: Laporan Arus Kas": akuntansiModule6,
+    "Modul 7: Analisis Keuangan: Gambaran Besar": akuntansiModule7,
+    "Modul 8: Suplemen Penyempurna Keseluruhan": akuntansiModule8,
   },
 
   foundai: {

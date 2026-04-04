@@ -4,6 +4,8 @@ import { foundaiFlashcards } from "./foundai-flashcards";
 import { foundaiQuiz } from "./foundai-quiz";
 import { bisekoFlashcards } from "./biseko-flashcards";
 import { bisekoQuiz } from "./biseko-quiz";
+import { akuntansiFlashcards } from "./akuntansi-flashcards";
+import { akuntansiQuiz } from "./akuntansi-quiz";
 
 /**
  * Placeholder content for all 5 subjects.
@@ -164,17 +166,8 @@ export const content: Record<string, SubjectContent> = {
     ],
     kisiKisi: [],
     kisiKisiNote: "Kisi-kisi resmi belum tersedia untuk mata kuliah ini. Gunakan rangkuman dan flashcards sebagai panduan belajar.",
-    flashcards: [
-      { id: 1, term: "Assets (Aset)", definition: "Sumber daya yang dimiliki perusahaan yang memberikan manfaat ekonomi di masa depan" },
-      { id: 2, term: "Liabilities (Kewajiban)", definition: "Utang atau kewajiban perusahaan kepada pihak lain" },
-      { id: 3, term: "Equity (Ekuitas)", definition: "Hak pemilik atas aset perusahaan setelah dikurangi kewajiban" },
-      { id: 4, term: "Revenue (Pendapatan)", definition: "Peningkatan manfaat ekonomi dari aktivitas normal perusahaan" },
-      { id: 5, term: "Expense (Beban)", definition: "Penurunan manfaat ekonomi berupa arus keluar aset" },
-    ],
-    quiz: [
-      { id: 1, question: "Rumus persamaan akuntansi dasar adalah?", options: ["A = L + E", "A = L - E", "A + L = E", "E = A + L"], answer: 0, category: "Module 2" },
-      { id: 2, question: "Debit untuk aset berarti?", options: ["Berkurang", "Bertambah", "Tetap", "Dihapus"], answer: 1, category: "Module 3" },
-    ],
+    flashcards: akuntansiFlashcards,
+    quiz: akuntansiQuiz,
   },
 
   foundai: {
