@@ -7,11 +7,16 @@
  */
 
 import React from "react";
+import Image from "next/image";
 import katex from "katex";
 
+const SUPABASE_STORAGE_URL =
+  "https://gvjwxccwuyuhgexypgbn.supabase.co/storage/v1/object/public/slides";
+
 interface ParsedElement {
-  type: "h1" | "h2" | "h3" | "bullet" | "subtitle" | "text";
+  type: "h1" | "h2" | "h3" | "bullet" | "subtitle" | "slide" | "text";
   content: React.ReactNode;
+  label?: string;
 }
 
 function renderMath(latex: string, key: number): React.ReactNode {
@@ -121,6 +126,27 @@ function parseLine(line: string): ParsedElement | null {
   const subtitle = trimmed.match(/^<subtitle>([\s\S]*?)<\/subtitle>$/);
   if (subtitle) return { type: "subtitle", content: parseInline(subtitle[1]) };
 
+  const slide = trimmed.match(/^<slide\s+src="([^"]+)"(?:\s+alt="([^"]*)")?\s*\/>$/);
+  if (slide) {
+    const src = `${SUPABASE_STORAGE_URL}/${slide[1]}`;
+    const alt = slide[2] || "Slide";
+    return {
+      type: "slide",
+      label: alt,
+      content: (
+        <Image
+          src={src}
+          alt={alt}
+          width={1920}
+          height={1080}
+          className="w-full h-auto rounded-lg"
+          quality={85}
+          sizes="(max-width: 768px) 100vw, 700px"
+        />
+      ),
+    };
+  }
+
   // Plain text with possible inline tags
   return { type: "text", content: parseInline(trimmed) };
 }
@@ -167,6 +193,17 @@ export function parseRangkuman(content: string): React.ReactNode {
             <span className="text-primary mt-1.5 shrink-0">•</span>
             <span className="text-sm leading-relaxed">{parsed.content}</span>
           </div>
+        );
+        break;
+      case "slide":
+        elements.push(
+          <details key={i} className="my-3 overflow-hidden rounded-lg border border-border group">
+            <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 select-none">
+              <svg className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              {parsed.label || "Slide"}
+            </summary>
+            {parsed.content}
+          </details>
         );
         break;
       case "subtitle":
