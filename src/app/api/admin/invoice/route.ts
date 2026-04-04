@@ -7,6 +7,17 @@ import {
 // ─── Mock counter ───
 let mockCounter = 90;
 
+// Helper: get the existing row (any row, since it's a singleton table)
+async function getRow(supabase: ReturnType<typeof createServerClient>) {
+  const { data, error } = await supabase!
+    .from("invoice_counter")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 // ─── GET /api/admin/invoice - Get current counter ───
 export async function GET() {
   try {
@@ -15,20 +26,8 @@ export async function GET() {
     }
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("invoice_counter")
-      .select("value")
-      .single();
-
-    if (error) {
-      // If no row exists yet, return default
-      if (error.code === "PGRST116") {
-        return NextResponse.json({ value: 1 });
-      }
-      throw error;
-    }
-
-    return NextResponse.json({ value: data.value });
+    const row = await getRow(supabase);
+    return NextResponse.json({ value: row?.value ?? 1 });
   } catch (error) {
     console.error("Invoice GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -44,24 +43,24 @@ export async function POST() {
     }
 
     const supabase = createServerClient()!;
+    const row = await getRow(supabase);
+    const newValue = (row?.value ?? 0) + 1;
 
-    // Use RPC or manual increment
-    const { data: current } = await supabase
-      .from("invoice_counter")
-      .select("value")
-      .single();
+    if (row) {
+      // Update existing row by its actual id
+      const { error } = await supabase
+        .from("invoice_counter")
+        .update({ value: newValue, updated_at: new Date().toISOString() })
+        .eq("id", row.id);
+      if (error) throw error;
+    } else {
+      // No row yet — insert
+      const { error } = await supabase
+        .from("invoice_counter")
+        .insert({ value: newValue, updated_at: new Date().toISOString() });
+      if (error) throw error;
+    }
 
-    const newValue = (current?.value || 0) + 1;
-
-    const { error } = await supabase
-      .from("invoice_counter")
-      .upsert({
-        id: "singleton",
-        value: newValue,
-        updated_at: new Date().toISOString(),
-      });
-
-    if (error) throw error;
     return NextResponse.json({ value: newValue });
   } catch (error) {
     console.error("Invoice POST error:", error);
@@ -88,15 +87,21 @@ export async function PUT(request: Request) {
     }
 
     const supabase = createServerClient()!;
-    const { error } = await supabase
-      .from("invoice_counter")
-      .upsert({
-        id: "singleton",
-        value,
-        updated_at: new Date().toISOString(),
-      });
+    const row = await getRow(supabase);
 
-    if (error) throw error;
+    if (row) {
+      const { error } = await supabase
+        .from("invoice_counter")
+        .update({ value, updated_at: new Date().toISOString() })
+        .eq("id", row.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("invoice_counter")
+        .insert({ value, updated_at: new Date().toISOString() });
+      if (error) throw error;
+    }
+
     return NextResponse.json({ value });
   } catch (error) {
     console.error("Invoice PUT error:", error);

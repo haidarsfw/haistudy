@@ -124,7 +124,7 @@ export async function POST(request: Request) {
           { role: "user", content: message },
         ],
         stream: true,
-        max_tokens: 4096,
+        max_tokens: 1024,
       });
 
       const stream = new ReadableStream({
