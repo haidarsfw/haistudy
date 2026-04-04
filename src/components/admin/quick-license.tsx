@@ -22,7 +22,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 const PACKAGE_OPTIONS = [
   { id: "share", label: "Share (Rp20.000)", tier: "share" as const },
@@ -45,10 +44,10 @@ export function QuickLicense() {
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch invoice counter on mount + subscribe to realtime changes + polling fallback
+  // Fetch invoice counter on mount + poll every 2s for cross-device sync
   useEffect(() => {
     const fetchCounter = () => {
-      fetch("/api/admin/invoice")
+      fetch(`/api/admin/invoice?t=${Date.now()}`)
         .then((r) => r.json())
         .then((data) => {
           if (typeof data.value === "number") {
@@ -59,42 +58,8 @@ export function QuickLicense() {
         .catch(console.error);
     };
 
-    // Initial fetch
     fetchCounter();
-
-    // Subscribe to realtime changes on invoice_counter table
-    const supabase = createBrowserClient();
-    if (supabase) {
-      const channel = supabase
-        .channel("invoice-counter-sync")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "invoice_counter",
-          },
-          (payload) => {
-            const newValue = (payload.new as { value?: number })?.value;
-            if (typeof newValue === "number") {
-              setInvoiceNumber(newValue);
-              setTempInvoice(String(newValue));
-            }
-          }
-        )
-        .subscribe();
-
-      // Polling fallback every 5s in case realtime misses events
-      const interval = setInterval(fetchCounter, 5_000);
-
-      return () => {
-        clearInterval(interval);
-        supabase.removeChannel(channel);
-      };
-    }
-
-    // No Supabase: poll every 5s
-    const interval = setInterval(fetchCounter, 5_000);
+    const interval = setInterval(fetchCounter, 2_000);
     return () => clearInterval(interval);
   }, []);
 

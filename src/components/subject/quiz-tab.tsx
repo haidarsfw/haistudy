@@ -89,10 +89,10 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         sounds.wrong();
       }
       setAnswers((prev) => ({ ...prev, [current.id]: optionIdx }));
-      // Scroll to explanation + next button after AnimatePresence renders
+      // Scroll to bottom anchor after AnimatePresence finishes rendering
       setTimeout(() => {
-        explanationRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-      }, 350);
+        explanationRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 500);
     },
     [state, current, answers]
   );
@@ -368,40 +368,41 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         })}
       </div>
 
-      {/* Explanation + Next button — wrapped for scroll target */}
-      <div ref={hasAnswered ? explanationRef : undefined}>
-        <AnimatePresence>
-          {hasAnswered && current.explanation && (
-            <motion.div
-              className="rounded-xl border border-border bg-muted/50 p-4"
-              variants={fadeInUp}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-            >
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Penjelasan</p>
-              <p className="text-sm leading-relaxed">{parseInline(current.explanation)}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Explanation + Next button */}
+      <AnimatePresence>
+        {hasAnswered && current.explanation && (
+          <motion.div
+            className="rounded-xl border border-border bg-muted/50 p-4"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Penjelasan</p>
+            <p className="text-sm leading-relaxed">{parseInline(current.explanation)}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Next button */}
-        <AnimatePresence>
-          {hasAnswered && (
-            <motion.div
-              className="self-end mt-4"
-              variants={fadeInUp}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-            >
-              <Button onClick={handleNext}>
-                {currentIdx < total - 1 ? "Selanjutnya" : "Lihat Hasil"}
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Next button */}
+      <AnimatePresence>
+        {hasAnswered && (
+          <motion.div
+            className="self-end mt-4"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <Button onClick={handleNext}>
+              {currentIdx < total - 1 ? "Selanjutnya" : "Lihat Hasil"}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Scroll anchor — placed AFTER animated elements so scroll target is below the Next button */}
+      <div ref={hasAnswered ? explanationRef : undefined} className="h-1" />
     </div>
   );
 }
