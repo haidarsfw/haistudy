@@ -15,7 +15,7 @@ export function MusicPlayer() {
       <PopoverTrigger
         render={
           <button
-            className={`group hidden sm:flex items-center gap-1 rounded-full px-2.5 py-1.5 backdrop-blur-sm border transition-[background-color,border-color,color] cursor-pointer ${
+            className={`group flex items-center gap-1 rounded-full px-2.5 py-1.5 backdrop-blur-sm border transition-[background-color,border-color,color] cursor-pointer ${
               isPlaying
                 ? "bg-primary/10 border-primary/30 text-primary"
                 : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"

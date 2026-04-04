@@ -5,6 +5,7 @@ import {
   CalendarDays,
   MapPin,
   BookOpen,
+  ExternalLink,
 } from "lucide-react";
 import { examSchedule } from "@/data/schedules";
 import { ExamCountdown } from "@/components/dashboard/exam-countdown";
@@ -96,7 +97,7 @@ export default function JadwalUTSPage() {
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <CalendarDays className="h-3.5 w-3.5" />
+                  <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                   {hasDate ? (
                     <span>
                       {new Date(exam.examDate!).toLocaleDateString(locale === "en" ? "en-US" : "id-ID", {
@@ -105,11 +106,27 @@ export default function JadwalUTSPage() {
                         month: "long",
                         year: "numeric",
                       })}
+                      {" · "}
+                      {exam.examType === "online"
+                        ? `Deadline ${exam.startTime} WIB`
+                        : `${exam.startTime} – ${exam.endTime} WIB`}
                     </span>
                   ) : (
                     <span className="italic">{t("schedule.not_announced")}</span>
                   )}
                 </div>
+
+                {exam.examType === "online" && (
+                  <a
+                    href="https://exam.apps.binus.ac.id"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    exam.apps.binus.ac.id
+                  </a>
+                )}
               </div>
             );
           })}

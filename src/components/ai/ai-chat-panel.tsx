@@ -50,6 +50,15 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
     }
   }, [messages]);
 
+  // Scroll to bottom when panel opens
+  useEffect(() => {
+    if (isOpen && scrollRef.current) {
+      requestAnimationFrame(() => {
+        scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
+      });
+    }
+  }, [isOpen]);
+
   const handleSend = useCallback(
     (text: string) => {
       if (!session) return;

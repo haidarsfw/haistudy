@@ -76,19 +76,23 @@ export function RangkumanTab({ subjectId }: RangkumanTabProps) {
       <div className="flex items-center justify-between">
         {/* Module selector */}
         <div className="flex gap-1 overflow-x-auto scrollbar-thin">
-          {modules.map((mod) => (
-            <button
-              key={mod}
-              onClick={() => setSelectedModule(mod)}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                selectedModule === mod
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {mod}
-            </button>
-          ))}
+          {modules.map((mod) => {
+            const shortLabel = mod.match(/^Modul\w*\s+\d+/i)?.[0] || mod;
+            return (
+              <button
+                key={mod}
+                onClick={() => setSelectedModule(mod)}
+                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selectedModule === mod
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="sm:hidden">{shortLabel}</span>
+                <span className="hidden sm:inline">{mod}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Reading mode */}

@@ -33,7 +33,7 @@ function renderMath(latex: string, key: number): React.ReactNode {
   }
 }
 
-function parseInline(text: string): React.ReactNode {
+export function parseInline(text: string): React.ReactNode {
   // Parse <b>, <i>, and $...$ (math) tags within text
   const parts: React.ReactNode[] = [];
   let remaining = text;

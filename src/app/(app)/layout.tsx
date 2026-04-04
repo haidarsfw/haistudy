@@ -42,7 +42,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Detect current subject from URL (e.g. /subject/statistik)
   const currentSubjectId = (params.id as string) || null;
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
-  const { notifications } = useNotifications();
+  const { notifications, dismissNotification } = useNotifications();
   const { settings, isLoading: settingsLoading } = useSettings();
   const voiceRoom = useVoiceRoom();
 
@@ -73,12 +73,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [session, settings?.selectedClass, settingsLoading, updateSession]);
 
-  // Show popup for new unread notifications (dedup by ID)
+  // Show popup for new unread notifications (dedup by ID, persisted via Supabase)
   const lastPopupId = useRef<string | null>(null);
   useEffect(() => {
-    if (notifications.length > 0 && !notifications[0].read && notifications[0].id !== lastPopupId.current) {
-      lastPopupId.current = notifications[0].id;
-      setPopupNotification(notifications[0]);
+    const unread = notifications.find(n => !n.read);
+    if (unread && unread.id !== lastPopupId.current) {
+      lastPopupId.current = unread.id;
+      setPopupNotification(unread);
       sounds.notification();
     }
   }, [notifications]);
@@ -271,7 +272,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     {/* Notification popup outside clipped flex container */}
     <NotificationPopup
       notification={popupNotification}
-      onDismiss={() => setPopupNotification(null)}
+      onDismiss={() => {
+        if (popupNotification) {
+          dismissNotification(popupNotification.id);
+        }
+        setPopupNotification(null);
+      }}
     />
     </>
   );

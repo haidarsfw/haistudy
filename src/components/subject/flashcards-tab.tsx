@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { FlashcardItem } from "@/types";
+import { parseInline } from "@/lib/content-parser";
 import { springBouncy, staggerContainer, staggerItem, scaleIn } from "@/lib/motion";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { sounds } from "@/lib/sounds";
@@ -184,7 +185,7 @@ export function FlashcardsTab({ items, onComplete, subjectId }: FlashcardsTabPro
                   Istilah
                 </p>
                 <p className="font-heading text-lg font-semibold">
-                  {current?.term}
+                  {current ? parseInline(current.term) : null}
                 </p>
                 <p className="mt-4 text-[10px] text-muted-foreground">
                   Klik atau tekan Space untuk membalik
@@ -196,7 +197,7 @@ export function FlashcardsTab({ items, onComplete, subjectId }: FlashcardsTabPro
                 <p className="text-xs text-primary mb-2 uppercase tracking-wider">
                   Definisi
                 </p>
-                <p className="text-sm leading-relaxed">{current?.definition}</p>
+                <p className="text-sm leading-relaxed">{current ? parseInline(current.definition) : null}</p>
               </div>
             </motion.div>
           </motion.div>

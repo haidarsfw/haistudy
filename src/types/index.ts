@@ -59,6 +59,7 @@ export interface QuizQuestion {
   question: string;
   options: string[];
   answer: number; // 0-indexed
+  explanation?: string;
   category: string; // Module/category name for weighted scoring
 }
 

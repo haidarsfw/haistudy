@@ -225,6 +225,13 @@ export function VoiceRoom({
           resumeAllAudio();
         });
 
+        // Track disconnection for UI state
+        roomInstance.on(RoomEvent.Disconnected, () => {
+          if (!mounted) return;
+          console.log("[Voice] Disconnected from room");
+          setIsConnected(false);
+        });
+
         // ═══════════════════════════════════════════════════════
         // Now connect (all listeners are already registered)
         // ═══════════════════════════════════════════════════════
@@ -246,15 +253,48 @@ export function VoiceRoom({
           setAudioBlocked(false);
         }
 
-        // Enable microphone (handle permission denied gracefully)
+        // Wait for engine to be fully ready before publishing tracks.
+        // room.connect() resolves before ICE/DTLS may finish, so publishing
+        // immediately can fail with "engine not connected within timeout".
+        const waitForEngine = (rm: import("livekit-client").Room, timeout = 10000) =>
+          new Promise<void>((resolve, reject) => {
+            if (rm.state === "connected" && rm.localParticipant.permissions?.canPublish) {
+              resolve();
+              return;
+            }
+            const timer = setTimeout(() => reject(new Error("Engine ready timeout")), timeout);
+            const check = () => {
+              if (rm.state === "connected" && rm.localParticipant.permissions?.canPublish) {
+                clearTimeout(timer);
+                rm.off(RoomEvent.Connected, check);
+                resolve();
+              }
+            };
+            rm.on(RoomEvent.Connected, check);
+            check();
+          });
+
+        // Enable microphone after engine is ready (with retry)
         try {
+          await waitForEngine(roomInstance);
           await roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current);
         } catch (micError) {
           const errName = (micError as Error)?.name || "";
           if (errName === "NotAllowedError") {
             console.warn("[Voice] Microphone permission denied by user");
           } else {
-            console.warn("[Voice] Failed to enable microphone:", micError);
+            console.warn("[Voice] Failed to enable mic, retrying in 2s:", micError);
+            // Retry once after 2s
+            setTimeout(async () => {
+              try {
+                if (mounted && roomInstance?.state === "connected") {
+                  await roomInstance.localParticipant.setMicrophoneEnabled(!isMutedRef.current);
+                  console.log("[Voice] Mic enabled on retry");
+                }
+              } catch (retryErr) {
+                console.warn("[Voice] Mic retry also failed:", retryErr);
+              }
+            }, 2000);
           }
         }
 

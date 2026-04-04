@@ -10,6 +10,13 @@ import { statistikModule1 } from './statistik-m1';
 import { statistikModule2 } from './statistik-m2';
 import { statistikModule3 } from './statistik-m3';
 import { statistikModule4 } from './statistik-m4';
+import { bisekoModule1 } from './biseko-m1';
+import { bisekoModule2 } from './biseko-m2';
+import { bisekoModule3 } from './biseko-m3';
+import { bisekoModule4 } from './biseko-m4';
+import { bisekoModule5 } from './biseko-m5';
+import { bisekoModule6 } from './biseko-m6';
+import { bisekoModule7 } from './biseko-m7';
 
 /**
  * Rangkuman (summary) content per subject.
@@ -25,25 +32,13 @@ export const rangkumanContent: Record<string, Record<string, string>> = {
   },
 
   biseko: {
-    "Module 1: Introduction to Business Economics": `
-      <h1>Introduction to Business Economics</h1>
-      <h2>Definisi Ekonomi Bisnis</h2>
-      <bullet><b>Ekonomi Bisnis:</b> Penerapan teori ekonomi dalam pengambilan keputusan bisnis.</bullet>
-      <bullet><b>Mikroekonomi:</b> Studi perilaku individu dan perusahaan dalam membuat keputusan.</bullet>
-      <h2>Konsep Dasar</h2>
-      <bullet><b>Scarcity:</b> Keterbatasan sumber daya relatif terhadap kebutuhan manusia.</bullet>
-      <bullet><b>Opportunity Cost:</b> Biaya peluang dari pilihan yang diambil.</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
-    "Module 2: Supply and Demand": `
-      <h1>Supply and Demand</h1>
-      <h2>Hukum Permintaan</h2>
-      <bullet><b>Law of Demand:</b> Semakin tinggi harga, semakin rendah kuantitas yang diminta (ceteris paribus).</bullet>
-      <h2>Hukum Penawaran</h2>
-      <bullet><b>Law of Supply:</b> Semakin tinggi harga, semakin tinggi kuantitas yang ditawarkan (ceteris paribus).</bullet>
-      <bullet><b>Equilibrium:</b> Titik di mana kurva supply dan demand bertemu.</bullet>
-      <subtitle><b><i>Placeholder - konten lengkap akan diisi kemudian.</i></b></subtitle>
-    `,
+    "Modul 1: Lingkungan Bisnis dan Organisasi Bisnis": bisekoModule1,
+    "Modul 2: Konsumen, Permintaan, dan Elastisitas Harga": bisekoModule2,
+    "Modul 3: Biaya Produksi, Pendapatan, dan Keuntungan": bisekoModule3,
+    "Modul 4: Struktur Pasar dan Maksimisasi Keuntungan": bisekoModule4,
+    "Modul 5: Pemasaran Digital & Maksimalisasi Laba": bisekoModule5,
+    "Modul 6: Strategi Bisnis, Globalisasi, dan MNC": bisekoModule6,
+    "Modul 7: Penyempurna": bisekoModule7,
   },
 
   cbkwn: {

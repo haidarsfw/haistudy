@@ -16,6 +16,7 @@ interface MessageListProps {
   onPin: (messageId: string) => void;
   onUnpin: (messageId: string) => void;
   onImageClick?: (src: string) => void;
+  isOpen?: boolean;
 }
 
 export function MessageList({
@@ -28,6 +29,7 @@ export function MessageList({
   onPin,
   onUnpin,
   onImageClick,
+  isOpen,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -44,6 +46,15 @@ export function MessageList({
   useEffect(() => {
     bottomRef.current?.scrollIntoView();
   }, []);
+
+  // Scroll to bottom when panel opens
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView();
+      });
+    }
+  }, [isOpen]);
 
   // Scroll to a specific message (from mention notification click)
   const scrollToMessage = useCallback((e: Event) => {

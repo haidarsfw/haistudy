@@ -44,9 +44,16 @@ export function KisiKisiTab({ items, note, subjectId }: KisiKisiTabProps) {
 
   if (items.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-muted-foreground">
-        Kisi-kisi belum tersedia untuk mata kuliah ini.
-      </p>
+      <div className="py-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          Kisi-kisi belum tersedia untuk mata kuliah ini.
+        </p>
+        {note && (
+          <div className="mx-auto mt-3 max-w-md rounded-lg bg-primary/5 border border-primary/20 px-4 py-2 text-xs text-primary">
+            {note}
+          </div>
+        )}
+      </div>
     );
   }
 

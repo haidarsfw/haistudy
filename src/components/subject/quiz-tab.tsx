@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { QuizQuestion } from "@/types";
+import { parseInline } from "@/lib/content-parser";
 import { calculateQuizScore, type QuizResult } from "@/lib/quiz-scoring";
 import { QUIZ_TIMER_SECONDS } from "@/lib/constants";
 import {
@@ -41,6 +42,7 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
   const [timer, setTimer] = useState(QUIZ_TIMER_SECONDS);
   const [result, setResult] = useState<QuizResult | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const explanationRef = useRef<HTMLDivElement>(null);
 
   const current = questions[currentIdx];
   const total = questions.length;
@@ -87,6 +89,12 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         sounds.wrong();
       }
       setAnswers((prev) => ({ ...prev, [current.id]: optionIdx }));
+      // Scroll to explanation after AnimatePresence renders it
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          explanationRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }, 150);
+      });
     },
     [state, current, answers]
   );
@@ -222,16 +230,21 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
                     <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{q.question}</p>
+                    <p className="text-sm font-medium">{parseInline(q.question)}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Jawaban: {q.options[q.answer]}
+                      Jawaban: {parseInline(q.options[q.answer])}
                       {!wasSkipped && !isCorrect && (
                         <span className="text-destructive">
                           {" "}
-                          &middot; Kamu pilih: {q.options[userAnswer]}
+                          &middot; Kamu pilih: {parseInline(q.options[userAnswer])}
                         </span>
                       )}
                     </p>
+                    {q.explanation && (
+                      <p className="text-xs text-muted-foreground mt-1 italic">
+                        {parseInline(q.explanation)}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -299,7 +312,7 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
             {current.category}
           </p>
           <p className="font-heading text-base font-semibold">
-            {current.question}
+            {parseInline(current.question)}
           </p>
         </motion.div>
       </AnimatePresence>
@@ -347,7 +360,7 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
               >
                 {String.fromCharCode(65 + idx)}
               </span>
-              <span className="flex-1">{option}</span>
+              <span className="flex-1">{parseInline(option)}</span>
               {isCorrect && (
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               )}
@@ -357,22 +370,40 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         })}
       </div>
 
-      {/* Next button */}
-      <AnimatePresence>
-        {hasAnswered && (
-          <motion.div
-            className="self-end"
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            <Button onClick={handleNext}>
-              {currentIdx < total - 1 ? "Selanjutnya" : "Lihat Hasil"}
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Explanation + Next button — wrapped for scroll target */}
+      <div ref={hasAnswered ? explanationRef : undefined}>
+        <AnimatePresence>
+          {hasAnswered && current.explanation && (
+            <motion.div
+              className="rounded-xl border border-border bg-muted/50 p-4"
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Penjelasan</p>
+              <p className="text-sm leading-relaxed">{parseInline(current.explanation)}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Next button */}
+        <AnimatePresence>
+          {hasAnswered && (
+            <motion.div
+              className="self-end mt-4"
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              <Button onClick={handleNext}>
+                {currentIdx < total - 1 ? "Selanjutnya" : "Lihat Hasil"}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

@@ -257,6 +257,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
                 onPin={handlePin}
                 onUnpin={handleUnpin}
                 onImageClick={setPreviewImage}
+                isOpen={isOpen}
               />
             )}
 
