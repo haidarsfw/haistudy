@@ -316,7 +316,7 @@ export function LicenseTable() {
               {search ? "Tidak ditemukan" : "Belum ada license key"}
             </p>
           ) : (
-            <ScrollArea className="max-h-[500px]">
+            <ScrollArea className="max-h-[calc(100vh-280px)]">
               <div className="space-y-2">
                 {filtered.map((license) => {
                   const activation = activations.find(

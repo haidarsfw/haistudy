@@ -17,6 +17,9 @@ interface MessageListProps {
   onUnpin: (messageId: string) => void;
   onImageClick?: (src: string) => void;
   isOpen?: boolean;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
 }
 
 export function MessageList({
@@ -30,6 +33,9 @@ export function MessageList({
   onUnpin,
   onImageClick,
   isOpen,
+  onLoadMore,
+  isLoadingMore,
+  hasMore,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -83,6 +89,11 @@ export function MessageList({
     const threshold = 100;
     isNearBottomRef.current =
       el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+
+    // Lazy load older messages when scrolling near top
+    if (el.scrollTop < 80 && hasMore && !isLoadingMore && onLoadMore) {
+      onLoadMore();
+    }
   };
 
   // Group messages by date
@@ -135,6 +146,14 @@ export function MessageList({
   return (
     <ScrollArea className="flex-1 min-h-0" ref={scrollAreaRef} onScroll={handleScroll}>
       <div className="py-2">
+        {isLoadingMore && (
+          <div className="flex justify-center py-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        )}
+        {!hasMore && messages.length > 0 && (
+          <p className="text-center text-[10px] text-muted-foreground py-2">Awal percakapan</p>
+        )}
         {groupedMessages.map((group) => (
           <div key={group.date}>
             {/* Date separator */}

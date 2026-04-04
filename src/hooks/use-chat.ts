@@ -13,6 +13,8 @@ export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const lastSendTime = useRef(0);
 
@@ -29,18 +31,46 @@ export function useChat() {
     try { localStorage.setItem(LAST_READ_KEY, now); } catch {}
   }, []);
 
-  // Fetch initial messages
+  // Fetch initial messages (latest batch)
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch("/api/chat/messages");
       const data = await res.json();
-      if (data.messages) setMessages(data.messages);
+      if (data.messages) {
+        setMessages(data.messages);
+        setHasMore(data.messages.length >= 100);
+      }
     } catch (error) {
       console.error("Failed to fetch chat messages:", error);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  // Fetch older messages (lazy load on scroll up)
+  const fetchMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore || messages.length === 0) return;
+    setIsLoadingMore(true);
+    try {
+      const oldestId = messages[0].id;
+      const res = await fetch(`/api/chat/messages?before=${encodeURIComponent(oldestId)}`);
+      const data = await res.json();
+      if (data.messages && data.messages.length > 0) {
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const newMsgs = data.messages.filter((m: ChatMessage) => !existingIds.has(m.id));
+          return [...newMsgs, ...prev];
+        });
+        setHasMore(data.messages.length >= 100);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Failed to fetch more messages:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, messages]);
 
   // Fetch pinned message IDs
   const fetchPins = useCallback(async () => {
@@ -418,6 +448,8 @@ export function useChat() {
     pinnedMessages,
     pinnedIds,
     isLoading,
+    isLoadingMore,
+    hasMore,
     isSending,
     unreadCount,
     sendMessage,
@@ -428,5 +460,6 @@ export function useChat() {
     pinMessage,
     unpinMessage,
     markAsRead,
+    fetchMore,
   };
 }

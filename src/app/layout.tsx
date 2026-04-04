@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/providers/session-provider";
 import { LanguageProvider } from "@/components/providers/language-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { MusicProvider } from "@/components/providers/music-provider";
+import { VoiceProvider } from "@/components/providers/voice-provider";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import "katex/dist/katex.min.css";
@@ -97,7 +98,9 @@ export default function RootLayout({
             <LanguageProvider>
               <TooltipProvider>
                 <MusicProvider>
-                  {children}
+                  <VoiceProvider>
+                    {children}
+                  </VoiceProvider>
                 </MusicProvider>
                 <Toaster position="top-right" richColors closeButton />
                 <Analytics />

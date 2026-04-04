@@ -11,6 +11,7 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 interface UserStat {
   licenseKey: string;
@@ -37,8 +38,27 @@ export function Statistics() {
 
     fetchUsers();
 
-    // Poll every 30s for real-time updates
-    const interval = setInterval(fetchUsers, 30_000);
+    // Supabase Realtime for license_keys changes (quiz scores, online minutes)
+    if (isSupabaseConfigured) {
+      const supabase = createClient();
+      if (supabase) {
+        const channel = supabase
+          .channel("admin-stats")
+          .on("postgres_changes", { event: "*", schema: "public", table: "license_keys" }, () => fetchUsers())
+          .on("postgres_changes", { event: "*", schema: "public", table: "activations" }, () => fetchUsers())
+          .subscribe();
+
+        // Polling fallback every 10s
+        const interval = setInterval(fetchUsers, 10_000);
+        return () => {
+          clearInterval(interval);
+          supabase.removeChannel(channel);
+        };
+      }
+    }
+
+    // Fallback: poll every 10s
+    const interval = setInterval(fetchUsers, 10_000);
     return () => clearInterval(interval);
   }, []);
 

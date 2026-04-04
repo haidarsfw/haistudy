@@ -30,6 +30,8 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     pinnedMessages,
     pinnedIds,
     isLoading,
+    isLoadingMore,
+    hasMore,
     isSending,
     unreadCount,
     sendMessage,
@@ -40,6 +42,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
     pinMessage,
     unpinMessage,
     markAsRead,
+    fetchMore,
   } = useChat();
   const { users } = useOnlineUsers();
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
@@ -258,6 +261,9 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
                 onUnpin={handleUnpin}
                 onImageClick={setPreviewImage}
                 isOpen={isOpen}
+                onLoadMore={fetchMore}
+                isLoadingMore={isLoadingMore}
+                hasMore={hasMore}
               />
             )}
 

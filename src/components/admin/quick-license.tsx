@@ -45,43 +45,57 @@ export function QuickLicense() {
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch invoice counter on mount + subscribe to realtime changes
+  // Fetch invoice counter on mount + subscribe to realtime changes + polling fallback
   useEffect(() => {
+    const fetchCounter = () => {
+      fetch("/api/admin/invoice")
+        .then((r) => r.json())
+        .then((data) => {
+          if (typeof data.value === "number") {
+            setInvoiceNumber(data.value);
+            setTempInvoice(String(data.value));
+          }
+        })
+        .catch(console.error);
+    };
+
     // Initial fetch
-    fetch("/api/admin/invoice")
-      .then((r) => r.json())
-      .then((data) => {
-        setInvoiceNumber(data.value);
-        setTempInvoice(String(data.value));
-      })
-      .catch(console.error);
+    fetchCounter();
 
     // Subscribe to realtime changes on invoice_counter table
     const supabase = createBrowserClient();
-    if (!supabase) return;
-
-    const channel = supabase
-      .channel("invoice-counter-sync")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "invoice_counter",
-        },
-        (payload) => {
-          const newValue = (payload.new as { value?: number })?.value;
-          if (typeof newValue === "number") {
-            setInvoiceNumber(newValue);
-            setTempInvoice(String(newValue));
+    if (supabase) {
+      const channel = supabase
+        .channel("invoice-counter-sync")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "invoice_counter",
+          },
+          (payload) => {
+            const newValue = (payload.new as { value?: number })?.value;
+            if (typeof newValue === "number") {
+              setInvoiceNumber(newValue);
+              setTempInvoice(String(newValue));
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      // Polling fallback every 5s in case realtime misses events
+      const interval = setInterval(fetchCounter, 5_000);
+
+      return () => {
+        clearInterval(interval);
+        supabase.removeChannel(channel);
+      };
+    }
+
+    // No Supabase: poll every 5s
+    const interval = setInterval(fetchCounter, 5_000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleGenerate = useCallback(async () => {

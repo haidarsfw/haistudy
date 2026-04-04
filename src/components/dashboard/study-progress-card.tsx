@@ -53,33 +53,45 @@ export function StudyProgressCard() {
   const [overall, setOverall] = useState(0);
 
   useEffect(() => {
-    const allProgress = getAllProgress();
-    const defaultProgress: SubjectProgress = {
-      materi: [],
-      flashcardsCompleted: false,
-      quizScores: {},
+    const recalculate = () => {
+      const allProgress = getAllProgress();
+      const defaultProgress: SubjectProgress = {
+        materi: [],
+        flashcardsCompleted: false,
+        quizScores: {},
+      };
+
+      const data = subjects.map((s) => {
+        const subContent = content[s.id];
+        const progress = allProgress[s.id] || defaultProgress;
+        const percent = subContent
+          ? calcPercent(
+              progress,
+              subContent.materi.length,
+              subContent.flashcards.length > 0,
+              subContent.quiz.length > 0
+            )
+          : 0;
+        return { id: s.id, name: s.name, icon: s.icon, color: s.color, percent };
+      });
+
+      setProgressData(data);
+      const avg =
+        data.length > 0
+          ? Math.round(data.reduce((sum, d) => sum + d.percent, 0) / data.length)
+          : 0;
+      setOverall(avg);
     };
 
-    const data = subjects.map((s) => {
-      const subContent = content[s.id];
-      const progress = allProgress[s.id] || defaultProgress;
-      const percent = subContent
-        ? calcPercent(
-            progress,
-            subContent.materi.length,
-            subContent.flashcards.length > 0,
-            subContent.quiz.length > 0
-          )
-        : 0;
-      return { id: s.id, name: s.name, icon: s.icon, color: s.color, percent };
-    });
+    recalculate();
 
-    setProgressData(data);
-    const avg =
-      data.length > 0
-        ? Math.round(data.reduce((sum, d) => sum + d.percent, 0) / data.length)
-        : 0;
-    setOverall(avg);
+    // Re-calculate when progress syncs from server or updates locally
+    window.addEventListener("hs-progress-synced", recalculate);
+    window.addEventListener("storage", recalculate);
+    return () => {
+      window.removeEventListener("hs-progress-synced", recalculate);
+      window.removeEventListener("storage", recalculate);
+    };
   }, []);
 
   return (

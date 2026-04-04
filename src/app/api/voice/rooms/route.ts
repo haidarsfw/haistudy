@@ -123,6 +123,45 @@ export async function GET() {
     await ensureSeedRooms();
     const supabase = createServerClient()!;
 
+    // Clean up stale participants (joined > 10 minutes ago AND not in presence table)
+    const STALE_MINUTES = 10;
+    const staleThreshold = new Date(Date.now() - STALE_MINUTES * 60 * 1000).toISOString();
+    try {
+      // Get participants who joined more than 10min ago
+      const { data: staleParticipants } = await supabase
+        .from("voice_participants")
+        .select("id, license_key, joined_at")
+        .lt("joined_at", staleThreshold);
+
+      if (staleParticipants && staleParticipants.length > 0) {
+        // Check which of these are still online in presence table
+        const licenseKeys = staleParticipants.map((p) => p.license_key).filter(Boolean);
+        const { data: onlinePresence } = await supabase
+          .from("presence")
+          .select("license_key, last_seen")
+          .in("license_key", licenseKeys)
+          .eq("online", true);
+
+        const recentThreshold = Date.now() - 3 * 60 * 1000; // 3 min
+        const onlineKeys = new Set(
+          (onlinePresence || [])
+            .filter((p) => new Date(p.last_seen as string).getTime() > recentThreshold)
+            .map((p) => p.license_key)
+        );
+
+        // Delete stale participants who are NOT online
+        const toDelete = staleParticipants.filter((p) => !onlineKeys.has(p.license_key));
+        if (toDelete.length > 0) {
+          await supabase
+            .from("voice_participants")
+            .delete()
+            .in("id", toDelete.map((p) => p.id));
+        }
+      }
+    } catch (cleanupErr) {
+      console.error("Voice stale cleanup error:", cleanupErr);
+    }
+
     // Fetch participants grouped by room
     const { data: participants, error } = await supabase
       .from("voice_participants")

@@ -89,12 +89,10 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         sounds.wrong();
       }
       setAnswers((prev) => ({ ...prev, [current.id]: optionIdx }));
-      // Scroll to explanation after AnimatePresence renders it
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          explanationRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        }, 150);
-      });
+      // Scroll to explanation + next button after AnimatePresence renders
+      setTimeout(() => {
+        explanationRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 350);
     },
     [state, current, answers]
   );

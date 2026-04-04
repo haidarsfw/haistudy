@@ -12,7 +12,7 @@ import { ChatTrigger } from "@/components/chat/chat-trigger";
 import { AiChatPanel } from "@/components/ai/ai-chat-panel";
 import { AiTrigger } from "@/components/ai/ai-trigger";
 import { VoicePanel } from "@/components/voice/voice-panel";
-import { useVoiceRoom } from "@/hooks/use-voice-room";
+import { useVoice } from "@/components/providers/voice-provider";
 import { NotificationPopup } from "@/components/notifications/notification-popup";
 import { SettingsModal } from "@/components/settings/settings-modal";
 import { ReminderAlarm } from "@/components/shared/reminder-alarm";
@@ -44,7 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
   const { notifications, dismissNotification } = useNotifications();
   const { settings, isLoading: settingsLoading } = useSettings();
-  const voiceRoom = useVoiceRoom();
+  const voiceRoom = useVoice();
 
   // Sync study progress from server into localStorage for dashboard widgets
   useProgressSync();
