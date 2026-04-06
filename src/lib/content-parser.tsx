@@ -140,8 +140,7 @@ function parseLine(line: string): ParsedElement | null {
           width={1920}
           height={1080}
           className="w-full h-auto rounded-lg"
-          quality={85}
-          sizes="(max-width: 768px) 100vw, 700px"
+          unoptimized
         />
       ),
     };

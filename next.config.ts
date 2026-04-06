@@ -5,11 +5,14 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
+    qualities: [75],
     remotePatterns: [
       {
         protocol: "https",
         hostname: "gvjwxccwuyuhgexypgbn.supabase.co",
+        port: "",
         pathname: "/storage/v1/object/public/slides/**",
+        search: "",
       },
     ],
   },
