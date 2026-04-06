@@ -4,8 +4,12 @@ import { motion } from "framer-motion";
 import { subjects } from "@/data/subjects";
 import { SubjectCard } from "./subject-card";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { useNotifications } from "@/hooks/use-notifications";
+import { useForumUnread } from "@/hooks/use-forum-unread";
 
 export function SubjectGrid() {
+  const { notifications } = useNotifications();
+  const forumUnread = useForumUnread(notifications);
   return (
     <div className="flex flex-col gap-3">
       <h3 className="font-heading text-sm font-semibold text-muted-foreground">
@@ -24,6 +28,7 @@ export function SubjectGrid() {
               subject={subject}
               // TODO: Wire up actual progress
               progress={0}
+              hasForumUnread={forumUnread.hasUnread(subject.id)}
             />
           </motion.div>
         ))}

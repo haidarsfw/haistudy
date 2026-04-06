@@ -15,7 +15,7 @@ import {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, userId, userName, licenseKey, deviceType, hideStatus } =
+    const { action, userId, userName, licenseKey, deviceType, hideStatus, syncMinutes, minutesToSync } =
       body as {
         action: "heartbeat" | "offline";
         userId: string;
@@ -23,6 +23,8 @@ export async function POST(request: Request) {
         licenseKey?: string;
         deviceType?: string;
         hideStatus?: boolean;
+        syncMinutes?: boolean;
+        minutesToSync?: number;
       };
 
     if (!userId) {
@@ -36,6 +38,32 @@ export async function POST(request: Request) {
     const supabase = createServerClient()!;
 
     if (action === "offline") {
+      // Sync accumulated visible minutes before going offline
+      if (syncMinutes && licenseKey && minutesToSync && minutesToSync > 0) {
+        try {
+          await supabase.rpc("increment_license_field", {
+            p_key: licenseKey,
+            p_field: "total_online_minutes",
+            p_amount: minutesToSync,
+          });
+        } catch (err) {
+          console.error("Failed to sync minutes on offline:", err);
+          // Fallback: direct update
+          const { data } = await supabase
+            .from("license_keys")
+            .select("total_online_minutes")
+            .eq("key", licenseKey)
+            .single();
+          if (data) {
+            await supabase
+              .from("license_keys")
+              .update({
+                total_online_minutes: (data.total_online_minutes || 0) + minutesToSync,
+              })
+              .eq("key", licenseKey);
+          }
+        }
+      }
       await supabase
         .from("presence")
         .update({ online: false, last_seen: new Date().toISOString() })
@@ -73,12 +101,13 @@ export async function POST(request: Request) {
       // online minutes every heartbeat call where the client signals
       // that 5 minutes of visible time have elapsed.
       // The client sends syncMinutes: true when it's time.
-      if ((body as { syncMinutes?: boolean }).syncMinutes) {
+      if (syncMinutes) {
+        const amount = minutesToSync && minutesToSync > 0 ? minutesToSync : 2;
         try {
           await supabase.rpc("increment_license_field", {
             p_key: licenseKey,
             p_field: "total_online_minutes",
-            p_amount: 5,
+            p_amount: amount,
           });
         } catch (err) {
           console.error("Failed to increment online minutes via RPC:", err);
@@ -93,7 +122,7 @@ export async function POST(request: Request) {
               .from("license_keys")
               .update({
                 total_online_minutes:
-                  (data.total_online_minutes || 0) + 5,
+                  (data.total_online_minutes || 0) + amount,
               })
               .eq("key", licenseKey);
           }

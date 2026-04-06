@@ -11,29 +11,7 @@ const isDeepSeekConfigured = DEEPSEEK_API_KEY.length > 0;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const DEEPSEEK_FAST = "deepseek-chat";
 const DEEPSEEK_REASONING = "deepseek-reasoner";
-const MAX_HISTORY = 20; // max conversation turns to send
-
-// ─── Rate limiting (in-memory, per license key) ───
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_MAX = 30; // requests per window
-const RATE_LIMIT_WINDOW_MS = 3_600_000; // 1 hour
-
-function checkRateLimit(licenseKey: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(licenseKey);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(licenseKey, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
-}
+const MAX_HISTORY = 40; // max conversation turns to send
 
 // ─── Mock response for dev without API key ───
 const MOCK_RESPONSES = [
@@ -82,14 +60,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Rate limit check
-    if (!checkRateLimit(licenseKey)) {
-      return NextResponse.json(
-        { error: "Batas penggunaan AI tercapai. Coba lagi dalam 1 jam." },
-        { status: 429 }
-      );
-    }
-
     // Build system prompt with subject context
     const systemPrompt = buildSystemPrompt(subjectId);
 
@@ -124,7 +94,7 @@ export async function POST(request: Request) {
           { role: "user", content: message },
         ],
         stream: true,
-        max_tokens: 1024,
+        max_tokens: 8192,
       });
 
       const stream = new ReadableStream({
@@ -170,7 +140,7 @@ export async function POST(request: Request) {
       generationConfig: {
         temperature: 0.7,
         topP: 0.9,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 8192,
       },
     });
 

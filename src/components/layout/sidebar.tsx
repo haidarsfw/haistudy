@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useNotifications } from "@/hooks/use-notifications";
+import { useForumUnread } from "@/hooks/use-forum-unread";
 import {
   Tooltip,
   TooltipContent,
@@ -49,6 +51,8 @@ export function Sidebar({ onSettingsOpen, onSupportOpen }: SidebarProps) {
   const router = useRouter();
   const { session, logout } = useSession();
   const { t } = useTranslation();
+  const { notifications } = useNotifications();
+  const { totalUnread: forumUnread } = useForumUnread(notifications);
   const [collapsed, setCollapsed] = useState(false);
   const [feedbackCount, setFeedbackCount] = useState(0);
 
@@ -187,14 +191,19 @@ export function Sidebar({ onSettingsOpen, onSupportOpen }: SidebarProps) {
                   ? pathname.startsWith(item.href.replace("#", ""))
                   : false;
 
+          const showDot = item.labelKey === "nav.subjects" && forumUnread > 0;
           return (
-            <NavButton
-              key={item.labelKey}
-              label={t(item.labelKey)}
-              icon={item.icon}
-              href={item.href}
-              isActive={isActive}
-            />
+            <div key={item.labelKey} className="relative">
+              <NavButton
+                label={t(item.labelKey)}
+                icon={item.icon}
+                href={item.href}
+                isActive={isActive}
+              />
+              {showDot && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-destructive pointer-events-none" />
+              )}
+            </div>
           );
         })}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Sun, Moon, BookOpen } from "lucide-react";
 import { parseRangkuman } from "@/lib/content-parser";
 import { getRangkumanBySubjectId } from "@/data/rangkuman";
@@ -11,14 +11,17 @@ type ReadingMode = "light" | "dark" | "sepia";
 
 interface RangkumanTabProps {
   subjectId: string;
+  initialModule?: string;
+  highlightText?: string;
 }
 
-export function RangkumanTab({ subjectId }: RangkumanTabProps) {
+export function RangkumanTab({ subjectId, initialModule, highlightText }: RangkumanTabProps) {
   const { dark } = useTheme();
   const { t } = useTranslation();
   const [mode, setMode] = useState<ReadingMode>(() => dark ? "dark" : "light");
   const [manualOverride, setManualOverride] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [selectedModule, setSelectedModule] = useState<string | null>(initialModule || null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const rangkumanData = getRangkumanBySubjectId(subjectId);
   const modules = rangkumanData ? Object.keys(rangkumanData) : [];
@@ -33,9 +36,58 @@ export function RangkumanTab({ subjectId }: RangkumanTabProps) {
   // Set first module as default
   useEffect(() => {
     if (modules.length > 0 && !selectedModule) {
-      setSelectedModule(modules[0]);
+      setSelectedModule(initialModule || modules[0]);
     }
-  }, [modules, selectedModule]);
+  }, [modules, selectedModule, initialModule]);
+
+  // Highlight + scroll to matched text from search
+  const applyHighlight = useCallback(() => {
+    if (!highlightText || !contentRef.current) return;
+
+    const walker = document.createTreeWalker(
+      contentRef.current,
+      NodeFilter.SHOW_TEXT,
+    );
+
+    let node: Text | null;
+    while ((node = walker.nextNode() as Text | null)) {
+      const idx = node.textContent?.toLowerCase().indexOf(highlightText.toLowerCase()) ?? -1;
+      if (idx === -1) continue;
+
+      const mark = document.createElement("mark");
+      mark.className = "bg-primary/30 rounded px-0.5 transition-colors duration-700";
+
+      const range = document.createRange();
+      range.setStart(node, idx);
+      range.setEnd(node, idx + highlightText.length);
+      range.surroundContents(mark);
+
+      mark.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Fade out after 4 seconds
+      setTimeout(() => {
+        mark.className = "bg-transparent rounded px-0.5 transition-colors duration-700";
+        setTimeout(() => {
+          // Unwrap the mark element
+          const parent = mark.parentNode;
+          if (parent) {
+            parent.replaceChild(document.createTextNode(mark.textContent || ""), mark);
+            parent.normalize();
+          }
+        }, 800);
+      }, 4000);
+
+      break; // Only highlight first match
+    }
+  }, [highlightText]);
+
+  useEffect(() => {
+    if (highlightText && selectedModule) {
+      // Wait for content to render
+      const timer = setTimeout(applyHighlight, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightText, selectedModule, applyHighlight]);
 
   // Block copy/paste on rangkuman content
   useEffect(() => {
@@ -121,6 +173,7 @@ export function RangkumanTab({ subjectId }: RangkumanTabProps) {
       {/* Content */}
       {selectedModule && rangkumanData[selectedModule] && (
         <div
+          ref={contentRef}
           className={`copy-protected rounded-xl border border-border p-5 ${modeStyles[mode]}`}
           onContextMenu={(e) => e.preventDefault()}
         >

@@ -78,6 +78,8 @@ export function getSubjectKnowledge(subjectId: string): string {
 
 /**
  * Build knowledge context for all subjects (overview).
+ * Includes kisi-kisi topics and condensed rangkuman so AI has broad knowledge
+ * even without a specific subjectId.
  */
 export function getAllSubjectsOverview(): string {
   const parts: string[] = [];
@@ -104,6 +106,38 @@ export function getAllSubjectsOverview(): string {
       parts.push(`- **${fc.term}**: ${fc.definition}`);
     }
     parts.push("");
+  }
+
+  // Kisi-kisi topics per subject
+  parts.push("\n## Kisi-Kisi Ujian Per Mata Kuliah\n");
+  for (const subject of subjects) {
+    const subjectContent = content[subject.id];
+    if (!subjectContent || subjectContent.kisiKisi.length === 0) continue;
+
+    parts.push(`### ${subject.name}`);
+    for (const kk of subjectContent.kisiKisi) {
+      parts.push(`**${kk.topic}**: ${kk.items.join("; ")}`);
+    }
+    parts.push("");
+  }
+
+  // Condensed rangkuman summaries (headings + first sentences)
+  parts.push("\n## Ringkasan Rangkuman Per Mata Kuliah\n");
+  for (const subject of subjects) {
+    const rangkuman = rangkumanContent[subject.id];
+    if (!rangkuman) continue;
+
+    parts.push(`### ${subject.name}`);
+    for (const [title, html] of Object.entries(rangkuman)) {
+      parts.push(`**${title}**`);
+      // Extract headings and first paragraph of each section
+      const plain = stripTags(html);
+      const lines = plain.split("\n").filter((l) => l.trim());
+      // Take headings and first ~500 chars of content
+      const summary = lines.slice(0, 20).join("\n");
+      parts.push(summary.length > 500 ? summary.slice(0, 500) + "..." : summary);
+      parts.push("");
+    }
   }
 
   return parts.join("\n");

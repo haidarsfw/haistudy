@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ParticipantList } from "./participant-list";
 import { AudioControls } from "./audio-controls";
-import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2, X, Maximize2, Volume2 } from "lucide-react";
+import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2, X, Maximize2, Volume2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -90,6 +90,46 @@ export function VoiceRoom({
   const isCreator = room.creatorId === currentLicenseKey;
   const canScreenShare = typeof navigator !== "undefined" &&
     typeof navigator.mediaDevices?.getDisplayMedia === "function";
+
+  // ═══ Idle disconnect — auto-leave after 10 min of inactivity ═══
+  const IDLE_WARN_MS = 8 * 60 * 1000;   // 8 min
+  const IDLE_KICK_MS = 10 * 60 * 1000;  // 10 min
+  const lastActivityRef = useRef(Date.now());
+  const [idleWarning, setIdleWarning] = useState(false);
+  const handleLeaveRef = useRef<() => void>(() => {});
+
+  const resetIdleTimer = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    setIdleWarning(false);
+  }, []);
+
+  // Check idle every 30s
+  useEffect(() => {
+    if (!isConnected) return;
+    const interval = setInterval(() => {
+      const idle = Date.now() - lastActivityRef.current;
+      if (idle >= IDLE_KICK_MS) {
+        console.log("[Voice] Auto-disconnect: idle for 10 minutes");
+        handleLeaveRef.current();
+      } else if (idle >= IDLE_WARN_MS) {
+        setIdleWarning(true);
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [isConnected]);
+
+  // Reset idle on: mute toggle, deafen toggle, screen share, tab visibility
+  useEffect(() => {
+    resetIdleTimer();
+  }, [isMuted, isDeafened, isScreenSharing, resetIdleTimer]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden) resetIdleTimer();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [resetIdleTimer]);
 
   // LiveKit connection — complete rewrite for reliable two-way audio
   useEffect(() => {
@@ -354,6 +394,7 @@ export function VoiceRoom({
   const handleEnableAudio = useCallback(async () => {
     const room = lkRoomRef.current;
     if (!room) return;
+    resetIdleTimer();
 
     try {
       // startAudio() MUST be called from a click/tap handler
@@ -432,8 +473,10 @@ export function VoiceRoom({
     lkRoomRef.current?.disconnect();
     lkRoomRef.current = null;
     setIsConnected(false);
+    setIdleWarning(false);
     onLeave();
   }, [onLeave]);
+  handleLeaveRef.current = handleLeave;
 
   return (
     <Card className="border-primary/30">
@@ -543,6 +586,29 @@ export function VoiceRoom({
               </p>
             </div>
           </button>
+        )}
+
+        {/* ═══ Idle warning banner ═══ */}
+        {idleWarning && isConnected && (
+          <div className="flex items-center gap-3 rounded-xl border-2 border-dashed border-yellow-500/40 bg-yellow-500/10 p-3">
+            <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
+                Kamu sudah idle 8+ menit
+              </p>
+              <p className="text-[10px] text-yellow-600/70 dark:text-yellow-400/70">
+                Akan otomatis disconnect dalam 2 menit jika tidak ada aktivitas.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 h-7 text-xs border-yellow-500/40 hover:bg-yellow-500/20"
+              onClick={resetIdleTimer}
+            >
+              Tetap di sini
+            </Button>
+          </div>
         )}
 
         {/* Participants */}

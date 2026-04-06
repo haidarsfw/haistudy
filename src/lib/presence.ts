@@ -13,8 +13,10 @@ import type { OnlineUser } from "@/types";
 
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let onlineMinutesInterval: ReturnType<typeof setInterval> | null = null;
+let visibleSecondsInterval: ReturnType<typeof setInterval> | null = null;
+let visibleSeconds = 0;
 
-const ONLINE_MINUTES_SYNC_MS = 5 * 60 * 1000; // 5 minutes
+const ONLINE_MINUTES_SYNC_MS = 2 * 60 * 1000; // 2 minutes
 
 export async function setupPresence(opts: {
   userId: string;
@@ -26,18 +28,23 @@ export async function setupPresence(opts: {
   // Heartbeat via API route (uses service_role, bypasses RLS)
   const sendHeartbeat = async (syncMinutes = false) => {
     try {
+      const payload: Record<string, unknown> = {
+        action: "heartbeat",
+        userId: opts.userId,
+        userName: opts.userName,
+        licenseKey: opts.licenseKey,
+        deviceType: opts.deviceType,
+        hideStatus: opts.hideStatus,
+        syncMinutes,
+      };
+      if (syncMinutes) {
+        const minutes = Math.floor(visibleSeconds / 60);
+        payload.minutesToSync = minutes > 0 ? minutes : 1;
+      }
       await fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "heartbeat",
-          userId: opts.userId,
-          userName: opts.userName,
-          licenseKey: opts.licenseKey,
-          deviceType: opts.deviceType,
-          hideStatus: opts.hideStatus,
-          syncMinutes,
-        }),
+        body: JSON.stringify(payload),
       });
     } catch {
       // Network error — ignore, will retry next interval
@@ -58,11 +65,20 @@ export async function setupPresence(opts: {
 
   startHeartbeat();
 
-  // Online minutes sync — every 5 minutes of visible time
+  // Visible-time accumulator — ticks every second only when tab is visible
+  visibleSeconds = 0;
+  if (visibleSecondsInterval) clearInterval(visibleSecondsInterval);
+  visibleSecondsInterval = setInterval(() => {
+    if (!document.hidden) visibleSeconds++;
+  }, 1000);
+
+  // Online minutes sync — every 2 minutes, sync accumulated visible time
   if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
   onlineMinutesInterval = setInterval(() => {
-    if (document.hidden) return; // Only count visible time
-    sendHeartbeat(true); // syncMinutes = true triggers server-side increment
+    const minutes = Math.floor(visibleSeconds / 60);
+    if (minutes < 1) return; // nothing to sync yet
+    visibleSeconds = visibleSeconds % 60; // keep remainder
+    sendHeartbeat(true); // syncMinutes = true triggers server-side increment with `minutes`
   }, ONLINE_MINUTES_SYNC_MS);
 
   const onVisibilityChange = () => {
@@ -72,12 +88,20 @@ export async function setupPresence(opts: {
   document.addEventListener("visibilitychange", onVisibilityChange);
 
   // Mark offline on tab close (sendBeacon fires reliably during unload)
+  // Include accumulated visible minutes so short sessions don't lose time
   const onBeforeUnload = () => {
     try {
+      const minutesToSync = Math.floor(visibleSeconds / 60);
       navigator.sendBeacon(
         "/api/presence",
         new Blob(
-          [JSON.stringify({ action: "offline", userId: opts.userId })],
+          [JSON.stringify({
+            action: "offline",
+            userId: opts.userId,
+            licenseKey: opts.licenseKey,
+            syncMinutes: minutesToSync > 0,
+            minutesToSync,
+          })],
           { type: "application/json" }
         )
       );
@@ -89,15 +113,23 @@ export async function setupPresence(opts: {
   return () => {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
+    if (visibleSecondsInterval) clearInterval(visibleSecondsInterval);
     document.removeEventListener("visibilitychange", onVisibilityChange);
     window.removeEventListener("beforeunload", onBeforeUnload);
 
     // Best-effort offline signal via sendBeacon (reliable during tab close)
+    const minutesToSync = Math.floor(visibleSeconds / 60);
     try {
       navigator.sendBeacon(
         "/api/presence",
         new Blob(
-          [JSON.stringify({ action: "offline", userId: opts.userId })],
+          [JSON.stringify({
+            action: "offline",
+            userId: opts.userId,
+            licenseKey: opts.licenseKey,
+            syncMinutes: minutesToSync > 0,
+            minutesToSync,
+          })],
           { type: "application/json" }
         )
       );
@@ -106,10 +138,17 @@ export async function setupPresence(opts: {
       fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "offline", userId: opts.userId }),
+        body: JSON.stringify({
+          action: "offline",
+          userId: opts.userId,
+          licenseKey: opts.licenseKey,
+          syncMinutes: minutesToSync > 0,
+          minutesToSync,
+        }),
         keepalive: true,
       }).catch(() => {});
     }
+    visibleSeconds = 0;
   };
 }
 

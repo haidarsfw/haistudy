@@ -212,6 +212,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           if (session?.isAdmin) { router.push("/admin?tab=7"); } else { setIsSupportOpen(true); }
         }}
         onSettingsOpen={handleSettingsOpen}
+        chatUnread={chatUnread}
       />
 
       {/* FABs (hidden on mobile - mobile uses bottom nav) */}

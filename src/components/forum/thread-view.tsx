@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useComments } from "@/hooks/use-comments";
@@ -43,6 +44,7 @@ export function ThreadView({
     thread.id
   );
   const [deviceId] = useState(() => getDeviceId());
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const { t } = useTranslation();
   const isAdmin = session?.isAdmin || false;
   const isAuthor = deviceId === thread.authorId;
@@ -106,8 +108,9 @@ export function ThreadView({
             alt="Thread image"
             width={600}
             height={320}
-            className="mt-3 max-h-80 w-auto rounded-lg object-contain"
+            className="mt-3 max-h-80 w-auto rounded-lg object-contain cursor-pointer"
             unoptimized
+            onClick={() => setPreviewImage(thread.imageUrl!)}
           />
         )}
 
@@ -197,6 +200,7 @@ export function ThreadView({
                 threadClosed={thread.closed}
                 onReply={addComment}
                 onDelete={deleteComment}
+                onImageClick={setPreviewImage}
               />
             ))}
           </div>
@@ -212,6 +216,7 @@ export function ThreadView({
           </div>
         )}
       </div>
+      <MediaPreviewer src={previewImage} onClose={() => setPreviewImage(null)} />
     </motion.div>
   );
 }

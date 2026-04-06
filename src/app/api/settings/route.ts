@@ -58,6 +58,7 @@ export async function GET(request: Request) {
       darkModeSchedule: data.dark_mode_schedule ?? DEFAULT_SETTINGS.darkModeSchedule,
       progress: data.progress ?? {},
       notes: data.notes ?? {},
+      recentSubjects: data.recent_subjects ?? [],
     };
 
     return NextResponse.json({
@@ -163,6 +164,7 @@ export async function PUT(request: Request) {
         dark_mode_schedule: settings.darkModeSchedule,
         progress: settings.progress,
         notes: settings.notes ?? {},
+        recent_subjects: settings.recentSubjects ?? [],
         updated_at: now,
       },
       { onConflict: "license_key" }

@@ -9,6 +9,7 @@ import { springSmooth, hoverLift, tapScale } from "@/lib/motion";
 interface SubjectCardProps {
   subject: Subject;
   progress?: number; // 0-100
+  hasForumUnread?: boolean;
 }
 
 // Subtle accent colors per subject - uses existing design system colors
@@ -20,7 +21,7 @@ const subjectBgColors: Record<string, string> = {
   foundai: "bg-rose-500",
 };
 
-export function SubjectCard({ subject, progress = 0 }: SubjectCardProps) {
+export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCardProps) {
   const bgColor = subjectBgColors[subject.id] || "bg-primary";
 
   return (
@@ -31,8 +32,11 @@ export function SubjectCard({ subject, progress = 0 }: SubjectCardProps) {
     >
       <Link
         href={`/subject/${subject.id}`}
-        className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-colors duration-200 hover:border-primary/30 hover:shadow-warm-lg"
+        className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-colors duration-200 hover:border-primary/30 hover:shadow-warm-lg"
       >
+        {hasForumUnread && (
+          <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-destructive z-10" />
+        )}
         {/* Thin accent stripe */}
         <div className={`h-1.5 w-full ${bgColor}`} />
 

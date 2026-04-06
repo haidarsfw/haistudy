@@ -27,9 +27,10 @@ interface TabNavProps {
   activeTab: number;
   onTabChange: (tab: number) => void;
   counts?: Record<number, number>;
+  tabDots?: Record<number, boolean>;
 }
 
-export function TabNav({ activeTab, onTabChange, counts }: TabNavProps) {
+export function TabNav({ activeTab, onTabChange, counts, tabDots }: TabNavProps) {
   return (
     <div className="border-b border-border">
       <div className="relative flex flex-wrap">
@@ -45,7 +46,12 @@ export function TabNav({ activeTab, onTabChange, counts }: TabNavProps) {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <div className="relative">
+                <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                {tabDots?.[tab.id] && (
+                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-destructive" />
+                )}
+              </div>
               <span className="hidden sm:inline">{tab.label}</span>
               <span className="sm:hidden">{tab.shortLabel}</span>
               {counts?.[tab.id] !== undefined &&

@@ -31,6 +31,7 @@ interface MobileNavProps {
   onAiToggle?: () => void;
   onSupportOpen?: () => void;
   onSettingsOpen?: () => void;
+  chatUnread?: number;
 }
 
 export function MobileNav({
@@ -39,6 +40,7 @@ export function MobileNav({
   onAiToggle,
   onSupportOpen,
   onSettingsOpen,
+  chatUnread = 0,
 }: MobileNavProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -180,7 +182,8 @@ export function MobileNav({
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] sm:hidden">
         {mainItems.map((item) => {
           const active = isActive(item.href);
-          const showRedDot = false;
+          const badgeCount = item.href === "#chat" ? chatUnread : item.href === "#more" ? unreadCount : 0;
+          const showRedDot = badgeCount > 0;
           return (
             <button
               key={item.labelKey}
@@ -196,7 +199,7 @@ export function MobileNav({
                 <item.icon className="h-5 w-5" />
                 {showRedDot && (
                   <span className="absolute -right-1.5 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[8px] font-bold text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
+                    {badgeCount > 9 ? "9+" : badgeCount}
                   </span>
                 )}
               </div>

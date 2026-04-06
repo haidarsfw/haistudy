@@ -93,6 +93,7 @@ export interface UserSettings {
   };
   progress: Record<string, SubjectProgress>;
   notes?: Record<string, string>; // subjectId -> note content, synced to DB
+  recentSubjects?: string[]; // last visited subject IDs (most recent first)
 }
 
 export interface OnlineUser {

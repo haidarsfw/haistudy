@@ -18,6 +18,7 @@ interface CommentCardProps {
   threadClosed: boolean;
   onReply: (content: string, parentCommentId: string, imageUrl?: string) => Promise<void>;
   onDelete: (commentId: string) => Promise<void>;
+  onImageClick?: (url: string) => void;
   isReply?: boolean;
 }
 
@@ -28,6 +29,7 @@ export function CommentCard({
   threadClosed,
   onReply,
   onDelete,
+  onImageClick,
   isReply = false,
 }: CommentCardProps) {
   const [showReplyInput, setShowReplyInput] = useState(false);
@@ -90,8 +92,9 @@ export function CommentCard({
             alt="Comment image"
             width={300}
             height={200}
-            className="mt-2 max-h-48 w-auto rounded-lg object-cover"
+            className="mt-2 max-h-48 w-auto rounded-lg object-cover cursor-pointer"
             unoptimized
+            onClick={() => onImageClick?.(comment.imageUrl!)}
           />
         )}
 
@@ -144,6 +147,7 @@ export function CommentCard({
               threadClosed={threadClosed}
               onReply={onReply}
               onDelete={onDelete}
+              onImageClick={onImageClick}
               isReply
             />
           ))}

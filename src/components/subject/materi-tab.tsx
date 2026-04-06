@@ -10,6 +10,7 @@ interface MateriTabProps {
   completedIds: number[];
   onToggleComplete: (id: number, completed: boolean) => void;
   subjectId: string;
+  highlightTitle?: string;
 }
 
 const typeIcons: Record<string, typeof FileText> = {
@@ -32,11 +33,29 @@ function getEmbedUrl(driveId: string, type: string): string {
 export function MateriTab({
   items,
   subjectId,
+  highlightTitle,
 }: MateriTabProps) {
   const [previewItem, setPreviewItem] = useState<MateriItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [preloadedDriveId, setPreloadedDriveId] = useState<string | null>(null);
   const preloadIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+
+  // Highlight + scroll to matching materi item from search
+  useEffect(() => {
+    if (!highlightTitle) return;
+    const match = items.find((i) => i.title === highlightTitle);
+    if (!match) return;
+    setHighlightId(match.id);
+    // Scroll to the element after render
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[data-materi-id="${match.id}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
+    // Clear highlight after 4s
+    const fadeTimer = setTimeout(() => setHighlightId(null), 4000);
+    return () => { clearTimeout(timer); clearTimeout(fadeTimer); };
+  }, [highlightTitle, items]);
 
   const openPreview = useCallback((item: MateriItem) => {
     if (item.driveId === "PLACEHOLDER") return;
@@ -154,6 +173,7 @@ export function MateriTab({
           return (
             <div
               key={item.id}
+              data-materi-id={item.id}
               role="button"
               tabIndex={isPlaceholder ? -1 : 0}
               aria-disabled={isPlaceholder}
@@ -165,9 +185,11 @@ export function MateriTab({
                 }
               }}
               className={`flex items-center gap-4 rounded-xl border p-4 transition-all text-left w-full ${
-                isPlaceholder
-                  ? "border-border bg-card/50 opacity-60 cursor-not-allowed"
-                  : "border-border bg-card hover:border-primary/40 hover:bg-primary/5 hover:shadow-md cursor-pointer active:scale-[0.99]"
+                highlightId === item.id
+                  ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md"
+                  : isPlaceholder
+                    ? "border-border bg-card/50 opacity-60 cursor-not-allowed"
+                    : "border-border bg-card hover:border-primary/40 hover:bg-primary/5 hover:shadow-md cursor-pointer active:scale-[0.99]"
               }`}
             >
               {/* Icon */}

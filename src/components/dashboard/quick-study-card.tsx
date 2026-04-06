@@ -7,11 +7,20 @@ import { fadeInUp } from "@/lib/motion";
 import { subjects } from "@/data/subjects";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useSettings } from "@/hooks/use-settings";
 
 export function QuickStudyCard() {
   const { t } = useTranslation();
-  // Show first 3 subjects as quick study shortcuts
-  const quickSubjects = subjects.slice(0, 3);
+  const { settings } = useSettings();
+
+  // Show last 3 visited subjects, padded with defaults to always show 3
+  const recentIds = settings.recentSubjects ?? [];
+  const recentSubjects = recentIds
+    .map((id) => subjects.find((s) => s.id === id))
+    .filter(Boolean) as typeof subjects;
+  // Pad with subjects not already in recent list
+  const remaining = subjects.filter((s) => !recentIds.includes(s.id));
+  const quickSubjects = [...recentSubjects, ...remaining].slice(0, 3);
 
   return (
     <motion.div data-onboarding="subjects" className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/20 light-card-shadow" variants={fadeInUp} initial="hidden" animate="visible">

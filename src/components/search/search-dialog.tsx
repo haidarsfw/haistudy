@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   BookOpen,
   FileText,
   Brain,
   ListChecks,
-  HelpCircle,
   Search,
-  GraduationCap,
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,21 +16,17 @@ import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";
 
 const typeIcons: Record<SearchResult["type"], typeof BookOpen> = {
-  subject: GraduationCap,
   materi: BookOpen,
   rangkuman: FileText,
   "kisi-kisi": ListChecks,
   flashcard: Brain,
-  quiz: HelpCircle,
 };
 
 const typeLabels: Record<SearchResult["type"], string> = {
-  subject: "Mata Kuliah",
-  materi: "Materi",
+  materi: "Slides",
   rangkuman: "Rangkuman",
   "kisi-kisi": "Kisi-Kisi",
   flashcard: "Flashcard",
-  quiz: "Quiz",
 };
 
 interface SearchDialogProps {
@@ -40,6 +35,7 @@ interface SearchDialogProps {
 }
 
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
+  const router = useRouter();
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -109,9 +105,10 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const navigate = useCallback(
     (result: SearchResult) => {
       try { sounds.click(); } catch {}
-      window.location.href = result.href;
+      onOpenChange(false);
+      router.push(result.href);
     },
-    []
+    [onOpenChange, router]
   );
 
   const handleKeyDown = useCallback(
@@ -204,8 +201,9 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       const Icon = typeIcons[result.type];
                       return (
                         <li key={`${result.type}-${result.subjectId}-${result.title}-${i}`} data-index={i}>
-                          <a
-                            href={result.href}
+                          <button
+                            type="button"
+                            onClick={() => navigate(result)}
                             onMouseEnter={() => setSelected(i)}
                             className={`flex w-full items-start gap-3 px-4 py-2.5 text-left no-underline transition-colors ${
                               i === selected
@@ -229,7 +227,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                                 </p>
                               )}
                             </div>
-                          </a>
+                          </button>
                         </li>
                       );
                     })}

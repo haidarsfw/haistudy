@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getSubjectById } from "@/data/subjects";
 import { getContentBySubjectId } from "@/data/content";
 import { useSession } from "@/components/providers/session-provider";
+import { useSettings } from "@/hooks/use-settings";
 import { useProgress } from "@/hooks/use-progress";
+import { useNotifications } from "@/hooks/use-notifications";
+import { useForumUnread } from "@/hooks/use-forum-unread";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { TabNav } from "@/components/subject/tab-nav";
 import { MateriTab } from "@/components/subject/materi-tab";
@@ -30,8 +33,22 @@ export default function SubjectPage() {
   const initialTab = Number(searchParams.get("tab")) || 0;
   const [activeTab, setActiveTab] = useState(initialTab);
 
+  const { settings, updateSettings } = useSettings();
+
+  // Track subject visit for "Lanjut Belajar" dashboard
+  useEffect(() => {
+    const recent = settings.recentSubjects ?? [];
+    // Already most recent — no update needed
+    if (recent[0] === subjectId) return;
+    const updated = [subjectId, ...recent.filter((id) => id !== subjectId)].slice(0, 5);
+    updateSettings({ recentSubjects: updated });
+  }, [subjectId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const subject = getSubjectById(subjectId);
   const content = getContentBySubjectId(subjectId);
+
+  const { notifications } = useNotifications();
+  const forumUnread = useForumUnread(notifications);
 
   const {
     progress,
@@ -158,7 +175,12 @@ export default function SubjectPage() {
       </div>
 
       {/* Tab navigation */}
-      <TabNav activeTab={activeTab} onTabChange={setActiveTab} counts={tabCounts} />
+      <TabNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        counts={tabCounts}
+        tabDots={forumUnread.hasUnread(subjectId) ? { 5: true } : undefined}
+      />
 
       {/* Tab content */}
       <div className="px-4">
@@ -177,13 +199,18 @@ export default function SubjectPage() {
                   completedIds={progress.materi}
                   onToggleComplete={handleMateriToggle}
                   subjectId={subjectId}
+                  highlightTitle={searchParams.get("highlight") || undefined}
                 />
               </PreviewLock>
             )}
 
             {activeTab === 1 && (
               <PreviewLock title="Rangkuman">
-                <RangkumanTab subjectId={subjectId} />
+                <RangkumanTab
+                  subjectId={subjectId}
+                  initialModule={searchParams.get("module") || undefined}
+                  highlightText={searchParams.get("highlight") || undefined}
+                />
               </PreviewLock>
             )}
 

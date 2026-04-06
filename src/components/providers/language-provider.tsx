@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useCallback } from "react";
+import { createContext, useContext, useMemo, useCallback, useState, useEffect } from "react";
 import type { Locale } from "@/lib/i18n";
 import { translate } from "@/lib/i18n";
 import { useSettings } from "@/hooks/use-settings";
@@ -19,7 +19,10 @@ const LanguageContext = createContext<LanguageContextValue>({
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { settings, updateSettings } = useSettings();
-  const locale: Locale = settings.language || "id";
+  // Use default "id" on first render to match SSR, then switch to actual locale
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const locale: Locale = mounted ? (settings.language || "id") : "id";
 
   const t = useCallback(
     (key: string) => translate(locale, key),
