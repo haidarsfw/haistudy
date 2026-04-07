@@ -15,7 +15,24 @@ function getLocalSettings(): UserSettings | null {
   if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(SETTINGS_KEY);
-    return stored ? JSON.parse(stored) : null;
+    if (stored) return JSON.parse(stored);
+
+    // Fallback: read from ThemeProvider's individual keys.
+    // This covers users who changed theme via toggle but never opened Settings,
+    // so the hs-settings bundle was never written.
+    const dark = localStorage.getItem("dark");
+    const theme = localStorage.getItem("theme");
+    const font = localStorage.getItem("font");
+    if (dark !== null || theme !== null || font !== null) {
+      return {
+        ...DEFAULT_SETTINGS,
+        darkMode: dark !== null ? JSON.parse(dark) : DEFAULT_SETTINGS.darkMode,
+        theme: theme !== null ? JSON.parse(theme) : DEFAULT_SETTINGS.theme,
+        font: font !== null ? JSON.parse(font) : DEFAULT_SETTINGS.font,
+      };
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -42,6 +59,7 @@ export function useSettings() {
   const updatedAtRef = useRef<string | null>(null);
   const isInitializedRef = useRef(false);
   const selfTriggeredRef = useRef(false);
+  const userChangedRef = useRef(false);
 
   // Apply settings to ThemeProvider
   const applyToTheme = useCallback(
@@ -109,21 +127,26 @@ export function useSettings() {
       if (data.settings) {
         const localSettings = getLocalSettings();
         const localUpdatedAt = localStorage.getItem("hs-settings-updated");
-
-        // Only apply server settings to theme if server has real saved data
-        // AND it's newer than local, OR if there are no local settings at all.
-        // This prevents server defaults from overriding local user changes.
         const serverHasData = !!data.updatedAt;
         const serverIsNewer =
           serverHasData &&
           (!localUpdatedAt ||
             new Date(data.updatedAt) > new Date(localUpdatedAt));
 
-        if (!localSettings || serverIsNewer) {
+        if (serverIsNewer) {
+          // Server has newer data (cross-device sync) — apply everything
+          setSettingsState(data.settings);
+          saveLocalSettings(data.settings);
+          setTimeout(() => applyToTheme(data.settings), 0);
+        } else if (!localSettings && serverHasData) {
+          // No local settings at all and server has real data — first load
           setSettingsState(data.settings);
           saveLocalSettings(data.settings);
           setTimeout(() => applyToTheme(data.settings), 0);
         }
+        // Otherwise: local settings exist or server only has defaults —
+        // keep local state, don't override theme. The inline script +
+        // ThemeProvider already applied the correct appearance.
         updatedAtRef.current = data.updatedAt;
       }
     } catch (error) {
@@ -143,6 +166,7 @@ export function useSettings() {
   const updateSettings = useCallback(
     (updates: Partial<UserSettings>) => {
       const next = { ...settings, ...updates };
+      userChangedRef.current = true;
       setSettingsState(next);
       saveLocalSettings(next);
 
@@ -159,10 +183,11 @@ export function useSettings() {
     [settings, saveToServer]
   );
 
-  // Apply appearance to ThemeProvider via useEffect - NOT inside setState updater
-  // This prevents "Cannot update component while rendering" (C3 fix)
+  // Apply appearance to ThemeProvider only when user explicitly changes settings.
+  // NOT on initialization — the inline script + ThemeProvider already handle that.
   useEffect(() => {
-    if (!isInitializedRef.current) return;
+    if (!userChangedRef.current) return;
+    userChangedRef.current = false;
     applyToTheme(settings);
   }, [settings.darkMode, settings.theme, settings.font, settings.darkModeSchedule, applyToTheme]);
 
