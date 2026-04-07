@@ -1,21 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter, Geist_Mono, Poppins } from "next/font/google";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { LanguageProvider } from "@/components/providers/language-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { MusicProvider } from "@/components/providers/music-provider";
-import { VoiceProvider } from "@/components/providers/voice-provider";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import "katex/dist/katex.min.css";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-heading",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["500", "600", "700"],
 });
 
 const inter = Inter({
@@ -28,12 +24,13 @@ const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -92,19 +89,16 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${jakartaSans.variable} ${inter.variable} ${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preconnect" href="https://gvjwxccwuyuhgexypgbn.supabase.co" />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider>
           <SessionProvider>
             <LanguageProvider>
-              <TooltipProvider>
-                <MusicProvider>
-                  <VoiceProvider>
-                    {children}
-                  </VoiceProvider>
-                </MusicProvider>
-                <Toaster position="top-right" richColors closeButton />
-                <Analytics />
-              </TooltipProvider>
+              {children}
+              <Toaster position="top-right" richColors closeButton />
+              <Analytics />
             </LanguageProvider>
           </SessionProvider>
         </ThemeProvider>

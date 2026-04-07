@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
   ChevronDown,
@@ -12,7 +11,6 @@ import {
   Info,
 } from "lucide-react";
 import { PURCHASE_FORM_URL } from "@/lib/constants";
-import { springSmooth } from "@/lib/motion";
 import { useTranslation } from "@/components/providers/language-provider";
 import { translate } from "@/lib/i18n";
 
@@ -85,8 +83,8 @@ export function PricingSection() {
   return (
     <section className="relative px-4 py-16 sm:py-20">
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute top-20 right-1/4 h-60 w-60 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-primary/15 opacity-60" />
+        <div className="absolute top-20 right-1/4 h-60 w-60 rounded-full bg-primary/10 opacity-50" />
       </div>
       <div className="mx-auto max-w-4xl">
         <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -101,28 +99,18 @@ export function PricingSection() {
             const isSelected = selectedPkg === pkg.id;
 
             return (
-              <motion.div
+              <div
                 key={pkg.id}
                 onClick={() => setSelectedPkg(pkg.id)}
-                className={`relative cursor-pointer rounded-2xl border p-4 sm:p-6 h-full flex flex-col transition-colors duration-200 ${
+                className={`relative cursor-pointer rounded-2xl border p-4 sm:p-6 h-full flex flex-col transition-all duration-200 ${
                   isSelected
-                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                    : "border-border bg-card hover:border-primary/20"
+                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 scale-[1.02] -translate-y-1"
+                    : "border-border bg-card hover:border-primary/20 hover:scale-[1.01] hover:-translate-y-0.5"
                 }`}
-                animate={{
-                  scale: isSelected ? 1.02 : 1,
-                  y: isSelected ? -4 : 0,
-                }}
-                transition={springSmooth}
-                whileHover={!isSelected ? { scale: 1.01, y: -2 } : undefined}
               >
                 {/* Selection ring */}
                 {isSelected && (
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl ring-2 ring-primary/30 pointer-events-none"
-                    layoutId="pricing-ring"
-                    transition={springSmooth}
-                  />
+                  <div className="absolute inset-0 rounded-2xl ring-2 ring-primary/30 pointer-events-none" />
                 )}
 
                 <div className="flex items-center gap-2 mb-3">
@@ -154,7 +142,7 @@ export function PricingSection() {
                   </span>
                 </div>
 
-                {/* Share requirement callout - hidden behind "Selengkapnya" */}
+                {/* Share requirement callout */}
                 {pkg.callout && (
                   <details className="mt-3 group/details">
                     <summary className="text-xs text-muted-foreground underline cursor-pointer hover:text-foreground transition-colors list-none">
@@ -193,48 +181,32 @@ export function PricingSection() {
                   </p>
                 )}
 
-                {/* Buy button - only on selected */}
-                <AnimatePresence mode="wait">
-                  {isSelected ? (
-                    <motion.a
-                      key="buy"
-                      href={PURCHASE_FORM_URL || "#"}
-                      target={PURCHASE_FORM_URL ? "_blank" : undefined}
-                      rel={
-                        PURCHASE_FORM_URL ? "noopener noreferrer" : undefined
-                      }
-                      className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg h-11 text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 ${
-                        !PURCHASE_FORM_URL
-                          ? "cursor-not-allowed opacity-60"
-                          : ""
-                      }`}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      {t("pricing.buy")}
-                    </motion.a>
-                  ) : (
-                    <motion.button
-                      key="select"
-                      className="mt-5 inline-flex w-full items-center justify-center rounded-lg h-11 text-sm font-medium transition-colors border border-border bg-background hover:bg-muted cursor-pointer"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedPkg(pkg.id);
-                      }}
-                    >
-                      {t("pricing.select")}
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                {/* Buy / Select button */}
+                {isSelected ? (
+                  <a
+                    href={PURCHASE_FORM_URL || "#"}
+                    target={PURCHASE_FORM_URL ? "_blank" : undefined}
+                    rel={PURCHASE_FORM_URL ? "noopener noreferrer" : undefined}
+                    className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg h-11 text-sm font-medium transition-all bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 ${
+                      !PURCHASE_FORM_URL ? "cursor-not-allowed opacity-60" : ""
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    {t("pricing.buy")}
+                  </a>
+                ) : (
+                  <button
+                    className="mt-5 inline-flex w-full items-center justify-center rounded-lg h-11 text-sm font-medium transition-colors border border-border bg-background hover:bg-muted cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPkg(pkg.id);
+                    }}
+                  >
+                    {t("pricing.select")}
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>

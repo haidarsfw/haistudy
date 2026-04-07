@@ -192,18 +192,18 @@ export default function LandingPage() {
         {/* Animated gradient mesh orbs */}
         {/* Animated gradient mesh orbs */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="landing-orb-1 absolute top-10 left-1/4 h-72 w-72 rounded-full bg-primary/40 blur-3xl" />
-          <div className="landing-orb-2 absolute bottom-10 right-1/4 h-80 w-80 rounded-full bg-primary/35 blur-3xl" />
-          <div className="landing-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[700px] w-[700px] rounded-full bg-primary/25" />
-          <div className="landing-orb-3 absolute top-20 right-10 h-48 w-48 rounded-full bg-primary/30 blur-2xl" />
-          <div className="landing-orb-2 absolute -bottom-20 left-10 h-40 w-40 rounded-full bg-primary/25 blur-3xl" />
+          <div className="landing-orb-1 absolute top-10 left-1/4 h-72 w-72 rounded-full bg-primary/30" />
+          <div className="landing-orb-2 absolute bottom-10 right-1/4 h-80 w-80 rounded-full bg-primary/25" />
+          <div className="landing-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[700px] w-[700px] rounded-full bg-primary/15" />
+          <div className="landing-orb-3 absolute top-20 right-10 h-48 w-48 rounded-full bg-primary/20" />
+          <div className="landing-orb-2 absolute -bottom-20 left-10 h-40 w-40 rounded-full bg-primary/15" />
         </div>
 
         {/* Dot grid pattern */}
         <div className="landing-dot-grid absolute inset-0 -z-[5] pointer-events-none" />
 
-        {/* Floating particles */}
-        <div className="absolute inset-0 -z-[4] overflow-hidden pointer-events-none">
+        {/* Floating particles — hidden on mobile for performance */}
+        <div className="absolute inset-0 -z-[4] overflow-hidden pointer-events-none hidden sm:block">
           <div className="landing-particle" style={{ left: '10%', bottom: '0', '--dur': '16s', '--del': '0s' } as React.CSSProperties} />
           <div className="landing-particle" style={{ left: '25%', bottom: '0', '--dur': '20s', '--del': '3s' } as React.CSSProperties} />
           <div className="landing-particle" style={{ left: '45%', bottom: '0', '--dur': '14s', '--del': '6s' } as React.CSSProperties} />
@@ -367,7 +367,7 @@ export default function LandingPage() {
       {/* ── FAQ ── */}
       <section id="faq" className="relative px-4 py-16 sm:py-20">
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="landing-orb-1 absolute top-20 right-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="landing-orb-1 absolute top-20 right-1/4 h-64 w-64 rounded-full bg-primary/10" />
         </div>
         <div className="mx-auto max-w-2xl">
           <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
