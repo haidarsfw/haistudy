@@ -85,7 +85,11 @@ export function useSettings() {
 
   // Fetch settings from server
   const fetchSettings = useCallback(async () => {
-    if (!session) return;
+    if (!session) {
+      setIsLoading(false);
+      isInitializedRef.current = true;
+      return;
+    }
     try {
       // Flush any pending debounced save first so server has latest data
       if (debounceRef.current) {
@@ -103,9 +107,23 @@ export function useSettings() {
       const data = await res.json();
 
       if (data.settings) {
-        setSettingsState(data.settings);
-        saveLocalSettings(data.settings);
-        setTimeout(() => applyToTheme(data.settings), 0);
+        const localSettings = getLocalSettings();
+        const localUpdatedAt = localStorage.getItem("hs-settings-updated");
+
+        // Only apply server settings to theme if server has real saved data
+        // AND it's newer than local, OR if there are no local settings at all.
+        // This prevents server defaults from overriding local user changes.
+        const serverHasData = !!data.updatedAt;
+        const serverIsNewer =
+          serverHasData &&
+          (!localUpdatedAt ||
+            new Date(data.updatedAt) > new Date(localUpdatedAt));
+
+        if (!localSettings || serverIsNewer) {
+          setSettingsState(data.settings);
+          saveLocalSettings(data.settings);
+          setTimeout(() => applyToTheme(data.settings), 0);
+        }
         updatedAtRef.current = data.updatedAt;
       }
     } catch (error) {
