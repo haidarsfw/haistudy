@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   CalendarDays,
   MapPin,
@@ -66,7 +67,7 @@ export default function JadwalUTSPage() {
                 key={exam.subjectId}
                 className="rounded-xl border border-border bg-card p-4 space-y-3"
               >
-                <div className="flex items-start gap-3">
+                <Link href={`/subject/${exam.subjectId}`} className="flex items-start gap-3 group">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-lg shrink-0 ${colorClass}`}
                   >
@@ -80,7 +81,7 @@ export default function JadwalUTSPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">
+                    <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
                       {exam.subject}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
@@ -94,7 +95,7 @@ export default function JadwalUTSPage() {
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <CalendarDays className="h-3.5 w-3.5 shrink-0" />
