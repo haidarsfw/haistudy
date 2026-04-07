@@ -199,7 +199,7 @@ export function parseRangkuman(content: string): React.ReactNode {
           <details key={i} className="my-3 overflow-hidden rounded-lg border border-border group">
             <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 select-none">
               <svg className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-              {parsed.label || "Slide"}
+              {parsed.label ? parseInline(parsed.label) : "Slide"}
             </summary>
             {parsed.content}
           </details>
