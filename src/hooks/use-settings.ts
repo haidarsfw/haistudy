@@ -49,7 +49,7 @@ function saveLocalSettings(settings: UserSettings) {
  */
 export function useSettings() {
   const { session } = useSession();
-  const { setDark, setTheme, setFont, setDarkModeSchedule } = useTheme();
+  const { dark, theme, font, setDark, setTheme, setFont, setDarkModeSchedule } = useTheme();
   const [settings, setSettingsState] = useState<UserSettings>(
     () => getLocalSettings() || { ...DEFAULT_SETTINGS, selectedClass: session?.selectedClass || "" }
   );
@@ -59,9 +59,8 @@ export function useSettings() {
   const updatedAtRef = useRef<string | null>(null);
   const isInitializedRef = useRef(false);
   const selfTriggeredRef = useRef(false);
-  const userChangedRef = useRef(false);
 
-  // Apply settings to ThemeProvider
+  // Apply ALL settings to ThemeProvider (for full sync: server/cross-device/cross-instance)
   const applyToTheme = useCallback(
     (s: UserSettings) => {
       setDark(s.darkMode);
@@ -71,6 +70,17 @@ export function useSettings() {
     },
     [setDark, setTheme, setFont, setDarkModeSchedule]
   );
+
+  // Keep settings state synced with ThemeProvider for header/landing toggles
+  // that bypass updateSettings (e.g. header dark mode button)
+  useEffect(() => {
+    setSettingsState(prev => {
+      if (prev.darkMode === dark && prev.theme === theme && prev.font === font) return prev;
+      const next = { ...prev, darkMode: dark, theme, font };
+      saveLocalSettings(next);
+      return next;
+    });
+  }, [dark, theme, font]);
 
   // Debounced save to server (must be before fetchSettings to avoid TDZ)
   const saveToServer = useCallback(
@@ -166,9 +176,14 @@ export function useSettings() {
   const updateSettings = useCallback(
     (updates: Partial<UserSettings>) => {
       const next = { ...settings, ...updates };
-      userChangedRef.current = true;
       setSettingsState(next);
       saveLocalSettings(next);
+
+      // Only apply appearance fields that were explicitly changed
+      if ("darkMode" in updates) setDark(updates.darkMode!);
+      if ("theme" in updates) setTheme(updates.theme!);
+      if ("font" in updates) setFont(updates.font!);
+      if ("darkModeSchedule" in updates) setDarkModeSchedule(updates.darkModeSchedule!);
 
       // Debounced save to server
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -180,16 +195,8 @@ export function useSettings() {
         new CustomEvent(SETTINGS_SYNC_EVENT, { detail: next })
       );
     },
-    [settings, saveToServer]
+    [settings, saveToServer, setDark, setTheme, setFont, setDarkModeSchedule]
   );
-
-  // Apply appearance to ThemeProvider only when user explicitly changes settings.
-  // NOT on initialization — the inline script + ThemeProvider already handle that.
-  useEffect(() => {
-    if (!userChangedRef.current) return;
-    userChangedRef.current = false;
-    applyToTheme(settings);
-  }, [settings.darkMode, settings.theme, settings.font, settings.darkModeSchedule, applyToTheme]);
 
   // Cross-instance sync: listen for settings changes from other useSettings() instances
   useEffect(() => {
