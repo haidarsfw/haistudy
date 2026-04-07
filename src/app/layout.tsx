@@ -91,6 +91,11 @@ export default function RootLayout({
     >
       <head>
         <link rel="preconnect" href="https://gvjwxccwuyuhgexypgbn.supabase.co" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var d=JSON.parse(localStorage.getItem("dark"));if(d===false)document.documentElement.classList.remove("dark");else document.documentElement.classList.add("dark");var t=JSON.parse(localStorage.getItem("theme"));if(t)document.documentElement.setAttribute("data-theme",t);var f=JSON.parse(localStorage.getItem("font"));if(f){document.documentElement.setAttribute("data-font",f);var m={jakarta:"var(--font-heading), sans-serif",inter:"var(--font-body), sans-serif",poppins:"var(--font-poppins), sans-serif"};document.documentElement.style.setProperty("--font-sans",m[f]||m.jakarta)}}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider>

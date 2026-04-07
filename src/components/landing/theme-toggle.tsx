@@ -2,27 +2,21 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/providers/theme-provider";
-import { useState, useEffect } from "react";
 
 export function LandingThemeToggle() {
-  const { dark, toggleDark } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const { toggleDark } = useTheme();
 
+  // Both icons always in DOM — CSS dark: variant toggles visibility.
+  // This avoids any hydration mismatch from conditional rendering.
   return (
     <button
       onClick={toggleDark}
       className="p-1.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer"
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label="Toggle dark mode"
     >
       <span className="flex items-center transition-transform duration-200">
-        {!mounted ? (
-          <span className="h-4 w-4" />
-        ) : dark ? (
-          <Sun className="h-4 w-4" />
-        ) : (
-          <Moon className="h-4 w-4" />
-        )}
+        <Sun className="h-4 w-4 hidden dark:block" />
+        <Moon className="h-4 w-4 block dark:hidden" />
       </span>
     </button>
   );

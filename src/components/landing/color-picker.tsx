@@ -8,12 +8,7 @@ import { sounds } from "@/lib/sounds";
 export function LandingColorPicker() {
   const { theme, setTheme } = useTheme();
   const [expanded, setExpanded] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Close on outside click (mobile)
   useEffect(() => {
@@ -32,11 +27,6 @@ export function LandingColorPicker() {
 
   const activeTheme = THEMES.find((t) => t.id === theme) || THEMES[0];
 
-  // SSR placeholder - single neutral circle to avoid hydration mismatch
-  if (!mounted) {
-    return <div className="h-[18px] w-[18px] rounded-full bg-muted" />;
-  }
-
   return (
     <div
       ref={containerRef}
@@ -50,6 +40,7 @@ export function LandingColorPicker() {
         className="h-[18px] w-[18px] rounded-full ring-2 ring-white/70 shadow-[0_0_6px_var(--primary)] transition-all cursor-pointer"
         style={{ backgroundColor: activeTheme.color }}
         aria-label="Change theme color"
+        suppressHydrationWarning
       />
 
       {/* Expanded swatches - instant show/hide, no animation */}
