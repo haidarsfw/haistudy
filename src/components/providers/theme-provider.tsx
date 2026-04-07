@@ -58,34 +58,39 @@ function isTimeInRange(now: Date, start: string, end: string): boolean {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [dark, setDarkState] = useState(() =>
-    getStoredValue("dark", DEFAULT_SETTINGS.darkMode)
-  );
-  const [theme, setThemeState] = useState<ThemeId>(() =>
-    getStoredValue("theme", DEFAULT_SETTINGS.theme)
-  );
-  const [font, setFontState] = useState<FontId>(() =>
-    getStoredValue("font", DEFAULT_SETTINGS.font)
-  );
-  const [darkModeSchedule, setDarkModeScheduleState] = useState(() =>
-    getStoredValue("darkModeSchedule", DEFAULT_SETTINGS.darkModeSchedule)
-  );
+  // Use defaults on first render to match SSR, then hydrate from localStorage
+  const [mounted, setMounted] = useState(false);
+  const [dark, setDarkState] = useState(DEFAULT_SETTINGS.darkMode);
+  const [theme, setThemeState] = useState<ThemeId>(DEFAULT_SETTINGS.theme);
+  const [font, setFontState] = useState<FontId>(DEFAULT_SETTINGS.font);
+  const [darkModeSchedule, setDarkModeScheduleState] = useState(DEFAULT_SETTINGS.darkModeSchedule);
+
+  // Hydrate from localStorage after mount
+  useEffect(() => {
+    setDarkState(getStoredValue("dark", DEFAULT_SETTINGS.darkMode));
+    setThemeState(getStoredValue("theme", DEFAULT_SETTINGS.theme));
+    setFontState(getStoredValue("font", DEFAULT_SETTINGS.font));
+    setDarkModeScheduleState(getStoredValue("darkModeSchedule", DEFAULT_SETTINGS.darkModeSchedule));
+    setMounted(true);
+  }, []);
 
   // Apply dark mode class
   useEffect(() => {
+    if (!mounted) return;
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
-  }, [dark]);
+  }, [dark, mounted]);
 
   // Apply theme data attribute
   useEffect(() => {
+    if (!mounted) return;
     const root = document.documentElement;
-    // Remove all theme attributes then set current
     root.setAttribute("data-theme", theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   // Apply font
   useEffect(() => {
+    if (!mounted) return;
     const root = document.documentElement;
     root.setAttribute("data-font", font);
 
@@ -95,7 +100,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       poppins: "var(--font-poppins), sans-serif",
     };
     root.style.setProperty("--font-sans", fontMap[font] || fontMap.jakarta);
-  }, [font]);
+  }, [font, mounted]);
 
   // Dark mode schedule check
   useEffect(() => {

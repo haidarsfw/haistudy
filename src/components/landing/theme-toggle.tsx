@@ -2,9 +2,12 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/providers/theme-provider";
+import { useState, useEffect } from "react";
 
 export function LandingThemeToggle() {
   const { dark, toggleDark } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <button
@@ -13,7 +16,9 @@ export function LandingThemeToggle() {
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
     >
       <span className="flex items-center transition-transform duration-200">
-        {dark ? (
+        {!mounted ? (
+          <span className="h-4 w-4" />
+        ) : dark ? (
           <Sun className="h-4 w-4" />
         ) : (
           <Moon className="h-4 w-4" />
