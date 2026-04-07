@@ -169,8 +169,21 @@ export const content: Record<string, SubjectContent> = {
       { id: 6, title: "Statement of Cash Flows", driveId: "1XEurk_BdkOEagXF-cgRl8YlRy2Auo7jLciyLCIH0cI0", type: "drive-gslides", session: "11-12", xp: 10 },
       { id: 7, title: "Financial Analysis: The Big Picture", driveId: "1LcbiKXHUAYLXdUEqD0D0tK91pUyTmg5Gy1qYCe6LM5o", type: "drive-gslides", session: "13-14", xp: 10 },
     ],
-    kisiKisi: [],
-    kisiKisiNote: "Kisi-kisi resmi belum tersedia — akan di-update secepat mungkin setelah mendapatkan kisi-kisi resmi dari dosen. Jika kamu memiliki kisi-kisi resmi atau informasi berguna lainnya, hubungi admin melalui layanan pelanggan/WA untuk mendapatkan benefit di website.",
+    kisiKisi: [
+      { topic: "Bagian 1: Teori (Bobot 50%)", items: [
+        "Pengantar Laporan Keuangan (Sesi 1) — Memahami berbagai macam laporan keuangan dasar (Financial Statements). Komponen utama: Laporan Laba Rugi, Laporan Perubahan Ekuitas, Neraca, dan Laporan Arus Kas.",
+        "Fraud, Internal Control, & Cash (Sesi 5 - Bab 7) — Fraud: Definisi dan faktor penyebab. Internal Control: Ciri pengendalian yang bagus, terutama adanya pengawasan ketat terhadap aset perusahaan. Cash: Petty Cash (pengelolaan kas kecil) dan Bank Reconciliation (rekonsiliasi antara catatan bank dan catatan perusahaan).",
+        "Statement of Cash Flows (Sesi 5 - Bab 12) — Kegunaan: Mengapa laporan arus kas penting bagi pengguna informasi keuangan. Klasifikasi Arus Kas: Aktivitas Operasi, Investasi, dan Pendanaan. Metode Penyajian: Perbedaan antara Metode Langsung (Direct) dan Metode Tidak Langsung (Indirect). Format: Memahami struktur pelaporan untuk kedua metode tersebut.",
+        "Further Financial Statement (Bab 2) — Pendalaman struktur laporan keuangan yang lebih kompleks.",
+      ] },
+      { topic: "Bagian 2: Cases / Praktika (Bobot 50%)", items: [
+        "Siklus Akuntansi Perusahaan Jasa (Bab 2) — Fokus pada penjurnalan transaksi umum, contohnya: Pembayaran Hutang: (D) Accounts Payable, (K) Cash. Pendapatan Jasa (Kredit): (D) Accounts Receivable, (K) Service Revenue. Pembelian Perlengkapan (Tunai): (D) Supplies, (K) Cash.",
+        "Jurnal Penyesuaian / Adjusting Entries (Bab 3) — 5 kategori akun utama: Prepaid Expense (beban dibayar dimuka), Unearned Revenue (pendapatan diterima dimuka), Accrued Revenue (pendapatan yang masih harus diterima), Accrued Expense (beban yang masih harus dibayar), Depreciation (penyusutan aset tetap).",
+        "Laporan Laba Rugi / Income Statement (Bab 4) — Penyusunan laporan laba rugi dalam format Multiple-Step. Memisahkan antara pendapatan/beban operasional dan non-operasional untuk mendapatkan Laba Kotor (Gross Profit) dan Laba Bersih (Net Income).",
+        "Analisis Rasio Keuangan (Bab 13) — Menghitung rasio keuangan berdasarkan data laporan yang disediakan. Kategori rasio: Rasio Likuiditas, Profitabilitas, dan Solvabilitas.",
+      ] },
+    ],
+    kisiKisiNote: "Teori 50% + Praktika 50%. Pastikan memahami konsep teori dan mampu mengerjakan soal hitungan/jurnal.",
     flashcards: akuntansiFlashcards,
     quiz: akuntansiQuiz,
   },
