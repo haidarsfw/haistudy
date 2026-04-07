@@ -90,6 +90,8 @@ export function CommentInput({
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
+
+    // Handle image paste
     for (const item of Array.from(items)) {
       if (item.type.startsWith("image/")) {
         e.preventDefault();
@@ -104,6 +106,23 @@ export function CommentInput({
         setError(null);
         return;
       }
+    }
+
+    // Handle rich text paste — preserve line breaks from HTML
+    const html = e.clipboardData.getData("text/html");
+    if (html) {
+      e.preventDefault();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      doc.querySelectorAll("br, p, div, h1, h2, h3, h4, h5, h6, li, tr, blockquote").forEach((el) => {
+        el.insertAdjacentText("beforebegin", "\n");
+      });
+      const text = (doc.body.textContent || "").replace(/\n{3,}/g, "\n\n").trim();
+      const ta = e.target as HTMLTextAreaElement;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const before = content.slice(0, start);
+      const after = content.slice(end);
+      setContent(before + text + after);
     }
   };
 
