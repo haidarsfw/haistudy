@@ -1,7 +1,7 @@
 "use client";
 
-import { memo, type ReactNode } from "react";
-import { Bot, User } from "lucide-react";
+import { memo, useState, type ReactNode } from "react";
+import { Bot, User, X } from "lucide-react";
 import { motion } from "framer-motion";
 import type { AiMessage } from "@/hooks/use-ai-chat";
 import { springGentle } from "@/lib/motion";
@@ -38,108 +38,160 @@ function renderKatex(latex: string, key: string, display = false): ReactNode {
 }
 
 /**
- * Split text into math segments and non-math segments.
- * Handles: $$...$$, $...$, \[...\], \(...\)
- * Math is extracted first to prevent markdown parsing from corrupting LaTeX.
+ * Render strategy: extract math into placeholders → parse markdown → restore math.
+ * This prevents math delimiters from breaking markdown patterns.
  */
-function splitMath(text: string): Array<{ type: "text" | "math-inline" | "math-display"; value: string }> {
-  const segments: Array<{ type: "text" | "math-inline" | "math-display"; value: string }> = [];
-  // Match display math first ($$...$$, \[...\]), then inline ($...$, \(...\))
-  const mathRegex = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\$([^$\n]+?)\$|\\\((.+?)\\\)/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
+function renderMarkdown(text: string): ReactNode[] {
+  const mathMap = new Map<string, { latex: string; display: boolean }>();
+  let counter = 0;
 
-  while ((match = mathRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      segments.push({ type: "text", value: text.slice(lastIndex, match.index) });
+  // 1. Replace all math with placeholders
+  let processed = text
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => {
+      const id = `__MATH_${counter++}__`;
+      mathMap.set(id, { latex, display: true });
+      return id;
+    })
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, latex) => {
+      const id = `__MATH_${counter++}__`;
+      mathMap.set(id, { latex, display: true });
+      return id;
+    })
+    .replace(/\$([^$\n]+?)\$/g, (_, latex) => {
+      const id = `__MATH_${counter++}__`;
+      mathMap.set(id, { latex, display: false });
+      return id;
+    })
+    .replace(/\\\((.+?)\\\)/g, (_, latex) => {
+      const id = `__MATH_${counter++}__`;
+      mathMap.set(id, { latex, display: false });
+      return id;
+    });
+
+  // 2. Parse lines with markdown
+  const lines = processed.split("\n");
+  const elements: ReactNode[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (i > 0) elements.push(<br key={`br-${i}`} />);
+    const line = lines[i];
+
+    // Headings
+    const h3 = line.match(/^###\s+(.+)$/);
+    if (h3) {
+      elements.push(
+        <strong key={`h-${i}`} className="font-bold text-[13px]">
+          {restoreMath(parseMarkdownInline(h3[1], `h${i}`), mathMap, `h${i}`)}
+        </strong>
+      );
+      continue;
     }
-    if (match[1] !== undefined) {
-      segments.push({ type: "math-display", value: match[1] });
-    } else if (match[2] !== undefined) {
-      segments.push({ type: "math-display", value: match[2] });
-    } else if (match[3] !== undefined) {
-      segments.push({ type: "math-inline", value: match[3] });
-    } else if (match[4] !== undefined) {
-      segments.push({ type: "math-inline", value: match[4] });
+    const h2 = line.match(/^##\s+(.+)$/);
+    if (h2) {
+      elements.push(
+        <strong key={`h-${i}`} className="font-bold text-[13px]">
+          {restoreMath(parseMarkdownInline(h2[1], `h${i}`), mathMap, `h${i}`)}
+        </strong>
+      );
+      continue;
     }
-    lastIndex = match.index + match[0].length;
+
+    const inlined = parseMarkdownInline(line, `l${i}`);
+    elements.push(...restoreMath(inlined, mathMap, `l${i}`));
   }
 
-  if (lastIndex < text.length) {
-    segments.push({ type: "text", value: text.slice(lastIndex) });
-  }
-
-  return segments;
+  return elements;
 }
 
-/** Parse markdown formatting: **bold**, *italic*, `code` */
-function parseMarkdownInline(text: string, keyPrefix: string): ReactNode[] {
-  const result: ReactNode[] = [];
+/** Parse **bold**, *italic*, `code` */
+function parseMarkdownInline(text: string, keyPrefix: string): (string | ReactNode)[] {
+  const result: (string | ReactNode)[] = [];
   const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
-  let partIndex = 0;
+  let idx = 0;
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
       result.push(text.slice(lastIndex, match.index));
     }
-
     if (match[2]) {
-      result.push(
-        <strong key={`${keyPrefix}-b-${partIndex}`} className="font-semibold">
-          {match[2]}
-        </strong>
-      );
+      result.push(<strong key={`${keyPrefix}-b${idx}`} className="font-semibold">{match[2]}</strong>);
     } else if (match[3]) {
-      result.push(
-        <em key={`${keyPrefix}-i-${partIndex}`}>{match[3]}</em>
-      );
+      result.push(<em key={`${keyPrefix}-i${idx}`}>{match[3]}</em>);
     } else if (match[4]) {
-      result.push(
-        <code
-          key={`${keyPrefix}-c-${partIndex}`}
-          className="rounded bg-background/50 px-1 py-0.5 text-xs"
-        >
-          {match[4]}
-        </code>
-      );
+      result.push(<code key={`${keyPrefix}-c${idx}`} className="rounded bg-background/50 px-1 py-0.5 text-xs">{match[4]}</code>);
     }
-
     lastIndex = match.index + match[0].length;
-    partIndex++;
+    idx++;
   }
-
   if (lastIndex < text.length) {
     result.push(text.slice(lastIndex));
+  }
+  return result;
+}
+
+/** Replace math placeholders with rendered KaTeX */
+function restoreMath(
+  nodes: (string | ReactNode)[],
+  mathMap: Map<string, { latex: string; display: boolean }>,
+  keyPrefix: string
+): ReactNode[] {
+  const result: ReactNode[] = [];
+  let mIdx = 0;
+
+  for (const node of nodes) {
+    if (typeof node === "string") {
+      // Split string by math placeholders
+      const parts = node.split(/(__MATH_\d+__)/g);
+      for (const part of parts) {
+        const math = mathMap.get(part);
+        if (math) {
+          result.push(renderKatex(math.latex, `${keyPrefix}-m${mIdx++}`, math.display));
+        } else if (part) {
+          result.push(part);
+        }
+      }
+    } else {
+      // ReactNode (bold/italic/code) — check children for placeholders
+      result.push(node);
+    }
   }
 
   return result;
 }
 
-/** Render a full message: split math first, then process markdown in text segments */
-function renderMarkdown(text: string): ReactNode[] {
-  const lines = text.split("\n");
-  const elements: ReactNode[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    if (i > 0) elements.push(<br key={`br-${i}`} />);
-
-    const segments = splitMath(lines[i]);
-    for (let j = 0; j < segments.length; j++) {
-      const seg = segments[j];
-      const key = `l${i}-s${j}`;
-      if (seg.type === "math-inline") {
-        elements.push(renderKatex(seg.value, key, false));
-      } else if (seg.type === "math-display") {
-        elements.push(renderKatex(seg.value, key, true));
-      } else {
-        elements.push(...parseMarkdownInline(seg.value, key));
-      }
-    }
-  }
-
-  return elements;
+function ImagePreview({ src }: { src: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <img
+        src={src}
+        alt="Uploaded"
+        className="max-w-full max-h-48 rounded-lg mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => setOpen(true)}
+      />
+      {open && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setOpen(false)}
+        >
+          <button
+            className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70"
+            onClick={() => setOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={src}
+            alt="Preview"
+            className="max-w-full max-h-[90vh] rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
+  );
 }
 
 export const AiMessageBubble = memo(function AiMessageBubble({
@@ -180,13 +232,7 @@ export const AiMessageBubble = memo(function AiMessageBubble({
       >
         {isUser ? (
           <div>
-            {message.image && (
-              <img
-                src={message.image}
-                alt="Uploaded"
-                className="max-w-full max-h-48 rounded-lg mb-2"
-              />
-            )}
+            {message.image && <ImagePreview src={message.image} />}
             <p className="whitespace-pre-wrap">{message.content}</p>
           </div>
         ) : message.content ? (
