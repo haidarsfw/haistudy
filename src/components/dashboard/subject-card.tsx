@@ -12,17 +12,7 @@ interface SubjectCardProps {
   hasForumUnread?: boolean;
 }
 
-// Subtle accent colors per subject - uses existing design system colors
-const subjectBgColors: Record<string, string> = {
-  statistik: "bg-blue-500",
-  biseko: "bg-emerald-500",
-  cbkwn: "bg-amber-500",
-  akuntansi: "bg-violet-500",
-  foundai: "bg-rose-500",
-};
-
 export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCardProps) {
-  const bgColor = subjectBgColors[subject.id] || "bg-primary";
 
   return (
     <motion.div
@@ -37,9 +27,6 @@ export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCa
         {hasForumUnread && (
           <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-destructive z-10" />
         )}
-        {/* Thin accent stripe */}
-        <div className={`h-1.5 w-full ${bgColor}`} />
-
         {/* Content with icon */}
         <div className="p-5 flex items-start gap-4">
           <SubjectIcon
