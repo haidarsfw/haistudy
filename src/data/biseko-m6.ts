@@ -5,11 +5,11 @@ export const bisekoModule6 = `
 Strategi merepresentasikan objektif dan filosofi sebuah perusahaan. Terdapat lima elemen pembentuk strategi, yaitu rencana, taktik, pola perilaku, posisi terhadap kompetitor, dan perspektif. Manajemen strategis terbagi menjadi tiga tahapan utama: analisis strategis, pilihan strategis, dan implementasi strategis. Penerapan strategi ini menyesuaikan dengan jenis bisnis, meliputi skala besar atau kecil, sektor manufaktur atau jasa, operasional domestik atau multinasional, entitas privat atau publik, serta orientasi laba atau nirlaba.
 
 <h3>Analisis Strategis</h3>
-Visi, misi, dan sikap terhadap pemangku kepentingan menjadi landasan penentuan arah strategis. Tujuan organisasi dipengaruhi secara langsung oleh tata kelola perusahaan, pandangan pemangku kepentingan, etika bisnis, dan konteks budaya (lihat materi sesi 14, slide Factors influencing organisational purpose).
+Visi, misi, dan sikap terhadap pemangku kepentingan menjadi landasan penentuan arah strategis. Tujuan organisasi dipengaruhi secara langsung oleh tata kelola perusahaan, pandangan pemangku kepentingan, etika bisnis, dan konteks budaya
 Penilaian lingkungan bisnis dilakukan melalui perangkat berikut:
 <bullet><b>Analisis PEST:</b> Berfokus pada penilaian kondisi ekonomi, politik, sosial, dan teknologi.</bullet>
-<bullet><b>Lima Kekuatan Porter:</b> Mengukur daya tawar pemasok, daya tawar pembeli, ancaman pendatang baru, ancaman substitusi, dan rivalitas kompetitif (lihat materi sesi 14, slide Porter's Five Forces Model).</bullet>
-<bullet><b>Analisis Rantai Nilai:</b> Digunakan untuk membangun keunggulan kompetitif berkelanjutan (lihat materi sesi 14, slide The value chain).</bullet>
+<bullet><b>Lima Kekuatan Porter:</b> Mengukur daya tawar pemasok, daya tawar pembeli, ancaman pendatang baru, ancaman substitusi, dan rivalitas kompetitif</bullet>
+<bullet><b>Analisis Rantai Nilai:</b> Digunakan untuk membangun keunggulan kompetitif berkelanjutan</bullet>
 <bullet><b>Aktivitas Utama:</b> Logistik masuk, operasi, logistik keluar, pemasaran dan penjualan, serta layanan purna jual.</bullet>
 <bullet><b>Aktivitas Sekunder:</b> Pengadaan, pengembangan teknologi, manajemen sumber daya manusia, dan infrastruktur perusahaan.</bullet>
 
