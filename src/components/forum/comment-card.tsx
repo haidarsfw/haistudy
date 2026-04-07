@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CommentInput } from "./comment-input";
+import { parseForumContent } from "@/lib/content-parser";
 import type { ForumComment } from "@/types";
 
 interface CommentCardProps {
@@ -84,7 +85,7 @@ export function CommentCard({
 
         {/* Content */}
         {comment.content && (
-          <p className="mt-1 text-sm whitespace-pre-wrap">{comment.content}</p>
+          <div className="mt-1 text-sm">{parseForumContent(comment.content)}</div>
         )}
         {comment.imageUrl && (
           <Image

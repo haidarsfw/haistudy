@@ -38,6 +38,86 @@ function renderMath(latex: string, key: number): React.ReactNode {
   }
 }
 
+/**
+ * Render forum/chat content: preserves newlines, parses $$...$$ (display) and $...$ (inline) math.
+ */
+export function parseForumContent(text: string): React.ReactNode {
+  // Split on display math first ($$...$$), then handle inline within each segment
+  const parts: React.ReactNode[] = [];
+  // Use split to separate display math blocks
+  const segments = text.split(/(\$\$[\s\S]+?\$\$)/g);
+  let key = 0;
+
+  for (const seg of segments) {
+    if (seg.startsWith("$$") && seg.endsWith("$$")) {
+      const latex = seg.slice(2, -2).trim();
+      try {
+        const html = katex.renderToString(latex, {
+          throwOnError: false,
+          displayMode: true,
+          trust: true,
+        });
+        parts.push(
+          <div
+            key={key++}
+            className="katex-display my-2 overflow-x-auto"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        );
+      } catch {
+        parts.push(<code key={key++} className="block my-2 text-xs">{latex}</code>);
+      }
+    } else if (seg) {
+      // Split by newlines to preserve paragraphs
+      const lines = seg.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i]) {
+          parts.push(<React.Fragment key={key++}>{parseInlineMath(lines[i])}</React.Fragment>);
+        }
+        if (i < lines.length - 1) {
+          parts.push(<br key={key++} />);
+        }
+      }
+    }
+  }
+
+  return <>{parts}</>;
+}
+
+/** Parse only $...$ inline math within a text string */
+function parseInlineMath(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const regex = /\$([^$\n]+?)\$/g;
+  let lastIndex = 0;
+  let match;
+  let key = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    try {
+      const html = katex.renderToString(match[1], {
+        throwOnError: false,
+        displayMode: false,
+        trust: true,
+      });
+      parts.push(
+        <span key={key++} className="katex-inline" dangerouslySetInnerHTML={{ __html: html }} />
+      );
+    } catch {
+      parts.push(<code key={key++}>{match[1]}</code>);
+    }
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length === 1 ? parts[0] : <>{parts}</>;
+}
+
 export function parseInline(text: string): React.ReactNode {
   // Parse <b>, <i>, and $...$ (math) tags within text
   const parts: React.ReactNode[] = [];

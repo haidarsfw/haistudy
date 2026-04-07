@@ -24,6 +24,7 @@ import { getDeviceId } from "@/lib/auth/device";
 import { CommentInput } from "./comment-input";
 import { CommentCard } from "./comment-card";
 import { MediaEmbed } from "./media-embed";
+import { parseForumContent } from "@/lib/content-parser";
 import type { ForumThread } from "@/types";
 
 interface ThreadViewProps {
@@ -98,7 +99,7 @@ export function ThreadView({
 
         {/* Content */}
         {thread.content && (
-          <p className="mt-3 text-sm whitespace-pre-wrap">{thread.content}</p>
+          <div className="mt-3 text-sm">{parseForumContent(thread.content)}</div>
         )}
 
         {/* Image */}
