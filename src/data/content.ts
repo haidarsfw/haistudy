@@ -23,7 +23,7 @@ export const content: Record<string, SubjectContent> = {
       { id: 6, title: "Discrete Probability Distributions", driveId: "1BfkJrC8Yqx0FKUFrBm90jHPO8YlnK-tcWWKs1XD_fNw", type: "drive-gslides", session: "7", xp: 10 },
     ],
     kisiKisi: [],
-    kisiKisiNote: "Kisi-kisi resmi belum tersedia untuk mata kuliah ini. Gunakan rangkuman dan flashcards sebagai panduan belajar.",
+    kisiKisiNote: "Kisi-kisi resmi belum tersedia — akan di-update secepat mungkin setelah mendapatkan kisi-kisi resmi dari dosen. Jika kamu memiliki kisi-kisi resmi atau informasi berguna lainnya, hubungi admin melalui layanan pelanggan/WA untuk mendapatkan benefit di website.",
     flashcards: [
       // MODUL 1/TOPIK 1: Pengantar Statistika Bisnis
       { id: 1, term: "Statistika", definition: "Ilmu pengumpulan, pengorganisasian, penyajian, analisis, dan interpretasi data guna memfasilitasi pengambilan keputusan yang efektif." },
@@ -127,7 +127,7 @@ export const content: Record<string, SubjectContent> = {
       { id: 12, title: "Business Strategy in a Global Economy", driveId: "1LLunzhpgrjIDfMKIIgKUwl9FfYJbVUSMGVZkZiIpc2I", type: "drive-gslides", session: "14", xp: 10 },
     ],
     kisiKisi: [],
-    kisiKisiNote: "Kisi-kisi resmi belum tersedia untuk mata kuliah ini. Gunakan rangkuman dan flashcards sebagai panduan belajar.",
+    kisiKisiNote: "Kisi-kisi resmi belum tersedia — akan di-update secepat mungkin setelah mendapatkan kisi-kisi resmi dari dosen. Jika kamu memiliki kisi-kisi resmi atau informasi berguna lainnya, hubungi admin melalui layanan pelanggan/WA untuk mendapatkan benefit di website.",
     flashcards: bisekoFlashcards,
     quiz: bisekoQuiz,
   },
@@ -143,7 +143,7 @@ export const content: Record<string, SubjectContent> = {
       { id: 7, title: "Wawasan Nusantara", driveId: "1Fzp3N1g_Uj57_t8Ljprr55iLfAFPntwzljY7OsI48mA", type: "drive-gslides", session: "7", xp: 10 },
     ],
     kisiKisi: [],
-    kisiKisiNote: "Kisi-kisi resmi belum tersedia untuk mata kuliah ini. Gunakan rangkuman dan flashcards sebagai panduan belajar.",
+    kisiKisiNote: "Ujian mata kuliah ini dilaksanakan secara online. Silakan kunjungi exam.apps.binus.ac.id untuk informasi lebih lanjut.",
     flashcards: [
       { id: 1, term: "Pancasila", definition: "Dasar negara dan ideologi bangsa Indonesia yang terdiri dari lima sila" },
       { id: 2, term: "UUD 1945", definition: "Undang-Undang Dasar Republik Indonesia sebagai hukum dasar tertinggi" },
@@ -165,7 +165,7 @@ export const content: Record<string, SubjectContent> = {
       { id: 7, title: "Financial Analysis: The Big Picture", driveId: "1LcbiKXHUAYLXdUEqD0D0tK91pUyTmg5Gy1qYCe6LM5o", type: "drive-gslides", session: "13-14", xp: 10 },
     ],
     kisiKisi: [],
-    kisiKisiNote: "Kisi-kisi resmi belum tersedia untuk mata kuliah ini. Gunakan rangkuman dan flashcards sebagai panduan belajar.",
+    kisiKisiNote: "Kisi-kisi resmi belum tersedia — akan di-update secepat mungkin setelah mendapatkan kisi-kisi resmi dari dosen. Jika kamu memiliki kisi-kisi resmi atau informasi berguna lainnya, hubungi admin melalui layanan pelanggan/WA untuk mendapatkan benefit di website.",
     flashcards: akuntansiFlashcards,
     quiz: akuntansiQuiz,
   },

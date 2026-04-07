@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Check,
   PartyPopper,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { FlashcardItem } from "@/types";
@@ -116,6 +117,16 @@ export function FlashcardsTab({ items, onComplete, subjectId }: FlashcardsTabPro
 
   return (
     <div className="flex flex-col items-center gap-4 py-6">
+      {subjectId === "cbkwn" && (
+        <div className="flex items-start gap-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 w-full max-w-md">
+          <Monitor className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
+          <p className="text-xs text-blue-700 dark:text-blue-400">
+            Ujian mata kuliah ini dilaksanakan secara <span className="font-semibold">online</span>. Silakan kunjungi{" "}
+            <a href="https://exam.apps.binus.ac.id" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">exam.apps.binus.ac.id</a>{" "}
+            untuk informasi lebih lanjut.
+          </p>
+        </div>
+      )}
       {/* Progress */}
       <div className="flex items-center gap-3 w-full max-w-md">
         <div className="h-1.5 flex-1 rounded-full bg-border overflow-hidden">

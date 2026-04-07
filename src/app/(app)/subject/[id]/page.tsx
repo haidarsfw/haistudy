@@ -21,7 +21,7 @@ import { PersonalNotesTab } from "@/components/subject/personal-notes-tab";
 import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
 import { durationFast } from "@/lib/motion";
-import { ChevronRight, Lightbulb } from "lucide-react";
+import { ChevronRight, Lightbulb, X } from "lucide-react";
 
 export default function SubjectPage() {
   const params = useParams();
@@ -32,6 +32,7 @@ export default function SubjectPage() {
 
   const initialTab = Number(searchParams.get("tab")) || 0;
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [showTip, setShowTip] = useState(true);
 
   const { settings, updateSettings } = useSettings();
 
@@ -175,13 +176,19 @@ export default function SubjectPage() {
       </div>
 
       {/* Slide-based learning tip for specific subjects */}
-      {["statistik", "akuntansi", "biseko"].includes(subjectId) && (
+      {showTip && ["statistik", "akuntansi", "biseko"].includes(subjectId) && (
         <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2.5">
           <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
+          <p className="flex-1 text-[11px] leading-relaxed text-muted-foreground">
             <span className="font-semibold text-foreground">Tips:</span>{" "}
             Mata kuliah ini sangat disarankan untuk dipelajari sembari membuka slide materi asli dari BINUSMAYA. Gunakan fitur <span className="font-medium text-foreground">AI haistudy</span> untuk membantu memahami materi dengan lebih mudah — kamu juga bisa upload gambar slide yang kurang kamu pahami!
           </p>
+          <button
+            onClick={() => setShowTip(false)}
+            className="shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 
@@ -250,6 +257,7 @@ export default function SubjectPage() {
                 <QuizTab
                   questions={content.quiz}
                   onScoreSave={(score, total) => saveQuizScore(score, total)}
+                  subjectId={subjectId}
                 />
               </PreviewLock>
             )}

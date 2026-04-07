@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle2, Monitor } from "lucide-react";
 import type { KisiKisiItem } from "@/types";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 
@@ -62,6 +62,16 @@ export function KisiKisiTab({ items, note, subjectId }: KisiKisiTabProps) {
       className="copy-protected flex flex-col gap-3 py-4"
       onContextMenu={(e) => e.preventDefault()}
     >
+      {subjectId === "cbkwn" && (
+        <div className="flex items-start gap-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 px-4 py-2.5">
+          <Monitor className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
+          <p className="text-xs text-blue-700 dark:text-blue-400">
+            Ujian mata kuliah ini dilaksanakan secara <span className="font-semibold">online</span>. Silakan kunjungi{" "}
+            <a href="https://exam.apps.binus.ac.id" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">exam.apps.binus.ac.id</a>{" "}
+            untuk informasi lebih lanjut.
+          </p>
+        </div>
+      )}
       {note && (
         <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-2 text-xs text-primary">
           {note}

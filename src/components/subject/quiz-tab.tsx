@@ -9,6 +9,7 @@ import {
   XCircle,
   Timer,
   Trophy,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { QuizQuestion } from "@/types";
@@ -31,11 +32,12 @@ import { sounds } from "@/lib/sounds";
 interface QuizTabProps {
   questions: QuizQuestion[];
   onScoreSave?: (score: number, total: number) => void;
+  subjectId?: string;
 }
 
 type QuizState = "idle" | "playing" | "review";
 
-export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
+export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
   const [state, setState] = useState<QuizState>("idle");
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -129,6 +131,16 @@ export function QuizTab({ questions, onScoreSave }: QuizTabProps) {
         initial="hidden"
         animate="visible"
       >
+        {subjectId === "cbkwn" && (
+          <div className="flex items-start gap-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 w-full max-w-md">
+            <Monitor className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              Ujian mata kuliah ini dilaksanakan secara <span className="font-semibold">online</span>. Silakan kunjungi{" "}
+              <a href="https://exam.apps.binus.ac.id" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">exam.apps.binus.ac.id</a>{" "}
+              untuk informasi lebih lanjut.
+            </p>
+          </div>
+        )}
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <Play className="h-8 w-8 text-primary" />
         </div>
