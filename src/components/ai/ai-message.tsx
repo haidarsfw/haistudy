@@ -81,7 +81,7 @@ function renderMarkdown(text: string): ReactNode[] {
     if (h3) {
       elements.push(
         <strong key={`h-${i}`} className="font-bold text-[13px]">
-          {restoreMath(parseMarkdownInline(h3[1], `h${i}`), mathMap, `h${i}`)}
+          {parseMarkdownInline(h3[1], `h${i}`, mathMap)}
         </strong>
       );
       continue;
@@ -90,22 +90,44 @@ function renderMarkdown(text: string): ReactNode[] {
     if (h2) {
       elements.push(
         <strong key={`h-${i}`} className="font-bold text-[13px]">
-          {restoreMath(parseMarkdownInline(h2[1], `h${i}`), mathMap, `h${i}`)}
+          {parseMarkdownInline(h2[1], `h${i}`, mathMap)}
         </strong>
       );
       continue;
     }
 
-    const inlined = parseMarkdownInline(line, `l${i}`);
-    elements.push(...restoreMath(inlined, mathMap, `l${i}`));
+    elements.push(...parseMarkdownInline(line, `l${i}`, mathMap));
   }
 
   return elements;
 }
 
-/** Parse **bold**, *italic*, `code` */
-function parseMarkdownInline(text: string, keyPrefix: string): (string | ReactNode)[] {
-  const result: (string | ReactNode)[] = [];
+/** Replace __MATH_N__ placeholders in a string with rendered KaTeX nodes */
+function expandMath(
+  text: string,
+  mathMap: Map<string, { latex: string; display: boolean }>,
+  keyPrefix: string
+): ReactNode[] {
+  const parts = text.split(/(__MATH_\d+__)/g);
+  const result: ReactNode[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    const math = mathMap.get(parts[i]);
+    if (math) {
+      result.push(renderKatex(math.latex, `${keyPrefix}-m${i}`, math.display));
+    } else if (parts[i]) {
+      result.push(parts[i]);
+    }
+  }
+  return result;
+}
+
+/** Parse **bold**, *italic*, `code` — with math placeholders resolved */
+function parseMarkdownInline(
+  text: string,
+  keyPrefix: string,
+  mathMap: Map<string, { latex: string; display: boolean }>
+): ReactNode[] {
+  const result: ReactNode[] = [];
   const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -113,12 +135,12 @@ function parseMarkdownInline(text: string, keyPrefix: string): (string | ReactNo
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      result.push(text.slice(lastIndex, match.index));
+      result.push(...expandMath(text.slice(lastIndex, match.index), mathMap, `${keyPrefix}-t${idx}`));
     }
     if (match[2]) {
-      result.push(<strong key={`${keyPrefix}-b${idx}`} className="font-semibold">{match[2]}</strong>);
+      result.push(<strong key={`${keyPrefix}-b${idx}`} className="font-semibold">{expandMath(match[2], mathMap, `${keyPrefix}-b${idx}`)}</strong>);
     } else if (match[3]) {
-      result.push(<em key={`${keyPrefix}-i${idx}`}>{match[3]}</em>);
+      result.push(<em key={`${keyPrefix}-i${idx}`}>{expandMath(match[3], mathMap, `${keyPrefix}-i${idx}`)}</em>);
     } else if (match[4]) {
       result.push(<code key={`${keyPrefix}-c${idx}`} className="rounded bg-background/50 px-1 py-0.5 text-xs">{match[4]}</code>);
     }
@@ -126,38 +148,8 @@ function parseMarkdownInline(text: string, keyPrefix: string): (string | ReactNo
     idx++;
   }
   if (lastIndex < text.length) {
-    result.push(text.slice(lastIndex));
+    result.push(...expandMath(text.slice(lastIndex), mathMap, `${keyPrefix}-e`));
   }
-  return result;
-}
-
-/** Replace math placeholders with rendered KaTeX */
-function restoreMath(
-  nodes: (string | ReactNode)[],
-  mathMap: Map<string, { latex: string; display: boolean }>,
-  keyPrefix: string
-): ReactNode[] {
-  const result: ReactNode[] = [];
-  let mIdx = 0;
-
-  for (const node of nodes) {
-    if (typeof node === "string") {
-      // Split string by math placeholders
-      const parts = node.split(/(__MATH_\d+__)/g);
-      for (const part of parts) {
-        const math = mathMap.get(part);
-        if (math) {
-          result.push(renderKatex(math.latex, `${keyPrefix}-m${mIdx++}`, math.display));
-        } else if (part) {
-          result.push(part);
-        }
-      }
-    } else {
-      // ReactNode (bold/italic/code) — check children for placeholders
-      result.push(node);
-    }
-  }
-
   return result;
 }
 
