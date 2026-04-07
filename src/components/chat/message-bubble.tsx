@@ -12,6 +12,7 @@ import {
   MoreHorizontal,
   ShieldCheck,
   Crown,
+  Gem,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AudioPlayer } from "./audio-player";
@@ -35,7 +36,7 @@ interface MessageBubbleProps {
   onPin: (messageId: string) => void;
   onUnpin: (messageId: string) => void;
   onImageClick?: (src: string) => void;
-  userRoleMap?: Map<string, "admin" | "vip" | "tester" | "normal">;
+  userRoleMap?: Map<string, "admin" | "diamond" | "vip" | "tester" | "normal">;
 }
 
 export function MessageBubble({
@@ -139,6 +140,15 @@ export function MessageBubble({
             >
               <ShieldCheck className="h-2.5 w-2.5" />
               Admin
+            </Badge>
+          )}
+          {message.packageTier === "diamond" && (
+            <Badge
+              variant="diamond-outline"
+              className="h-4 gap-0.5 px-1 text-[9px]"
+            >
+              <Gem className="h-2.5 w-2.5" />
+              Diamond
             </Badge>
           )}
           {message.packageTier === "vip" && (

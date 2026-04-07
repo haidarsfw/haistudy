@@ -107,7 +107,7 @@ function mapLicenseRow(row: Record<string, unknown>): LicenseKey {
     daysActive: row.days_active as number,
     isAdmin: row.is_admin as boolean,
     isTester: row.is_tester as boolean,
-    packageTier: (row.package_tier as "share" | "normal" | "vip") || "normal",
+    packageTier: (row.package_tier as "share" | "normal" | "vip" | "diamond") || "normal",
     maxDevices: row.max_devices as number,
     unlimitedDevices: row.unlimited_devices as boolean,
     fixedExpiry: (row.fixed_expiry as string) || null,

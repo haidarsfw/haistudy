@@ -20,7 +20,7 @@ interface UseAiChatReturn {
     text: string,
     licenseKey: string,
     subjectId?: string | null,
-    packageTier?: "share" | "normal" | "vip",
+    packageTier?: "share" | "normal" | "vip" | "diamond",
     model?: "fast" | "reasoning",
     isAdmin?: boolean,
     image?: string | null
@@ -82,7 +82,7 @@ export function useAiChat(): UseAiChatReturn {
       text: string,
       licenseKey: string,
       subjectId?: string | null,
-      packageTier?: "share" | "normal" | "vip",
+      packageTier?: "share" | "normal" | "vip" | "diamond",
       model?: "fast" | "reasoning",
       isAdmin?: boolean,
       image?: string | null

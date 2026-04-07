@@ -102,6 +102,9 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
               {session.isAdmin && (
                 <Badge variant="admin-outline" className="text-[9px] px-1 py-0">Admin</Badge>
               )}
+              {session.packageTier === "diamond" && (
+                <Badge variant="diamond-outline" className="text-[9px] px-1 py-0">Diamond</Badge>
+              )}
               {session.packageTier === "vip" && (
                 <Badge variant="vip-outline" className="text-[9px] px-1 py-0">VIP</Badge>
               )}

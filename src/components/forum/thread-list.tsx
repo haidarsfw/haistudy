@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { MessageSquare, Lock, Shield, Crown, Plus } from "lucide-react";
+import { MessageSquare, Lock, Shield, Crown, Gem, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +96,12 @@ export function ThreadList({
                   <Badge variant="admin-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
                     <Shield className="h-2.5 w-2.5" />
                     Admin
+                  </Badge>
+                )}
+                {thread.packageTier === "diamond" && (
+                  <Badge variant="diamond-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
+                    <Gem className="h-2.5 w-2.5" />
+                    Diamond
                   </Badge>
                 )}
                 {thread.packageTier === "vip" && (

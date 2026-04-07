@@ -22,11 +22,12 @@ interface MessageInputProps {
   disabled?: boolean;
   onlineUserNames?: string[];
   isAdmin?: boolean;
-  userRoleMap?: Map<string, "admin" | "vip" | "tester" | "normal">;
+  userRoleMap?: Map<string, "admin" | "diamond" | "vip" | "tester" | "normal">;
 }
 
 const ROLE_COLORS: Record<string, string> = {
   admin: "text-red-500",
+  diamond: "text-sky-400",
   vip: "text-amber-400",
   tester: "text-green-500",
   normal: "text-blue-500",

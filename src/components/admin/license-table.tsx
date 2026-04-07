@@ -98,6 +98,7 @@ function UserDetailDialog({
             <div className="flex flex-wrap gap-1.5">
               {license.isAdmin && <Badge variant="admin-outline" className="text-[10px] gap-0.5"><Shield className="h-2.5 w-2.5" /> Admin</Badge>}
               {license.isTester && <Badge variant="tester-outline" className="text-[10px] gap-0.5"><FlaskConical className="h-2.5 w-2.5" /> Tester</Badge>}
+              {license.packageTier === "diamond" && <Badge variant="diamond-outline" className="text-[10px]">Diamond</Badge>}
               {license.packageTier === "vip" && <Badge variant="vip-outline" className="text-[10px]">VIP</Badge>}
               {license.packageTier === "normal" && <Badge variant="secondary" className="text-[10px]">Normal</Badge>}
               {license.packageTier === "share" && <Badge variant="outline" className="text-[10px]">Share</Badge>}
@@ -341,6 +342,11 @@ export function LicenseTable() {
                               <Badge variant="admin-outline" className="gap-0.5 text-[10px]">
                                 <Shield className="h-2.5 w-2.5" />
                                 Admin
+                              </Badge>
+                            )}
+                            {license.packageTier === "diamond" && (
+                              <Badge variant="diamond-outline" className="gap-0.5 text-[10px]">
+                                Diamond
                               </Badge>
                             )}
                             {license.packageTier === "vip" && (

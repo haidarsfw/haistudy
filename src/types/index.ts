@@ -10,7 +10,7 @@ export interface Session {
   expiry: string | null;
   selectedClass: string;
   isPreview?: boolean;
-  packageTier: "share" | "normal" | "vip";
+  packageTier: "share" | "normal" | "vip" | "diamond";
 }
 
 export interface Subject {
@@ -118,7 +118,7 @@ export interface ChatMessage {
   authorClass: string;
   isAdmin: boolean;
   isTester: boolean;
-  packageTier?: "share" | "normal" | "vip";
+  packageTier?: "share" | "normal" | "vip" | "diamond";
   deleted: boolean;
   replyToId: string | null;
   replyToName: string | null;
@@ -185,7 +185,7 @@ export interface ForumThread {
   authorClass: string;
   isAdmin: boolean;
   isTester: boolean;
-  packageTier?: "share" | "normal" | "vip";
+  packageTier?: "share" | "normal" | "vip" | "diamond";
   imageUrl: string | null;
   mediaUrl: string | null;
   closed: boolean;
@@ -203,7 +203,7 @@ export interface ForumComment {
   authorClass: string;
   isAdmin: boolean;
   isTester: boolean;
-  packageTier?: "share" | "normal" | "vip";
+  packageTier?: "share" | "normal" | "vip" | "diamond";
   parentCommentId: string | null;
   createdAt: string;
   replies?: ForumComment[];
@@ -237,7 +237,7 @@ export interface LicenseKey {
   daysActive: number;
   isAdmin: boolean;
   isTester: boolean;
-  packageTier: "share" | "normal" | "vip";
+  packageTier: "share" | "normal" | "vip" | "diamond";
   maxDevices: number;
   unlimitedDevices: boolean;
   fixedExpiry: string | null;

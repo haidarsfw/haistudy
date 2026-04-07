@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Lightbulb, Sparkles, Shield, FlaskConical, Crown } from "lucide-react";
+import { Lightbulb, Sparkles, Shield, FlaskConical, Crown, Gem } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -241,7 +241,13 @@ export function GreetingCard() {
                 {t("badge.admin")}
               </Badge>
             )}
-            {(session?.packageTier === "vip" || session?.isAdmin) && (
+            {(session?.packageTier === "diamond") && (
+              <Badge variant="diamond-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
+                <Gem className="h-2.5 w-2.5" />
+                Diamond
+              </Badge>
+            )}
+            {(session?.packageTier === "vip" || session?.packageTier === "diamond" || session?.isAdmin) && (
               <Badge variant="vip-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
                 <Crown className="h-2.5 w-2.5" />
                 {t("badge.vip")}

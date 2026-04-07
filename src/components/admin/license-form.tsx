@@ -27,7 +27,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
   );
   const [isAdmin, setIsAdmin] = useState(license?.isAdmin || false);
   const [isTester, setIsTester] = useState(license?.isTester || false);
-  const [packageTier, setPackageTier] = useState<"share" | "normal" | "vip">(license?.packageTier || "normal");
+  const [packageTier, setPackageTier] = useState<"share" | "normal" | "vip" | "diamond">(license?.packageTier || "normal");
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = useCallback(
@@ -160,7 +160,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
 
       <div className="space-y-2">
         <Label>Package Tier</Label>
-        <Select value={packageTier} onValueChange={(v) => setPackageTier(v as "share" | "normal" | "vip")}>
+        <Select value={packageTier} onValueChange={(v) => setPackageTier(v as "share" | "normal" | "vip" | "diamond")}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -168,6 +168,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
             <SelectItem value="share">Share</SelectItem>
             <SelectItem value="normal">Normal</SelectItem>
             <SelectItem value="vip">VIP</SelectItem>
+            <SelectItem value="diamond">Diamond</SelectItem>
           </SelectContent>
         </Select>
       </div>

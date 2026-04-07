@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { Reply, Trash2, Shield, Crown } from "lucide-react";
+import { Reply, Trash2, Shield, Crown, Gem } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,12 @@ export function CommentCard({
             <Badge variant="admin-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
               <Shield className="h-2.5 w-2.5" />
               Admin
+            </Badge>
+          )}
+          {comment.packageTier === "diamond" && (
+            <Badge variant="diamond-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
+              <Gem className="h-2.5 w-2.5" />
+              Diamond
             </Badge>
           )}
           {comment.packageTier === "vip" && (

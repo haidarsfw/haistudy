@@ -146,11 +146,12 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange }: ChatPanelProps) {
 
   // Build role map from messages for mention coloring
   const userRoleMap = useMemo(() => {
-    const map = new Map<string, "admin" | "vip" | "tester" | "normal">();
+    const map = new Map<string, "admin" | "diamond" | "vip" | "tester" | "normal">();
     for (const m of messages) {
       const name = m.authorName.toLowerCase();
       if (map.has(name)) continue;
       if (m.isAdmin) map.set(name, "admin");
+      else if (m.packageTier === "diamond") map.set(name, "diamond");
       else if (m.packageTier === "vip") map.set(name, "vip");
       else if (m.isTester) map.set(name, "tester");
       else map.set(name, "normal");

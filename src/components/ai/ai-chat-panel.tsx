@@ -237,7 +237,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
               onStop={stopStreaming}
               aiModel={aiModel}
               onModelChange={setAiModel}
-              showModelToggle={session.packageTier === "vip" || session.isAdmin}
+              showModelToggle={session.packageTier === "vip" || session.packageTier === "diamond" || session.isAdmin}
             />
           </motion.div>
         </>

@@ -27,6 +27,11 @@ export function SessionInfo() {
               {t("settings.admin_badge")}
             </Badge>
           )}
+          {session.packageTier === "diamond" && (
+            <Badge variant="diamond-outline" className="text-[9px]">
+              Diamond
+            </Badge>
+          )}
           {session.packageTier === "vip" && (
             <Badge variant="vip-outline" className="text-[9px]">
               VIP

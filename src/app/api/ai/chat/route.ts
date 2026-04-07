@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       history: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }>;
       subjectId: string | null;
       licenseKey: string;
-      packageTier?: "share" | "normal" | "vip";
+      packageTier?: "share" | "normal" | "vip" | "diamond";
       model?: "fast" | "reasoning";
       isAdmin?: boolean;
       image?: string | null; // base64 data URL
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
     // Route: VIP or Admin → DeepSeek, else → Gemini
     // Images always go to Gemini (DeepSeek doesn't support vision)
-    const useDeepSeek = (packageTier === "vip" || isAdmin) && isDeepSeekConfigured && !image;
+    const useDeepSeek = (packageTier === "vip" || packageTier === "diamond" || isAdmin) && isDeepSeekConfigured && !image;
 
     // Mock mode - return non-streaming response
     if (!useDeepSeek && !isGeminiConfigured) {

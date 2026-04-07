@@ -27,6 +27,7 @@ const PACKAGE_OPTIONS = [
   { id: "share", label: "Share (Rp20.000)", tier: "share" as const },
   { id: "normal", label: "Normal (Rp25.000)", tier: "normal" as const },
   { id: "vip", label: "VIP (Rp30.000)", tier: "vip" as const },
+  { id: "diamond", label: "Diamond (Rp50.000+)", tier: "diamond" as const },
   { id: "free", label: "Free", tier: "normal" as const },
 ] as const;
 

@@ -248,7 +248,7 @@ export async function POST(request: Request) {
       expiry: activation.expiry,
       selectedClass: "",
       isPreview: license.is_preview || false,
-      packageTier: (license.package_tier as "share" | "normal" | "vip") || "normal",
+      packageTier: (license.package_tier as "share" | "normal" | "vip" | "diamond") || "normal",
     };
 
     // Build embedded settings
@@ -323,7 +323,7 @@ function handleMockValidation(key: string, _deviceId: string) {
     expiry: null,
     selectedClass: "",
     isPreview: key === "PREVIEW01",
-    packageTier: (key === "ADMIN1" ? "vip" : "normal") as "share" | "normal" | "vip",
+    packageTier: (key === "ADMIN1" ? "vip" : "normal") as "share" | "normal" | "vip" | "diamond",
   };
 
   return buildSessionResponse(session, null);
@@ -339,7 +339,7 @@ function buildSessionResponse(session: {
   expiry: string | null;
   selectedClass: string;
   isPreview?: boolean;
-  packageTier: "share" | "normal" | "vip";
+  packageTier: "share" | "normal" | "vip" | "diamond";
 }, settings: Record<string, unknown> | null) {
   const response = NextResponse.json({ valid: true, session, settings });
 
