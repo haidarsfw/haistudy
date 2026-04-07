@@ -12,14 +12,20 @@ interface AiMessageBubbleProps {
   isStreaming?: boolean;
 }
 
-function renderKatex(latex: string, key: string): ReactNode {
+function renderKatex(latex: string, key: string, display = false): ReactNode {
   try {
     const html = katex.renderToString(latex, {
       throwOnError: false,
-      displayMode: false,
+      displayMode: display,
       trust: true,
     });
-    return (
+    return display ? (
+      <div
+        key={key}
+        className="katex-display my-2 overflow-x-auto"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    ) : (
       <span
         key={key}
         className="katex-inline"
@@ -31,56 +37,71 @@ function renderKatex(latex: string, key: string): ReactNode {
   }
 }
 
-/** Parse simple markdown (bold, italic, inline code, math) into React elements. */
-function renderMarkdown(text: string): ReactNode[] {
-  const lines = text.split("\n");
-  const elements: ReactNode[] = [];
+/**
+ * Split text into math segments and non-math segments.
+ * Handles: $$...$$, $...$, \[...\], \(...\)
+ * Math is extracted first to prevent markdown parsing from corrupting LaTeX.
+ */
+function splitMath(text: string): Array<{ type: "text" | "math-inline" | "math-display"; value: string }> {
+  const segments: Array<{ type: "text" | "math-inline" | "math-display"; value: string }> = [];
+  // Match display math first ($$...$$, \[...\]), then inline ($...$, \(...\))
+  const mathRegex = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\$([^$\n]+?)\$|\\\((.+?)\\\)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
 
-  for (let i = 0; i < lines.length; i++) {
-    if (i > 0) elements.push(<br key={`br-${i}`} />);
-    elements.push(...parseInline(lines[i], `line-${i}`));
+  while ((match = mathRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: "text", value: text.slice(lastIndex, match.index) });
+    }
+    if (match[1] !== undefined) {
+      segments.push({ type: "math-display", value: match[1] });
+    } else if (match[2] !== undefined) {
+      segments.push({ type: "math-display", value: match[2] });
+    } else if (match[3] !== undefined) {
+      segments.push({ type: "math-inline", value: match[3] });
+    } else if (match[4] !== undefined) {
+      segments.push({ type: "math-inline", value: match[4] });
+    }
+    lastIndex = match.index + match[0].length;
   }
 
-  return elements;
+  if (lastIndex < text.length) {
+    segments.push({ type: "text", value: text.slice(lastIndex) });
+  }
+
+  return segments;
 }
 
-function parseInline(text: string, keyPrefix: string): ReactNode[] {
+/** Parse markdown formatting: **bold**, *italic*, `code` */
+function parseMarkdownInline(text: string, keyPrefix: string): ReactNode[] {
   const result: ReactNode[] = [];
-  // Match $math$, **bold**, *italic*, `code` — math first to avoid conflicts
-  const regex = /(\$([^$]+)\$|\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g;
+  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let partIndex = 0;
 
   while ((match = regex.exec(text)) !== null) {
-    // Add text before match
     if (match.index > lastIndex) {
       result.push(text.slice(lastIndex, match.index));
     }
 
     if (match[2]) {
-      // Math $...$
-      result.push(renderKatex(match[2], `${keyPrefix}-m-${partIndex}`));
-    } else if (match[3]) {
-      // Bold **text**
       result.push(
         <strong key={`${keyPrefix}-b-${partIndex}`} className="font-semibold">
-          {match[3]}
+          {match[2]}
         </strong>
       );
-    } else if (match[4]) {
-      // Italic *text*
+    } else if (match[3]) {
       result.push(
-        <em key={`${keyPrefix}-i-${partIndex}`}>{match[4]}</em>
+        <em key={`${keyPrefix}-i-${partIndex}`}>{match[3]}</em>
       );
-    } else if (match[5]) {
-      // Inline code `text`
+    } else if (match[4]) {
       result.push(
         <code
           key={`${keyPrefix}-c-${partIndex}`}
           className="rounded bg-background/50 px-1 py-0.5 text-xs"
         >
-          {match[5]}
+          {match[4]}
         </code>
       );
     }
@@ -89,12 +110,36 @@ function parseInline(text: string, keyPrefix: string): ReactNode[] {
     partIndex++;
   }
 
-  // Add remaining text
   if (lastIndex < text.length) {
     result.push(text.slice(lastIndex));
   }
 
   return result;
+}
+
+/** Render a full message: split math first, then process markdown in text segments */
+function renderMarkdown(text: string): ReactNode[] {
+  const lines = text.split("\n");
+  const elements: ReactNode[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (i > 0) elements.push(<br key={`br-${i}`} />);
+
+    const segments = splitMath(lines[i]);
+    for (let j = 0; j < segments.length; j++) {
+      const seg = segments[j];
+      const key = `l${i}-s${j}`;
+      if (seg.type === "math-inline") {
+        elements.push(renderKatex(seg.value, key, false));
+      } else if (seg.type === "math-display") {
+        elements.push(renderKatex(seg.value, key, true));
+      } else {
+        elements.push(...parseMarkdownInline(seg.value, key));
+      }
+    }
+  }
+
+  return elements;
 }
 
 export const AiMessageBubble = memo(function AiMessageBubble({

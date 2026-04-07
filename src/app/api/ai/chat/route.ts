@@ -66,7 +66,8 @@ export async function POST(request: Request) {
     const systemPrompt = buildSystemPrompt(subjectId);
 
     // Route: VIP or Admin → DeepSeek, else → Gemini
-    const useDeepSeek = (packageTier === "vip" || isAdmin) && isDeepSeekConfigured;
+    // Images always go to Gemini (DeepSeek doesn't support vision)
+    const useDeepSeek = (packageTier === "vip" || isAdmin) && isDeepSeekConfigured && !image;
 
     // Mock mode - return non-streaming response
     if (!useDeepSeek && !isGeminiConfigured) {
