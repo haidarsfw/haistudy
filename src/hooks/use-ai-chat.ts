@@ -9,6 +9,7 @@ export interface AiMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: number;
+  image?: string; // base64 data URL for user-uploaded images
 }
 
 interface UseAiChatReturn {
@@ -21,7 +22,8 @@ interface UseAiChatReturn {
     subjectId?: string | null,
     packageTier?: "share" | "normal" | "vip",
     model?: "fast" | "reasoning",
-    isAdmin?: boolean
+    isAdmin?: boolean,
+    image?: string | null
   ) => Promise<void>;
   clearHistory: () => void;
   conversations: AiConversation[];
@@ -81,7 +83,8 @@ export function useAiChat(): UseAiChatReturn {
       subjectId?: string | null,
       packageTier?: "share" | "normal" | "vip",
       model?: "fast" | "reasoning",
-      isAdmin?: boolean
+      isAdmin?: boolean,
+      image?: string | null
     ) => {
       if (!text.trim() || isStreaming) return;
 
@@ -99,6 +102,7 @@ export function useAiChat(): UseAiChatReturn {
         role: "user",
         content: text.trim(),
         timestamp: Date.now(),
+        ...(image ? { image } : {}),
       };
 
       const updatedMessages = [...messagesRef.current, userMsg];
@@ -134,6 +138,7 @@ export function useAiChat(): UseAiChatReturn {
             packageTier: packageTier || "normal",
             model: model || "fast",
             isAdmin: isAdmin || false,
+            ...(image ? { image } : {}),
           }),
           signal: controller.signal,
         });

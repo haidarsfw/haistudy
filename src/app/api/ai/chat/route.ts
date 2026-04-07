@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       packageTier = "normal",
       model = "fast",
       isAdmin = false,
+      image = null,
     } = body as {
       message: string;
       history: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }>;
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
       packageTier?: "share" | "normal" | "vip";
       model?: "fast" | "reasoning";
       isAdmin?: boolean;
+      image?: string | null; // base64 data URL
     };
 
     if (!message || !licenseKey) {
@@ -86,13 +88,21 @@ export async function POST(request: Request) {
         content: m.parts.map((p) => p.text).join(""),
       }));
 
+      // Build user message content (text + optional image)
+      const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+        { type: "text", text: message },
+      ];
+      if (image) {
+        userContent.push({ type: "image_url", image_url: { url: image } });
+      }
+
       const completion = await deepseek.chat.completions.create({
         model: deepseekModel,
         messages: [
           { role: "system", content: systemPrompt },
           ...openaiHistory,
-          { role: "user", content: message },
-        ],
+          { role: "user", content: image ? userContent : message },
+        ] as Parameters<typeof deepseek.chat.completions.create>[0]["messages"],
         stream: true,
         max_tokens: 8192,
       });
@@ -146,7 +156,22 @@ export async function POST(request: Request) {
 
     const trimmedHistory = history.slice(-MAX_HISTORY);
     const chat = geminiModel.startChat({ history: trimmedHistory });
-    const result = await chat.sendMessageStream(message);
+
+    // Build message parts (text + optional image)
+    const messageParts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
+      { text: message },
+    ];
+    if (image) {
+      // Extract base64 data and mime type from data URL
+      const match = image.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (match) {
+        messageParts.push({
+          inlineData: { mimeType: match[1], data: match[2] },
+        });
+      }
+    }
+
+    const result = await chat.sendMessageStream(messageParts);
 
     const stream = new ReadableStream({
       async start(controller) {

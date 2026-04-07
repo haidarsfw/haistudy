@@ -5,13 +5,33 @@ import { Bot, User } from "lucide-react";
 import { motion } from "framer-motion";
 import type { AiMessage } from "@/hooks/use-ai-chat";
 import { springGentle } from "@/lib/motion";
+import katex from "katex";
 
 interface AiMessageBubbleProps {
   message: AiMessage;
   isStreaming?: boolean;
 }
 
-/** Parse simple markdown (bold, italic, inline code) into React elements. */
+function renderKatex(latex: string, key: string): ReactNode {
+  try {
+    const html = katex.renderToString(latex, {
+      throwOnError: false,
+      displayMode: false,
+      trust: true,
+    });
+    return (
+      <span
+        key={key}
+        className="katex-inline"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  } catch {
+    return <code key={key}>{latex}</code>;
+  }
+}
+
+/** Parse simple markdown (bold, italic, inline code, math) into React elements. */
 function renderMarkdown(text: string): ReactNode[] {
   const lines = text.split("\n");
   const elements: ReactNode[] = [];
@@ -26,8 +46,8 @@ function renderMarkdown(text: string): ReactNode[] {
 
 function parseInline(text: string, keyPrefix: string): ReactNode[] {
   const result: ReactNode[] = [];
-  // Match **bold**, *italic*, `code`
-  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g;
+  // Match $math$, **bold**, *italic*, `code` — math first to avoid conflicts
+  const regex = /(\$([^$]+)\$|\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let partIndex = 0;
@@ -39,25 +59,28 @@ function parseInline(text: string, keyPrefix: string): ReactNode[] {
     }
 
     if (match[2]) {
+      // Math $...$
+      result.push(renderKatex(match[2], `${keyPrefix}-m-${partIndex}`));
+    } else if (match[3]) {
       // Bold **text**
       result.push(
         <strong key={`${keyPrefix}-b-${partIndex}`} className="font-semibold">
-          {match[2]}
+          {match[3]}
         </strong>
       );
-    } else if (match[3]) {
+    } else if (match[4]) {
       // Italic *text*
       result.push(
-        <em key={`${keyPrefix}-i-${partIndex}`}>{match[3]}</em>
+        <em key={`${keyPrefix}-i-${partIndex}`}>{match[4]}</em>
       );
-    } else if (match[4]) {
+    } else if (match[5]) {
       // Inline code `text`
       result.push(
         <code
           key={`${keyPrefix}-c-${partIndex}`}
           className="rounded bg-background/50 px-1 py-0.5 text-xs"
         >
-          {match[4]}
+          {match[5]}
         </code>
       );
     }
@@ -111,7 +134,16 @@ export const AiMessageBubble = memo(function AiMessageBubble({
         }`}
       >
         {isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <div>
+            {message.image && (
+              <img
+                src={message.image}
+                alt="Uploaded"
+                className="max-w-full max-h-48 rounded-lg mb-2"
+              />
+            )}
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          </div>
         ) : message.content ? (
           <div className="space-y-1 whitespace-pre-wrap">
             {renderMarkdown(message.content)}

@@ -60,9 +60,9 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
   }, [isOpen]);
 
   const handleSend = useCallback(
-    (text: string) => {
+    (text: string, image?: string | null) => {
       if (!session) return;
-      sendMessage(text, session.licenseKey, subjectId, session.packageTier, aiModel, session.isAdmin);
+      sendMessage(text, session.licenseKey, subjectId, session.packageTier, aiModel, session.isAdmin, image);
     },
     [session, sendMessage, subjectId, aiModel]
   );
