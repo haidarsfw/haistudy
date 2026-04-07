@@ -128,7 +128,7 @@ function parseMarkdownInline(
   mathMap: Map<string, { latex: string; display: boolean }>
 ): ReactNode[] {
   const result: ReactNode[] = [];
-  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g;
+  const regex = /(\*\*(.+?)\*\*|(?<=\s|^)\*([^*\s][^*]*?)\*(?=[\s.,;:!?)}\]]|$)|`([^`]+)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let idx = 0;

@@ -25,6 +25,7 @@ interface UseAiChatReturn {
     isAdmin?: boolean,
     image?: string | null
   ) => Promise<void>;
+  stopStreaming: () => void;
   clearHistory: () => void;
   conversations: AiConversation[];
   activeConversationId: string | null;
@@ -240,6 +241,14 @@ export function useAiChat(): UseAiChatReturn {
     [isStreaming, activeId, createConversation, saveMessages]
   );
 
+  const stopStreaming = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setIsStreaming(false);
+  }, []);
+
   const clearHistory = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -298,6 +307,7 @@ export function useAiChat(): UseAiChatReturn {
     isStreaming,
     error,
     sendMessage,
+    stopStreaming,
     clearHistory,
     conversations,
     activeConversationId: activeId,

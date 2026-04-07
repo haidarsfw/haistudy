@@ -21,7 +21,7 @@ import { PersonalNotesTab } from "@/components/subject/personal-notes-tab";
 import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
 import { durationFast } from "@/lib/motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Lightbulb } from "lucide-react";
 
 export default function SubjectPage() {
   const params = useParams();
@@ -173,6 +173,17 @@ export default function SubjectPage() {
           <span className="absolute text-[11px] font-bold">{percent}%</span>
         </div>
       </div>
+
+      {/* Slide-based learning tip for specific subjects */}
+      {["statistik", "akuntansi", "biseko"].includes(subjectId) && (
+        <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2.5">
+          <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-foreground">Tips:</span>{" "}
+            Mata kuliah ini sangat disarankan untuk dipelajari sembari membuka slide materi asli dari BINUSMAYA. Gunakan fitur <span className="font-medium text-foreground">AI haistudy</span> untuk membantu memahami materi dengan lebih mudah — kamu juga bisa upload gambar slide yang kurang kamu pahami!
+          </p>
+        </div>
+      )}
 
       {/* Tab navigation */}
       <TabNav

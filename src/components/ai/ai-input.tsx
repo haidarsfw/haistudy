@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Send, ImagePlus, X } from "lucide-react";
+import { Send, ImagePlus, X, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
@@ -9,7 +9,8 @@ import { sounds } from "@/lib/sounds";
 
 interface AiInputProps {
   onSend: (text: string, image?: string | null) => void;
-  disabled?: boolean;
+  isStreaming?: boolean;
+  onStop?: () => void;
   aiModel?: "fast" | "reasoning";
   onModelChange?: (model: "fast" | "reasoning") => void;
   showModelToggle?: boolean;
@@ -39,7 +40,7 @@ function compressImage(dataUrl: string): Promise<string> {
   });
 }
 
-export function AiInput({ onSend, disabled, aiModel, onModelChange, showModelToggle }: AiInputProps) {
+export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, showModelToggle }: AiInputProps) {
   const [value, setValue] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [promptHistory, setPromptHistory] = useState<string[]>([]);
@@ -56,6 +57,17 @@ export function AiInput({ onSend, disabled, aiModel, onModelChange, showModelTog
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [value]);
+
+  // Auto-focus textarea when streaming ends
+  const wasStreamingRef = useRef(false);
+  useEffect(() => {
+    if (isStreaming) {
+      wasStreamingRef.current = true;
+    } else if (wasStreamingRef.current) {
+      wasStreamingRef.current = false;
+      textareaRef.current?.focus();
+    }
+  }, [isStreaming]);
 
   const processFile = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -93,7 +105,7 @@ export function AiInput({ onSend, disabled, aiModel, onModelChange, showModelTog
   const handleSubmit = useCallback(() => {
     if (!guard("preview.ai_blocked")) return;
     const trimmed = value.trim();
-    if ((!trimmed && !image) || disabled) return;
+    if (!trimmed && !image) return;
     if (trimmed) {
       setPromptHistory(prev => [...prev, trimmed]);
     }
@@ -105,7 +117,7 @@ export function AiInput({ onSend, disabled, aiModel, onModelChange, showModelTog
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [value, image, disabled, onSend, guard]);
+  }, [value, image, onSend, guard]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -184,7 +196,7 @@ export function AiInput({ onSend, disabled, aiModel, onModelChange, showModelTog
         />
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isPreview}
+          disabled={isPreview}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
           title="Upload gambar"
         >
@@ -196,19 +208,30 @@ export function AiInput({ onSend, disabled, aiModel, onModelChange, showModelTog
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={isPreview ? t("preview.ai_blocked") : image ? "Tulis pertanyaan tentang gambar..." : "Tanya tentang materi kuliah..."}
-          disabled={disabled || isPreview}
+          disabled={isPreview}
           rows={1}
           className="flex-1 resize-none rounded-xl border border-border bg-muted/50 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-primary disabled:opacity-50"
           maxLength={2000}
         />
-        <Button
-          size="icon"
-          className="h-9 w-9 shrink-0 rounded-full"
-          onClick={handleSubmit}
-          disabled={disabled || (!value.trim() && !image)}
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+        {isStreaming ? (
+          <Button
+            size="icon"
+            variant="destructive"
+            className="h-9 w-9 shrink-0 rounded-full"
+            onClick={onStop}
+          >
+            <Square className="h-3.5 w-3.5" />
+          </Button>
+        ) : (
+          <Button
+            size="icon"
+            className="h-9 w-9 shrink-0 rounded-full"
+            onClick={handleSubmit}
+            disabled={!value.trim() && !image}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

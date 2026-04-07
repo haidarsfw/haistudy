@@ -25,6 +25,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
     isStreaming,
     error,
     sendMessage,
+    stopStreaming,
     clearHistory,
     conversations,
     activeConversationId,
@@ -232,7 +233,8 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
             {/* Input */}
             <AiInput
               onSend={handleSend}
-              disabled={isStreaming}
+              isStreaming={isStreaming}
+              onStop={stopStreaming}
               aiModel={aiModel}
               onModelChange={setAiModel}
               showModelToggle={session.packageTier === "vip" || session.isAdmin}
