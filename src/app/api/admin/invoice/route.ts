@@ -5,7 +5,7 @@ import {
 } from "@/lib/supabase/server";
 
 // ─── Mock counter ───
-let mockCounter = 90;
+let mockCounter = 25;
 
 // Helper: get the existing row (any row, since it's a singleton table)
 async function getRow(supabase: ReturnType<typeof createServerClient>) {

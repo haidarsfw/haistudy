@@ -36,32 +36,32 @@ export function QuickLicense() {
   const [pkg, setPkg] = useState<string>("share");
   const [devices, setDevices] = useState(2);
   const [freeReason, setFreeReason] = useState("");
-  const [invoiceNumber, setInvoiceNumber] = useState(90);
+  const [invoiceNumber, setInvoiceNumber] = useState<number | null>(null);
   const [editingInvoice, setEditingInvoice] = useState(false);
   const editingRef = useRef(false);
-  const [tempInvoice, setTempInvoice] = useState("90");
+  const [tempInvoice, setTempInvoice] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch invoice counter on mount + poll every 3s for cross-device sync
+  // Fetch invoice counter on mount + poll every 10s for cross-device sync
   useEffect(() => {
     const fetchCounter = () => {
-      if (editingRef.current) return; // Don't overwrite while user is editing
+      if (editingRef.current) return;
       fetch(`/api/admin/invoice?t=${Date.now()}`)
         .then((r) => r.json())
         .then((data) => {
           if (typeof data.value === "number" && !editingRef.current) {
             setInvoiceNumber(data.value);
-            setTempInvoice(String(data.value));
+            if (!editingRef.current) setTempInvoice(String(data.value));
           }
         })
         .catch(console.error);
     };
 
     fetchCounter();
-    const interval = setInterval(fetchCounter, 3_000);
+    const interval = setInterval(fetchCounter, 10_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -90,7 +90,7 @@ export function QuickLicense() {
       year: "numeric",
     });
 
-    const currentInvoice = invoiceNumber;
+    const currentInvoice = invoiceNumber ?? 1;
 
     try {
       // Create license key via API
@@ -161,7 +161,7 @@ Selamat belajar! 🚀`;
   }, [name, pkg, devices, freeReason, invoiceNumber]);
 
   const handleSaveInvoice = useCallback(async () => {
-    const value = parseInt(tempInvoice) || 90;
+    const value = parseInt(tempInvoice) || 1;
     try {
       await fetch("/api/admin/invoice", {
         method: "PUT",
@@ -220,13 +220,18 @@ Selamat belajar! 🚀`;
             ) : (
               <button
                 onClick={() => {
+                  if (invoiceNumber === null) return;
                   setTempInvoice(String(invoiceNumber));
                   editingRef.current = true;
                   setEditingInvoice(true);
                 }}
                 className="flex items-center gap-1 text-sm font-medium hover:text-primary"
               >
-                {String(invoiceNumber).padStart(3, "0")}
+                {invoiceNumber === null ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  String(invoiceNumber).padStart(3, "0")
+                )}
                 <Pencil className="h-3 w-3" />
               </button>
             )}
@@ -295,7 +300,7 @@ Selamat belajar! 🚀`;
 
           <Button
             onClick={handleGenerate}
-            disabled={saving || !name.trim()}
+            disabled={saving || !name.trim() || invoiceNumber === null}
             className="w-full"
           >
             {saving ? (
