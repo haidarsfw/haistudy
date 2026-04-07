@@ -183,7 +183,7 @@ export const content: Record<string, SubjectContent> = {
         "Analisis Rasio Keuangan (Bab 13) — Menghitung rasio keuangan berdasarkan data laporan yang disediakan. Kategori rasio: Rasio Likuiditas, Profitabilitas, dan Solvabilitas.",
       ] },
     ],
-    kisiKisiNote: "Teori 50% + Praktika 50%. Pastikan memahami konsep teori dan mampu mengerjakan soal hitungan/jurnal.",
+    kisiKisiNote: "Sumber: Kemanggisan.",
     flashcards: akuntansiFlashcards,
     quiz: akuntansiQuiz,
   },
