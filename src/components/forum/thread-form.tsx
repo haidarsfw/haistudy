@@ -144,7 +144,6 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onPaste={handlePaste}
-        maxLength={2000}
         rows={4}
         className="resize-none"
         disabled={isSubmitting}

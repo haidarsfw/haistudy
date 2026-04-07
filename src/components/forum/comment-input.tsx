@@ -158,7 +158,6 @@ export function CommentInput({
           onPaste={handlePaste}
           placeholder={placeholder}
           rows={2}
-          maxLength={2000}
           className="min-h-[60px] resize-none text-sm min-w-0"
           disabled={isSending}
         />
