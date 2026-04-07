@@ -70,7 +70,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
   const retryLastMessage = useCallback(() => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
     if (lastUserMsg && session) {
-      handleSend(lastUserMsg.content);
+      handleSend(lastUserMsg.content, lastUserMsg.image);
     }
   }, [messages, session, handleSend]);
 
