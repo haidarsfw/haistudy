@@ -4,15 +4,16 @@ import { rangkumanContent } from "@/data/rangkuman";
 
 /**
  * Strip custom HTML-like tags from rangkuman content into plain text.
+ * Preserves slide references as readable citations.
  */
 function stripTags(html: string): string {
   return html
-    .replace(/<h[1-3]>/g, "\n## ")
-    .replace(/<\/h[1-3]>/g, "")
-    .replace(/<bullet>/g, "- ")
-    .replace(/<\/bullet>/g, "")
-    .replace(/<subtitle>/g, "")
-    .replace(/<\/subtitle>/g, "")
+    .replace(/<h1>([\s\S]*?)<\/h1>/g, "\n# $1")
+    .replace(/<h2>([\s\S]*?)<\/h2>/g, "\n## $1")
+    .replace(/<h3>([\s\S]*?)<\/h3>/g, "\n### $1")
+    .replace(/<bullet>([\s\S]*?)<\/bullet>/g, "- $1")
+    .replace(/<subtitle>([\s\S]*?)<\/subtitle>/g, "$1")
+    .replace(/<slide\s+src="[^"]*"\s+alt="([^"]*)"\s*\/>/g, "[Lihat slide: $1]")
     .replace(/<\/?[bi]>/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
@@ -121,23 +122,18 @@ export function getAllSubjectsOverview(): string {
     parts.push("");
   }
 
-  // Condensed rangkuman summaries (headings + first sentences)
-  parts.push("\n## Ringkasan Rangkuman Per Mata Kuliah\n");
+  // Full rangkuman content for all subjects
+  parts.push("\n## Rangkuman Lengkap Per Mata Kuliah\n");
   for (const subject of subjects) {
     const rangkuman = rangkumanContent[subject.id];
     if (!rangkuman) continue;
 
     parts.push(`### ${subject.name}`);
     for (const [title, html] of Object.entries(rangkuman)) {
-      parts.push(`**${title}**`);
-      // Extract headings and first paragraph of each section
-      const plain = stripTags(html);
-      const lines = plain.split("\n").filter((l) => l.trim());
-      // Take headings and first ~500 chars of content
-      const summary = lines.slice(0, 20).join("\n");
-      parts.push(summary.length > 500 ? summary.slice(0, 500) + "..." : summary);
-      parts.push("");
+      parts.push(`\n#### ${title}`);
+      parts.push(stripTags(html));
     }
+    parts.push("");
   }
 
   return parts.join("\n");
