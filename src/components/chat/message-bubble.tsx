@@ -74,6 +74,8 @@ export function MessageBubble({
     switch (role) {
       case "admin":
         return "font-semibold text-red-500 dark:text-red-400";
+      case "diamond":
+        return "font-semibold text-sky-500 dark:text-sky-400 drop-shadow-[0_0_6px_oklch(0.7_0.15_230/0.5)]";
       case "vip":
         return "font-semibold text-amber-500 dark:text-amber-300 drop-shadow-[0_0_6px_oklch(0.7_0.15_80/0.5)]";
       case "tester":
@@ -151,7 +153,7 @@ export function MessageBubble({
               Diamond
             </Badge>
           )}
-          {message.packageTier === "vip" && (
+          {(message.packageTier === "vip" || message.packageTier === "diamond") && (
             <Badge
               variant="vip-outline"
               className="h-4 gap-0.5 px-1 text-[9px]"

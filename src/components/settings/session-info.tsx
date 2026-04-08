@@ -32,7 +32,7 @@ export function SessionInfo() {
               Diamond
             </Badge>
           )}
-          {session.packageTier === "vip" && (
+          {(session.packageTier === "vip" || session.packageTier === "diamond") && (
             <Badge variant="vip-outline" className="text-[9px]">
               VIP
             </Badge>
