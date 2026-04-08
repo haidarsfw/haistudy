@@ -322,7 +322,13 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
               onContextMenu={(e) => e.preventDefault()}
               onClick={handleContentClick}
             >
-              <div className="max-w-4xl mx-auto" style={{ zoom: zoom / 100 }}>
+              <div
+                className="max-w-4xl mx-auto origin-top"
+                style={{
+                  transform: `scale(${zoom / 100})`,
+                  width: `${10000 / zoom}%`,
+                }}
+              >
                 {parseRangkuman(rangkumanData[selectedModule])}
               </div>
             </div>
