@@ -9,7 +9,12 @@ Lingkungan bisnis dianalisis melalui pendekatan PEST:
 <bullet><b>Sosial/Kultural:</b> Sikap dan komposisi demografis dari konsumen dan pekerja.</bullet>
 <bullet><b>Teknologi:</b> Faktor yang mengubah struktur industri dan metode produksi.</bullet>
 Seiring meningkatnya tuntutan tanggung jawab sosial, kerangka diperluas menjadi analisis STEEPLE dengan penambahan elemen Ekologis/Lingkungan, Legal (hukum), dan Etika. Analisis ini digunakan perusahaan untuk memahami relasi antar set faktor dengan penekanan pada krusialnya faktor ekonomi.
-Struktur industri menentukan kinerja perusahaan. Klasifikasi produksi dibagi menjadi sektor primer, sekunder, dan tersier. Terdapat pergeseran tren pangsa PDB dan jumlah pekerja antar sektor dari waktu ke waktu Pengelompokan firma ke dalam sektor industri bertujuan mempermudah analisis tren, identifikasi kebutuhan spesifik, dan pemahaman relasi antar firma. Sistem klasifikasi Standard Industrial Classification (SIC 2007) didasarkan pada karakteristik pasokan firma, yang berjenjang dari 21 bagian utama turun menjadi sub-bagian, divisi, grup, hingga kelas Dinamika perekonomian Inggris menunjukkan adanya deindustrialisasi, perubahan basis output dan ketenagakerjaan, pergeseran konsentrasi industri, serta distribusi UKM.
+Struktur industri menentukan kinerja perusahaan. Klasifikasi produksi dibagi menjadi sektor primer, sekunder, dan tersier. Terdapat pergeseran tren pangsa PDB dan jumlah pekerja antar sektor dari waktu ke waktu.
+<slide src="biseko/m1-output-gdp-sectors.png" alt="Output of Industrial Sectors (as a Percentage of GDP) — Pie chart: Primary, Secondary, Tertiary"/>
+<slide src="biseko/m1-employment-sectors.png" alt="Employment by Industrial Sector (% of Total Employees) 1974 vs 2021"/>
+Pengelompokan firma ke dalam sektor industri bertujuan mempermudah analisis tren, identifikasi kebutuhan spesifik, dan pemahaman relasi antar firma. Sistem klasifikasi Standard Industrial Classification (SIC 2007) didasarkan pada karakteristik pasokan firma, yang berjenjang dari 21 bagian utama turun menjadi sub-bagian, divisi, grup, hingga kelas.
+<slide src="biseko/m1-sic-classification.png" alt="Klasifikasi SIC 2007 — Contoh manufaktur karpet: Section D → Division 13 → Group 13.9 → Class 13.93 → Subclass 13.93/1"/>
+Dinamika perekonomian Inggris menunjukkan adanya deindustrialisasi, perubahan basis output dan ketenagakerjaan, pergeseran konsentrasi industri, serta distribusi UKM.
 Kinerja bisnis dievaluasi menggunakan indikator struktur-perilaku-kinerja. Hubungan struktur dan perilaku mencakup spektrum pasar sangat kompetitif hingga yang diwarnai kolusi. Indikator performa meliputi profitabilitas, penguasaan pangsa pasar, pertumbuhan pangsa, dan harga saham. Target internal bisnis secara tradisional adalah maksimalisasi laba, namun model ini sering dianggap terlalu sederhana. Realitasnya dipengaruhi oleh perceraian fungsi antara pemilik dan manajer, ambisi subjektif manajer, perilaku satisficing (mencapai target secukupnya tanpa maksimalisasi absolut), serta potensi konflik antar tujuan. Kinerja juga diukur melalui kualitas struktur internal, sistem informasi, kompetensi manajerial, mutu tenaga kerja, sistem motivasi teknis, serta efisiensi distribusi dan finansial.
 
 <h2>Bagian 2: Organisasi Bisnis</h2>
@@ -21,8 +26,11 @@ Status entitas hukum perusahaan terbagi atas beberapa bentuk:
 <bullet><b>Perusahaan (Companies):</b> Memiliki liabilitas terbatas. Format public limited companies (plc) diperbolehkan merilis dan memperdagangkan saham publik di Bursa Efek. Terdapat juga format private limited companies.</bullet>
 <bullet><b>Lainnya:</b> Konsorsium, koperasi konsumen, koperasi produsen, dan korporasi publik, yang seringkali memicu perdebatan terkait justifikasi nominal gaji figur CEO.</bullet>
 Organisasi internal firma dibangun dengan beberapa kerangka:
-<bullet><b>U-form:</b> Memiliki berbagai keuntungan fungsional. Bentuk ini bermasalah saat firma berekspansi terlalu besar akibat batas rasionalitas (bounded rationality), lonjakan biaya komunikasi, distorsi informasi, dan penurunan efisiensi organisasi secara keseluruhan</bullet>
-<bullet><b>M-form:</b> Konsep divisional dengan keuntungan dan kerugian spesifik</bullet>
-<bullet><b>H-form (Holding Company / Flat organisation):</b> Format datar yang lazim diadopsi perusahaan multinasional</bullet>
+<bullet><b>U-form:</b> Memiliki berbagai keuntungan fungsional. Bentuk ini bermasalah saat firma berekspansi terlalu besar akibat batas rasionalitas (bounded rationality), lonjakan biaya komunikasi, distorsi informasi, dan penurunan efisiensi organisasi secara keseluruhan.</bullet>
+<slide src="biseko/m1-u-form.png" alt="Bagan U-Form: Chief Executive → Production, Finance, Sales, Purchasing"/>
+<bullet><b>M-form:</b> Konsep divisional dengan keuntungan dan kerugian spesifik.</bullet>
+<slide src="biseko/m1-m-form.png" alt="Bagan M-Form: Head Office → Division 1/2/3 → Production, Finance, Sales, Purchasing"/>
+<bullet><b>H-form (Holding Company / Flat organisation):</b> Format datar yang lazim diadopsi perusahaan multinasional.</bullet>
+<slide src="biseko/m1-h-form-disney.png" alt="Bagan H-Form: The Walt Disney Company (Holding Company) — Media Networks, Parks and Resorts, Consumer Products, Studio Entertainment"/>
 <bullet><b>Struktur Multinasional:</b> Mencakup model integrated international enterprises, asosiasi transnasional, serta penerapan mekanisme global sourcing lintas benua.</bullet>
 `;
