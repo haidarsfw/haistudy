@@ -25,6 +25,7 @@ import {
   Info,
   AlertTriangle,
   Wrench,
+  Bell,
 } from "lucide-react";
 
 import type { Announcement } from "@/types";
@@ -46,6 +47,7 @@ export function AdminAnnouncements() {
     "info"
   );
   const [creating, setCreating] = useState(false);
+  const [notifyOnly, setNotifyOnly] = useState(false);
 
   const fetchAnnouncements = useCallback(async () => {
     try {
@@ -70,18 +72,20 @@ export function AdminAnnouncements() {
       const res = await fetch("/api/admin/announcements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage.trim(), type: newType }),
+        body: JSON.stringify({ message: newMessage.trim(), type: newType, notifyOnly }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setAnnouncements((prev) => [data.announcement, ...prev]);
+      if (!notifyOnly && data.announcement) {
+        setAnnouncements((prev) => [data.announcement, ...prev]);
+      }
       setNewMessage("");
-      toast.success("Announcement dibuat");
+      toast.success(notifyOnly ? "Notifikasi terkirim ke semua user" : "Announcement dibuat");
     } catch {
-      toast.error("Gagal membuat announcement");
+      toast.error(notifyOnly ? "Gagal mengirim notifikasi" : "Gagal membuat announcement");
     }
     setCreating(false);
-  }, [newMessage, newType]);
+  }, [newMessage, newType, notifyOnly]);
 
   const handleToggle = useCallback(async (id: string, active: boolean) => {
     try {
@@ -160,36 +164,50 @@ export function AdminAnnouncements() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Create new */}
-        <div className="flex gap-2">
-          <Select
-            value={newType}
-            onValueChange={(v) =>
-              v && setNewType(v as "info" | "warning" | "maintenance")
-            }
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="info">Info</SelectItem>
-              <SelectItem value="warning">Warning</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-            </SelectContent>
-          </Select>
-          <Input
-            placeholder="Tulis announcement..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-            className="flex-1"
-          />
-          <Button onClick={handleCreate} disabled={creating || !newMessage.trim()}>
-            {creating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-          </Button>
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Select
+              value={newType}
+              onValueChange={(v) =>
+                v && setNewType(v as "info" | "warning" | "maintenance")
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="info">Info</SelectItem>
+                <SelectItem value="warning">Warning</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Tulis announcement..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              className="flex-1"
+            />
+            <Button onClick={handleCreate} disabled={creating || !newMessage.trim()}>
+              {creating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : notifyOnly ? (
+                <Bell className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={notifyOnly}
+              onChange={(e) => setNotifyOnly(e.target.checked)}
+              className="rounded border-border accent-primary"
+            />
+            <Bell className="h-3 w-3" />
+            Notifikasi saja (tidak tampil di banner)
+          </label>
         </div>
 
         {/* List */}

@@ -59,7 +59,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { message, type } = body;
+    const { message, type, notifyOnly } = body;
 
     if (!message?.trim()) {
       return NextResponse.json(
@@ -69,6 +69,9 @@ export async function POST(request: Request) {
     }
 
     if (!isSupabaseServerConfigured) {
+      if (notifyOnly) {
+        return NextResponse.json({ success: true, notifyOnly: true });
+      }
       const announcement: Announcement = {
         id: crypto.randomUUID(),
         message: message.trim(),
@@ -81,19 +84,26 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("announcements")
-      .insert({
-        message: message.trim(),
-        type: type || "info",
-        active: true,
-      })
-      .select()
-      .single();
 
-    if (error) throw error;
+    let announcement: Announcement | null = null;
 
-    // Notify all active license key holders about the announcement
+    // Only create banner announcement if not notifyOnly
+    if (!notifyOnly) {
+      const { data, error } = await supabase
+        .from("announcements")
+        .insert({
+          message: message.trim(),
+          type: type || "info",
+          active: true,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      announcement = mapRow(data);
+    }
+
+    // Notify all active license key holders
     try {
       const { data: licenseKeys } = await supabase
         .from("license_keys")
@@ -115,11 +125,13 @@ export async function POST(request: Request) {
         await supabase.from("notifications").insert(notificationRows);
       }
     } catch (notifError) {
-      // Non-critical: log but don't fail the announcement creation
       console.error("Failed to create announcement notifications:", notifError);
     }
 
-    return NextResponse.json({ announcement: mapRow(data) });
+    if (notifyOnly) {
+      return NextResponse.json({ success: true, notifyOnly: true });
+    }
+    return NextResponse.json({ announcement });
   } catch (error) {
     console.error("Announcements POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
