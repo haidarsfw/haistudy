@@ -132,7 +132,7 @@ export const content: Record<string, SubjectContent> = {
       { topic: "Hitungan Revenue dan Profit", items: ["Hitungan revenue dan profit"] },
       { topic: "Oligopoly Game Theory", items: ["Oligopoly game theory"] },
     ],
-    kisiKisiNote: "Sumber: Kemanggisan LB21.",
+    kisiKisiNote: "",
     flashcards: bisekoFlashcards,
     quiz: bisekoQuiz,
   },
