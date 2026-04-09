@@ -115,7 +115,7 @@ export async function POST(request: Request) {
           license_key: lk.key,
           type: "announcement" as const,
           sender_name: null,
-          preview: message.trim().slice(0, 200),
+          preview: message.trim(),
           context: "system" as const,
           thread_id: null,
           subject_id: null,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, MessageCircle, Reply, X } from "lucide-react";
+import { Bell, MessageCircle, Reply, X, Megaphone } from "lucide-react";
 import type { Notification } from "@/types";
 
 interface NotificationPopupProps {
@@ -29,6 +29,9 @@ export function NotificationPopup({
 
   const getIcon = () => {
     if (!notification) return null;
+    if (notification.type === "announcement") {
+      return <Megaphone className="h-4 w-4" />;
+    }
     switch (notification.context) {
       case "chat":
         return <MessageCircle className="h-4 w-4" />;
@@ -48,6 +51,8 @@ export function NotificationPopup({
         return `${notification.senderName} menyebut @all`;
       case "thread_reply":
         return `${notification.senderName} membalas thread`;
+      case "announcement":
+        return "Pengumuman baru";
       default:
         return "Notifikasi baru";
     }
@@ -66,7 +71,7 @@ export function NotificationPopup({
           onDragEnd={(_, info) => {
             if (info.offset.x > 80) onDismiss();
           }}
-          className="fixed right-4 top-16 z-[60] w-96 max-w-[calc(100vw-2rem)] cursor-pointer rounded-lg border border-border bg-card p-4 shadow-lg max-h-[60vh] overflow-y-auto"
+          className="fixed right-4 top-16 z-[60] w-96 max-w-[calc(100vw-2rem)] cursor-pointer rounded-lg border border-border bg-card p-4 shadow-lg max-h-[70vh] overflow-y-auto"
           onClick={onDismiss}
         >
           <button
@@ -82,10 +87,10 @@ export function NotificationPopup({
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{getLabel()}</p>
               {notification.preview && (
-                <p className={`mt-0.5 text-xs text-muted-foreground ${
-                  notification.context === "system"
-                    ? "whitespace-pre-line break-words max-h-32 overflow-y-auto"
-                    : "truncate"
+                <p className={`mt-1 text-sm ${
+                  notification.type === "announcement"
+                    ? "whitespace-pre-line break-words text-foreground max-h-48 overflow-y-auto leading-relaxed"
+                    : "truncate text-xs text-muted-foreground"
                 }`}>
                   {notification.preview}
                 </p>
