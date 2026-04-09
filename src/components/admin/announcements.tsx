@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -172,7 +173,7 @@ export function AdminAnnouncements() {
                 v && setNewType(v as "info" | "warning" | "maintenance")
               }
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-32 h-auto">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -181,22 +182,23 @@ export function AdminAnnouncements() {
                 <SelectItem value="maintenance">Maintenance</SelectItem>
               </SelectContent>
             </Select>
-            <Input
-              placeholder="Tulis announcement..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              className="flex-1"
-            />
-            <Button onClick={handleCreate} disabled={creating || !newMessage.trim()}>
-              {creating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : notifyOnly ? (
-                <Bell className="h-4 w-4" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex-1 flex gap-2">
+              <Textarea
+                placeholder="Tulis announcement... (Gunakan Enter untuk baris baru)"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="flex-1 resize-none min-h-20"
+              />
+              <Button onClick={handleCreate} disabled={creating || !newMessage.trim()} className="self-end">
+                {creating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : notifyOnly ? (
+                  <Bell className="h-4 w-4" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
           <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
             <input
@@ -234,7 +236,7 @@ export function AdminAnnouncements() {
                 >
                   <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${config.color}`} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm">{ann.message}</p>
+                    <p className="text-sm whitespace-pre-line break-words">{ann.message}</p>
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-[10px]">
                         {config.label}

@@ -66,7 +66,7 @@ export function NotificationPopup({
           onDragEnd={(_, info) => {
             if (info.offset.x > 80) onDismiss();
           }}
-          className="fixed right-4 top-16 z-[60] w-80 max-w-[calc(100vw-2rem)] cursor-pointer rounded-lg border border-border bg-card p-3 shadow-lg"
+          className="fixed right-4 top-16 z-[60] w-96 max-w-[calc(100vw-2rem)] cursor-pointer rounded-lg border border-border bg-card p-4 shadow-lg max-h-[60vh] overflow-y-auto"
           onClick={onDismiss}
         >
           <button
@@ -75,14 +75,18 @@ export function NotificationPopup({
           >
             <X className="h-3.5 w-3.5" />
           </button>
-          <div className="flex items-start gap-3 pr-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div className="flex items-start gap-3 pr-6">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
               {getIcon()}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{getLabel()}</p>
               {notification.preview && (
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                <p className={`mt-0.5 text-xs text-muted-foreground ${
+                  notification.context === "system"
+                    ? "whitespace-pre-line break-words max-h-32 overflow-y-auto"
+                    : "truncate"
+                }`}>
                   {notification.preview}
                 </p>
               )}
