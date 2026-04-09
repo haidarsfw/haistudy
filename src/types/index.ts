@@ -41,6 +41,8 @@ export interface MateriItem {
   type: "slides" | "pdf" | "drive-pptx" | "drive-pdf" | "drive-gslides" | "drive-gdoc";
   session?: string;
   xp?: number;
+  sectionLabel?: string;
+  sectionNote?: string;
 }
 
 export interface KisiKisiItem {

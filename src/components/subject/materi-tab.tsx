@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ExternalLink, FileText, Presentation, X, Loader2 } from "lucide-react";
+import { ExternalLink, FileText, Presentation, X, Loader2, BookOpenCheck } from "lucide-react";
 import type { MateriItem } from "@/types";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 
@@ -171,6 +171,20 @@ export function MateriTab({
           const isPlaceholder = item.driveId === "PLACEHOLDER";
 
           return (
+            <div key={`wrapper-${item.id}`} className="contents">
+            {item.sectionLabel && (
+              <div className="flex flex-col items-center gap-1.5 pt-4 pb-1">
+                <div className="w-full h-px bg-border" />
+                <div className="flex items-center gap-2 text-xs font-semibold text-primary/80 uppercase tracking-wider">
+                  <BookOpenCheck className="h-3.5 w-3.5" />
+                  {item.sectionLabel}
+                </div>
+                {item.sectionNote && (
+                  <p className="text-[11px] text-muted-foreground text-center max-w-md">{item.sectionNote}</p>
+                )}
+                <div className="w-full h-px bg-border" />
+              </div>
+            )}
             <div
               key={item.id}
               data-materi-id={item.id}
@@ -226,6 +240,7 @@ export function MateriTab({
                 />
               </div>
             </div>
+            </div>
           );
         })}
 
@@ -258,7 +273,9 @@ export function MateriTab({
                 </h3>
               </div>
               <a
-                href={`https://docs.google.com/presentation/d/${previewItem.driveId}/edit`}
+                href={previewItem.type === "drive-gslides" || previewItem.type === "slides"
+                  ? `https://docs.google.com/presentation/d/${previewItem.driveId}/edit`
+                  : `https://drive.google.com/file/d/${previewItem.driveId}/view`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
