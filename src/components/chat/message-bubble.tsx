@@ -262,10 +262,11 @@ export function MessageBubble({
                   )}
                 </DropdownMenuItem>
               )}
-              {(isOwn || isAdmin) && (
+              {(isAdmin || isOwn) && (
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => onDelete(message.id)}
+                  disabled={!isAdmin && !isOwn}
                 >
                   <Trash2 className="mr-2 h-3.5 w-3.5" />
                   Hapus
