@@ -237,6 +237,8 @@ export default function SubjectPage() {
                 <KisiKisiTab
                   items={content.kisiKisi}
                   note={content.kisiKisiNote}
+                  info={content.kisiKisiInfo}
+                  attachments={content.kisiKisiAttachments}
                   subjectId={subjectId}
                 />
               </PreviewLock>

@@ -45,9 +45,16 @@ export interface MateriItem {
   sectionNote?: string;
 }
 
+export interface KisiKisiAttachment {
+  title: string;
+  driveId: string;
+  type: "drive-gdoc" | "drive-pdf" | "drive-gslides" | "drive-pptx";
+}
+
 export interface KisiKisiItem {
   topic: string;
   items: string[];
+  attachments?: KisiKisiAttachment[];
 }
 
 export interface FlashcardItem {
@@ -69,6 +76,8 @@ export interface SubjectContent {
   materi: MateriItem[];
   kisiKisi: KisiKisiItem[];
   kisiKisiNote?: string;
+  kisiKisiInfo?: { label: string; value: string }[];
+  kisiKisiAttachments?: KisiKisiAttachment[];
   flashcards: FlashcardItem[];
   quiz: QuizQuestion[];
 }

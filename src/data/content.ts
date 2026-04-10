@@ -27,8 +27,36 @@ export const content: Record<string, SubjectContent> = {
       { id: 103, title: "Describing Data: Revisi Quartil", driveId: "14FQuP-GzgBGILDueC_9lbIW1ZztT4Pld7kfYbv9ximE", type: "drive-gslides", xp: 5 },
       { id: 104, title: "Gabungan Continuous Probability", driveId: "14lsM5j08NdetKlCp4zlVKZFA_ukXlnR-", type: "drive-pdf", xp: 5 },
     ],
-    kisiKisi: [],
-    kisiKisiNote: "Kisi-kisi resmi belum tersedia — akan di-update secepat mungkin setelah mendapatkan kisi-kisi resmi dari dosen. Jika kamu memiliki kisi-kisi resmi atau informasi berguna lainnya, hubungi admin melalui layanan pelanggan/WA untuk mendapatkan benefit di website.",
+    kisiKisi: [
+      { topic: "Konsep Dasar Probabilitas", items: [
+        "Nilai Probabilitas (antara 0 dan 1)",
+        "Event (Peristiwa)",
+        "Percobaan (Eksperiment)",
+        "Ruang Sampel",
+      ] },
+      { topic: "Metode Perhitungan", items: [
+        "Factorial",
+        "Permutasi",
+        "Combinasi",
+      ] },
+      { topic: "Distribusi Probabilitas", items: [
+        "Distribusi Hypergeometris",
+        "Distribusi Binomium",
+        "Distribusi Poison",
+        "Distribusi Normal",
+        "Mencari luas curve dibawah normal",
+      ] },
+    ],
+    kisiKisiNote: "Materi tidak disebutkan secara spesifik oleh dosen, namun berdasarkan file dari dosen LD86, poin-poinnya adalah sebagai berikut. File yang diberi dosen terlampir di bawah.",
+    kisiKisiInfo: [
+      { label: "Sifat Ujian", value: "Ujian Tertutup (Closed Book), Full Essay" },
+      { label: "Persyaratan", value: "Wajib membawa kalkulator" },
+      { label: "Fasilitas Ujian", value: "Rumus dan tabel disediakan" },
+      { label: "Sumber", value: "LE86 & LD86" },
+    ],
+    kisiKisiAttachments: [
+      { title: "File Kisi-Kisi dari Dosen LD86", driveId: "1IhBry1_b7Ppy_vVDsckE7WCP_q7Jz5AtHhiS2bNohcw", type: "drive-gdoc" },
+    ],
     flashcards: [
       // MODUL 1/TOPIK 1: Pengantar Statistika Bisnis
       { id: 1, term: "Statistika", definition: "Ilmu pengumpulan, pengorganisasian, penyajian, analisis, dan interpretasi data guna memfasilitasi pengambilan keputusan yang efektif." },
