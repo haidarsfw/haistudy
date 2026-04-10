@@ -164,7 +164,7 @@ export async function GET() {
 
     const supabase = createServerClient()!;
 
-    const [licenseRes, activationRes, deviceRes] = await Promise.all([
+    const [licenseRes, activationRes, deviceRes, profileRes] = await Promise.all([
       supabase
         .from("license_keys")
         .select("*")
@@ -177,6 +177,9 @@ export async function GET() {
         .from("devices")
         .select("*")
         .order("last_seen", { ascending: false }),
+      supabase
+        .from("user_profiles")
+        .select("license_key, email, phone"),
     ]);
 
     if (licenseRes.error) throw licenseRes.error;
@@ -185,7 +188,16 @@ export async function GET() {
     const activations = (activationRes.data || []).map(mapActivationRow);
     const devices = (deviceRes.data || []).map(mapDeviceRow);
 
-    return NextResponse.json({ licenses, activations, devices });
+    // Build profiles map: license_key -> { email, phone }
+    const profiles: Record<string, { email: string | null; phone: string | null }> = {};
+    for (const row of profileRes.data || []) {
+      profiles[row.license_key as string] = {
+        email: (row.email as string) || null,
+        phone: (row.phone as string) || null,
+      };
+    }
+
+    return NextResponse.json({ licenses, activations, devices, profiles });
   } catch (error) {
     console.error("Admin licenses GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

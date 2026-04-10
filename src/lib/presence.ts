@@ -16,7 +16,7 @@ let onlineMinutesInterval: ReturnType<typeof setInterval> | null = null;
 let visibleSecondsInterval: ReturnType<typeof setInterval> | null = null;
 let visibleSeconds = 0;
 
-const ONLINE_MINUTES_SYNC_MS = 2 * 60 * 1000; // 2 minutes
+const ONLINE_MINUTES_SYNC_MS = 60 * 1000; // 1 minute — sync more frequently to minimize loss on tab close
 
 export async function setupPresence(opts: {
   userId: string;
@@ -77,8 +77,8 @@ export async function setupPresence(opts: {
   onlineMinutesInterval = setInterval(() => {
     const minutes = Math.floor(visibleSeconds / 60);
     if (minutes < 1) return; // nothing to sync yet
-    visibleSeconds = visibleSeconds % 60; // keep remainder
-    sendHeartbeat(true); // syncMinutes = true triggers server-side increment with `minutes`
+    visibleSeconds = visibleSeconds % 60; // keep remainder seconds
+    sendHeartbeat(true);
   }, ONLINE_MINUTES_SYNC_MS);
 
   const onVisibilityChange = () => {

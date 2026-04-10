@@ -81,28 +81,38 @@ export function ActivityLogs() {
               {logs.length}
             </Badge>
           </CardTitle>
-          <Button size="sm" variant="ghost" onClick={fetchLogs}>
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
-          <ConfirmDialog
-            trigger={
-              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            }
-            description="Hapus semua log yang lebih dari 7 hari? Aksi ini tidak bisa dibatalkan."
-            onConfirm={async () => {
-              const sevenDaysAgo = Date.now() - 7 * 86400000;
-              const oldLogs = logs.filter((l) => new Date(l.createdAt).getTime() < sevenDaysAgo);
-              if (oldLogs.length === 0) {
-                toast.info("Tidak ada log lama untuk dihapus");
-                return;
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setLoading(true);
+                fetchLogs();
+              }}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
               }
-              // Filter client-side (server should also have cleanup)
-              setLogs((prev) => prev.filter((l) => new Date(l.createdAt).getTime() >= sevenDaysAgo));
-              toast.success(`${oldLogs.length} log lama dihapus`);
-            }}
-          />
+              description="Hapus semua log yang lebih dari 7 hari? Aksi ini tidak bisa dibatalkan."
+              onConfirm={async () => {
+                const sevenDaysAgo = Date.now() - 7 * 86400000;
+                const oldLogs = logs.filter((l) => new Date(l.createdAt).getTime() < sevenDaysAgo);
+                if (oldLogs.length === 0) {
+                  toast.info("Tidak ada log lama untuk dihapus");
+                  return;
+                }
+                // Filter client-side (server should also have cleanup)
+                setLogs((prev) => prev.filter((l) => new Date(l.createdAt).getTime() >= sevenDaysAgo));
+                toast.success(`${oldLogs.length} log lama dihapus`);
+              }}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

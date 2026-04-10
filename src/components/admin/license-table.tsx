@@ -28,6 +28,7 @@ import {
   Smartphone,
   Tablet,
   Mail,
+  Phone,
   Clock,
   Trophy,
   Calendar,
@@ -35,7 +36,12 @@ import {
   User,
   Copy,
   CheckCircle,
+  MessageSquare,
+  Bot,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { LicenseForm } from "./license-form";
 import type { LicenseKey, Activation, Device } from "@/types";
@@ -49,21 +55,152 @@ function formatOnlineTime(minutes: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
+/** AI conversation type from admin API */
+interface AdminAiConversation {
+  id: string;
+  license_key: string;
+  title: string;
+  messages: Array<{ role: "user" | "assistant"; content: string }>;
+  created_at: string;
+  updated_at: string;
+}
+
+/** AI Conversations Dialog */
+function AiConversationsDialog({
+  licenseKey,
+  open,
+  onOpenChange,
+}: {
+  licenseKey: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [conversations, setConversations] = useState<AdminAiConversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    fetch(`/api/admin/ai-conversations?licenseKey=${encodeURIComponent(licenseKey)}`)
+      .then((r) => r.json())
+      .then((data) => setConversations(data.conversations || []))
+      .catch(() => toast.error("Gagal memuat AI conversations"))
+      .finally(() => setLoading(false));
+  }, [open, licenseKey]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
+            AI Conversations
+          </DialogTitle>
+          <DialogDescription>
+            Riwayat chat AI untuk <code className="text-xs">{licenseKey}</code>
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : conversations.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            Belum ada AI conversations
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {conversations.map((conv) => {
+              const msgCount = conv.messages?.length || 0;
+              const isExpanded = expandedId === conv.id;
+              return (
+                <div key={conv.id} className="rounded-lg border">
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : conv.id)}
+                    className="flex w-full items-center gap-2 p-3 text-left hover:bg-muted/50 transition-colors"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {conv.title || "(Untitled)"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {msgCount} messages · {format(new Date(conv.updated_at), "d MMM yyyy, HH:mm", { locale: idLocale })}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] shrink-0">
+                      {msgCount}
+                    </Badge>
+                  </button>
+
+                  {isExpanded && conv.messages && conv.messages.length > 0 && (
+                    <div className="border-t">
+                      <ScrollArea className="max-h-[400px]">
+                        <div className="p-3 space-y-2">
+                          {conv.messages.map((msg, idx) => (
+                            <div
+                              key={idx}
+                              className={`rounded-lg p-2.5 text-sm ${
+                                msg.role === "user"
+                                  ? "bg-primary/10 ml-8"
+                                  : "bg-muted/60 mr-8"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 mb-1">
+                                {msg.role === "user" ? (
+                                  <User className="h-3 w-3 text-primary" />
+                                ) : (
+                                  <Bot className="h-3 w-3 text-muted-foreground" />
+                                )}
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                                  {msg.role === "user" ? "User" : "AI"}
+                                </span>
+                              </div>
+                              <p className="text-xs whitespace-pre-wrap break-words leading-relaxed">
+                                {msg.content}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** Full user detail dialog shown when admin clicks a license row */
 function UserDetailDialog({
   license,
   activation,
   devices: devs,
+  profileEmail,
+  profilePhone,
   open,
   onOpenChange,
 }: {
   license: LicenseKey;
   activation: Activation | undefined;
   devices: Device[];
+  profileEmail: string | null;
+  profilePhone: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
 
   const copyKey = () => {
     navigator.clipboard.writeText(license.key).then(() => {
@@ -114,7 +251,8 @@ function UserDetailDialog({
               <div className="grid grid-cols-2 gap-3">
                 <InfoField icon={<User className="h-3.5 w-3.5" />} label="Username" value={activation.userName} />
                 <InfoField icon={<KeyRound className="h-3.5 w-3.5" />} label="Nama" value={license.name} />
-                <InfoField icon={<Mail className="h-3.5 w-3.5" />} label="Email" value={activation.email || "—"} />
+                <InfoField icon={<Mail className="h-3.5 w-3.5" />} label="Email" value={profileEmail || activation.email || "—"} />
+                <InfoField icon={<Phone className="h-3.5 w-3.5" />} label="Phone" value={profilePhone || "—"} />
                 <InfoField icon={<Globe className="h-3.5 w-3.5" />} label="Referral Code" value={activation.referralCode || "—"} />
                 <InfoField
                   icon={<Calendar className="h-3.5 w-3.5" />}
@@ -181,6 +319,18 @@ function UserDetailDialog({
             </>
           )}
 
+          {/* AI Conversations Button */}
+          <Separator />
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2"
+            onClick={() => setAiDialogOpen(true)}
+          >
+            <MessageSquare className="h-4 w-4" />
+            Lihat AI Conversations
+          </Button>
+
           {/* Meta */}
           <div className="text-[10px] text-muted-foreground space-y-0.5">
             <p>Max devices: {license.unlimitedDevices ? "Unlimited" : license.maxDevices}</p>
@@ -188,6 +338,13 @@ function UserDetailDialog({
             <p>Created: {format(new Date(license.createdAt), "d MMM yyyy, HH:mm", { locale: idLocale })}</p>
           </div>
         </div>
+
+        {/* AI Conversations sub-dialog */}
+        <AiConversationsDialog
+          licenseKey={license.key}
+          open={aiDialogOpen}
+          onOpenChange={setAiDialogOpen}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -209,6 +366,7 @@ export function LicenseTable() {
   const [licenses, setLicenses] = useState<LicenseKey[]>([]);
   const [activations, setActivations] = useState<Activation[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, { email: string | null; phone: string | null }>>({});
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -222,6 +380,7 @@ export function LicenseTable() {
       setLicenses(data.licenses || []);
       setActivations(data.activations || []);
       setDevices(data.devices || []);
+      setProfiles(data.profiles || {});
     } catch {
       toast.error("Gagal memuat data lisensi");
     }
@@ -461,11 +620,14 @@ export function LicenseTable() {
         if (!lic) return null;
         const act = activations.find((a) => a.licenseKey === selectedLicenseKey);
         const devs = act ? devices.filter((d) => d.activationId === act.id) : [];
+        const profile = profiles[selectedLicenseKey] || { email: null, phone: null };
         return (
           <UserDetailDialog
             license={lic}
             activation={act}
             devices={devs}
+            profileEmail={profile.email}
+            profilePhone={profile.phone}
             open={!!selectedLicenseKey}
             onOpenChange={(open) => { if (!open) setSelectedLicenseKey(null); }}
           />

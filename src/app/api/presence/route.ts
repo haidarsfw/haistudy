@@ -101,13 +101,12 @@ export async function POST(request: Request) {
       // online minutes every heartbeat call where the client signals
       // that 5 minutes of visible time have elapsed.
       // The client sends syncMinutes: true when it's time.
-      if (syncMinutes) {
-        const amount = minutesToSync && minutesToSync > 0 ? minutesToSync : 2;
+      if (syncMinutes && minutesToSync && minutesToSync > 0) {
         try {
           await supabase.rpc("increment_license_field", {
             p_key: licenseKey,
             p_field: "total_online_minutes",
-            p_amount: amount,
+            p_amount: minutesToSync,
           });
         } catch (err) {
           console.error("Failed to increment online minutes via RPC:", err);
@@ -122,7 +121,7 @@ export async function POST(request: Request) {
               .from("license_keys")
               .update({
                 total_online_minutes:
-                  (data.total_online_minutes || 0) + amount,
+                  (data.total_online_minutes || 0) + minutesToSync,
               })
               .eq("key", licenseKey);
           }
