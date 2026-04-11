@@ -3,6 +3,15 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   BarChart3,
   Users,
@@ -26,6 +35,8 @@ interface UserStat {
 export function Statistics() {
   const [users, setUsers] = useState<UserStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllQuiz, setShowAllQuiz] = useState(false);
+  const [showAllActive, setShowAllActive] = useState(false);
 
   useEffect(() => {
     const fetchUsers = () => {
@@ -83,16 +94,16 @@ export function Statistics() {
       : 0;
 
   // Leaderboard: top 10 by quiz score (all users)
-  const leaderboard = [...users]
+  const quizRankedAll = [...users]
     .filter((u) => u.totalQuizScore > 0)
-    .sort((a, b) => b.totalQuizScore - a.totalQuizScore)
-    .slice(0, 10);
+    .sort((a, b) => b.totalQuizScore - a.totalQuizScore);
+  const leaderboard = quizRankedAll.slice(0, 10);
 
   // Most active: top 10 by online minutes (all users)
-  const mostActive = [...users]
+  const activeRankedAll = [...users]
     .filter((u) => u.totalOnlineMinutes > 0)
-    .sort((a, b) => b.totalOnlineMinutes - a.totalOnlineMinutes)
-    .slice(0, 10);
+    .sort((a, b) => b.totalOnlineMinutes - a.totalOnlineMinutes);
+  const mostActive = activeRankedAll.slice(0, 10);
 
   if (loading) {
     return (
@@ -204,6 +215,16 @@ export function Statistics() {
                 ))}
               </div>
             )}
+            {quizRankedAll.length > 10 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 w-full text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setShowAllQuiz(true)}
+              >
+                Tampilkan Semua ({quizRankedAll.length})
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -246,9 +267,107 @@ export function Statistics() {
                 })}
               </div>
             )}
+            {activeRankedAll.length > 10 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 w-full text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setShowAllActive(true)}
+              >
+                Tampilkan Semua ({activeRankedAll.length})
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Show All Quiz Leaderboard Dialog */}
+      <Dialog open={showAllQuiz} onOpenChange={setShowAllQuiz}>
+        <DialogContent className="sm:max-w-md max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-yellow-500" />
+              Quiz Leaderboard
+            </DialogTitle>
+            <DialogDescription>
+              Semua pengguna berdasarkan quiz score
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-3">
+            <div className="space-y-1">
+              {quizRankedAll.map((user, i) => (
+                <div
+                  key={user.licenseKey}
+                  className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                >
+                  <span
+                    className={`w-6 text-center text-sm font-bold ${
+                      i === 0
+                        ? "text-yellow-500"
+                        : i === 1
+                          ? "text-gray-400"
+                          : i === 2
+                            ? "text-amber-600"
+                            : "text-muted-foreground"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {user.userName}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="font-mono text-xs">
+                    {user.totalQuizScore}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Show All Most Active Dialog */}
+      <Dialog open={showAllActive} onOpenChange={setShowAllActive}>
+        <DialogContent className="sm:max-w-md max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-blue-500" />
+              Most Active
+            </DialogTitle>
+            <DialogDescription>
+              Semua pengguna berdasarkan waktu online
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-3">
+            <div className="space-y-1">
+              {activeRankedAll.map((user, i) => {
+                const hours = Math.floor(user.totalOnlineMinutes / 60);
+                const mins = user.totalOnlineMinutes % 60;
+                return (
+                  <div
+                    key={user.licenseKey}
+                    className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                  >
+                    <span className="w-6 text-center text-sm font-bold text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {user.userName}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="font-mono text-xs">
+                      {hours > 0 ? `${hours}h ${mins}m` : `${mins}m`}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

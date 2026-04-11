@@ -15,6 +15,7 @@ let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let onlineMinutesInterval: ReturnType<typeof setInterval> | null = null;
 let visibleSecondsInterval: ReturnType<typeof setInterval> | null = null;
 let visibleSeconds = 0;
+let hasSentOffline = false;
 
 const ONLINE_MINUTES_SYNC_MS = 60 * 1000; // 1 minute — sync more frequently to minimize loss on tab close
 
@@ -26,7 +27,9 @@ export async function setupPresence(opts: {
   hideStatus: boolean;
 }): Promise<() => void> {
   // Heartbeat via API route (uses service_role, bypasses RLS)
-  const sendHeartbeat = async (syncMinutes = false) => {
+  // explicitMinutes: when called from the sync interval, pass the pre-calculated
+  // minutes so we don't re-derive from the (already-reset) visibleSeconds.
+  const sendHeartbeat = async (syncMinutes = false, explicitMinutes?: number) => {
     try {
       const payload: Record<string, unknown> = {
         action: "heartbeat",
@@ -38,8 +41,16 @@ export async function setupPresence(opts: {
         syncMinutes,
       };
       if (syncMinutes) {
-        const minutes = Math.floor(visibleSeconds / 60);
-        payload.minutesToSync = minutes > 0 ? minutes : 1;
+        // Use explicit value when provided (from sync interval), otherwise
+        // fall back to the current accumulator (from ad-hoc calls).
+        const minutes = explicitMinutes ?? Math.floor(visibleSeconds / 60);
+        if (minutes < 1) {
+          // Nothing meaningful to sync — skip the flag so server doesn't
+          // attempt a zero-minute increment.
+          payload.syncMinutes = false;
+        } else {
+          payload.minutesToSync = minutes;
+        }
       }
       await fetch("/api/presence", {
         method: "POST",
@@ -50,6 +61,9 @@ export async function setupPresence(opts: {
       // Network error — ignore, will retry next interval
     }
   };
+
+  // Reset offline guard for this session
+  hasSentOffline = false;
 
   // Initial heartbeat
   await sendHeartbeat();
@@ -72,52 +86,30 @@ export async function setupPresence(opts: {
     if (!document.hidden) visibleSeconds++;
   }, 1000);
 
-  // Online minutes sync — every 2 minutes, sync accumulated visible time
+  // Online minutes sync — every minute, sync accumulated visible time
   if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
   onlineMinutesInterval = setInterval(() => {
     const minutes = Math.floor(visibleSeconds / 60);
     if (minutes < 1) return; // nothing to sync yet
     visibleSeconds = visibleSeconds % 60; // keep remainder seconds
-    sendHeartbeat(true);
+    // Pass the pre-calculated minutes so sendHeartbeat doesn't re-derive
+    // from the (now-reset) visibleSeconds.
+    sendHeartbeat(true, minutes);
   }, ONLINE_MINUTES_SYNC_MS);
 
   const onVisibilityChange = () => {
     startHeartbeat();
-    if (!document.hidden) sendHeartbeat(); // immediate heartbeat when tab becomes visible
+    if (!document.hidden) {
+      sendHeartbeat(); // immediate heartbeat when tab becomes visible (no minute sync)
+    }
   };
   document.addEventListener("visibilitychange", onVisibilityChange);
 
   // Mark offline on tab close (sendBeacon fires reliably during unload)
   // Include accumulated visible minutes so short sessions don't lose time
-  const onBeforeUnload = () => {
-    try {
-      const minutesToSync = Math.floor(visibleSeconds / 60);
-      navigator.sendBeacon(
-        "/api/presence",
-        new Blob(
-          [JSON.stringify({
-            action: "offline",
-            userId: opts.userId,
-            licenseKey: opts.licenseKey,
-            syncMinutes: minutesToSync > 0,
-            minutesToSync,
-          })],
-          { type: "application/json" }
-        )
-      );
-    } catch {}
-  };
-  window.addEventListener("beforeunload", onBeforeUnload);
-
-  // Cleanup function
-  return () => {
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
-    if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
-    if (visibleSecondsInterval) clearInterval(visibleSecondsInterval);
-    document.removeEventListener("visibilitychange", onVisibilityChange);
-    window.removeEventListener("beforeunload", onBeforeUnload);
-
-    // Best-effort offline signal via sendBeacon (reliable during tab close)
+  const sendOfflineBeacon = () => {
+    if (hasSentOffline) return; // guard against double-counting
+    hasSentOffline = true;
     const minutesToSync = Math.floor(visibleSeconds / 60);
     try {
       navigator.sendBeacon(
@@ -128,13 +120,13 @@ export async function setupPresence(opts: {
             userId: opts.userId,
             licenseKey: opts.licenseKey,
             syncMinutes: minutesToSync > 0,
-            minutesToSync,
+            minutesToSync: minutesToSync > 0 ? minutesToSync : 0,
           })],
           { type: "application/json" }
         )
       );
     } catch {
-      // Fallback: fire-and-forget fetch
+      // sendBeacon failed — fire-and-forget fallback
       fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,12 +135,28 @@ export async function setupPresence(opts: {
           userId: opts.userId,
           licenseKey: opts.licenseKey,
           syncMinutes: minutesToSync > 0,
-          minutesToSync,
+          minutesToSync: minutesToSync > 0 ? minutesToSync : 0,
         }),
         keepalive: true,
       }).catch(() => {});
     }
     visibleSeconds = 0;
+  };
+
+  const onBeforeUnload = () => sendOfflineBeacon();
+  window.addEventListener("beforeunload", onBeforeUnload);
+
+  // Cleanup function
+  return () => {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
+    if (visibleSecondsInterval) clearInterval(visibleSecondsInterval);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener("beforeunload", onBeforeUnload);
+
+    // Best-effort offline signal — reuse the same guarded function
+    // so we never double-count with the beforeunload handler.
+    sendOfflineBeacon();
   };
 }
 
