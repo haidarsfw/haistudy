@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       }
 
       // Mark offline, reset accumulator
-      await supabase
+      const { error: offlineError } = await supabase
         .from("presence")
         .update({
           online: false,
@@ -120,6 +120,14 @@ export async function POST(request: Request) {
           online_seconds_accumulator: 0,
         })
         .eq("user_id", userId);
+
+      // If update failed (column missing), retry without accumulator
+      if (offlineError) {
+        await supabase
+          .from("presence")
+          .update({ online: false, last_seen: nowISO })
+          .eq("user_id", userId);
+      }
 
       return NextResponse.json({ success: true });
     }
@@ -182,9 +190,19 @@ export async function POST(request: Request) {
       upsertData.online_seconds_accumulator = newAccumulator;
     }
 
-    await supabase
+    const { error: upsertError } = await supabase
       .from("presence")
       .upsert(upsertData, { onConflict: "user_id" });
+
+    // If upsert failed (likely missing column), retry without accumulator
+    if (upsertError) {
+      delete upsertData.online_seconds_accumulator;
+      await supabase
+        .from("presence")
+        .upsert(upsertData, { onConflict: "user_id" });
+      // Time tracking disabled — column missing
+      minutesToFlush = 0;
+    }
 
     // Step 5: Flush minutes to license_keys
     if (minutesToFlush > 0 && licenseKey) {
