@@ -23,9 +23,9 @@ import {
  */
 
 // Maximum elapsed seconds between heartbeats that counts as "active".
-// Heartbeats are every 60s when visible → anything ≤ 150s is valid.
-// Anything larger = hidden tab (5 min heartbeats) or reconnection.
-const MAX_ACTIVE_ELAPSED_S = 150;
+// Heartbeats are every 120s when visible → anything ≤ 300s is valid.
+// Anything larger = hidden tab (10 min heartbeats) or reconnection.
+const MAX_ACTIVE_ELAPSED_S = 300;
 
 export async function POST(request: Request) {
   try {

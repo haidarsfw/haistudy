@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const CHECK_INTERVAL_MS = 2 * 60 * 1000; // Poll every 2 minutes
+const CHECK_INTERVAL_MS = 5 * 60 * 1000; // Poll every 5 minutes
 
 /**
  * Polls /api/version to detect new deploys.

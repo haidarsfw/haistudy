@@ -53,8 +53,8 @@ export function useOnlineUsers() {
           }
         });
 
-      // Polling fallback every 30s as safety net if realtime drops silently
-      const pollInterval = setInterval(refresh, 30_000);
+      // Polling fallback every 60s as safety net if realtime drops silently
+      const pollInterval = setInterval(refresh, 60_000);
 
       return () => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -62,8 +62,8 @@ export function useOnlineUsers() {
         supabase.removeChannel(channel);
       };
     } else {
-      // Poll mock data every 30s
-      const interval = setInterval(refresh, 30_000);
+      // Poll mock data every 60s
+      const interval = setInterval(refresh, 60_000);
       return () => clearInterval(interval);
     }
   }, [refresh, debouncedRefresh]);

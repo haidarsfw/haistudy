@@ -8,7 +8,7 @@ import { DEFAULT_SETTINGS } from "@/lib/constants";
 import type { UserSettings } from "@/types";
 
 const SETTINGS_KEY = "hs-settings";
-const DEBOUNCE_MS = 1000;
+const DEBOUNCE_MS = 3000;
 const SETTINGS_SYNC_EVENT = "hs-settings-changed";
 
 function getLocalSettings(): UserSettings | null {
