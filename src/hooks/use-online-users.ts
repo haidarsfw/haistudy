@@ -53,8 +53,8 @@ export function useOnlineUsers() {
           }
         });
 
-      // Polling fallback every 10s as safety net if realtime drops silently
-      const pollInterval = setInterval(refresh, 10_000);
+      // Polling fallback every 30s as safety net if realtime drops silently
+      const pollInterval = setInterval(refresh, 30_000);
 
       return () => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
