@@ -24,6 +24,7 @@ import { SupportPanel } from "@/components/support/support-panel";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
 import { useProgressSync } from "@/hooks/use-progress-sync";
+import { useVersionCheck } from "@/hooks/use-version-check";
 import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
 import { APP_EVENTS } from "@/lib/events";
@@ -48,6 +49,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Sync study progress from server into localStorage for dashboard widgets
   useProgressSync();
+
+  // Auto-reload when a new deploy is detected
+  useVersionCheck();
 
   // Lock body scroll when any overlay panel is open
   const anyPanelOpen = isChatOpen || isAiOpen || isVoiceOpen || isSupportOpen;
