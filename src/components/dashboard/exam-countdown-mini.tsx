@@ -35,11 +35,10 @@ export function ExamCountdownMini() {
 
     if (detailed) {
       const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
       if (d > 0) {
-        setCountdown(`${d} hari ${h} jam ${m} menit ${s} detik`);
+        setCountdown(`${d} hari ${h} jam ${m} menit`);
       } else {
-        setCountdown(`${h} jam ${m} menit ${s} detik`);
+        setCountdown(`${h} jam ${m} menit`);
       }
     } else {
       if (d > 0) {
@@ -56,11 +55,9 @@ export function ExamCountdownMini() {
     if (!exam?.examDate) return;
     setSubject(exam.subject);
 
-    // Detailed mode: update every second for accurate seconds display
-    // Simple mode: update every minute
-    const intervalMs = isDetailed ? 1000 : 60000;
+    // Both modes update every minute
     update(exam.examDate!, isDetailed);
-    const interval = setInterval(() => update(exam.examDate!, isDetailed), intervalMs);
+    const interval = setInterval(() => update(exam.examDate!, isDetailed), 60000);
     return () => clearInterval(interval);
   }, [isDetailed, update]);
 
@@ -102,8 +99,8 @@ export function ExamCountdownMini() {
         <>
           <p className="text-sm font-semibold truncate">{subject}</p>
           <p
-            className={`mt-1 font-bold tabular-nums ${
-              isDetailed ? "text-sm" : "text-lg"
+            className={`mt-1 font-bold tabular-nums whitespace-nowrap ${
+              isDetailed ? "text-base" : "text-lg"
             } ${isUrgent ? "text-destructive" : "text-foreground"}`}
           >
             {countdown}
