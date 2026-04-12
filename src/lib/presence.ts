@@ -1,7 +1,13 @@
 /**
- * Presence utilities.
- * Manages online status via /api/presence (server-side, bypasses RLS).
- * Reads via Supabase anon key (SELECT policy exists).
+ * Presence utilities — v3 (server-side time tracking).
+ *
+ * CLIENT: Sends heartbeats every 30s (visible) / 5m (hidden).
+ *         NO client-side time counting. Zero accumulators.
+ * SERVER: Calculates active time from heartbeat intervals.
+ *         Accumulates seconds → flushes full minutes to license_keys.
+ *
+ * This eliminates all previous bugs caused by client-side state being
+ * reset on React effect re-runs, settings syncs, or tab lifecycle events.
  */
 
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
@@ -12,12 +18,22 @@ import {
 import type { OnlineUser } from "@/types";
 
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-let onlineMinutesInterval: ReturnType<typeof setInterval> | null = null;
-let visibleSecondsInterval: ReturnType<typeof setInterval> | null = null;
-let visibleSeconds = 0;
 let hasSentOffline = false;
 
-const ONLINE_MINUTES_SYNC_MS = 60 * 1000; // 1 minute — sync more frequently to minimize loss on tab close
+// Module-level hide status — updated via updateHideStatus() without
+// restarting the presence setup. This avoids the critical bug where
+// settings?.hideStatus changes caused the entire presence system to
+// restart, resetting accumulated time.
+let currentHideStatus = false;
+
+/**
+ * Update the hide status sent with heartbeats.
+ * Called from usePresence when settings.hideStatus changes.
+ * Does NOT restart the heartbeat system.
+ */
+export function updateHideStatus(hide: boolean) {
+  currentHideStatus = hide;
+}
 
 export async function setupPresence(opts: {
   userId: string;
@@ -26,107 +42,71 @@ export async function setupPresence(opts: {
   deviceType: string;
   hideStatus: boolean;
 }): Promise<() => void> {
-  // Heartbeat via API route (uses service_role, bypasses RLS)
-  // explicitMinutes: when called from the sync interval, pass the pre-calculated
-  // minutes so we don't re-derive from the (already-reset) visibleSeconds.
-  const sendHeartbeat = async (syncMinutes = false, explicitMinutes?: number) => {
+  currentHideStatus = opts.hideStatus;
+  hasSentOffline = false;
+
+  // ── Simple heartbeat — no time tracking on client ──
+  const sendHeartbeat = async () => {
     try {
-      const payload: Record<string, unknown> = {
-        action: "heartbeat",
-        userId: opts.userId,
-        userName: opts.userName,
-        licenseKey: opts.licenseKey,
-        deviceType: opts.deviceType,
-        hideStatus: opts.hideStatus,
-        syncMinutes,
-      };
-      if (syncMinutes) {
-        // Use explicit value when provided (from sync interval), otherwise
-        // fall back to the current accumulator (from ad-hoc calls).
-        const minutes = explicitMinutes ?? Math.floor(visibleSeconds / 60);
-        if (minutes < 1) {
-          // Nothing meaningful to sync — skip the flag so server doesn't
-          // attempt a zero-minute increment.
-          payload.syncMinutes = false;
-        } else {
-          payload.minutesToSync = minutes;
-        }
-      }
       await fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          action: "heartbeat",
+          userId: opts.userId,
+          userName: opts.userName,
+          licenseKey: opts.licenseKey,
+          deviceType: opts.deviceType,
+          hideStatus: currentHideStatus,
+        }),
       });
     } catch {
-      // Network error — ignore, will retry next interval
+      // Network error — will retry next interval
     }
   };
-
-  // Reset offline guard for this session
-  hasSentOffline = false;
 
   // Initial heartbeat
   await sendHeartbeat();
 
-  // Heartbeat interval — faster when tab is visible
+  // Heartbeat interval — 30s when visible, 5m when hidden
   const startHeartbeat = () => {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
-    const interval = document.hidden
+    const ms = document.hidden
       ? PRESENCE_HEARTBEAT_HIDDEN_MS
       : PRESENCE_HEARTBEAT_VISIBLE_MS;
-    heartbeatInterval = setInterval(() => sendHeartbeat(), interval);
+    heartbeatInterval = setInterval(sendHeartbeat, ms);
   };
 
   startHeartbeat();
 
-  // Visible-time accumulator — ticks every second only when tab is visible
-  visibleSeconds = 0;
-  if (visibleSecondsInterval) clearInterval(visibleSecondsInterval);
-  visibleSecondsInterval = setInterval(() => {
-    if (!document.hidden) visibleSeconds++;
-  }, 1000);
-
-  // Online minutes sync — every minute, sync accumulated visible time
-  if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
-  onlineMinutesInterval = setInterval(() => {
-    const minutes = Math.floor(visibleSeconds / 60);
-    if (minutes < 1) return; // nothing to sync yet
-    visibleSeconds = visibleSeconds % 60; // keep remainder seconds
-    // Pass the pre-calculated minutes so sendHeartbeat doesn't re-derive
-    // from the (now-reset) visibleSeconds.
-    sendHeartbeat(true, minutes);
-  }, ONLINE_MINUTES_SYNC_MS);
-
   const onVisibilityChange = () => {
     startHeartbeat();
     if (!document.hidden) {
-      sendHeartbeat(); // immediate heartbeat when tab becomes visible (no minute sync)
+      // Immediate heartbeat when tab becomes visible
+      sendHeartbeat();
     }
   };
   document.addEventListener("visibilitychange", onVisibilityChange);
 
-  // Mark offline on tab close (sendBeacon fires reliably during unload)
-  // Include accumulated visible minutes so short sessions don't lose time
+  // ── Offline beacon — fire-and-forget when tab closes ──
   const sendOfflineBeacon = () => {
-    if (hasSentOffline) return; // guard against double-counting
+    if (hasSentOffline) return;
     hasSentOffline = true;
-    const minutesToSync = Math.floor(visibleSeconds / 60);
     try {
       navigator.sendBeacon(
         "/api/presence",
         new Blob(
-          [JSON.stringify({
-            action: "offline",
-            userId: opts.userId,
-            licenseKey: opts.licenseKey,
-            syncMinutes: minutesToSync > 0,
-            minutesToSync: minutesToSync > 0 ? minutesToSync : 0,
-          })],
+          [
+            JSON.stringify({
+              action: "offline",
+              userId: opts.userId,
+              licenseKey: opts.licenseKey,
+            }),
+          ],
           { type: "application/json" }
         )
       );
     } catch {
-      // sendBeacon failed — fire-and-forget fallback
       fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,31 +114,28 @@ export async function setupPresence(opts: {
           action: "offline",
           userId: opts.userId,
           licenseKey: opts.licenseKey,
-          syncMinutes: minutesToSync > 0,
-          minutesToSync: minutesToSync > 0 ? minutesToSync : 0,
         }),
         keepalive: true,
       }).catch(() => {});
     }
-    visibleSeconds = 0;
   };
 
   const onBeforeUnload = () => sendOfflineBeacon();
   window.addEventListener("beforeunload", onBeforeUnload);
 
-  // Cleanup function
+  // ── Cleanup ──
   return () => {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
-    if (onlineMinutesInterval) clearInterval(onlineMinutesInterval);
-    if (visibleSecondsInterval) clearInterval(visibleSecondsInterval);
+    heartbeatInterval = null;
     document.removeEventListener("visibilitychange", onVisibilityChange);
     window.removeEventListener("beforeunload", onBeforeUnload);
-
-    // Best-effort offline signal — reuse the same guarded function
-    // so we never double-count with the beforeunload handler.
     sendOfflineBeacon();
   };
 }
+
+// ════════════════════════════════════════════════════
+// Read online users (unchanged)
+// ════════════════════════════════════════════════════
 
 export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
   if (!isSupabaseConfigured) return getMockOnlineUsers();
@@ -172,7 +149,7 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     .eq("online", true)
     .order("last_seen", { ascending: false });
 
-  // Filter stale entries (last_seen older than 3 minutes — tolerates up to 5 missed 30s heartbeats)
+  // Filter stale entries (last_seen older than 3 minutes)
   const STALE_MS = 3 * 60 * 1000;
   const now = Date.now();
   const freshData = (data || []).filter((row: Record<string, unknown>) => {
@@ -180,7 +157,6 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     return now - lastSeen < STALE_MS;
   });
 
-  // Map snake_case DB columns → camelCase TypeScript interface
   const rawUsers = freshData.map((row: Record<string, unknown>) => ({
     id: (row.user_id as string) || (row.id as string) || "",
     userName: (row.user_name as string) || "Unknown",
@@ -202,12 +178,10 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     const existing = grouped.get(key);
     if (existing) {
       existing.deviceCount += 1;
-      // Collect unique device types
       if (!existing.deviceTypes?.includes(user.deviceType)) {
         existing.deviceTypes = existing.deviceTypes || [existing.deviceType];
         existing.deviceTypes.push(user.deviceType);
       }
-      // Keep the most recent lastSeen
       if (user.lastSeen > existing.lastSeen) {
         existing.lastSeen = user.lastSeen;
       }

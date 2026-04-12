@@ -4,17 +4,29 @@ import { useEffect, useRef } from "react";
 import { useSession } from "@/components/providers/session-provider";
 import { useSettings } from "@/hooks/use-settings";
 import { getDeviceId, getDeviceType } from "@/lib/auth/device";
-import { setupPresence } from "@/lib/presence";
+import { setupPresence, updateHideStatus } from "@/lib/presence";
 
 /**
  * Sets up presence tracking for the current user.
- * Automatically handles heartbeat and cleanup.
+ *
+ * CRITICAL FIX: hideStatus is passed via a module-level setter
+ * (updateHideStatus) instead of being a dependency of the setup effect.
+ * This prevents the entire presence system from restarting every time
+ * settings change — which was the root cause of inaccurate time tracking.
+ *
+ * The setup effect only re-runs on login/logout (session.licenseKey change).
  */
 export function usePresence() {
   const { session } = useSession();
   const { settings } = useSettings();
   const cleanupRef = useRef<(() => void) | null>(null);
 
+  // Update hideStatus WITHOUT restarting the presence system
+  useEffect(() => {
+    updateHideStatus(settings?.hideStatus ?? false);
+  }, [settings?.hideStatus]);
+
+  // Setup presence — ONLY restart on login/logout
   useEffect(() => {
     if (!session) return;
 
@@ -33,6 +45,8 @@ export function usePresence() {
 
     return () => {
       cleanupRef.current?.();
+      cleanupRef.current = null;
     };
-  }, [session, settings?.hideStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.licenseKey]);
 }
