@@ -20,7 +20,9 @@ export function OnlineUsers() {
   const { session } = useSession();
 
   const isAdmin = session?.isAdmin ?? false;
-  // All users are always shown; hidden users are masked for non-admin
+  const myLicenseKey = session?.licenseKey ?? "";
+  // Check if the current user has hide status enabled (from their own presence entry)
+  const myHideStatus = users.find((u) => u.licenseKey === myLicenseKey)?.hideStatus ?? false;
   const visibleUsers = users;
 
   return (
@@ -55,7 +57,24 @@ export function OnlineUsers() {
             const subject = user.currentSubject
               ? getSubjectById(user.currentSubject)
               : null;
-            const masked = user.hideStatus && !isAdmin;
+            const isSelf = user.licenseKey === myLicenseKey;
+            // Masking logic:
+            // - Admin: always sees real names
+            // - Self (hidden): sees own name as "Name (hidden)"
+            // - Hidden user viewing others: ALL others show as "Hidden User"
+            // - Non-hidden user viewing hidden user: shows "Hidden User"
+            const masked = !isAdmin && !isSelf && (user.hideStatus || myHideStatus);
+
+            let displayName: string;
+            if (isAdmin) {
+              displayName = user.userName || "Anonymous";
+            } else if (isSelf && user.hideStatus) {
+              displayName = `${user.userName || "Anonymous"} (hidden)`;
+            } else if (masked) {
+              displayName = "Hidden User";
+            } else {
+              displayName = user.userName || "Anonymous";
+            }
 
             return (
               <motion.div
@@ -68,8 +87,8 @@ export function OnlineUsers() {
 
                 {/* Name + device count */}
                 <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
-                  {masked ? "People (hide)" : (user.userName || "Anonymous")}
-                  {user.deviceCount > 1 && (
+                  {displayName}
+                  {!masked && user.deviceCount > 1 && (
                     <span className="text-muted-foreground font-normal ml-1">({user.deviceCount})</span>
                   )}
                 </span>
@@ -87,12 +106,14 @@ export function OnlineUsers() {
                 )}
 
                 {/* Device icons */}
-                <div className="flex items-center gap-0.5 shrink-0">
-                  {devices.map((dt, i) => {
-                    const Icon = deviceIcons[dt] || Monitor;
-                    return <Icon key={`${dt}-${i}`} className="h-3 w-3 text-muted-foreground" />;
-                  })}
-                </div>
+                {!masked && (
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    {devices.map((dt, i) => {
+                      const Icon = deviceIcons[dt] || Monitor;
+                      return <Icon key={`${dt}-${i}`} className="h-3 w-3 text-muted-foreground" />;
+                    })}
+                  </div>
+                )}
               </motion.div>
             );
           })}

@@ -25,14 +25,14 @@ const deviceIconMap: Record<string, typeof Monitor> = {
 
 const MAX_VISIBLE_EXPANDED = 2;
 
-function UserRow({ user, index, isAdmin, masked }: { user: OnlineUser; index: number; isAdmin: boolean; masked: boolean }) {
+function UserRow({ user, index, isAdmin, masked, displayName }: { user: OnlineUser; index: number; isAdmin: boolean; masked: boolean; displayName: string }) {
   const devices = user.deviceTypes || [user.deviceType];
   return (
     <div className="flex items-center gap-2 text-xs">
       <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
       <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
-        {masked ? "People (hide)" : (user.userName || "Anonymous")}
-        {user.deviceCount > 1 && (
+        {displayName}
+        {!masked && user.deviceCount > 1 && (
           <span className="text-muted-foreground font-normal ml-1">({user.deviceCount})</span>
         )}
       </span>
@@ -40,12 +40,14 @@ function UserRow({ user, index, isAdmin, masked }: { user: OnlineUser; index: nu
         <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
       )}
       {/* Device icons */}
-      <div className="flex items-center gap-0.5 shrink-0">
-        {devices.map((dt, i) => {
-          const Icon = deviceIconMap[dt] || Monitor;
-          return <Icon key={`${dt}-${i}`} className="h-3 w-3 text-muted-foreground" />;
-        })}
-      </div>
+      {!masked && (
+        <div className="flex items-center gap-0.5 shrink-0">
+          {devices.map((dt, i) => {
+            const Icon = deviceIconMap[dt] || Monitor;
+            return <Icon key={`${dt}-${i}`} className="h-3 w-3 text-muted-foreground" />;
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -58,7 +60,22 @@ export function OnlineUsersMini() {
   const [showAll, setShowAll] = useState(false);
 
   const isAdmin = session?.isAdmin ?? false;
+  const myLicenseKey = session?.licenseKey ?? "";
+  const myHideStatus = users.find((u) => u.licenseKey === myLicenseKey)?.hideStatus ?? false;
   const visibleUsers = users;
+
+  // Helper to compute display name for a user
+  const getDisplayName = (user: OnlineUser): string => {
+    const isSelf = user.licenseKey === myLicenseKey;
+    if (isAdmin) return user.userName || "Anonymous";
+    if (isSelf && user.hideStatus) return `${user.userName || "Anonymous"} (hidden)`;
+    if (!isSelf && (user.hideStatus || myHideStatus)) return "Hidden User";
+    return user.userName || "Anonymous";
+  };
+  const isMasked = (user: OnlineUser): boolean => {
+    const isSelf = user.licenseKey === myLicenseKey;
+    return !isAdmin && !isSelf && (user.hideStatus || myHideStatus);
+  };
 
   return (
     <>
@@ -94,12 +111,12 @@ export function OnlineUsersMini() {
           <div className="flex items-center gap-2 mt-2">
             <div className="flex -space-x-1.5">
               {visibleUsers.slice(0, 5).map((user, i) => {
-                const masked = user.hideStatus && !isAdmin;
+                const masked = isMasked(user);
                 return (
                   <div
                     key={user.id}
                     className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`}
-                    title={masked ? "?" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`}
+                    title={masked ? "Hidden User" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`}
                   >
                     {masked ? "?" : (user.userName || "?").charAt(0).toUpperCase()}
                   </div>
@@ -132,9 +149,9 @@ export function OnlineUsersMini() {
             >
               <div className="mt-3 border-t border-border pt-2 space-y-1.5">
                 {visibleUsers.slice(0, MAX_VISIBLE_EXPANDED).map((user, i) => {
-                  const masked = user.hideStatus && !isAdmin;
+                  const masked = isMasked(user);
                   return (
-                    <UserRow key={user.id} user={user} index={i} isAdmin={isAdmin} masked={masked} />
+                    <UserRow key={user.id} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} />
                   );
                 })}
 
@@ -189,9 +206,9 @@ export function OnlineUsersMini() {
               {/* Modal body */}
               <div className="p-4 space-y-2 max-h-[50vh] overflow-y-auto">
                 {visibleUsers.map((user, i) => {
-                  const masked = user.hideStatus && !isAdmin;
+                  const masked = isMasked(user);
                   return (
-                    <UserRow key={user.id} user={user} index={i} isAdmin={isAdmin} masked={masked} />
+                    <UserRow key={user.id} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} />
                   );
                 })}
               </div>
