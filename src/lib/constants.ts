@@ -89,4 +89,5 @@ export const DEFAULT_SETTINGS = {
     end: "06:00",
   },
   progress: {},
+  countdownDetailed: true,
 };

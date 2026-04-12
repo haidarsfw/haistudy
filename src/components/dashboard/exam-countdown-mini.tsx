@@ -1,24 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Clock, AlertTriangle, Timer } from "lucide-react";
 import { motion } from "framer-motion";
 import { getNextExam } from "@/data/schedules";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useSettings } from "@/hooks/use-settings";
 import { staggerItem } from "@/lib/motion";
-
-type CountdownMode = "simple" | "detailed";
 
 export function ExamCountdownMini() {
   const { t } = useTranslation();
+  const { settings, updateSettings } = useSettings();
   const [countdown, setCountdown] = useState<string | null>(null);
   const [subject, setSubject] = useState<string | null>(null);
   const [isUrgent, setIsUrgent] = useState(false);
-  const [mode, setMode] = useState<CountdownMode>("simple");
-  const rafRef = useRef<number | null>(null);
+
+  // Derive mode from synced settings (default: detailed = true)
+  const isDetailed = settings.countdownDetailed ?? true;
+
+  const toggleMode = useCallback(() => {
+    updateSettings({ countdownDetailed: !isDetailed });
+  }, [isDetailed, updateSettings]);
 
   // Memoized update function for both modes
-  const update = useCallback((examDate: string, currentMode: CountdownMode) => {
+  const update = useCallback((examDate: string, detailed: boolean) => {
     const diff = new Date(examDate).getTime() - Date.now();
     if (diff <= 0) {
       setCountdown(null);
@@ -28,14 +33,13 @@ export function ExamCountdownMini() {
     const h = Math.floor((diff % 86400000) / 3600000);
     setIsUrgent(d <= 3);
 
-    if (currentMode === "detailed") {
-      const s = Math.floor((diff % 3600000) / 1000) % 60;
-      const ms = Math.floor(diff % 1000);
+    if (detailed) {
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
       if (d > 0) {
-        setCountdown(`${d}d ${h}h ${String(s).padStart(2, "0")}s ${String(ms).padStart(3, "0")}ms`);
+        setCountdown(`${d} hari ${h} jam ${m} menit ${s} detik`);
       } else {
-        const m = Math.floor((diff % 3600000) / 60000);
-        setCountdown(`${h}h ${m}m ${String(s).padStart(2, "0")}s ${String(ms).padStart(3, "0")}ms`);
+        setCountdown(`${h} jam ${m} menit ${s} detik`);
       }
     } else {
       if (d > 0) {
@@ -52,23 +56,13 @@ export function ExamCountdownMini() {
     if (!exam?.examDate) return;
     setSubject(exam.subject);
 
-    if (mode === "detailed") {
-      // Use requestAnimationFrame loop for millisecond precision
-      const tick = () => {
-        update(exam.examDate!, mode);
-        rafRef.current = requestAnimationFrame(tick);
-      };
-      tick();
-      return () => {
-        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      };
-    } else {
-      // Simple mode: update every minute
-      update(exam.examDate!, mode);
-      const interval = setInterval(() => update(exam.examDate!, mode), 60000);
-      return () => clearInterval(interval);
-    }
-  }, [mode, update]);
+    // Detailed mode: update every second for accurate seconds display
+    // Simple mode: update every minute
+    const intervalMs = isDetailed ? 1000 : 60000;
+    update(exam.examDate!, isDetailed);
+    const interval = setInterval(() => update(exam.examDate!, isDetailed), intervalMs);
+    return () => clearInterval(interval);
+  }, [isDetailed, update]);
 
   const exam = getNextExam();
 
@@ -88,16 +82,16 @@ export function ExamCountdownMini() {
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex-1">
           {t("dashboard.exam_countdown")}
         </span>
-        {/* Toggle button */}
+        {/* Toggle button — synced to Supabase */}
         {exam?.examDate && countdown && (
           <button
-            onClick={() => setMode((prev) => (prev === "simple" ? "detailed" : "simple"))}
+            onClick={toggleMode}
             className={`p-1 rounded-md transition-colors cursor-pointer ${
-              mode === "detailed"
+              isDetailed
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
-            title={mode === "simple" ? "Mode detail (dengan detik & milidetik)" : "Mode simpel (hari & jam)"}
+            title={isDetailed ? "Mode simpel (hari & jam)" : "Mode detail (hari, jam, menit, detik)"}
           >
             <Timer className="h-3.5 w-3.5" />
           </button>
@@ -109,7 +103,7 @@ export function ExamCountdownMini() {
           <p className="text-sm font-semibold truncate">{subject}</p>
           <p
             className={`mt-1 font-bold tabular-nums ${
-              mode === "detailed" ? "text-sm" : "text-lg"
+              isDetailed ? "text-sm" : "text-lg"
             } ${isUrgent ? "text-destructive" : "text-foreground"}`}
           >
             {countdown}

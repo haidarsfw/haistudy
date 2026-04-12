@@ -59,6 +59,7 @@ export async function GET(request: Request) {
       progress: data.progress ?? {},
       notes: data.notes ?? {},
       recentSubjects: data.recent_subjects ?? [],
+      countdownDetailed: data.countdown_detailed ?? true,
     };
 
     return NextResponse.json({
@@ -165,6 +166,7 @@ export async function PUT(request: Request) {
         progress: settings.progress,
         notes: settings.notes ?? {},
         recent_subjects: settings.recentSubjects ?? [],
+        countdown_detailed: settings.countdownDetailed ?? true,
         updated_at: now,
       },
       { onConflict: "license_key" }

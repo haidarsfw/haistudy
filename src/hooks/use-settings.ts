@@ -252,6 +252,7 @@ export function useSettings() {
               darkModeSchedule:
                 row.dark_mode_schedule ?? DEFAULT_SETTINGS.darkModeSchedule,
               progress: row.progress ?? {},
+              countdownDetailed: row.countdown_detailed ?? true,
             };
             setSettingsState(incoming);
             saveLocalSettings(incoming);

@@ -105,6 +105,7 @@ export interface UserSettings {
   progress: Record<string, SubjectProgress>;
   notes?: Record<string, string>; // subjectId -> note content, synced to DB
   recentSubjects?: string[]; // last visited subject IDs (most recent first)
+  countdownDetailed?: boolean; // true = Hari>Jam>Menit>Detik, false = Hari>Jam
 }
 
 export interface OnlineUser {
