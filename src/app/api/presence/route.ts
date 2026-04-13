@@ -23,9 +23,9 @@ import {
  */
 
 // Maximum elapsed seconds between heartbeats that counts as "active".
-// Heartbeats are every 120s when visible → anything ≤ 300s is valid.
-// Anything larger = hidden tab (10 min heartbeats) or reconnection.
-const MAX_ACTIVE_ELAPSED_S = 300;
+// Heartbeats are every 30s when visible → anything ≤ 90s is valid.
+// Anything larger = hidden tab (5 min heartbeats) or reconnection.
+const MAX_ACTIVE_ELAPSED_S = 90;
 
 export async function POST(request: Request) {
   try {
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
               (now.getTime() - lastSeen.getTime()) / 1000
             );
             if (elapsedS >= 5 && elapsedS <= MAX_ACTIVE_ELAPSED_S) {
-              accumulator += Math.min(elapsedS, 60);
+              accumulator += elapsedS;
             }
 
             // Flush full minutes to license_keys
@@ -165,8 +165,7 @@ export async function POST(request: Request) {
         // 5–90 seconds = normal visible-tab heartbeat (~30s expected).
         // Anything larger = hidden tab, reconnection, or first heartbeat.
         if (elapsedS >= 5 && elapsedS <= MAX_ACTIVE_ELAPSED_S) {
-          // Cap individual addition at 60s as safety measure
-          newAccumulator += Math.min(elapsedS, 60);
+          newAccumulator += elapsedS;
         }
       }
 

@@ -149,8 +149,8 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     .eq("online", true)
     .order("last_seen", { ascending: false });
 
-  // Filter stale entries (last_seen older than 7 minutes — tolerates missed 120s heartbeats)
-  const STALE_MS = 7 * 60 * 1000;
+  // Filter stale entries (last_seen older than 3 minutes — heartbeats are every 30s)
+  const STALE_MS = 3 * 60 * 1000;
   const now = Date.now();
   const freshData = (data || []).filter((row: Record<string, unknown>) => {
     const lastSeen = new Date(row.last_seen as string).getTime();
