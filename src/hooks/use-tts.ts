@@ -76,7 +76,7 @@ export function useTTS(): UseTTSReturn {
     }
   }, []);
 
-  // ── Voice loading — Indonesian voices only ──
+  // ── Voice loading — Indonesian voices, prefer local (reliable) ──
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
@@ -84,21 +84,29 @@ export function useTTS(): UseTTSReturn {
       const all = speechSynthesis.getVoices();
 
       // Show only Indonesian voices
-      const idVoices = all.filter((v) => v.lang.startsWith("id"));
+      let idVoices = all.filter((v) => v.lang.startsWith("id"));
 
-      // If no Indonesian voices found, also include English as fallback
-      const filtered =
-        idVoices.length > 0
-          ? idVoices
-          : all.filter(
-              (v) => v.lang.startsWith("id") || v.lang.startsWith("en")
-            );
+      // If no Indonesian voices found, include English as fallback
+      if (idVoices.length === 0) {
+        idVoices = all.filter(
+          (v) => v.lang.startsWith("id") || v.lang.startsWith("en")
+        );
+      }
 
-      setVoices(filtered);
+      // Sort: local voices first (they're reliable), network voices last
+      // Chrome's network "Bahasa Indonesia" voice often fails silently
+      idVoices.sort((a, b) => {
+        if (a.localService && !b.localService) return -1;
+        if (!a.localService && b.localService) return 1;
+        return 0;
+      });
 
-      // Auto-select first Indonesian voice if not already selected
+      setVoices(idVoices);
+
+      // Auto-select first LOCAL voice for reliability
       if (!voiceRef.current) {
-        const pick = filtered[0] || null;
+        const localVoice = idVoices.find((v) => v.localService);
+        const pick = localVoice || idVoices[0] || null;
         setSelectedVoice(pick);
         voiceRef.current = pick;
       }
