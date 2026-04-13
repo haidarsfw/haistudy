@@ -57,6 +57,7 @@ export default function SubjectPage() {
     markMateriIncomplete,
     setFlashcardsCompleted,
     saveQuizScore,
+    getCompletionPercent,
   } = useProgress(subjectId);
 
   const handleMateriToggle = useCallback(
@@ -91,14 +92,12 @@ export default function SubjectPage() {
     );
   }
 
-  // Calculate per-subject progress
-  const materiTotal = content.materi.length;
-  const materiDone = progress.materi.length;
-  const flashcardsDone = progress.flashcardsCompleted ? 1 : 0;
-  const quizEntries = progress.quizScores ? Object.keys(progress.quizScores).length : 0;
-  const totalItems = materiTotal + 1 + 1;
-  const doneItems = materiDone + flashcardsDone + (quizEntries > 0 ? 1 : 0);
-  const percent = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+  // Calculate per-subject progress using the unified weighted formula
+  const percent = getCompletionPercent(
+    content.materi.length,
+    content.flashcards.length > 0,
+    content.quiz.length > 0
+  );
 
   // Tab counts
   const tabCounts: Record<number, number> = {

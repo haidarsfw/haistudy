@@ -3,7 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import type { UserSettings } from "@/types";
+import type { UserSettings, SubjectProgress } from "@/types";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 
 // ─── Mock store ───
@@ -60,6 +60,7 @@ export async function GET(request: Request) {
       notes: data.notes ?? {},
       recentSubjects: data.recent_subjects ?? [],
       countdownDetailed: data.countdown_detailed ?? true,
+      streak: data.streak ?? null,
     };
 
     return NextResponse.json({
@@ -76,43 +77,11 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { licenseKey, settings, updatedAt, incrementQuizScore } = body as {
+    const { licenseKey, settings, updatedAt } = body as {
       licenseKey: string;
       settings: UserSettings;
       updatedAt?: string;
-      incrementQuizScore?: number;
     };
-
-    // Handle quiz score increment separately
-    if (licenseKey && incrementQuizScore && incrementQuizScore > 0) {
-      if (isSupabaseServerConfigured) {
-        const supabase = createServerClient()!;
-        try {
-          await supabase.rpc("increment_license_field", {
-            p_key: licenseKey,
-            p_field: "total_quiz_score",
-            p_amount: incrementQuizScore,
-          });
-        } catch (err) {
-          console.error("Failed to increment quiz score via RPC:", err);
-          // Fallback: direct update
-          const { data } = await supabase
-            .from("license_keys")
-            .select("total_quiz_score")
-            .eq("key", licenseKey)
-            .single();
-          if (data) {
-            await supabase
-              .from("license_keys")
-              .update({ total_quiz_score: (data.total_quiz_score || 0) + incrementQuizScore })
-              .eq("key", licenseKey);
-          }
-        }
-      }
-      if (!settings) {
-        return NextResponse.json({ success: true });
-      }
-    }
 
     if (!licenseKey || !settings) {
       return NextResponse.json(
@@ -167,15 +136,40 @@ export async function PUT(request: Request) {
         notes: settings.notes ?? {},
         recent_subjects: settings.recentSubjects ?? [],
         countdown_detailed: settings.countdownDetailed ?? true,
+        streak: settings.streak ?? null,
         updated_at: now,
       },
       { onConflict: "license_key" }
     );
 
     if (error) throw error;
+
+    // Recalculate total_quiz_score from progress data (sum of best per subject)
+    if (settings.progress && Object.keys(settings.progress).length > 0) {
+      let totalScore = 0;
+      for (const subjectProgress of Object.values(settings.progress)) {
+        const sp = subjectProgress as SubjectProgress;
+        if (sp.quizScores && Object.keys(sp.quizScores).length > 0) {
+          // Find the best score for this subject
+          let bestScore = 0;
+          for (const entry of Object.values(sp.quizScores)) {
+            if (entry.score > bestScore) bestScore = entry.score;
+          }
+          totalScore += Math.round(bestScore);
+        }
+      }
+      // Update license_keys.total_quiz_score (fire-and-forget)
+      supabase
+        .from("license_keys")
+        .update({ total_quiz_score: totalScore })
+        .eq("key", licenseKey)
+        .then(() => {});
+    }
+
     return NextResponse.json({ success: true, updatedAt: now });
   } catch (error) {
     console.error("Settings PUT error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+

@@ -86,7 +86,7 @@ export function useProgress(subjectId: string) {
         return next;
       });
     },
-    [subjectId]
+    [subjectId, session]
   );
 
   const markMateriCompleted = useCallback(
@@ -127,20 +127,10 @@ export function useProgress(subjectId: string) {
           [new Date().toISOString()]: { score, total },
         },
       }));
-
-      // Sync quiz score to license key for admin stats
-      if (session?.licenseKey) {
-        fetch("/api/settings", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            licenseKey: session.licenseKey,
-            incrementQuizScore: Math.round(score),
-          }),
-        }).catch(() => {});
-      }
+      // Note: total_quiz_score on license_keys is now recalculated
+      // server-side from progress data in the PUT /api/settings handler
     },
-    [update, session]
+    [update]
   );
 
   // Calculate completion percentage

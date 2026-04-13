@@ -29,11 +29,14 @@ function getQuizScores(): Record<string, { score: number; total: number }> {
     const scores: Record<string, { score: number; total: number }> = {};
     for (const [subjectId, p] of Object.entries(progress)) {
       if (p.quizScores) {
-        // Get latest quiz score
-        const entries = Object.entries(p.quizScores);
+        const entries = Object.values(p.quizScores);
         if (entries.length > 0) {
-          const latest = entries[entries.length - 1];
-          scores[subjectId] = latest[1];
+          // Get BEST quiz score (not latest)
+          let best = entries[0];
+          for (const entry of entries) {
+            if (entry.score > best.score) best = entry;
+          }
+          scores[subjectId] = best;
         }
       }
     }
@@ -199,11 +202,12 @@ export default function AnalyticsPage() {
                   <span>
                     {t("analytics.flashcards")} {flashcardsDone ? t("common.done") : "-"}
                   </span>
-                  {quizScore && (
-                    <span>
-                      {t("analytics.quiz")} {quizScore.score}/{quizScore.total}
-                    </span>
-                  )}
+                  <span>
+                    {t("analytics.quiz")}{" "}
+                    {quizScore
+                      ? `${Math.round(quizScore.score)}/${quizScore.total} poin`
+                      : "-"}
+                  </span>
                 </div>
               </div>
             ))}

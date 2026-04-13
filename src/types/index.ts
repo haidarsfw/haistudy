@@ -106,6 +106,12 @@ export interface UserSettings {
   notes?: Record<string, string>; // subjectId -> note content, synced to DB
   recentSubjects?: string[]; // last visited subject IDs (most recent first)
   countdownDetailed?: boolean; // true = Hari>Jam>Menit>Detik, false = Hari>Jam
+  streak?: {
+    currentStreak: number;
+    bestStreak: number;
+    lastActiveDate: string | null;
+    activeDates: string[];
+  } | null;
 }
 
 export interface OnlineUser {

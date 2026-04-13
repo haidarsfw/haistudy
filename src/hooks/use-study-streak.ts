@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSession } from "@/components/providers/session-provider";
 
 const STORAGE_KEY = "hs-study-streak";
 
@@ -40,12 +41,55 @@ function daysBetween(a: string, b: string): number {
   );
 }
 
-export function useStudyStreak() {
-  const [streak, setStreak] = useState<StreakData>(getDefaultData);
+/** Merge two streak datasets — takes the higher values */
+function mergeStreaks(a: StreakData, b: StreakData): StreakData {
+  // Take the one with the more recent lastActiveDate
+  const aDate = a.lastActiveDate ? new Date(a.lastActiveDate).getTime() : 0;
+  const bDate = b.lastActiveDate ? new Date(b.lastActiveDate).getTime() : 0;
+  const latest = aDate >= bDate ? a : b;
 
+  return {
+    currentStreak: latest.currentStreak,
+    bestStreak: Math.max(a.bestStreak, b.bestStreak),
+    lastActiveDate: latest.lastActiveDate,
+    activeDates: [
+      ...new Set([...a.activeDates, ...b.activeDates]),
+    ].sort().slice(-90),
+  };
+}
+
+export function useStudyStreak() {
+  const { session } = useSession();
+  const [streak, setStreak] = useState<StreakData>(getDefaultData);
+  const hasSynced = useRef(false);
+
+  // Load from localStorage + merge with server on mount
   useEffect(() => {
-    setStreak(loadStreak());
-  }, []);
+    const local = loadStreak();
+    setStreak(local);
+
+    if (!session?.licenseKey || hasSynced.current) return;
+    hasSynced.current = true;
+
+    // Fetch server streak and merge
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`
+        );
+        const data = await res.json();
+        const serverStreak = data.settings?.streak as StreakData | null;
+
+        if (serverStreak) {
+          const merged = mergeStreaks(local, serverStreak);
+          saveStreak(merged);
+          setStreak(merged);
+        }
+      } catch {
+        // silent — local data is fine
+      }
+    })();
+  }, [session?.licenseKey]);
 
   const recordActivity = useCallback(() => {
     const today = getTodayStr();
@@ -72,7 +116,19 @@ export function useStudyStreak() {
 
     saveStreak(newData);
     setStreak(newData);
-  }, []);
+
+    // Sync to server (debounced via existing settings save pipeline)
+    if (session?.licenseKey) {
+      fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          licenseKey: session.licenseKey,
+          settings: { streak: newData },
+        }),
+      }).catch(() => {});
+    }
+  }, [session]);
 
   return { ...streak, recordActivity };
 }
