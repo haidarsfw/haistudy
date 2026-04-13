@@ -33,6 +33,7 @@ import { sounds } from "@/lib/sounds";
 interface SidebarProps {
   onSettingsOpen: () => void;
   onSupportOpen?: () => void;
+  supportUnread?: number;
 }
 
 const navItems = [
@@ -47,7 +48,7 @@ const navItems = [
 
 const STORAGE_KEY = "hs-sidebar-collapsed";
 
-export function Sidebar({ onSettingsOpen, onSupportOpen }: SidebarProps) {
+export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { session, logout } = useSession();
@@ -209,11 +210,18 @@ export function Sidebar({ onSettingsOpen, onSupportOpen }: SidebarProps) {
         })}
 
         {/* Support */}
-        <NavButton
-          label={t("nav.support")}
-          icon={LifeBuoy}
-          onClick={onSupportOpen}
-        />
+        <div className="relative">
+          <NavButton
+            label={t("nav.support")}
+            icon={LifeBuoy}
+            onClick={onSupportOpen}
+          />
+          {supportUnread > 0 && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white pointer-events-none">
+              {supportUnread > 9 ? "9+" : supportUnread}
+            </span>
+          )}
+        </div>
 
         {/* Settings */}
         <div data-onboarding="settings">

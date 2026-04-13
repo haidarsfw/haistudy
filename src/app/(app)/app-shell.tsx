@@ -29,6 +29,7 @@ import { usePresence } from "@/hooks/use-presence";
 import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
 import { APP_EVENTS } from "@/lib/events";
+import { useSupportUnread } from "@/hooks/use-support-unread";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -40,6 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
+  const { unreadCount: supportUnread, markAsRead: markSupportRead, markPanelClosed: markSupportClosed } = useSupportUnread();
 
   // Detect current subject from URL (e.g. /subject/statistik)
   const currentSubjectId = (params.id as string) || null;
@@ -200,8 +202,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <>
     <div className="flex h-[100dvh] bg-background overflow-x-clip max-w-[100vw]">
       <PreviewWatermark />
-      <Sidebar onSettingsOpen={handleSettingsOpen} onSupportOpen={() => {
-        if (session?.isAdmin) { router.push("/admin?tab=7"); } else { setIsSupportOpen(true); }
+      <Sidebar onSettingsOpen={handleSettingsOpen} supportUnread={supportUnread} onSupportOpen={() => {
+        if (session?.isAdmin) { router.push("/admin?tab=7"); } else { markSupportRead(); setIsSupportOpen(true); }
       }} />
 
       {/* Main content area */}
@@ -216,8 +218,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         onChatToggle={handleChatToggle}
         isChatOpen={isChatOpen}
         onAiToggle={handleAiToggle}
+        supportUnread={supportUnread}
         onSupportOpen={() => {
-          if (session?.isAdmin) { router.push("/admin?tab=7"); } else { setIsSupportOpen(true); }
+          if (session?.isAdmin) { router.push("/admin?tab=7"); } else { markSupportRead(); setIsSupportOpen(true); }
         }}
         onSettingsOpen={handleSettingsOpen}
         chatUnread={chatUnread}
@@ -272,7 +275,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <ReminderAlarm reminderTime={settings.reminder} />
 
       {/* Support panel */}
-      <SupportPanel isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
+      <SupportPanel isOpen={isSupportOpen} onClose={() => { setIsSupportOpen(false); markSupportClosed(); }} />
 
       {/* Onboarding tutorial */}
       <OnboardingOverlay />

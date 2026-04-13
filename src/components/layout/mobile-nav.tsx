@@ -32,6 +32,7 @@ interface MobileNavProps {
   onSupportOpen?: () => void;
   onSettingsOpen?: () => void;
   chatUnread?: number;
+  supportUnread?: number;
 }
 
 export function MobileNav({
@@ -41,6 +42,7 @@ export function MobileNav({
   onSupportOpen,
   onSettingsOpen,
   chatUnread = 0,
+  supportUnread = 0,
 }: MobileNavProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -158,7 +160,12 @@ export function MobileNav({
                       }`}
                     >
                       <item.icon className="h-4.5 w-4.5 shrink-0" />
-                      <span>{t(item.labelKey)}</span>
+                      <span className="flex-1 text-left">{t(item.labelKey)}</span>
+                      {item.labelKey === "nav.support" && supportUnread > 0 && (
+                        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white">
+                          {supportUnread > 9 ? "9+" : supportUnread}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -182,7 +189,7 @@ export function MobileNav({
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] sm:hidden">
         {mainItems.map((item) => {
           const active = isActive(item.href);
-          const badgeCount = item.href === "#chat" ? chatUnread : item.href === "#more" ? unreadCount : 0;
+          const badgeCount = item.href === "#chat" ? chatUnread : item.href === "#more" ? (unreadCount + supportUnread) : 0;
           const showRedDot = badgeCount > 0;
           return (
             <button
