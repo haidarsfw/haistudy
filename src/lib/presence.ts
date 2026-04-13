@@ -1,7 +1,7 @@
 /**
  * Presence utilities — v3 (server-side time tracking).
  *
- * CLIENT: Sends heartbeats every 30s (visible) / 5m (hidden).
+ * CLIENT: Sends heartbeats every 60s (visible) / 5m (hidden).
  *         NO client-side time counting. Zero accumulators.
  * SERVER: Calculates active time from heartbeat intervals.
  *         Accumulates seconds → flushes full minutes to license_keys.
@@ -149,8 +149,8 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     .eq("online", true)
     .order("last_seen", { ascending: false });
 
-  // Filter stale entries (last_seen older than 3 minutes — heartbeats are every 30s)
-  const STALE_MS = 3 * 60 * 1000;
+  // Filter stale entries (last_seen older than 4 minutes — heartbeats are every 60s)
+  const STALE_MS = 4 * 60 * 1000;
   const now = Date.now();
   const freshData = (data || []).filter((row: Record<string, unknown>) => {
     const lastSeen = new Date(row.last_seen as string).getTime();
