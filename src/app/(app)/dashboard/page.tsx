@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { useSession } from "@/components/providers/session-provider";
-import { usePresence } from "@/hooks/use-presence";
 import { GreetingCard } from "@/components/dashboard/greeting-card";
 import { ExamCountdownMini } from "@/components/dashboard/exam-countdown-mini";
 import { StudyProgressMini } from "@/components/dashboard/study-progress-mini";
@@ -14,8 +13,6 @@ import { staggerContainer, staggerItem } from "@/lib/motion";
 export default function DashboardPage() {
   const { session } = useSession();
 
-  // Set up presence tracking
-  usePresence();
 
   if (!session) return null;
 

@@ -25,6 +25,7 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
 import { useProgressSync } from "@/hooks/use-progress-sync";
 import { useVersionCheck } from "@/hooks/use-version-check";
+import { usePresence } from "@/hooks/use-presence";
 import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
 import { APP_EVENTS } from "@/lib/events";
@@ -52,6 +53,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Auto-reload when a new deploy is detected
   useVersionCheck();
+
+  // Presence tracking — globally active on all app pages
+  usePresence();
 
   // Lock body scroll when any overlay panel is open
   const anyPanelOpen = isChatOpen || isAiOpen || isVoiceOpen || isSupportOpen;
