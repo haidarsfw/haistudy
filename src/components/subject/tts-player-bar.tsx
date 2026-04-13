@@ -17,9 +17,11 @@ const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
 interface TTSPlayerBarProps {
   tts: UseTTSReturn;
   onClose: () => void;
+  /** When true, renders inline (no fixed positioning) — for use inside fullscreen modals */
+  inline?: boolean;
 }
 
-export function TTSPlayerBar({ tts, onClose }: TTSPlayerBarProps) {
+export function TTSPlayerBar({ tts, onClose, inline }: TTSPlayerBarProps) {
   const {
     isPlaying,
     isPaused,
@@ -70,7 +72,10 @@ export function TTSPlayerBar({ tts, onClose }: TTSPlayerBarProps) {
   };
 
   return (
-    <div className="fixed bottom-14 sm:bottom-0 left-0 sm:left-16 right-0 z-50 animate-in slide-in-from-bottom duration-300">
+    <div className={inline
+      ? "shrink-0 animate-in slide-in-from-bottom duration-300"
+      : "fixed bottom-14 sm:bottom-0 left-0 sm:left-16 right-0 z-50 animate-in slide-in-from-bottom duration-300"
+    }>
       {/* Progress bar */}
       <div className="h-0.5 bg-muted">
         <div

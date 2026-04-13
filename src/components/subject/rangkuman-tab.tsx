@@ -520,10 +520,10 @@ export function RangkumanTab({
                 {parseRangkuman(rangkumanData[selectedModule])}
               </div>
             </div>
-          </div>
 
-          {/* TTS Player in fullscreen */}
-          {ttsActive && <TTSPlayerBar tts={tts} onClose={handleCloseTTS} />}
+            {/* TTS Player in fullscreen — inline so it sits in the flex layout */}
+            {ttsActive && <TTSPlayerBar tts={tts} onClose={handleCloseTTS} inline />}
+          </div>
         </div>
       )}
 
