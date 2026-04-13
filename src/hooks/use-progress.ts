@@ -66,6 +66,9 @@ export function useProgress(subjectId: string) {
         all[subjectId] = next;
         saveAllProgress(all);
 
+        // Notify other widgets in this tab that progress changed
+        window.dispatchEvent(new Event("hs-progress-updated"));
+
         // Debounced sync to Supabase
         if (session?.licenseKey) {
           if (syncRef.current) clearTimeout(syncRef.current);

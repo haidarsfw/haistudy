@@ -101,7 +101,7 @@ export function ExamCountdownMini() {
             <p className="text-sm font-semibold truncate">{subject}</p>
             <p
               className={`mt-1 text-base font-bold tabular-nums leading-snug ${
-                isUrgent ? "text-destructive" : "text-foreground"
+                isUrgent ? "text-destructive animate-urgent-pulse" : "text-foreground"
               }`}
             >
               {countdown}

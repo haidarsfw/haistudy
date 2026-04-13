@@ -207,7 +207,13 @@ export function GreetingCard() {
 
     const handleSync = () => setOverallProgress(calcOverallProgress());
     window.addEventListener("hs-progress-synced", handleSync);
-    return () => window.removeEventListener("hs-progress-synced", handleSync);
+    window.addEventListener("hs-progress-updated", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("hs-progress-synced", handleSync);
+      window.removeEventListener("hs-progress-updated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
   }, []);
 
   const greetingKey = useMemo(() => getGreetingKey(), []);

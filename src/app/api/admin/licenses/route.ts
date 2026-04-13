@@ -392,3 +392,70 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
+// ─── PATCH /api/admin/licenses - Reset devices for a license key ───
+export async function PATCH(request: Request) {
+  try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { key, action } = body;
+
+    if (!key || action !== "reset-devices") {
+      return NextResponse.json(
+        { error: "key and action='reset-devices' required" },
+        { status: 400 }
+      );
+    }
+
+    if (!isSupabaseServerConfigured) {
+      // Remove all mock devices for this license's activations
+      const activationIds = Array.from(mockActivations.values())
+        .filter((a) => a.licenseKey === key)
+        .map((a) => a.id);
+      const remaining = mockDevices.filter(
+        (d) => !activationIds.includes(d.activationId)
+      );
+      mockDevices.length = 0;
+      mockDevices.push(...remaining);
+      return NextResponse.json({ success: true, deletedCount: activationIds.length });
+    }
+
+    const supabase = createServerClient()!;
+
+    // Find all activations for this license key
+    const { data: activations } = await supabase
+      .from("activations")
+      .select("id")
+      .eq("license_key", key);
+
+    if (!activations || activations.length === 0) {
+      return NextResponse.json({ success: true, deletedCount: 0 });
+    }
+
+    const activationIds = activations.map((a) => a.id);
+
+    // Delete all devices for these activations
+    const { error, count } = await supabase
+      .from("devices")
+      .delete()
+      .in("activation_id", activationIds);
+
+    if (error) throw error;
+
+    // Also remove presence entries for this license key
+    await supabase
+      .from("presence")
+      .delete()
+      .eq("license_key", key)
+      .then(() => {});
+
+    return NextResponse.json({ success: true, deletedCount: count || 0 });
+  } catch (error) {
+    console.error("Admin licenses PATCH error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}

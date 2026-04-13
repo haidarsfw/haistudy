@@ -887,3 +887,15 @@ html.tts-bar-open .tts-shift-target {
   transition: transform 0.3s ease;
 }
 
+/* ============================================
+   Urgent Countdown Pulse
+   ============================================ */
+
+@keyframes urgent-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-urgent-pulse {
+  animation: urgent-pulse 2s ease-in-out infinite;
+}

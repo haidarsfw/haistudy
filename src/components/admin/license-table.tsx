@@ -40,6 +40,7 @@ import {
   Bot,
   ChevronDown,
   ChevronRight,
+  RotateCcw,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -201,12 +202,35 @@ function UserDetailDialog({
 }) {
   const [copied, setCopied] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [resettingDevices, setResettingDevices] = useState(false);
 
   const copyKey = () => {
     navigator.clipboard.writeText(license.key).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => {});
+  };
+
+  const handleResetDevices = async () => {
+    setResettingDevices(true);
+    try {
+      const res = await fetch("/api/admin/licenses", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: license.key, action: "reset-devices" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`Devices berhasil direset (${data.deletedCount || 0} dihapus)`);
+        onOpenChange(false);
+      } else {
+        toast.error(data.error || "Gagal reset devices");
+      }
+    } catch {
+      toast.error("Gagal menghubungi server");
+    } finally {
+      setResettingDevices(false);
+    }
   };
 
   return (
@@ -319,18 +343,39 @@ function UserDetailDialog({
             </>
           )}
 
-          {/* AI Conversations Button */}
+          {/* Action Buttons */}
           <Separator />
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full gap-2"
-            onClick={() => setAiDialogOpen(true)}
-          >
-            <MessageSquare className="h-4 w-4" />
-            Lihat AI Conversations
-          </Button>
-
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setAiDialogOpen(true)}
+            >
+              <MessageSquare className="h-4 w-4" />
+              Lihat AI Conversations
+            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-2"
+                  disabled={resettingDevices}
+                >
+                  {resettingDevices ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-4 w-4" />
+                  )}
+                  Reset Devices
+                </Button>
+              }
+              title="Reset Devices?"
+              description={`Semua perangkat yang terhubung ke ${license.key} (${license.name}) akan dihapus. User perlu login ulang di perangkat mereka.`}
+              onConfirm={handleResetDevices}
+            />
+          </div>
           {/* Meta */}
           <div className="text-[10px] text-muted-foreground space-y-0.5">
             <p>Max devices: {license.unlimitedDevices ? "Unlimited" : license.maxDevices}</p>

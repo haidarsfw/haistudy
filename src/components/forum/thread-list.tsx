@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ForumThread } from "@/types";
 import { springSmooth } from "@/lib/motion";
+import { useThreadRead } from "@/hooks/use-thread-read";
 
 interface ThreadListProps {
   threads: ForumThread[];
   isLoading: boolean;
   onSelectThread: (threadId: string) => void;
   onNewThread: () => void;
+  onThreadRead?: (threadId: string) => void;
 }
 
 function ThreadSkeleton() {
@@ -33,7 +35,9 @@ export function ThreadList({
   isLoading,
   onSelectThread,
   onNewThread,
+  onThreadRead,
 }: ThreadListProps) {
+  const { isRead, markRead } = useThreadRead();
   if (isLoading) {
     return (
       <div className="space-y-3 py-4">
@@ -71,10 +75,18 @@ export function ThreadList({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={springSmooth}
-              onClick={() => onSelectThread(thread.id)}
+              onClick={() => {
+                markRead(thread.id);
+                onThreadRead?.(thread.id);
+                onSelectThread(thread.id);
+              }}
               className="flex w-full flex-col gap-1.5 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent/5"
             >
               <div className="flex items-start gap-2">
+                {/* Unread red dot */}
+                {!isRead(thread.id) && (
+                  <span className="mt-1.5 h-2 w-2 rounded-full bg-destructive shrink-0" />
+                )}
                 <h3 className="flex-1 text-sm font-semibold leading-snug">
                   {thread.closed && (
                     <Lock className="mr-1 inline h-3.5 w-3.5 text-muted-foreground" />
