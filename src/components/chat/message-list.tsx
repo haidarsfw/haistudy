@@ -40,27 +40,54 @@ export function MessageList({
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
+  const hasInitialScrolled = useRef(false);
+
+  // Reliable scroll-to-bottom helper
+  // ScrollArea wraps content in a viewport div — we need to scroll THAT
+  const scrollToBottom = useCallback((smooth = false) => {
+    // Method 1: scrollIntoView on the sentinel div
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView(
+        smooth ? { behavior: "smooth" } : undefined
+      );
+    }
+    // Method 2: also manually scroll the ScrollArea viewport (belt & suspenders)
+    const viewport = scrollAreaRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement | null;
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }, []);
 
   // Auto-scroll to bottom on new messages (if user is near bottom)
   useEffect(() => {
     if (isNearBottomRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      // Small delay to let new message DOM nodes render
+      requestAnimationFrame(() => scrollToBottom(true));
     }
-  }, [messages.length]);
+  }, [messages.length, scrollToBottom]);
 
-  // Initial scroll to bottom
+  // Initial scroll to bottom — retry a few times to handle async rendering
   useEffect(() => {
-    bottomRef.current?.scrollIntoView();
-  }, []);
+    if (hasInitialScrolled.current) return;
+    hasInitialScrolled.current = true;
+    // Immediate + staggered retries to handle ScrollArea viewport delay
+    scrollToBottom();
+    const t1 = setTimeout(() => scrollToBottom(), 50);
+    const t2 = setTimeout(() => scrollToBottom(), 150);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [scrollToBottom]);
 
   // Scroll to bottom when panel opens
   useEffect(() => {
     if (isOpen) {
-      requestAnimationFrame(() => {
-        bottomRef.current?.scrollIntoView();
-      });
+      // Delay enough for panel slide animation + DOM settle
+      const t1 = setTimeout(() => scrollToBottom(), 100);
+      const t2 = setTimeout(() => scrollToBottom(), 300);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
-  }, [isOpen]);
+  }, [isOpen, scrollToBottom]);
 
   // Scroll to a specific message (from mention notification click)
   const scrollToMessage = useCallback((e: Event) => {
