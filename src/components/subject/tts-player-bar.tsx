@@ -70,7 +70,7 @@ export function TTSPlayerBar({ tts, onClose }: TTSPlayerBarProps) {
   };
 
   return (
-    <div className="fixed bottom-14 sm:bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom duration-300">
+    <div className="fixed bottom-14 sm:bottom-0 left-0 sm:left-16 right-0 z-50 animate-in slide-in-from-bottom duration-300">
       {/* Progress bar */}
       <div className="h-0.5 bg-muted">
         <div
