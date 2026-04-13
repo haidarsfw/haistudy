@@ -77,12 +77,12 @@ export function useNotifications() {
     };
   }, [session]);
 
-  // Polling fallback — every 10s re-fetch to catch any missed realtime events
+  // Polling fallback — every 120s as safety net (Realtime handles instant delivery)
   useEffect(() => {
     if (!session) return;
     const interval = setInterval(() => {
       fetchNotifications();
-    }, 10_000);
+    }, 120_000);
     return () => clearInterval(interval);
   }, [session, fetchNotifications]);
 

@@ -48,12 +48,16 @@ export function useChat() {
   }, []);
 
   // Fetch older messages (lazy load on scroll up)
+  const oldestCreatedAtRef = useRef<string | null>(null);
+  useEffect(() => {
+    oldestCreatedAtRef.current = messages.length > 0 ? messages[0].createdAt : null;
+  }, [messages]);
+
   const fetchMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore || messages.length === 0) return;
+    if (isLoadingMore || !hasMore || !oldestCreatedAtRef.current) return;
     setIsLoadingMore(true);
     try {
-      const oldestId = messages[0].id;
-      const res = await fetch(`/api/chat/messages?before=${encodeURIComponent(oldestId)}`);
+      const res = await fetch(`/api/chat/messages?before=${encodeURIComponent(oldestCreatedAtRef.current)}`);
       const data = await res.json();
       if (data.messages && data.messages.length > 0) {
         setMessages((prev) => {
@@ -70,7 +74,7 @@ export function useChat() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, hasMore, messages]);
+  }, [isLoadingMore, hasMore]);
 
   // Fetch pinned message IDs
   const fetchPins = useCallback(async () => {

@@ -173,29 +173,36 @@ export function useSettings() {
   }, [fetchSettings]);
 
   // Update a specific setting - broadcasts to all hook instances via CustomEvent
+  // Use a ref to always have latest settings for the debounced server save
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+
   const updateSettings = useCallback(
     (updates: Partial<UserSettings>) => {
-      const next = { ...settings, ...updates };
-      setSettingsState(next);
-      saveLocalSettings(next);
+      setSettingsState((prev) => {
+        const next = { ...prev, ...updates };
+        saveLocalSettings(next);
+
+        // Schedule debounced save using ref to capture latest state
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => saveToServer(next), DEBOUNCE_MS);
+
+        // Broadcast to other useSettings instances in this tab
+        selfTriggeredRef.current = true;
+        window.dispatchEvent(
+          new CustomEvent(SETTINGS_SYNC_EVENT, { detail: next })
+        );
+
+        return next;
+      });
 
       // Only apply appearance fields that were explicitly changed
       if ("darkMode" in updates) setDark(updates.darkMode!);
       if ("theme" in updates) setTheme(updates.theme!);
       if ("font" in updates) setFont(updates.font!);
       if ("darkModeSchedule" in updates) setDarkModeSchedule(updates.darkModeSchedule!);
-
-      // Debounced save to server
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => saveToServer(next), DEBOUNCE_MS);
-
-      // Broadcast to other useSettings instances in this tab
-      selfTriggeredRef.current = true;
-      window.dispatchEvent(
-        new CustomEvent(SETTINGS_SYNC_EVENT, { detail: next })
-      );
     },
-    [settings, saveToServer, setDark, setTheme, setFont, setDarkModeSchedule]
+    [saveToServer, setDark, setTheme, setFont, setDarkModeSchedule]
   );
 
   // Cross-instance sync: listen for settings changes from other useSettings() instances

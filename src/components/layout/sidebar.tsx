@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getDeviceId } from "@/lib/auth/device";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
@@ -88,7 +89,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen }: SidebarProps) {
       await fetch("/api/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ licenseKey: session?.licenseKey }),
+        body: JSON.stringify({ licenseKey: session?.licenseKey, deviceId: getDeviceId() }),
       });
     } catch {
       // Continue anyway

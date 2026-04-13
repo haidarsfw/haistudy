@@ -6,20 +6,67 @@ import {
 
 /**
  * POST /api/auth/logout
- * Clears session cookies and optionally cleans up presence.
+ * Clears session cookies and cleans up presence.
+ * Accepts both licenseKey and deviceId for accurate presence cleanup.
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const licenseKey = (body as { licenseKey?: string }).licenseKey;
+    const { licenseKey, deviceId } = body as {
+      licenseKey?: string;
+      deviceId?: string;
+    };
 
     // Clean up presence in Supabase
     if (isSupabaseServerConfigured && licenseKey) {
       const supabase = createServerClient()!;
-      await supabase
-        .from("presence")
-        .update({ online: false, last_seen: new Date().toISOString() })
-        .eq("license_key", licenseKey);
+
+      // Flush remaining accumulated seconds before going offline
+      if (deviceId) {
+        // Preferred: use deviceId (matches presence row's user_id)
+        const { data: presenceRow } = await supabase
+          .from("presence")
+          .select("online_seconds_accumulator")
+          .eq("user_id", deviceId)
+          .single();
+
+        if (presenceRow) {
+          const accum = presenceRow.online_seconds_accumulator || 0;
+          const fullMinutes = Math.floor(accum / 60);
+
+          // Flush accumulated minutes to license_keys before going offline
+          if (fullMinutes > 0) {
+            try {
+              await supabase.rpc("increment_license_field", {
+                p_key: licenseKey,
+                p_field: "online_minutes",
+                p_amount: fullMinutes,
+              });
+            } catch {
+              // Non-critical — best effort
+            }
+          }
+
+          await supabase
+            .from("presence")
+            .update({
+              online: false,
+              last_seen: new Date().toISOString(),
+              online_seconds_accumulator: 0,
+            })
+            .eq("user_id", deviceId);
+        }
+      } else {
+        // Fallback: use licenseKey (backward compat, less precise)
+        await supabase
+          .from("presence")
+          .update({
+            online: false,
+            last_seen: new Date().toISOString(),
+            online_seconds_accumulator: 0,
+          })
+          .eq("license_key", licenseKey);
+      }
     }
 
     const response = NextResponse.json({ success: true });

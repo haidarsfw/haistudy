@@ -35,43 +35,21 @@ export function useProgress(subjectId: string) {
   const [progress, setProgress] = useState<SubjectProgress>(defaultProgress);
   const syncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load on mount + merge from server
+  // Load from localStorage on mount.
+  // NOTE: Server sync is handled globally by useProgressSync in AppShell.
+  // We listen for the sync event to re-read localStorage when it completes.
   useEffect(() => {
     const all = getAllProgress();
     setProgress(all[subjectId] || defaultProgress);
 
-    // Sync from server on mount
-    if (session?.licenseKey) {
-      fetch(`/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.settings?.progress) {
-            const serverProgress = data.settings.progress as Record<string, SubjectProgress>;
-            const serverSubject = serverProgress[subjectId];
-            if (serverSubject) {
-              const localAll = getAllProgress();
-              const localSubject = localAll[subjectId] || defaultProgress;
-              // Merge: server wins for fields with more data
-              const merged: SubjectProgress = {
-                materi: Array.from(
-                  new Set([...localSubject.materi, ...serverSubject.materi])
-                ),
-                flashcardsCompleted:
-                  localSubject.flashcardsCompleted || serverSubject.flashcardsCompleted,
-                quizScores: {
-                  ...serverSubject.quizScores,
-                  ...localSubject.quizScores,
-                },
-              };
-              localAll[subjectId] = merged;
-              saveAllProgress(localAll);
-              setProgress(merged);
-            }
-          }
-        })
-        .catch(() => {});
-    }
-  }, [subjectId, session?.licenseKey]);
+    // Re-read when AppShell's useProgressSync completes
+    const onSynced = () => {
+      const refreshed = getAllProgress();
+      setProgress(refreshed[subjectId] || defaultProgress);
+    };
+    window.addEventListener("hs-progress-synced", onSynced);
+    return () => window.removeEventListener("hs-progress-synced", onSynced);
+  }, [subjectId]);
 
   // Cleanup sync timeout on unmount
   useEffect(() => {

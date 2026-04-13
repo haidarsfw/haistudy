@@ -84,7 +84,7 @@ export function useOnboarding() {
     } catch {}
     setShouldShow(false);
     setPostPhase("contact-form");
-  }, []);
+  }, [storageKey]);
 
   const advancePostPhase = useCallback(() => {
     setPostPhase((current) => {
