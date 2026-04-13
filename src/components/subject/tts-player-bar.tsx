@@ -54,9 +54,20 @@ export function TTSPlayerBar({ tts, onClose }: TTSPlayerBarProps) {
     onClose();
   };
 
-  const sectionProgress = totalSections > 0
-    ? Math.round(((currentSectionIndex + 1) / totalSections) * 100)
-    : 0;
+  const sectionProgress =
+    totalSections > 0
+      ? Math.round(((currentSectionIndex + 1) / totalSections) * 100)
+      : 0;
+
+  // Friendly voice name: strip "Google" / "Microsoft" prefix noise
+  const voiceLabel = (v: SpeechSynthesisVoice) => {
+    let name = v.name;
+    // Remove common prefixes
+    name = name.replace(/^(Google |Microsoft |Apple )/i, "");
+    // Keep it short
+    if (name.length > 18) name = name.slice(0, 18) + "…";
+    return name;
+  };
 
   return (
     <div className="fixed bottom-14 sm:bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom duration-300">
@@ -113,6 +124,7 @@ export function TTSPlayerBar({ tts, onClose }: TTSPlayerBarProps) {
               </p>
               <p className="text-[10px] text-muted-foreground leading-tight">
                 Section {currentSectionIndex + 1}/{totalSections}
+                {isPaused && " • Dijeda"}
               </p>
             </div>
           </div>
@@ -144,31 +156,29 @@ export function TTSPlayerBar({ tts, onClose }: TTSPlayerBarProps) {
             </div>
           </div>
 
-          {/* ── Voice selector (desktop only) ── */}
+          {/* ── Voice selector (if multiple voices available) ── */}
           {availableVoices.length > 1 && (
             <div className="relative shrink-0 group hidden sm:block">
               <button
-                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium bg-muted hover:bg-muted/80 transition-colors max-w-[80px] truncate"
+                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium bg-muted hover:bg-muted/80 transition-colors max-w-[90px] truncate"
                 title="Pilih suara"
               >
-                {selectedVoice?.lang.slice(0, 2).toUpperCase() || "ID"}
+                {selectedVoice ? voiceLabel(selectedVoice) : "Suara"}{" "}
+                <ChevronDown className="h-2.5 w-2.5 inline -mt-0.5" />
               </button>
               <div className="absolute bottom-full right-0 mb-1 hidden group-hover:block group-focus-within:block">
-                <div className="bg-popover border border-border rounded-lg shadow-lg py-1 max-h-40 overflow-y-auto min-w-[160px]">
+                <div className="bg-popover border border-border rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto min-w-[180px]">
                   {availableVoices.map((v) => (
                     <button
                       key={v.voiceURI}
                       onClick={() => setVoice(v)}
-                      className={`block w-full text-left px-3 py-1 text-xs transition-colors ${
+                      className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${
                         selectedVoice?.voiceURI === v.voiceURI
                           ? "text-primary font-semibold bg-primary/5"
                           : "text-foreground hover:bg-muted"
                       }`}
                     >
-                      <span className="font-medium">{v.lang}</span>{" "}
-                      <span className="text-muted-foreground truncate">
-                        {v.name.slice(0, 20)}
-                      </span>
+                      <span className="font-medium">{voiceLabel(v)}</span>
                     </button>
                   ))}
                 </div>

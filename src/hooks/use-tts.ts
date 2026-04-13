@@ -59,6 +59,7 @@ export function useTTS(): UseTTSReturn {
   const sectionIdxRef = useRef(0);
   const blockIdxRef = useRef(0);
   const playingRef = useRef(false);
+  const pausedRef = useRef(false); // NEW: prevents onend from advancing when paused
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const speedRef = useRef(1);
 
@@ -75,25 +76,29 @@ export function useTTS(): UseTTSReturn {
     }
   }, []);
 
-  // ── Voice loading ──
+  // ── Voice loading — Indonesian voices only ──
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
     const loadVoices = () => {
       const all = speechSynthesis.getVoices();
-      // Show Indonesian + English voices
-      const filtered = all.filter(
-        (v) => v.lang.startsWith("id") || v.lang.startsWith("en")
-      );
+
+      // Show only Indonesian voices
+      const idVoices = all.filter((v) => v.lang.startsWith("id"));
+
+      // If no Indonesian voices found, also include English as fallback
+      const filtered =
+        idVoices.length > 0
+          ? idVoices
+          : all.filter(
+              (v) => v.lang.startsWith("id") || v.lang.startsWith("en")
+            );
+
       setVoices(filtered);
 
-      // Auto-select: prefer Indonesian neural voice
+      // Auto-select first Indonesian voice if not already selected
       if (!voiceRef.current) {
-        const idVoice = filtered.find((v) => v.lang.startsWith("id"));
-        const enVoice = filtered.find(
-          (v) => v.lang.startsWith("en") && v.localService
-        );
-        const pick = idVoice || enVoice || filtered[0] || null;
+        const pick = filtered[0] || null;
         setSelectedVoice(pick);
         voiceRef.current = pick;
       }
@@ -114,6 +119,7 @@ export function useTTS(): UseTTSReturn {
       if (secIdx >= sections.length) {
         speechSynthesis.cancel();
         playingRef.current = false;
+        pausedRef.current = false;
         setIsPlaying(false);
         setIsPaused(false);
         setActiveLineIndex(null);
@@ -150,14 +156,21 @@ export function useTTS(): UseTTSReturn {
       utt.rate = speedRef.current;
 
       utt.onend = () => {
-        if (!playingRef.current) return;
+        // CRITICAL: Don't advance if we're paused or stopped
+        if (!playingRef.current || pausedRef.current) return;
         speakBlock(secIdx, blkIdx + 1);
       };
 
       utt.onerror = (e) => {
-        if (e.error === "interrupted" || e.error === "canceled") return;
+        if (
+          e.error === "interrupted" ||
+          e.error === "canceled"
+        )
+          return;
         console.error("[TTS] Utterance error:", e.error);
-        if (playingRef.current) speakBlock(secIdx, blkIdx + 1);
+        if (playingRef.current && !pausedRef.current) {
+          speakBlock(secIdx, blkIdx + 1);
+        }
       };
 
       speechSynthesis.speak(utt);
@@ -172,6 +185,7 @@ export function useTTS(): UseTTSReturn {
       if (typeof window === "undefined" || !window.speechSynthesis) return;
       speechSynthesis.cancel();
       playingRef.current = true;
+      pausedRef.current = false;
       setIsPlaying(true);
       setIsPaused(false);
       speakBlock(fromSectionIndex, 0);
@@ -181,22 +195,26 @@ export function useTTS(): UseTTSReturn {
 
   const pause = useCallback(() => {
     if (!playingRef.current) return;
-    // Chrome bug workaround: cancel instead of pause, save position
+    // Set pausedRef BEFORE cancel so onend doesn't advance
+    pausedRef.current = true;
     speechSynthesis.cancel();
     setIsPaused(true);
     // playingRef stays true — we're still in a session
+    // sectionIdxRef and blockIdxRef retain the current position
   }, []);
 
   const resume = useCallback(() => {
-    if (!playingRef.current || !isPaused) return;
+    if (!playingRef.current) return;
+    pausedRef.current = false;
     setIsPaused(false);
-    // Re-create from saved position
+    // Re-create from the EXACT saved position
     speakBlock(sectionIdxRef.current, blockIdxRef.current);
-  }, [isPaused, speakBlock]);
+  }, [speakBlock]);
 
   const stop = useCallback(() => {
-    speechSynthesis.cancel();
+    pausedRef.current = false;
     playingRef.current = false;
+    speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
     setActiveLineIndex(null);
@@ -207,6 +225,7 @@ export function useTTS(): UseTTSReturn {
   const nextSection = useCallback(() => {
     const next = sectionIdxRef.current + 1;
     if (next >= sectionsRef.current.length) return;
+    pausedRef.current = false;
     speechSynthesis.cancel();
     speakBlock(next, 0);
   }, [speakBlock]);
@@ -214,6 +233,7 @@ export function useTTS(): UseTTSReturn {
   const prevSection = useCallback(() => {
     const prev = sectionIdxRef.current - 1;
     if (prev < 0) return;
+    pausedRef.current = false;
     speechSynthesis.cancel();
     speakBlock(prev, 0);
   }, [speakBlock]);
@@ -223,26 +243,28 @@ export function useTTS(): UseTTSReturn {
       setSpeedState(newSpeed);
       speedRef.current = newSpeed;
       localStorage.setItem(SPEED_KEY, String(newSpeed));
-      // If currently playing, restart current block with new speed
-      if (playingRef.current && !isPaused) {
+      // If currently playing (not paused), restart current block with new speed
+      if (playingRef.current && !pausedRef.current) {
         speechSynthesis.cancel();
+        pausedRef.current = false;
         speakBlock(sectionIdxRef.current, blockIdxRef.current);
       }
     },
-    [isPaused, speakBlock]
+    [speakBlock]
   );
 
   const setVoice = useCallback(
     (voice: SpeechSynthesisVoice) => {
       setSelectedVoice(voice);
       voiceRef.current = voice;
-      // If currently playing, restart current block with new voice
-      if (playingRef.current && !isPaused) {
+      // If currently playing (not paused), restart current block with new voice
+      if (playingRef.current && !pausedRef.current) {
         speechSynthesis.cancel();
+        pausedRef.current = false;
         speakBlock(sectionIdxRef.current, blockIdxRef.current);
       }
     },
-    [isPaused, speakBlock]
+    [speakBlock]
   );
 
   const setSections = useCallback((sections: TTSSection[]) => {
@@ -252,8 +274,9 @@ export function useTTS(): UseTTSReturn {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      speechSynthesis.cancel();
+      pausedRef.current = false;
       playingRef.current = false;
+      speechSynthesis.cancel();
     };
   }, []);
 
