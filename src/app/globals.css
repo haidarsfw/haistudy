@@ -856,6 +856,7 @@ html[data-font="poppins"] body {
 }
 
 .tts-active-line {
+  position: relative;
   background: oklch(from var(--primary) l c h / 0.08) !important;
   border-left: 2px solid oklch(from var(--primary) l c h / 0.5);
   padding-left: 8px;

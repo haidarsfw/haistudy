@@ -22,6 +22,7 @@ export interface UseTTSReturn {
   // State
   isPlaying: boolean;
   isPaused: boolean;
+  isFinished: boolean;
   currentSectionIndex: number;
   currentBlockIndex: number;
   totalSections: number;
@@ -30,6 +31,7 @@ export interface UseTTSReturn {
   availableVoices: SpeechSynthesisVoice[];
   selectedVoice: SpeechSynthesisVoice | null;
   speed: number;
+  supported: boolean;
 
   // Actions
   play: (fromSectionIndex?: number) => void;
@@ -46,6 +48,7 @@ export interface UseTTSReturn {
 export function useTTS(): UseTTSReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
@@ -53,15 +56,24 @@ export function useTTS(): UseTTSReturn {
   const [selectedVoice, setSelectedVoice] =
     useState<SpeechSynthesisVoice | null>(null);
   const [speed, setSpeedState] = useState(1);
+  const [totalSections, setTotalSections] = useState(0);
+  const [supported, setSupported] = useState(false);
 
   // Refs for stable access in callbacks
   const sectionsRef = useRef<TTSSection[]>([]);
   const sectionIdxRef = useRef(0);
   const blockIdxRef = useRef(0);
   const playingRef = useRef(false);
-  const pausedRef = useRef(false); // NEW: prevents onend from advancing when paused
+  const pausedRef = useRef(false);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const speedRef = useRef(1);
+
+  // Check browser support on mount
+  useEffect(() => {
+    setSupported(
+      typeof window !== "undefined" && "speechSynthesis" in window
+    );
+  }, []);
 
   // Load speed from localStorage on mount
   useEffect(() => {
@@ -130,6 +142,7 @@ export function useTTS(): UseTTSReturn {
         pausedRef.current = false;
         setIsPlaying(false);
         setIsPaused(false);
+        setIsFinished(true);
         setActiveLineIndex(null);
         setCurrentSectionIndex(0);
         setCurrentBlockIndex(0);
@@ -196,6 +209,7 @@ export function useTTS(): UseTTSReturn {
       pausedRef.current = false;
       setIsPlaying(true);
       setIsPaused(false);
+      setIsFinished(false);
       speakBlock(fromSectionIndex, 0);
     },
     [speakBlock]
@@ -225,6 +239,7 @@ export function useTTS(): UseTTSReturn {
     speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
+    setIsFinished(false);
     setActiveLineIndex(null);
     setCurrentSectionIndex(0);
     setCurrentBlockIndex(0);
@@ -277,6 +292,8 @@ export function useTTS(): UseTTSReturn {
 
   const setSections = useCallback((sections: TTSSection[]) => {
     sectionsRef.current = sections;
+    setTotalSections(sections.length);
+    setIsFinished(false);
   }, []);
 
   // Cleanup on unmount
@@ -284,22 +301,26 @@ export function useTTS(): UseTTSReturn {
     return () => {
       pausedRef.current = false;
       playingRef.current = false;
-      speechSynthesis.cancel();
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        speechSynthesis.cancel();
+      }
     };
   }, []);
 
   return {
     isPlaying,
     isPaused,
+    isFinished,
     currentSectionIndex,
     currentBlockIndex,
-    totalSections: sectionsRef.current.length,
+    totalSections,
     currentSectionTitle:
       sectionsRef.current[currentSectionIndex]?.title || "",
     activeLineIndex,
     availableVoices: voices,
     selectedVoice,
     speed,
+    supported,
     play,
     pause,
     resume,

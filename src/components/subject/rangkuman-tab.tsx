@@ -71,7 +71,15 @@ export function RangkumanTab({
 
   // ── TTS: auto-scroll + highlight active line ──
   useEffect(() => {
-    if (tts.activeLineIndex === null) return;
+    if (tts.activeLineIndex === null) {
+      // Clear all highlights when no active line
+      [contentRef.current, fullscreenContentRef.current].forEach((c) =>
+        c
+          ?.querySelectorAll(".tts-active-line")
+          .forEach((el) => el.classList.remove("tts-active-line"))
+      );
+      return;
+    }
 
     // Find the active element in both normal and fullscreen views
     const containers = [contentRef.current, fullscreenContentRef.current];
@@ -93,20 +101,24 @@ export function RangkumanTab({
         el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
-
-    return () => {
-      // Cleanup highlights when line changes
-      for (const container of containers) {
-        container
-          ?.querySelectorAll(".tts-active-line")
-          .forEach((el) => el.classList.remove("tts-active-line"));
-      }
-    };
   }, [tts.activeLineIndex]);
+
+  // ── TTS: auto-close when playback finishes naturally ──
+  useEffect(() => {
+    if (tts.isFinished && ttsActive) {
+      setTtsActive(false);
+      // Clear all highlights
+      [contentRef.current, fullscreenContentRef.current].forEach((c) =>
+        c
+          ?.querySelectorAll(".tts-active-line")
+          .forEach((el) => el.classList.remove("tts-active-line"))
+      );
+    }
+  }, [tts.isFinished, ttsActive]);
 
   // ── TTS: stop when module changes ──
   useEffect(() => {
-    if (tts.isPlaying) {
+    if (tts.isPlaying || ttsActive) {
       tts.stop();
       setTtsActive(false);
     }
@@ -116,6 +128,7 @@ export function RangkumanTab({
   // ── TTS: cleanup on unmount ──
   useEffect(() => {
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       tts.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,8 +138,7 @@ export function RangkumanTab({
   const handleStartTTS = useCallback(() => {
     if (!selectedModule || !rangkumanData?.[selectedModule]) return;
 
-    // Check browser support
-    if (typeof window === "undefined" || !window.speechSynthesis) {
+    if (!tts.supported) {
       alert("Browser Anda tidak mendukung Text-to-Speech.");
       return;
     }
@@ -137,11 +149,11 @@ export function RangkumanTab({
     tts.setSections(sections);
     setTtsActive(true);
 
-    // Small delay to let setSections propagate
-    requestAnimationFrame(() => {
+    // Small delay to let setSections propagate via state update
+    setTimeout(() => {
       tts.play(0);
-    });
-  }, [selectedModule, rangkumanData, tts]);
+    }, 50);
+  }, [selectedModule, rangkumanData, tts.supported, tts.setSections, tts.play]);
 
   const handleCloseTTS = useCallback(() => {
     tts.stop();
@@ -152,7 +164,7 @@ export function RangkumanTab({
         ?.querySelectorAll(".tts-active-line")
         .forEach((el) => el.classList.remove("tts-active-line"))
     );
-  }, [tts]);
+  }, [tts.stop]);
 
   // Highlight + scroll to matched text from search
   const applyHighlight = useCallback(() => {
@@ -265,10 +277,6 @@ export function RangkumanTab({
     if (img?.src) setLightboxSrc(img.src);
   }, []);
 
-  // Check if TTS is supported
-  const ttsSupported =
-    typeof window !== "undefined" && "speechSynthesis" in window;
-
   return (
     <div className="flex flex-col gap-3 py-4">
       {/* Controls */}
@@ -316,8 +324,8 @@ export function RangkumanTab({
           </button>
           <div className="w-px bg-border mx-0.5" />
 
-          {/* TTS button */}
-          {ttsSupported && (
+          {/* TTS button — uses state-based supported check (SSR safe) */}
+          {tts.supported && (
             <button
               onClick={ttsActive ? handleCloseTTS : handleStartTTS}
               className={`rounded-md p-1.5 transition-colors ${
@@ -429,7 +437,7 @@ export function RangkumanTab({
                 <div className="w-px h-4 bg-current/15 mx-1" />
 
                 {/* TTS button in fullscreen */}
-                {ttsSupported && (
+                {tts.supported && (
                   <button
                     onClick={ttsActive ? handleCloseTTS : handleStartTTS}
                     className={`rounded-md p-1.5 transition-colors ${
