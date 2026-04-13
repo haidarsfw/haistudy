@@ -116,6 +116,16 @@ export function RangkumanTab({
     }
   }, [tts.isFinished, ttsActive]);
 
+  // ── TTS: toggle body class so floating buttons shift up ──
+  useEffect(() => {
+    if (ttsActive) {
+      document.documentElement.classList.add("tts-bar-open");
+    } else {
+      document.documentElement.classList.remove("tts-bar-open");
+    }
+    return () => document.documentElement.classList.remove("tts-bar-open");
+  }, [ttsActive]);
+
   // ── TTS: stop when module changes ──
   useEffect(() => {
     if (tts.isPlaying || ttsActive) {

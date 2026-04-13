@@ -880,3 +880,10 @@ html[data-font="poppins"] body {
   animation: tts-pulse 1.5s ease-in-out infinite;
 }
 
+/* ── Shift floating buttons up when TTS bar is visible ── */
+
+html.tts-bar-open .tts-shift-target {
+  transform: translateY(-3rem);
+  transition: transform 0.3s ease;
+}
+

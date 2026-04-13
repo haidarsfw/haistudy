@@ -16,7 +16,7 @@ export function VoiceTrigger({ onClick }: VoiceTriggerProps) {
       onClick={onClick}
       size="icon"
       variant="outline"
-      className="fixed bottom-20 right-32 z-40 h-12 w-12 rounded-full border-primary/30 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground sm:bottom-6 sm:right-34"
+      className="tts-shift-target fixed bottom-20 right-32 z-40 h-12 w-12 rounded-full border-primary/30 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground sm:bottom-6 sm:right-34"
     >
       <Mic className="h-5 w-5" />
 
