@@ -243,7 +243,8 @@ export function parseRangkuman(content: string): React.ReactNode {
         elements.push(
           <h2
             key={i}
-            className="font-heading text-xl font-bold mt-6 mb-2 first:mt-0"
+            data-tts-line={i}
+            className="font-heading text-xl font-bold mt-6 mb-2 first:mt-0 transition-colors duration-300"
           >
             {parsed.content}
           </h2>
@@ -253,7 +254,8 @@ export function parseRangkuman(content: string): React.ReactNode {
         elements.push(
           <h3
             key={i}
-            className="font-heading text-lg font-semibold mt-4 mb-1.5"
+            data-tts-line={i}
+            className="font-heading text-lg font-semibold mt-4 mb-1.5 transition-colors duration-300"
           >
             {parsed.content}
           </h3>
@@ -261,14 +263,22 @@ export function parseRangkuman(content: string): React.ReactNode {
         break;
       case "h3":
         elements.push(
-          <h4 key={i} className="font-heading text-base font-medium mt-3 mb-1">
+          <h4
+            key={i}
+            data-tts-line={i}
+            className="font-heading text-base font-medium mt-3 mb-1 transition-colors duration-300"
+          >
             {parsed.content}
           </h4>
         );
         break;
       case "bullet":
         elements.push(
-          <div key={i} className="flex gap-2 my-1 pl-2">
+          <div
+            key={i}
+            data-tts-line={i}
+            className="flex gap-2 my-1 pl-2 transition-colors duration-300 rounded"
+          >
             <span className="text-primary mt-1.5 shrink-0">•</span>
             <span className="text-sm leading-relaxed">{parsed.content}</span>
           </div>
@@ -276,7 +286,7 @@ export function parseRangkuman(content: string): React.ReactNode {
         break;
       case "slide":
         elements.push(
-          <details key={i} className="my-3 overflow-hidden rounded-lg border border-border group">
+          <details key={i} data-tts-line={i} className="my-3 overflow-hidden rounded-lg border border-border group">
             <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 select-none">
               <svg className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
               {parsed.label ? parseInline(parsed.label) : "Slide"}
@@ -289,7 +299,8 @@ export function parseRangkuman(content: string): React.ReactNode {
         elements.push(
           <p
             key={i}
-            className="text-sm text-muted-foreground mt-3 italic"
+            data-tts-line={i}
+            className="text-sm text-muted-foreground mt-3 italic transition-colors duration-300"
           >
             {parsed.content}
           </p>
@@ -297,7 +308,11 @@ export function parseRangkuman(content: string): React.ReactNode {
         break;
       default:
         elements.push(
-          <p key={i} className="text-sm leading-relaxed my-1">
+          <p
+            key={i}
+            data-tts-line={i}
+            className="text-sm leading-relaxed my-1 transition-colors duration-300 rounded"
+          >
             {parsed.content}
           </p>
         );

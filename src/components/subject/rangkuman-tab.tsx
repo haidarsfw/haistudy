@@ -1,11 +1,26 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Sun, Moon, BookOpen, Maximize2, X, ChevronLeft, ChevronRight, Minus, Plus, RotateCcw } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  BookOpen,
+  Maximize2,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  RotateCcw,
+  Headphones,
+} from "lucide-react";
 import { parseRangkuman } from "@/lib/content-parser";
 import { getRangkumanBySubjectId } from "@/data/rangkuman";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useTTS } from "@/hooks/use-tts";
+import { stripForSpeech } from "@/lib/tts/strip-for-speech";
+import { TTSPlayerBar } from "./tts-player-bar";
 
 type ReadingMode = "light" | "dark" | "sepia";
 
@@ -15,17 +30,28 @@ interface RangkumanTabProps {
   highlightText?: string;
 }
 
-export function RangkumanTab({ subjectId, initialModule, highlightText }: RangkumanTabProps) {
+export function RangkumanTab({
+  subjectId,
+  initialModule,
+  highlightText,
+}: RangkumanTabProps) {
   const { dark } = useTheme();
   const { t } = useTranslation();
-  const [mode, setMode] = useState<ReadingMode>(() => dark ? "dark" : "light");
+  const [mode, setMode] = useState<ReadingMode>(() =>
+    dark ? "dark" : "light"
+  );
   const [manualOverride, setManualOverride] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<string | null>(initialModule || null);
+  const [selectedModule, setSelectedModule] = useState<string | null>(
+    initialModule || null
+  );
   const [fullscreen, setFullscreen] = useState(false);
-  const [zoom, setZoom] = useState(100); // percentage, 100 = default
+  const [zoom, setZoom] = useState(100);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [ttsActive, setTtsActive] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const fullscreenContentRef = useRef<HTMLDivElement>(null);
 
+  const tts = useTTS();
   const rangkumanData = getRangkumanBySubjectId(subjectId);
   const modules = rangkumanData ? Object.keys(rangkumanData) : [];
 
@@ -43,22 +69,111 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
     }
   }, [modules, selectedModule, initialModule]);
 
+  // ── TTS: auto-scroll + highlight active line ──
+  useEffect(() => {
+    if (tts.activeLineIndex === null) return;
+
+    // Find the active element in both normal and fullscreen views
+    const containers = [contentRef.current, fullscreenContentRef.current];
+
+    for (const container of containers) {
+      if (!container) continue;
+
+      // Remove previous highlights
+      container
+        .querySelectorAll(".tts-active-line")
+        .forEach((el) => el.classList.remove("tts-active-line"));
+
+      // Find and highlight the active element
+      const el = container.querySelector(
+        `[data-tts-line="${tts.activeLineIndex}"]`
+      );
+      if (el) {
+        el.classList.add("tts-active-line");
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    return () => {
+      // Cleanup highlights when line changes
+      for (const container of containers) {
+        container
+          ?.querySelectorAll(".tts-active-line")
+          .forEach((el) => el.classList.remove("tts-active-line"));
+      }
+    };
+  }, [tts.activeLineIndex]);
+
+  // ── TTS: stop when module changes ──
+  useEffect(() => {
+    if (tts.isPlaying) {
+      tts.stop();
+      setTtsActive(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModule]);
+
+  // ── TTS: cleanup on unmount ──
+  useEffect(() => {
+    return () => {
+      tts.stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Start TTS for current module ──
+  const handleStartTTS = useCallback(() => {
+    if (!selectedModule || !rangkumanData?.[selectedModule]) return;
+
+    // Check browser support
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      alert("Browser Anda tidak mendukung Text-to-Speech.");
+      return;
+    }
+
+    const sections = stripForSpeech(rangkumanData[selectedModule], "id");
+    if (sections.length === 0) return;
+
+    tts.setSections(sections);
+    setTtsActive(true);
+
+    // Small delay to let setSections propagate
+    requestAnimationFrame(() => {
+      tts.play(0);
+    });
+  }, [selectedModule, rangkumanData, tts]);
+
+  const handleCloseTTS = useCallback(() => {
+    tts.stop();
+    setTtsActive(false);
+    // Clean up highlights
+    [contentRef.current, fullscreenContentRef.current].forEach((c) =>
+      c
+        ?.querySelectorAll(".tts-active-line")
+        .forEach((el) => el.classList.remove("tts-active-line"))
+    );
+  }, [tts]);
+
   // Highlight + scroll to matched text from search
   const applyHighlight = useCallback(() => {
     if (!highlightText || !contentRef.current) return;
 
     const walker = document.createTreeWalker(
       contentRef.current,
-      NodeFilter.SHOW_TEXT,
+      NodeFilter.SHOW_TEXT
     );
 
     let node: Text | null;
     while ((node = walker.nextNode() as Text | null)) {
-      const idx = node.textContent?.toLowerCase().indexOf(highlightText.toLowerCase()) ?? -1;
+      const idx =
+        node.textContent
+          ?.toLowerCase()
+          .indexOf(highlightText.toLowerCase()) ?? -1;
       if (idx === -1) continue;
 
       const mark = document.createElement("mark");
-      mark.className = "bg-primary/30 rounded px-0.5 transition-colors duration-700";
+      mark.className =
+        "bg-primary/30 rounded px-0.5 transition-colors duration-700";
 
       const range = document.createRange();
       range.setStart(node, idx);
@@ -69,24 +184,26 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
 
       // Fade out after 4 seconds
       setTimeout(() => {
-        mark.className = "bg-transparent rounded px-0.5 transition-colors duration-700";
+        mark.className =
+          "bg-transparent rounded px-0.5 transition-colors duration-700";
         setTimeout(() => {
-          // Unwrap the mark element
           const parent = mark.parentNode;
           if (parent) {
-            parent.replaceChild(document.createTextNode(mark.textContent || ""), mark);
+            parent.replaceChild(
+              document.createTextNode(mark.textContent || ""),
+              mark
+            );
             parent.normalize();
           }
         }, 800);
       }, 4000);
 
-      break; // Only highlight first match
+      break;
     }
   }, [highlightText]);
 
   useEffect(() => {
     if (highlightText && selectedModule) {
-      // Wait for content to render
       const timer = setTimeout(applyHighlight, 300);
       return () => clearTimeout(timer);
     }
@@ -148,6 +265,10 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
     if (img?.src) setLightboxSrc(img.src);
   }, []);
 
+  // Check if TTS is supported
+  const ttsSupported =
+    typeof window !== "undefined" && "speechSynthesis" in window;
+
   return (
     <div className="flex flex-col gap-3 py-4">
       {/* Controls */}
@@ -173,7 +294,7 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
           })}
         </div>
 
-        {/* Reading mode + fullscreen */}
+        {/* Reading mode + TTS + fullscreen */}
         <div className="flex gap-1 shrink-0 ml-2">
           <button
             onClick={() => handleModeChange("light")}
@@ -194,6 +315,22 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
             <BookOpen className="h-3.5 w-3.5" />
           </button>
           <div className="w-px bg-border mx-0.5" />
+
+          {/* TTS button */}
+          {ttsSupported && (
+            <button
+              onClick={ttsActive ? handleCloseTTS : handleStartTTS}
+              className={`rounded-md p-1.5 transition-colors ${
+                ttsActive
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title={ttsActive ? "Stop TTS" : "Dengarkan Rangkuman"}
+            >
+              <Headphones className="h-3.5 w-3.5" />
+            </button>
+          )}
+
           <button
             onClick={() => setFullscreen(true)}
             className="rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
@@ -216,14 +353,22 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
         </div>
       )}
 
+      {/* TTS Player Bar */}
+      {ttsActive && <TTSPlayerBar tts={tts} onClose={handleCloseTTS} />}
+
       {/* Fullscreen modal */}
       {fullscreen && selectedModule && rangkumanData[selectedModule] && (
         <div className="fixed inset-0 z-[100] flex flex-col">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setFullscreen(false)} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setFullscreen(false)}
+          />
 
           {/* Modal */}
-          <div className={`relative z-10 flex flex-col h-full w-full ${modeStyles[mode]}`}>
+          <div
+            className={`relative z-10 flex flex-col h-full w-full ${modeStyles[mode]}`}
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 border-b border-current/10 shrink-0">
               {/* Left: module nav */}
@@ -238,13 +383,18 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <span className="text-sm font-medium truncate max-w-[140px] sm:max-w-none">{selectedModule}</span>
+                <span className="text-sm font-medium truncate max-w-[140px] sm:max-w-none">
+                  {selectedModule}
+                </span>
                 <button
                   onClick={() => {
                     const idx = modules.indexOf(selectedModule);
-                    if (idx < modules.length - 1) setSelectedModule(modules[idx + 1]);
+                    if (idx < modules.length - 1)
+                      setSelectedModule(modules[idx + 1]);
                   }}
-                  disabled={modules.indexOf(selectedModule) === modules.length - 1}
+                  disabled={
+                    modules.indexOf(selectedModule) === modules.length - 1
+                  }
                   className="rounded-md p-1 hover:bg-current/10 disabled:opacity-30 transition-colors"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -278,6 +428,23 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
 
                 <div className="w-px h-4 bg-current/15 mx-1" />
 
+                {/* TTS button in fullscreen */}
+                {ttsSupported && (
+                  <button
+                    onClick={ttsActive ? handleCloseTTS : handleStartTTS}
+                    className={`rounded-md p-1.5 transition-colors ${
+                      ttsActive
+                        ? "bg-primary/15 text-primary"
+                        : "opacity-60 hover:opacity-100"
+                    }`}
+                    title={ttsActive ? "Stop TTS" : "Dengarkan"}
+                  >
+                    <Headphones className="h-3.5 w-3.5" />
+                  </button>
+                )}
+
+                <div className="w-px h-4 bg-current/15 mx-1" />
+
                 {/* Zoom */}
                 <button
                   onClick={() => setZoom((z) => Math.max(70, z - 10))}
@@ -287,7 +454,9 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
                 >
                   <Minus className="h-3.5 w-3.5" />
                 </button>
-                <span className="text-[11px] font-medium tabular-nums w-8 text-center">{zoom}%</span>
+                <span className="text-[11px] font-medium tabular-nums w-8 text-center">
+                  {zoom}%
+                </span>
                 <button
                   onClick={() => setZoom((z) => Math.min(150, z + 10))}
                   disabled={zoom >= 150}
@@ -318,6 +487,7 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
 
             {/* Scrollable content */}
             <div
+              ref={fullscreenContentRef}
               className="flex-1 overflow-y-auto overscroll-contain copy-protected px-4 sm:px-8 md:px-16 lg:px-32 py-6 [&_img]:cursor-zoom-in"
               onContextMenu={(e) => e.preventDefault()}
               onClick={handleContentClick}
@@ -333,6 +503,9 @@ export function RangkumanTab({ subjectId, initialModule, highlightText }: Rangku
               </div>
             </div>
           </div>
+
+          {/* TTS Player in fullscreen */}
+          {ttsActive && <TTSPlayerBar tts={tts} onClose={handleCloseTTS} />}
         </div>
       )}
 

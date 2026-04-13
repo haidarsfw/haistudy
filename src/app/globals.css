@@ -845,3 +845,37 @@ html[data-font="poppins"] body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ============================================
+   TTS Active Highlight
+   ============================================ */
+
+@keyframes tts-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.tts-active-line {
+  background: oklch(from var(--primary) l c h / 0.08) !important;
+  border-left: 2px solid oklch(from var(--primary) l c h / 0.5);
+  padding-left: 8px;
+  border-radius: 4px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.dark .tts-active-line {
+  background: oklch(from var(--primary) l c h / 0.12) !important;
+  border-left-color: oklch(from var(--primary) l c h / 0.6);
+}
+
+.tts-active-line::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--primary);
+  animation: tts-pulse 1.5s ease-in-out infinite;
+}
+
