@@ -85,7 +85,9 @@ export function TTSPlayerBar({ tts, onClose, inline }: TTSPlayerBarProps) {
       </div>
 
       {/* Player body */}
-      <div className="bg-background/80 backdrop-blur-xl border-t border-border/50 px-3 sm:px-4 py-2">
+      <div className={`border-t border-border/50 px-3 sm:px-4 py-2 ${
+        inline ? "bg-background" : "bg-background/80 backdrop-blur-xl"
+      }`}>
         <div className="max-w-4xl mx-auto flex items-center gap-2 sm:gap-3">
           {/* ── Play controls ── */}
           <div className="flex items-center gap-0.5 shrink-0">
