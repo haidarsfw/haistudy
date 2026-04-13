@@ -206,6 +206,7 @@ export function useSettings() {
   );
 
   // Cross-instance sync: listen for settings changes from other useSettings() instances
+  // Uses queueMicrotask to avoid setState during another component's render phase
   useEffect(() => {
     const handler = (e: Event) => {
       if (selfTriggeredRef.current) {
@@ -213,8 +214,10 @@ export function useSettings() {
         return; // Skip - this instance originated the change
       }
       const incoming = (e as CustomEvent).detail as UserSettings;
-      setSettingsState(incoming);
-      applyToTheme(incoming);
+      queueMicrotask(() => {
+        setSettingsState(incoming);
+        applyToTheme(incoming);
+      });
     };
     window.addEventListener(SETTINGS_SYNC_EVENT, handler);
     return () => window.removeEventListener(SETTINGS_SYNC_EVENT, handler);

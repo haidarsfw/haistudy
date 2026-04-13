@@ -68,7 +68,7 @@ export function ExamCountdownMini() {
       variants={staggerItem}
       className={`rounded-xl border bg-card p-4 transition-colors light-card-shadow ${
         isUrgent ? "border-destructive/30" : "border-border"
-      } flex flex-col justify-center`}
+      } flex flex-col`}
     >
       <div className="flex items-center gap-2 mb-2">
         {isUrgent ? (
@@ -95,27 +95,29 @@ export function ExamCountdownMini() {
         )}
       </div>
 
-      {exam?.examDate && countdown ? (
-        <>
-          <p className="text-sm font-semibold truncate">{subject}</p>
-          <p
-            className={`mt-1 text-base font-bold tabular-nums leading-snug ${
-              isUrgent ? "text-destructive" : "text-foreground"
-            }`}
-          >
-            {countdown}
-          </p>
-          {exam.examNote?.includes("Prediksi") && (
-            <p className="mt-1 text-[10px] text-amber-500/80">
-              * Prediksi, bukan jadwal resmi
+      <div className="flex-1 flex flex-col justify-center">
+        {exam?.examDate && countdown ? (
+          <>
+            <p className="text-sm font-semibold truncate">{subject}</p>
+            <p
+              className={`mt-1 text-base font-bold tabular-nums leading-snug ${
+                isUrgent ? "text-destructive" : "text-foreground"
+              }`}
+            >
+              {countdown}
             </p>
-          )}
-        </>
-      ) : (
-        <p className="text-xs text-muted-foreground">
-          {exam ? t("dashboard.exam_not_announced") : t("dashboard.all_exams_passed")}
-        </p>
-      )}
+            {exam.examNote?.includes("Prediksi") && (
+              <p className="mt-1 text-[10px] text-amber-500/80">
+                * Prediksi, bukan jadwal resmi
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {exam ? t("dashboard.exam_not_announced") : t("dashboard.all_exams_passed")}
+          </p>
+        )}
+      </div>
     </motion.div>
   );
 }

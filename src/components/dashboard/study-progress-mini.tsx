@@ -104,7 +104,7 @@ export function StudyProgressMini() {
   return (
     <motion.div
       variants={staggerItem}
-      className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col justify-center"
+      className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col"
     >
       <div className="flex items-center gap-2 mb-2">
         <TrendingUp className="h-4 w-4 text-primary" />
@@ -112,7 +112,7 @@ export function StudyProgressMini() {
           {t("dashboard.progress")}
         </span>
       </div>
-      <div className="flex items-center justify-center py-1">
+      <div className="flex-1 flex items-center justify-center py-1">
         <ProgressRing percent={progress} />
       </div>
     </motion.div>

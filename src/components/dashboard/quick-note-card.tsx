@@ -84,7 +84,7 @@ export function QuickNoteCard() {
   return (
     <motion.div
       variants={staggerItem}
-      className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col justify-center"
+      className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col"
     >
       <div className="flex items-center gap-2 mb-2">
         <StickyNote className="h-4 w-4 text-amber-500" />
@@ -97,12 +97,14 @@ export function QuickNoteCard() {
           <CloudOff className="h-3 w-3 text-muted-foreground/50" />
         )}
       </div>
-      <textarea
-        value={note}
-        onChange={(e) => handleChange(e.target.value)}
-        placeholder={t("dashboard.quick_note_placeholder")}
-        className="w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground/50 focus:outline-none h-[60px]"
-      />
+      <div className="flex-1 flex flex-col justify-center">
+        <textarea
+          value={note}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder={t("dashboard.quick_note_placeholder")}
+          className="w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground/50 focus:outline-none h-[60px]"
+        />
+      </div>
     </motion.div>
   );
 }
