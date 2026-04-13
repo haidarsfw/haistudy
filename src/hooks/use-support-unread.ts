@@ -71,13 +71,10 @@ export function useSupportUnread() {
     }
   }, [session?.licenseKey, session?.isAdmin, getLastRead]);
 
-  // Initial fetch + poll every 120s
+  // Initial fetch on mount only — Realtime handles subsequent updates
   useEffect(() => {
     if (!session?.licenseKey) return;
-
     fetchUnread();
-    const interval = setInterval(fetchUnread, 120_000);
-    return () => clearInterval(interval);
   }, [session?.licenseKey, fetchUnread]);
 
   // Listen for realtime support messages to update count

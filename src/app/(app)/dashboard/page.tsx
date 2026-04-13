@@ -30,7 +30,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Row 2: 4 compact stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <ExamCountdownMini />
           <StudyProgressMini />
           <QuickNoteCard />

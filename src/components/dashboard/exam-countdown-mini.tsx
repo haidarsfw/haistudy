@@ -68,7 +68,7 @@ export function ExamCountdownMini() {
       variants={staggerItem}
       className={`rounded-xl border bg-card p-4 transition-colors light-card-shadow ${
         isUrgent ? "border-destructive/30" : "border-border"
-      }`}
+      } flex flex-col justify-center`}
     >
       <div className="flex items-center gap-2 mb-2">
         {isUrgent ? (

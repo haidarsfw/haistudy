@@ -104,7 +104,7 @@ export function StudyProgressMini() {
   return (
     <motion.div
       variants={staggerItem}
-      className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow"
+      className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col justify-center"
     >
       <div className="flex items-center gap-2 mb-2">
         <TrendingUp className="h-4 w-4 text-primary" />
