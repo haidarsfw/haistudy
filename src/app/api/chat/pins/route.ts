@@ -21,7 +21,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("pinned_messages")
       .select("message_id")
-      .order("created_at", { ascending: false });
+      .order("pinned_at", { ascending: false });
 
     if (error) throw error;
     const pinnedIds = (data || []).map(

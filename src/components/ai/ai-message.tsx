@@ -38,15 +38,17 @@ function renderKatex(latex: string, key: string, display = false): ReactNode {
 }
 
 /**
- * Render strategy: extract math into placeholders → parse markdown → restore math.
- * This prevents math delimiters from breaking markdown patterns.
+ * Render strategy: extract math into placeholders → classify lines (heading / bullet /
+ * ordered / quote / paragraph) → restore math. This prevents math delimiters from
+ * breaking markdown patterns AND gives block-level elements their own <div> so lists
+ * and headings render as proper rows, not prefixed by literal `*` or `##` tokens.
  */
 function renderMarkdown(text: string): ReactNode[] {
   const mathMap = new Map<string, { latex: string; display: boolean }>();
   let counter = 0;
 
-  // 1. Replace all math with placeholders
-  let processed = text
+  // 1. Replace all math with placeholders (unchanged)
+  const processed = text
     .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => {
       const id = `__MATH_${counter++}__`;
       mathMap.set(id, { latex, display: true });
@@ -68,35 +70,88 @@ function renderMarkdown(text: string): ReactNode[] {
       return id;
     });
 
-  // 2. Parse lines with markdown
+  // 2. Classify & render each line
   const lines = processed.split("\n");
   const elements: ReactNode[] = [];
 
   for (let i = 0; i < lines.length; i++) {
-    if (i > 0) elements.push(<br key={`br-${i}`} />);
-    const line = lines[i];
+    const rawLine = lines[i].trimEnd();
 
-    // Headings
-    const h3 = line.match(/^###\s+(.+)$/);
-    if (h3) {
-      elements.push(
-        <strong key={`h-${i}`} className="font-bold text-[13px]">
-          {parseMarkdownInline(h3[1], `h${i}`, mathMap)}
-        </strong>
-      );
-      continue;
-    }
-    const h2 = line.match(/^##\s+(.+)$/);
-    if (h2) {
-      elements.push(
-        <strong key={`h-${i}`} className="font-bold text-[13px]">
-          {parseMarkdownInline(h2[1], `h${i}`, mathMap)}
-        </strong>
-      );
+    // Blank line → small vertical spacer
+    if (rawLine.trim() === "") {
+      elements.push(<div key={`sp-${i}`} className="h-2" />);
       continue;
     }
 
-    elements.push(...parseMarkdownInline(line, `l${i}`, mathMap));
+    // Heading: #, ##, ### (up to 3 leading spaces allowed)
+    const heading = rawLine.match(/^\s{0,3}(#{1,3})\s+(.+)$/);
+    if (heading) {
+      const level = heading[1].length;
+      const content = heading[2];
+      const sizeClass =
+        level === 1
+          ? "font-bold text-[15px] mt-1"
+          : level === 2
+          ? "font-bold text-[14px] mt-1"
+          : "font-semibold text-[13px]";
+      elements.push(
+        <div key={`h-${i}`} className={sizeClass}>
+          {parseMarkdownInline(content, `h${i}`, mathMap)}
+        </div>
+      );
+      continue;
+    }
+
+    // Unordered list bullet: *, -, or • at line start
+    const bullet = rawLine.match(/^\s{0,3}[*\-•]\s+(.+)$/);
+    if (bullet) {
+      elements.push(
+        <div key={`b-${i}`} className="flex gap-2 pl-1">
+          <span className="shrink-0 select-none text-muted-foreground">•</span>
+          <div className="flex-1">
+            {parseMarkdownInline(bullet[1], `b${i}`, mathMap)}
+          </div>
+        </div>
+      );
+      continue;
+    }
+
+    // Ordered list item: "1." "2)" etc.
+    const ordered = rawLine.match(/^\s{0,3}(\d+)[.)]\s+(.+)$/);
+    if (ordered) {
+      elements.push(
+        <div key={`o-${i}`} className="flex gap-2 pl-1">
+          <span className="shrink-0 select-none text-muted-foreground tabular-nums">
+            {ordered[1]}.
+          </span>
+          <div className="flex-1">
+            {parseMarkdownInline(ordered[2], `o${i}`, mathMap)}
+          </div>
+        </div>
+      );
+      continue;
+    }
+
+    // Blockquote: "> text"
+    const quote = rawLine.match(/^\s{0,3}>\s*(.*)$/);
+    if (quote) {
+      elements.push(
+        <div
+          key={`q-${i}`}
+          className="border-l-2 border-border pl-3 text-muted-foreground"
+        >
+          {parseMarkdownInline(quote[1], `q${i}`, mathMap)}
+        </div>
+      );
+      continue;
+    }
+
+    // Default: paragraph-ish line
+    elements.push(
+      <div key={`l-${i}`}>
+        {parseMarkdownInline(rawLine, `l${i}`, mathMap)}
+      </div>
+    );
   }
 
   return elements;
@@ -121,28 +176,57 @@ function expandMath(
   return result;
 }
 
-/** Parse **bold**, *italic*, `code` — with math placeholders resolved */
+/** Parse **bold**, *italic*, `code`, ~~strike~~ — with math placeholders resolved */
 function parseMarkdownInline(
   text: string,
   keyPrefix: string,
   mathMap: Map<string, { latex: string; display: boolean }>
 ): ReactNode[] {
   const result: ReactNode[] = [];
-  const regex = /(\*\*(.+?)\*\*|(?<=\s|^)\*([^*\s][^*]*?)\*(?=[\s.,;:!?)}\]]|$)|`([^`]+)`)/g;
+  // Matches: **bold**, *italic* (lookarounds reject `**` and word-inside), `code`, ~~strike~~
+  const regex =
+    /(\*\*([^*\n]+?)\*\*|(?<![*\w])\*([^*\n]+?)\*(?![*\w])|`([^`\n]+?)`|~~([^~\n]+?)~~)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let idx = 0;
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      result.push(...expandMath(text.slice(lastIndex, match.index), mathMap, `${keyPrefix}-t${idx}`));
+      result.push(
+        ...expandMath(
+          text.slice(lastIndex, match.index),
+          mathMap,
+          `${keyPrefix}-t${idx}`
+        )
+      );
     }
     if (match[2]) {
-      result.push(<strong key={`${keyPrefix}-b${idx}`} className="font-semibold">{expandMath(match[2], mathMap, `${keyPrefix}-b${idx}`)}</strong>);
+      result.push(
+        <strong key={`${keyPrefix}-b${idx}`} className="font-semibold">
+          {expandMath(match[2], mathMap, `${keyPrefix}-b${idx}`)}
+        </strong>
+      );
     } else if (match[3]) {
-      result.push(<em key={`${keyPrefix}-i${idx}`}>{expandMath(match[3], mathMap, `${keyPrefix}-i${idx}`)}</em>);
+      result.push(
+        <em key={`${keyPrefix}-i${idx}`}>
+          {expandMath(match[3], mathMap, `${keyPrefix}-i${idx}`)}
+        </em>
+      );
     } else if (match[4]) {
-      result.push(<code key={`${keyPrefix}-c${idx}`} className="rounded bg-background/50 px-1 py-0.5 text-xs">{match[4]}</code>);
+      result.push(
+        <code
+          key={`${keyPrefix}-c${idx}`}
+          className="rounded bg-background/50 px-1 py-0.5 text-xs"
+        >
+          {match[4]}
+        </code>
+      );
+    } else if (match[5]) {
+      result.push(
+        <s key={`${keyPrefix}-s${idx}`}>
+          {expandMath(match[5], mathMap, `${keyPrefix}-s${idx}`)}
+        </s>
+      );
     }
     lastIndex = match.index + match[0].length;
     idx++;
@@ -228,9 +312,7 @@ export const AiMessageBubble = memo(function AiMessageBubble({
             <p className="whitespace-pre-wrap">{message.content}</p>
           </div>
         ) : message.content ? (
-          <div className="space-y-1 whitespace-pre-wrap">
-            {renderMarkdown(message.content)}
-          </div>
+          <div className="space-y-0.5">{renderMarkdown(message.content)}</div>
         ) : isStreaming ? (
           <div className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:0ms]" />
