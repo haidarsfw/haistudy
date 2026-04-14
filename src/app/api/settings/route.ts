@@ -3,8 +3,27 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import type { UserSettings, SubjectProgress } from "@/types";
+import type { UserSettings, SubjectProgress, ThemeId, FontId } from "@/types";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
+
+function mapRowToSettings(data: Record<string, unknown>): UserSettings {
+  return {
+    darkMode: (data.dark_mode as boolean) ?? DEFAULT_SETTINGS.darkMode,
+    theme: (data.theme as ThemeId) ?? DEFAULT_SETTINGS.theme,
+    font: (data.font as FontId) ?? DEFAULT_SETTINGS.font,
+    language: (data.language as "id" | "en") ?? DEFAULT_SETTINGS.language,
+    selectedClass: (data.selected_class as string) ?? "",
+    reminder: (data.reminder as UserSettings["reminder"]) ?? null,
+    hideStatus: (data.hide_status as boolean) ?? false,
+    hideStatusChangedAt: (data.hide_status_changed_at as string) ?? null,
+    darkModeSchedule: (data.dark_mode_schedule as UserSettings["darkModeSchedule"]) ?? DEFAULT_SETTINGS.darkModeSchedule,
+    progress: (data.progress as Record<string, SubjectProgress>) ?? {},
+    notes: (data.notes as Record<string, string>) ?? {},
+    recentSubjects: (data.recent_subjects as string[]) ?? [],
+    countdownDetailed: (data.countdown_detailed as boolean) ?? true,
+    streak: (data.streak as UserSettings["streak"]) ?? null,
+  };
+}
 
 // ─── Mock store ───
 const mockSettings = new Map<string, UserSettings & { updatedAt: string }>();
@@ -46,25 +65,8 @@ export async function GET(request: Request) {
       });
     }
 
-    const settings: UserSettings = {
-      darkMode: data.dark_mode ?? DEFAULT_SETTINGS.darkMode,
-      theme: data.theme ?? DEFAULT_SETTINGS.theme,
-      font: data.font ?? DEFAULT_SETTINGS.font,
-      language: data.language ?? DEFAULT_SETTINGS.language,
-      selectedClass: data.selected_class ?? "",
-      reminder: data.reminder ?? null,
-      hideStatus: data.hide_status ?? false,
-      hideStatusChangedAt: data.hide_status_changed_at ?? null,
-      darkModeSchedule: data.dark_mode_schedule ?? DEFAULT_SETTINGS.darkModeSchedule,
-      progress: data.progress ?? {},
-      notes: data.notes ?? {},
-      recentSubjects: data.recent_subjects ?? [],
-      countdownDetailed: data.countdown_detailed ?? true,
-      streak: data.streak ?? null,
-    };
-
     return NextResponse.json({
-      settings,
+      settings: mapRowToSettings(data),
       updatedAt: data.updated_at,
     });
   } catch (error) {
@@ -90,6 +92,13 @@ export async function PUT(request: Request) {
       );
     }
 
+    // Guard against unbounded JSON payloads
+    const progressStr = JSON.stringify(settings.progress || {});
+    const notesStr = JSON.stringify(settings.notes || {});
+    if (progressStr.length > 100_000 || notesStr.length > 100_000) {
+      return NextResponse.json({ error: "Data too large" }, { status: 413 });
+    }
+
     const now = new Date().toISOString();
 
     if (!isSupabaseServerConfigured) {
@@ -111,11 +120,18 @@ export async function PUT(request: Request) {
         existing?.updated_at &&
         new Date(existing.updated_at) > new Date(updatedAt)
       ) {
-        // Server is newer - skip save, return server data
+        // Server is newer - skip save, return server settings for client reconciliation
+        const { data: fullRow } = await supabase
+          .from("user_settings")
+          .select("*")
+          .eq("license_key", licenseKey)
+          .single();
+
         return NextResponse.json({
           success: false,
           conflict: true,
           serverUpdatedAt: existing.updated_at,
+          settings: fullRow ? mapRowToSettings(fullRow) : null,
         });
       }
     }

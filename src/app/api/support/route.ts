@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 
 export interface SupportMessage {
   id: string;
@@ -21,6 +22,9 @@ export async function GET(req: NextRequest) {
 
   // ─── Admin: Fetch all conversations ───
   if (fetchAll) {
+    if (!(await isAdminFromCookies())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
     if (!isSupabaseServerConfigured) {
       // Group memory store by license_key
       const grouped = new Map<string, SupportMessage[]>();
@@ -150,17 +154,37 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { licenseKey, content, isAdmin, senderName } = body;
+    const { licenseKey, content, senderName } = body;
+
+    // Trust cookies, not client-provided flags — controls rate limit + is_admin flag
+    const isAdmin = await isAdminFromCookies();
 
     if (!licenseKey || !content?.trim() || !senderName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Rate limit: 5s cooldown for non-admin messages
+    if (isSupabaseServerConfigured && !isAdmin) {
+      const supabase = createServerClient()!;
+      const { data: recent } = await supabase
+        .from("support_messages")
+        .select("created_at")
+        .eq("license_key", licenseKey)
+        .eq("is_admin", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (recent && Date.now() - new Date(recent.created_at).getTime() < 5000) {
+        return NextResponse.json({ error: "Please wait before sending another message" }, { status: 429 });
+      }
     }
 
     const message: SupportMessage = {
       id: `sup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       license_key: licenseKey,
       content: content.trim().slice(0, 2000),
-      is_admin: isAdmin || false,
+      is_admin: isAdmin,
       sender_name: senderName,
       created_at: new Date().toISOString(),
     };
@@ -195,6 +219,10 @@ export async function POST(req: NextRequest) {
 // ─── PATCH: Resolve a conversation ───
 export async function PATCH(req: NextRequest) {
   try {
+    if (!(await isAdminFromCookies())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     const body = await req.json();
     const { licenseKey, action } = body;
 

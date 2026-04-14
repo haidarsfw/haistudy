@@ -5,6 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+  :root {
+    --accent-h: 250; /* default accent hue for shadow-warm tinting */
+  }
+
   img, video, iframe {
     max-width: 100%;
     height: auto;

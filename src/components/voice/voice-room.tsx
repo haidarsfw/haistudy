@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -122,6 +123,25 @@ export function VoiceRoom({
   useEffect(() => {
     resetIdleTimer();
   }, [isMuted, isDeafened, isScreenSharing, resetIdleTimer]);
+
+  // Reset idle on global user activity (mouse, touch, keyboard, scroll)
+  useEffect(() => {
+    if (!isConnected) return;
+    const ACTIVITY_DEBOUNCE = 30_000; // Only reset every 30s to avoid excessive resets
+    let lastReset = Date.now();
+    const onActivity = () => {
+      const now = Date.now();
+      if (now - lastReset > ACTIVITY_DEBOUNCE) {
+        lastReset = now;
+        resetIdleTimer();
+      }
+    };
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "touchmove"];
+    events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, onActivity));
+    };
+  }, [isConnected, resetIdleTimer]);
 
   useEffect(() => {
     const onVisible = () => {
@@ -479,6 +499,7 @@ export function VoiceRoom({
   handleLeaveRef.current = handleLeave;
 
   return (
+    <>
     <Card className="border-primary/30">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -588,28 +609,7 @@ export function VoiceRoom({
           </button>
         )}
 
-        {/* ═══ Idle warning banner ═══ */}
-        {idleWarning && isConnected && (
-          <div className="flex items-center gap-3 rounded-xl border-2 border-dashed border-yellow-500/40 bg-yellow-500/10 p-3">
-            <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
-                Kamu sudah idle 8+ menit
-              </p>
-              <p className="text-[10px] text-yellow-600/70 dark:text-yellow-400/70">
-                Akan otomatis disconnect dalam 2 menit jika tidak ada aktivitas.
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="shrink-0 h-7 text-xs border-yellow-500/40 hover:bg-yellow-500/20"
-              onClick={resetIdleTimer}
-            >
-              Tetap di sini
-            </Button>
-          </div>
-        )}
+        {/* Idle warning popup rendered via portal below */}
 
         {/* Participants */}
         <div>
@@ -697,5 +697,33 @@ export function VoiceRoom({
         <div ref={roomRef} style={{ position: "absolute", width: "1px", height: "1px", overflow: "hidden", opacity: 0, pointerEvents: "none" }} />
       </CardContent>
     </Card>
+
+    {/* ═══ Idle warning — centered screen popup via portal ═══ */}
+    {idleWarning && isConnected && typeof document !== "undefined" && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="mx-4 flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-yellow-500/30 bg-background p-6 shadow-2xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-500/15">
+            <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
+              Kamu sudah idle 8+ menit
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Akan otomatis disconnect dalam 2 menit jika tidak ada aktivitas.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={resetIdleTimer}
+          >
+            Tetap di sini
+          </Button>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 }

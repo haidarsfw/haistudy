@@ -6,11 +6,12 @@ import { X, Download } from "lucide-react";
 
 interface MediaPreviewerProps {
   src: string | null;
+  type?: "image" | "iframe";
   alt?: string;
   onClose: () => void;
 }
 
-export function MediaPreviewer({ src, alt, onClose }: MediaPreviewerProps) {
+export function MediaPreviewer({ src, type = "image", alt, onClose }: MediaPreviewerProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -47,28 +48,49 @@ export function MediaPreviewer({ src, alt, onClose }: MediaPreviewerProps) {
             <X className="h-5 w-5" />
           </button>
 
-          {/* Download button */}
-          <a
-            href={src}
-            target="_blank"
-            rel="noopener noreferrer"
-            download
-            onClick={(e) => e.stopPropagation()}
-            className="absolute top-4 right-16 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-          >
-            <Download className="h-5 w-5" />
-          </a>
+          {type === "image" && (
+            <>
+              {/* Download button */}
+              <a
+                href={src}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-4 right-16 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              >
+                <Download className="h-5 w-5" />
+              </a>
 
-          {/* Image */}
-          <motion.img
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            src={src}
-            alt={alt || "Preview"}
-            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
+              {/* Image */}
+              <motion.img
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                src={src}
+                alt={alt || "Preview"}
+                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </>
+          )}
+
+          {type === "iframe" && (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="h-[90vh] w-[90vw] overflow-hidden rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <iframe
+                src={src}
+                className="h-full w-full border-0"
+                allowFullScreen
+                title="Media preview"
+              />
+            </motion.div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

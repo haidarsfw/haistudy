@@ -4,6 +4,13 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 
+function sanitizeContext(context: unknown): Record<string, unknown> | null {
+  if (!context) return null;
+  const str = typeof context === "string" ? context : JSON.stringify(context);
+  if (str.length <= 2000) return typeof context === "string" ? { raw: context } : context as Record<string, unknown>;
+  return { truncated: str.slice(0, 2000) };
+}
+
 // ─── Mock store ───
 const mockErrors: Array<{
   id: string;
@@ -48,10 +55,10 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
     const { error } = await supabase.from("error_logs").insert({
-      message,
-      stack: stack || null,
-      context: context || null,
-      user_agent: userAgent || null,
+      message: (message || "").slice(0, 500),
+      stack: (stack || "").slice(0, 5000),
+      context: sanitizeContext(context),
+      user_agent: (userAgent || "").slice(0, 500),
       resolved: false,
     });
 

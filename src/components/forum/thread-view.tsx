@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -25,7 +25,8 @@ import { CommentInput } from "./comment-input";
 import { CommentCard } from "./comment-card";
 import { MediaEmbed } from "./media-embed";
 import { parseForumContent } from "@/lib/content-parser";
-import type { ForumThread } from "@/types";
+import { detectMediaType } from "@/lib/media-utils";
+import type { ForumThread, Attachment } from "@/types";
 
 interface ThreadViewProps {
   thread: ForumThread;
@@ -45,10 +46,36 @@ export function ThreadView({
     thread.id
   );
   const [deviceId] = useState(() => getDeviceId());
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<"image" | "iframe">("image");
   const { t } = useTranslation();
   const isAdmin = session?.isAdmin || false;
   const isAuthor = deviceId === thread.authorId;
+
+  // Build merged attachments: prefer new attachments, fall back to legacy fields
+  const attachments = useMemo<Attachment[]>(() => {
+    if (thread.attachments && thread.attachments.length > 0) {
+      return thread.attachments;
+    }
+    const legacy: Attachment[] = [];
+    if (thread.imageUrl) {
+      legacy.push({ type: "image", url: thread.imageUrl });
+    }
+    if (thread.mediaUrl) {
+      const mt = detectMediaType(thread.mediaUrl);
+      const type = mt === "youtube" ? "youtube"
+        : mt === "google-slides" ? "google-slides"
+        : mt === "google-pdf" ? "google-pdf"
+        : "link";
+      legacy.push({ type, url: thread.mediaUrl });
+    }
+    return legacy;
+  }, [thread.attachments, thread.imageUrl, thread.mediaUrl]);
+
+  const handleExpand = (url: string, type: "image" | "iframe") => {
+    setPreviewSrc(url);
+    setPreviewType(type);
+  };
 
   return (
     <motion.div
@@ -102,21 +129,41 @@ export function ThreadView({
           <div className="mt-3 text-sm">{parseForumContent(thread.content)}</div>
         )}
 
-        {/* Image */}
-        {thread.imageUrl && (
-          <Image
-            src={thread.imageUrl}
-            alt="Thread image"
-            width={600}
-            height={320}
-            className="mt-3 max-h-80 w-auto rounded-lg object-contain cursor-pointer"
-            unoptimized
-            onClick={() => setPreviewImage(thread.imageUrl!)}
-          />
-        )}
+        {/* Attachments */}
+        {attachments.length > 0 && (
+          <div className="mt-3 space-y-3">
+            {/* Image gallery */}
+            {attachments.filter((a) => a.type === "image").length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {attachments
+                  .filter((a) => a.type === "image")
+                  .map((a, i) => (
+                    <Image
+                      key={`img-${i}`}
+                      src={a.url}
+                      alt={`Attachment ${i + 1}`}
+                      width={300}
+                      height={200}
+                      className="max-h-60 w-auto rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                      unoptimized
+                      onClick={() => handleExpand(a.url, "image")}
+                    />
+                  ))}
+              </div>
+            )}
 
-        {/* Media embed */}
-        {thread.mediaUrl && <MediaEmbed url={thread.mediaUrl} />}
+            {/* Media embeds (YouTube, Slides, PDF, Links) */}
+            {attachments
+              .filter((a) => a.type !== "image")
+              .map((a, i) => (
+                <MediaEmbed
+                  key={`media-${i}`}
+                  url={a.url}
+                  onExpand={handleExpand}
+                />
+              ))}
+          </div>
+        )}
 
         {/* Admin / author actions */}
         {(isAdmin || isAuthor) && (
@@ -201,7 +248,7 @@ export function ThreadView({
                 threadClosed={thread.closed}
                 onReply={addComment}
                 onDelete={deleteComment}
-                onImageClick={setPreviewImage}
+                onImageClick={(url) => handleExpand(url, "image")}
               />
             ))}
           </div>
@@ -217,7 +264,11 @@ export function ThreadView({
           </div>
         )}
       </div>
-      <MediaPreviewer src={previewImage} onClose={() => setPreviewImage(null)} />
+      <MediaPreviewer
+        src={previewSrc}
+        type={previewType}
+        onClose={() => setPreviewSrc(null)}
+      />
     </motion.div>
   );
 }

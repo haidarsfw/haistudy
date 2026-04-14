@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { validateAdmin } from "@/lib/auth/admin-guard";
 import type { PurchaseRequest } from "@/types";
 
 // ─── Mock store ───
@@ -53,6 +54,9 @@ function mapRow(row: Record<string, unknown>): PurchaseRequest {
 // ─── GET /api/admin/purchase?status=pending ───
 export async function GET(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
 
@@ -93,6 +97,9 @@ export async function GET(request: Request) {
 // ─── PATCH /api/admin/purchase - Approve or reject ───
 export async function PATCH(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const body = await request.json();
     const { id, status, licenseKey } = body;
 

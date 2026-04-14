@@ -92,29 +92,21 @@ export async function setupPresence(opts: {
   const sendOfflineBeacon = () => {
     if (hasSentOffline) return;
     hasSentOffline = true;
-    try {
-      navigator.sendBeacon(
-        "/api/presence",
-        new Blob(
-          [
-            JSON.stringify({
-              action: "offline",
-              userId: opts.userId,
-              licenseKey: opts.licenseKey,
-            }),
-          ],
-          { type: "application/json" }
-        )
-      );
-    } catch {
+    const payload = JSON.stringify({
+      action: "offline",
+      userId: opts.userId,
+      licenseKey: opts.licenseKey,
+    });
+    const sent = navigator.sendBeacon(
+      "/api/presence",
+      new Blob([payload], { type: "application/json" })
+    );
+    if (!sent) {
+      // Beacon rejected (queue full) — use keepalive fetch as fallback
       fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "offline",
-          userId: opts.userId,
-          licenseKey: opts.licenseKey,
-        }),
+        body: payload,
         keepalive: true,
       }).catch(() => {});
     }
@@ -150,7 +142,7 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     .order("last_seen", { ascending: false });
 
   // Filter stale entries (last_seen older than 4 minutes — heartbeats are every 60s)
-  const STALE_MS = 4 * 60 * 1000;
+  const STALE_MS = 150_000; // 2.5 minutes (2.5 missed 60s heartbeats)
   const now = Date.now();
   const freshData = (data || []).filter((row: Record<string, unknown>) => {
     const lastSeen = new Date(row.last_seen as string).getTime();

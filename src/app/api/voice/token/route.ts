@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { AccessToken } from "livekit-server-sdk";
+import {
+  createServerClient,
+  isSupabaseServerConfigured,
+} from "@/lib/supabase/server";
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET;
@@ -23,6 +27,22 @@ export async function POST(request: Request) {
         { error: "roomId, userName, and licenseKey are required" },
         { status: 400 }
       );
+    }
+
+    // Validate license key against DB (prevents random-string JWT issuance)
+    if (isSupabaseServerConfigured) {
+      const supabase = createServerClient()!;
+      const { data: license } = await supabase
+        .from("license_keys")
+        .select("key, suspended_until")
+        .eq("key", licenseKey)
+        .single();
+      if (!license) {
+        return NextResponse.json({ error: "Invalid license" }, { status: 401 });
+      }
+      if (license.suspended_until && new Date(license.suspended_until) > new Date()) {
+        return NextResponse.json({ error: "Account suspended" }, { status: 403 });
+      }
     }
 
     if (!isLiveKitConfigured) {

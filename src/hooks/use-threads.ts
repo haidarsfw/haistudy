@@ -65,6 +65,7 @@ export function useThreads(subjectId: string) {
               packageTier: row.package_tier ?? "normal",
               imageUrl: row.image_url,
               mediaUrl: row.media_url,
+              attachments: row.attachments || undefined,
               closed: row.closed,
               commentCount: row.comment_count,
               createdAt: row.created_at,
@@ -104,6 +105,7 @@ export function useThreads(subjectId: string) {
       content: string;
       imageUrl?: string;
       mediaUrl?: string;
+      attachments?: import("@/types").Attachment[];
     }) => {
       if (!session) return;
 
@@ -127,6 +129,7 @@ export function useThreads(subjectId: string) {
           isAdmin: session.isAdmin,
           imageUrl: data.imageUrl || null,
           mediaUrl: data.mediaUrl || null,
+          attachments: data.attachments || null,
         }),
       });
 

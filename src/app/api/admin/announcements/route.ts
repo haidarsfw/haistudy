@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { validateAdmin } from "@/lib/auth/admin-guard";
 import type { Announcement } from "@/types";
 
 // ─── Mock store ───
@@ -33,6 +34,9 @@ function mapRow(row: Record<string, unknown>): Announcement {
 // ─── GET /api/admin/announcements ───
 export async function GET() {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     if (!isSupabaseServerConfigured) {
       return NextResponse.json({
         announcements: Array.from(mockAnnouncements.values()),
@@ -58,6 +62,9 @@ export async function GET() {
 // ─── POST /api/admin/announcements ───
 export async function POST(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const body = await request.json();
     const { message, type, notifyOnly } = body;
 
@@ -141,6 +148,9 @@ export async function POST(request: Request) {
 // ─── PUT /api/admin/announcements - Toggle active or update message ───
 export async function PUT(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const body = await request.json();
     const { id, message, type, active } = body;
 
@@ -183,6 +193,9 @@ export async function PUT(request: Request) {
 // ─── DELETE /api/admin/announcements ───
 export async function DELETE(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const body = await request.json();
     const { id } = body;
 

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { ImagePlus, Link2, X, Loader2 } from "lucide-react";
+import { ImagePlus, Link2, X, Loader2, Paperclip, Youtube, FileText, Presentation, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,41 @@ import { Textarea } from "@/components/ui/textarea";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { detectMediaType } from "@/lib/media-utils";
 import { sounds } from "@/lib/sounds";
+import type { Attachment, AttachmentType } from "@/types";
+
+const MAX_ATTACHMENTS = 5;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/** A pending attachment: either an image file to upload or a URL */
+interface PendingAttachment {
+  id: string;
+  type: "image-file" | "url";
+  file?: File;
+  preview?: string; // blob URL for image preview
+  url?: string;
+  attachmentType: AttachmentType;
+  label?: string;
+}
+
+function getAttachmentIcon(type: AttachmentType) {
+  switch (type) {
+    case "image": return <ImagePlus className="h-3.5 w-3.5" />;
+    case "youtube": return <Youtube className="h-3.5 w-3.5" />;
+    case "google-slides": return <Presentation className="h-3.5 w-3.5" />;
+    case "google-pdf": return <FileText className="h-3.5 w-3.5" />;
+    case "link": return <Globe className="h-3.5 w-3.5" />;
+  }
+}
+
+function getAttachmentLabel(type: AttachmentType) {
+  switch (type) {
+    case "image": return "Gambar";
+    case "youtube": return "YouTube";
+    case "google-slides": return "Google Slides";
+    case "google-pdf": return "Google Drive";
+    case "link": return "Link";
+  }
+}
 
 interface ThreadFormProps {
   onSubmit: (data: {
@@ -17,6 +52,7 @@ interface ThreadFormProps {
     content: string;
     imageUrl?: string;
     mediaUrl?: string;
+    attachments?: Attachment[];
   }) => Promise<void>;
   onCancel: () => void;
 }
@@ -24,39 +60,93 @@ interface ThreadFormProps {
 export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [mediaUrl, setMediaUrl] = useState("");
-  const [showMediaInput, setShowMediaInput] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pending, setPending] = useState<PendingAttachment[]>([]);
+  const [linkInput, setLinkInput] = useState("");
+  const [showLinkInput, setShowLinkInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const remaining = MAX_ATTACHMENTS - pending.length;
+
+  // ─── Image selection (supports multiple) ───
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!file.type.startsWith("image/")) {
-      setError("Hanya file gambar yang diizinkan");
-      return;
+    const toAdd: PendingAttachment[] = [];
+    for (const file of files) {
+      if (pending.length + toAdd.length >= MAX_ATTACHMENTS) {
+        setError(`Maksimal ${MAX_ATTACHMENTS} attachment`);
+        break;
+      }
+      if (!file.type.startsWith("image/")) {
+        setError("Hanya file gambar yang diizinkan");
+        continue;
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        setError("Ukuran gambar maksimal 5MB");
+        continue;
+      }
+      toAdd.push({
+        id: crypto.randomUUID(),
+        type: "image-file",
+        file,
+        preview: URL.createObjectURL(file),
+        attachmentType: "image",
+      });
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Ukuran gambar maksimal 5MB");
-      return;
+    if (toAdd.length > 0) {
+      setPending((prev) => [...prev, ...toAdd]);
+      if (toAdd.length === files.length) setError(null);
     }
 
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    setError(null);
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+    // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // ─── Link addition ───
+  const handleAddLink = () => {
+    if (!linkInput.trim()) return;
+    if (pending.length >= MAX_ATTACHMENTS) {
+      setError(`Maksimal ${MAX_ATTACHMENTS} attachment`);
+      return;
+    }
+
+    const url = linkInput.trim();
+    const mediaType = detectMediaType(url);
+    let attachmentType: AttachmentType;
+
+    if (mediaType === "youtube") attachmentType = "youtube";
+    else if (mediaType === "google-slides") attachmentType = "google-slides";
+    else if (mediaType === "google-pdf") attachmentType = "google-pdf";
+    else attachmentType = "link";
+
+    setPending((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        type: "url",
+        url,
+        attachmentType,
+        label: url.length > 50 ? url.slice(0, 47) + "..." : url,
+      },
+    ]);
+    setLinkInput("");
+    setError(null);
+  };
+
+  // ─── Remove attachment ───
+  const removeAttachment = (id: string) => {
+    setPending((prev) => {
+      const item = prev.find((a) => a.id === id);
+      if (item?.preview) URL.revokeObjectURL(item.preview);
+      return prev.filter((a) => a.id !== id);
+    });
+  };
+
+  // ─── Paste handler ───
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -67,12 +157,24 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
         e.preventDefault();
         const file = item.getAsFile();
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
+        if (pending.length >= MAX_ATTACHMENTS) {
+          setError(`Maksimal ${MAX_ATTACHMENTS} attachment`);
+          return;
+        }
+        if (file.size > MAX_IMAGE_SIZE) {
           setError("Ukuran gambar maksimal 5MB");
           return;
         }
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
+        setPending((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            type: "image-file",
+            file,
+            preview: URL.createObjectURL(file),
+            attachmentType: "image",
+          },
+        ]);
         setError(null);
         return;
       }
@@ -83,7 +185,6 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
     if (html) {
       e.preventDefault();
       const doc = new DOMParser().parseFromString(html, "text/html");
-      // Insert newlines before block elements
       doc.querySelectorAll("br, p, div, h1, h2, h3, h4, h5, h6, li, tr, blockquote").forEach((el) => {
         el.insertAdjacentText("beforebegin", "\n");
       });
@@ -97,6 +198,7 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
     }
   };
 
+  // ─── Submit ───
   const handleSubmit = async () => {
     if (!title.trim()) {
       setError("Judul tidak boleh kosong");
@@ -107,33 +209,28 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
     setError(null);
 
     try {
-      let imageUrl: string | undefined;
+      // Upload all image files and build final attachments
+      const attachments: Attachment[] = [];
 
-      // Upload image if selected
-      if (imageFile) {
-        const url = await uploadToCloudinary(imageFile);
-        if (url) {
-          imageUrl = url;
+      for (const item of pending) {
+        if (item.type === "image-file" && item.file) {
+          const uploadedUrl = await uploadToCloudinary(item.file);
+          if (uploadedUrl) {
+            attachments.push({ type: "image", url: uploadedUrl });
+          }
+        } else if (item.type === "url" && item.url) {
+          attachments.push({
+            type: item.attachmentType,
+            url: item.url,
+            label: item.label,
+          });
         }
-      }
-
-      // Validate media URL if provided
-      let validMediaUrl: string | undefined;
-      if (mediaUrl.trim()) {
-        const type = detectMediaType(mediaUrl.trim());
-        if (!type) {
-          setError("URL media harus YouTube atau Google Slides");
-          setIsSubmitting(false);
-          return;
-        }
-        validMediaUrl = mediaUrl.trim();
       }
 
       await onSubmit({
         title: title.trim(),
         content: content.trim(),
-        imageUrl,
-        mediaUrl: validMediaUrl,
+        attachments: attachments.length > 0 ? attachments : undefined,
       });
       sounds.send();
     } catch (err) {
@@ -169,34 +266,67 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
         disabled={isSubmitting}
       />
 
-      {/* Image preview */}
-      {imagePreview && (
-        <div className="relative inline-block">
-          <Image
-            src={imagePreview}
-            alt="Preview"
-            width={200}
-            height={128}
-            className="h-32 w-auto rounded-lg object-cover"
-            unoptimized
-          />
-          <button
-            onClick={removeImage}
-            className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
+      {/* Attachments preview */}
+      {pending.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {pending.map((item) => (
+            <div
+              key={item.id}
+              className="relative flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 text-xs"
+            >
+              {item.type === "image-file" && item.preview ? (
+                <Image
+                  src={item.preview}
+                  alt="Preview"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded object-cover"
+                  unoptimized
+                />
+              ) : (
+                getAttachmentIcon(item.attachmentType)
+              )}
+              <span className="max-w-[120px] truncate text-muted-foreground">
+                {item.type === "image-file"
+                  ? item.file?.name || "Gambar"
+                  : getAttachmentLabel(item.attachmentType)}
+              </span>
+              <button
+                onClick={() => removeAttachment(item.id)}
+                className="ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Media URL input */}
-      {showMediaInput && (
-        <Input
-          placeholder="URL YouTube atau Google Slides..."
-          value={mediaUrl}
-          onChange={(e) => setMediaUrl(e.target.value)}
-          disabled={isSubmitting}
-        />
+      {/* Link URL input */}
+      {showLinkInput && (
+        <div className="flex gap-2">
+          <Input
+            placeholder="URL YouTube, Google Slides, Google Drive, atau link lain..."
+            value={linkInput}
+            onChange={(e) => setLinkInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddLink();
+              }
+            }}
+            disabled={isSubmitting}
+            className="flex-1"
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleAddLink}
+            disabled={!linkInput.trim() || isSubmitting}
+          >
+            Tambah
+          </Button>
+        </div>
       )}
 
       {/* Action buttons */}
@@ -205,6 +335,7 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={handleImageSelect}
         />
@@ -213,7 +344,7 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
           size="sm"
           className="gap-1.5 text-muted-foreground"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isSubmitting}
+          disabled={isSubmitting || remaining <= 0}
         >
           <ImagePlus className="h-4 w-4" />
           Gambar
@@ -222,12 +353,20 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
           variant="ghost"
           size="sm"
           className="gap-1.5 text-muted-foreground"
-          onClick={() => { sounds.toggle(); setShowMediaInput(!showMediaInput); }}
-          disabled={isSubmitting}
+          onClick={() => { sounds.toggle(); setShowLinkInput(!showLinkInput); }}
+          disabled={isSubmitting || remaining <= 0}
         >
           <Link2 className="h-4 w-4" />
-          Media
+          Link
         </Button>
+
+        {/* Attachment counter */}
+        {pending.length > 0 && (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Paperclip className="h-3 w-3" />
+            {pending.length}/{MAX_ATTACHMENTS}
+          </span>
+        )}
 
         <div className="flex-1" />
 

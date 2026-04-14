@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 
 export interface FeedbackItem {
   id: string;
@@ -71,6 +72,9 @@ export async function POST(req: NextRequest) {
 
     // Admin action: clear all feedback
     if (action === "clearAll") {
+      if (!(await isAdminFromCookies())) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
       if (!isSupabaseServerConfigured) {
         feedbackStore.length = 0;
         return NextResponse.json({ success: true });
@@ -90,6 +94,9 @@ export async function POST(req: NextRequest) {
 
     // Admin actions: mark as read/resolved
     if (action === "updateStatus" && feedbackId) {
+      if (!(await isAdminFromCookies())) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
       if (!isSupabaseServerConfigured) {
         const item = feedbackStore.find((f) => f.id === feedbackId);
         if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -117,6 +124,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // Validate image URLs — only allow Cloudinary HTTPS URLs, max 3
+    const imageUrls = (body.imageUrls || [])
+      .filter((url: unknown): url is string => typeof url === "string")
+      .filter((url: string) => {
+        try {
+          const parsed = new URL(url);
+          return parsed.protocol === "https:" && parsed.hostname.includes("cloudinary.com");
+        } catch { return false; }
+      })
+      .slice(0, 3);
+
     if (!isSupabaseServerConfigured) {
       const feedback: FeedbackItem = {
         id: `fb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -124,7 +142,7 @@ export async function POST(req: NextRequest) {
         name: name || "Anonymous",
         category,
         message: message.slice(0, 1000),
-        imageUrls: body.imageUrls || [],
+        imageUrls,
         status: "unread",
         createdAt: new Date().toISOString(),
       };
@@ -140,7 +158,7 @@ export async function POST(req: NextRequest) {
         name: name || "Anonymous",
         category,
         message: message.slice(0, 1000),
-        image_urls: body.imageUrls || [],
+        image_urls: imageUrls,
         status: "unread",
       })
       .select("id")

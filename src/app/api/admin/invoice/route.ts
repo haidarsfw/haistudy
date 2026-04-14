@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { validateAdmin } from "@/lib/auth/admin-guard";
 
 // ─── Mock counter ───
 let mockCounter = 25;
@@ -21,6 +22,9 @@ async function getRow(supabase: ReturnType<typeof createServerClient>) {
 // ─── GET /api/admin/invoice - Get current counter ───
 export async function GET() {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     if (!isSupabaseServerConfigured) {
       return NextResponse.json({ value: mockCounter });
     }
@@ -37,6 +41,9 @@ export async function GET() {
 // ─── POST /api/admin/invoice - Increment and return new value ───
 export async function POST() {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     if (!isSupabaseServerConfigured) {
       mockCounter += 1;
       return NextResponse.json({ value: mockCounter });
@@ -44,24 +51,42 @@ export async function POST() {
 
     const supabase = createServerClient()!;
     const row = await getRow(supabase);
-    const newValue = (row?.value ?? 0) + 1;
+    const currentValue = row?.value ?? 0;
+    const newValue = currentValue + 1;
 
     if (row) {
-      // Update existing row by its actual id
-      const { error } = await supabase
+      // Optimistic locking: only update if value hasn't changed
+      const { data, error } = await supabase
         .from("invoice_counter")
         .update({ value: newValue, updated_at: new Date().toISOString() })
-        .eq("id", row.id);
+        .eq("id", row.id)
+        .eq("value", currentValue)
+        .select()
+        .maybeSingle();
+
       if (error) throw error;
+
+      if (!data) {
+        // Race condition — refetch and retry once
+        const retry = await getRow(supabase);
+        const retryValue = (retry?.value ?? 0) + 1;
+        const { error: retryError } = await supabase
+          .from("invoice_counter")
+          .update({ value: retryValue, updated_at: new Date().toISOString() })
+          .eq("id", retry!.id);
+        if (retryError) throw retryError;
+        return NextResponse.json({ value: retryValue });
+      }
+
+      return NextResponse.json({ value: newValue });
     } else {
       // No row yet — insert
       const { error } = await supabase
         .from("invoice_counter")
         .insert({ value: newValue, updated_at: new Date().toISOString() });
       if (error) throw error;
+      return NextResponse.json({ value: newValue });
     }
-
-    return NextResponse.json({ value: newValue });
   } catch (error) {
     console.error("Invoice POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -71,6 +96,9 @@ export async function POST() {
 // ─── PUT /api/admin/invoice - Set counter to specific value ───
 export async function PUT(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const body = await request.json();
     const { value } = body;
 

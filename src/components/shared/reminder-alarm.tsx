@@ -16,6 +16,9 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startAlarm = useCallback(() => {
+    // Re-entry guard — if an AudioContext already exists, we're already ringing.
+    // Prevents double-creation when the 30s check window + async setIsRinging race.
+    if (audioCtxRef.current) return;
     setIsRinging(true);
 
     try {
@@ -92,16 +95,18 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
     return () => clearInterval(timer);
   }, [reminderTime, isRinging, hasFiredToday, startAlarm]);
 
-  // Reset hasFiredToday at midnight
+  // Reset hasFiredToday when the calendar day changes (timezone/DST-safe)
   useEffect(() => {
-    const checkMidnight = () => {
-      const now = new Date();
-      if (now.getHours() === 0 && now.getMinutes() === 0) {
+    const getToday = () => new Date().toDateString();
+    let lastDay = getToday();
+    const checkDayChange = () => {
+      const today = getToday();
+      if (today !== lastDay) {
+        lastDay = today;
         setHasFiredToday(false);
       }
     };
-
-    const timer = setInterval(checkMidnight, 60_000);
+    const timer = setInterval(checkDayChange, 60_000);
     return () => clearInterval(timer);
   }, []);
 

@@ -193,6 +193,14 @@ export interface PurchaseRequest {
 // Forum types
 // ============================================
 
+export type AttachmentType = "image" | "youtube" | "google-slides" | "google-pdf" | "link";
+
+export interface Attachment {
+  type: AttachmentType;
+  url: string;
+  label?: string;
+}
+
 export interface ForumThread {
   id: string;
   subjectId: string;
@@ -206,6 +214,7 @@ export interface ForumThread {
   packageTier?: "share" | "normal" | "vip" | "diamond";
   imageUrl: string | null;
   mediaUrl: string | null;
+  attachments?: Attachment[];
   closed: boolean;
   commentCount: number;
   createdAt: string;

@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import type { ForumComment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
@@ -34,7 +35,8 @@ export async function GET(request: Request) {
       .from("forum_comments")
       .select("*")
       .eq("thread_id", threadId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(500);
 
     if (error) throw error;
 
@@ -71,9 +73,11 @@ export async function POST(request: Request) {
       authorId,
       authorName,
       authorClass,
-      isAdmin,
       parentCommentId,
     } = body;
+
+    // Trust cookies, not client-provided flags
+    const isAdmin = await isAdminFromCookies();
 
     if (!threadId || (!content?.trim() && !imageUrl) || !authorId || !authorName) {
       return NextResponse.json(
@@ -82,12 +86,29 @@ export async function POST(request: Request) {
       );
     }
 
+    if ((content || "").length > 5000) {
+      return NextResponse.json({ error: "Comment too long (max 5000)" }, { status: 400 });
+    }
+
+    // Only accept Cloudinary image URLs (same policy as feedback route)
+    let safeImageUrl: string | null = null;
+    if (imageUrl) {
+      try {
+        const parsed = new URL(imageUrl);
+        if (parsed.protocol === "https:" && parsed.hostname.includes("cloudinary.com")) {
+          safeImageUrl = imageUrl;
+        }
+      } catch {
+        /* drop invalid URL */
+      }
+    }
+
     if (!isSupabaseServerConfigured) {
       const comment: ForumComment = {
         id: crypto.randomUUID(),
         threadId,
         content: (content || "").trim(),
-        imageUrl: imageUrl || null,
+        imageUrl: safeImageUrl,
         authorId,
         authorName,
         authorClass: authorClass || "",
@@ -108,7 +129,7 @@ export async function POST(request: Request) {
       .insert({
         thread_id: threadId,
         content: (content || "").trim(),
-        image_url: imageUrl || null,
+        image_url: safeImageUrl,
         author_id: authorId,
         author_name: authorName,
         author_class: authorClass || "",
@@ -214,7 +235,8 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { commentId, requesterId, isAdmin } = body;
+    const { commentId, requesterId } = body;
+    const isAdmin = await isAdminFromCookies();
 
     if (!commentId || !requesterId) {
       return NextResponse.json(

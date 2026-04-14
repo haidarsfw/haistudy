@@ -23,6 +23,7 @@ import {
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useNotifications } from "@/hooks/use-notifications";
+import { getDeviceId } from "@/lib/auth/device";
 import { sounds } from "@/lib/sounds";
 
 interface MobileNavProps {
@@ -103,9 +104,18 @@ export function MobileNav({
     router.push(href);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     sounds.click();
     setMoreOpen(false);
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ licenseKey: session?.licenseKey, deviceId: getDeviceId() }),
+      });
+    } catch {
+      // Continue anyway
+    }
     logout();
     router.push("/");
   };

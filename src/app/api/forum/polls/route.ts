@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import type { ForumPoll, PollOption } from "@/types";
 
 // ─── Mock store ───
@@ -104,6 +105,18 @@ export async function POST(request: Request) {
       );
     }
 
+    if (question.length > 300) {
+      return NextResponse.json({ error: "Question too long (max 300)" }, { status: 400 });
+    }
+    if (options.length > 10) {
+      return NextResponse.json({ error: "Too many options (max 10)" }, { status: 400 });
+    }
+    for (const opt of options) {
+      if (typeof opt === "string" && opt.length > 100) {
+        return NextResponse.json({ error: "Option too long (max 100)" }, { status: 400 });
+      }
+    }
+
     const pollOptions: PollOption[] = options
       .filter((o: string) => o.trim())
       .map((text: string) => ({ text: text.trim(), votes: 0 }));
@@ -172,7 +185,8 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { pollId, requesterId, isAdmin } = body;
+    const { pollId, requesterId } = body;
+    const isAdmin = await isAdminFromCookies();
 
     if (!pollId || !requesterId) {
       return NextResponse.json(

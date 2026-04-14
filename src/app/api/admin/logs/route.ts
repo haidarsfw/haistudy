@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { validateAdmin } from "@/lib/auth/admin-guard";
 import type { ActivityLog, ErrorLog } from "@/types";
 
 // ─── Mock stores ───
@@ -83,6 +84,9 @@ function mapErrorRow(row: Record<string, unknown>): ErrorLog {
 // ─── GET /api/admin/logs?type=activity|error&limit=50 ───
 export async function GET(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "activity";
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
@@ -128,6 +132,9 @@ export async function GET(request: Request) {
 // ─── PATCH /api/admin/logs - Mark error as resolved ───
 export async function PATCH(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const body = await request.json();
     const { id, resolved } = body;
 
@@ -158,6 +165,9 @@ export async function PATCH(request: Request) {
 // ─── DELETE /api/admin/logs - Clear logs by type ───
 export async function DELETE(request: Request) {
   try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
     const body = await request.json();
     const { type } = body;
 

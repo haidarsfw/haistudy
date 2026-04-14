@@ -27,6 +27,7 @@ export function useAudioRecorder() {
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const startTimeRef = useRef<number>(0);
   const elapsedBeforePauseRef = useRef<number>(0);
+  const audioUrlRef = useRef<string | null>(null);
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -87,6 +88,7 @@ export function useAudioRecorder() {
       recorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: mimeType });
         const url = URL.createObjectURL(blob);
+        audioUrlRef.current = url;
         setState((prev) => ({
           ...prev,
           isRecording: false,
@@ -159,7 +161,8 @@ export function useAudioRecorder() {
   }, [startTimer]);
 
   const discardRecording = useCallback(() => {
-    if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    audioUrlRef.current = null;
     setState({
       isRecording: false,
       isPaused: false,
@@ -168,13 +171,13 @@ export function useAudioRecorder() {
       audioUrl: null,
       error: null,
     });
-  }, [state.audioUrl]);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       cleanup();
-      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

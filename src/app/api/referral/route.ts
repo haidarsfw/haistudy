@@ -10,6 +10,11 @@ const mockReferrals = new Map<
   { code: string; count: number }
 >();
 
+// In-memory per-license cooldown to slow brute-force of referral codes.
+// Resets on deploy — fine for free tier since determined attackers would still hit DB lookups.
+const recentReferralAttempts = new Map<string, number>();
+const REFERRAL_COOLDOWN_MS = 10_000;
+
 function generateReferralCode(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "REF-";
@@ -88,6 +93,16 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Per-license cooldown — blocks rapid-fire brute-force of the 6-char code space
+    const lastAttempt = recentReferralAttempts.get(licenseKey);
+    if (lastAttempt && Date.now() - lastAttempt < REFERRAL_COOLDOWN_MS) {
+      return NextResponse.json(
+        { error: "Tunggu sebentar sebelum mencoba lagi" },
+        { status: 429 }
+      );
+    }
+    recentReferralAttempts.set(licenseKey, Date.now());
 
     if (!isSupabaseServerConfigured) {
       // Find referrer

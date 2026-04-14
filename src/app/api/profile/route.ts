@@ -63,6 +63,22 @@ export async function PUT(request: Request) {
       );
     }
 
+    // Shape validation — accept null/empty (clears the field) but reject garbage
+    if (email !== undefined && email !== null && email !== "") {
+      if (
+        typeof email !== "string" ||
+        email.length > 100 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ) {
+        return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+      }
+    }
+    if (phone !== undefined && phone !== null && phone !== "") {
+      if (typeof phone !== "string" || phone.length > 30) {
+        return NextResponse.json({ error: "Invalid phone" }, { status: 400 });
+      }
+    }
+
     if (!isSupabaseServerConfigured) {
       const existing = mockProfiles.get(licenseKey) || { email: null, phone: null };
       mockProfiles.set(licenseKey, {

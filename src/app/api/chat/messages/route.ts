@@ -142,13 +142,15 @@ export async function POST(request: Request) {
       authorId,
       authorName,
       authorClass,
-      isAdmin,
       isTester,
       packageTier,
       replyToId,
       replyToName,
       replyToContent,
     } = body;
+
+    // Trust cookies, not client-provided flags
+    const isAdmin = await isAdminFromCookies();
 
     if (!authorId || !authorName) {
       return NextResponse.json(
@@ -160,6 +162,13 @@ export async function POST(request: Request) {
     if (type === "text" && !content?.trim()) {
       return NextResponse.json(
         { error: "Message content is required" },
+        { status: 400 }
+      );
+    }
+
+    if (type === "text" && (content?.length ?? 0) > 2000) {
+      return NextResponse.json(
+        { error: "Message too long (max 2000 characters)" },
         { status: 400 }
       );
     }
@@ -331,6 +340,16 @@ export async function DELETE(request: Request) {
         { error: "Missing required fields" },
         { status: 400 }
       );
+    }
+
+    // Non-admin deletes require a valid session cookie
+    if (!isAdmin) {
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      const sessionCookie = cookieStore.get("hs-session")?.value;
+      if (!sessionCookie) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      }
     }
 
     if (!isSupabaseServerConfigured) {

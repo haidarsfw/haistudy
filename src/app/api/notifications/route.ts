@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import type { Notification } from "@/types";
 
 // ─── Mock store ───
@@ -192,6 +193,9 @@ export async function DELETE(request: Request) {
 
     if (action === "clearAnnouncements") {
       // Admin action: clear ALL announcement notifications for ALL users
+      if (!(await isAdminFromCookies())) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
       if (!isSupabaseServerConfigured) {
         // Mock: remove announcement-type notifications from all users
         for (const [key, notifs] of mockNotifications.entries()) {

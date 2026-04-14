@@ -45,6 +45,7 @@ export function ForumTab({ subjectId }: ForumTabProps) {
       content: string;
       imageUrl?: string;
       mediaUrl?: string;
+      attachments?: import("@/types").Attachment[];
     }) => {
       if (!guard("preview.forum_blocked")) return;
       await createThread(data);

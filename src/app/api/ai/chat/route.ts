@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 import { buildSystemPrompt } from "@/lib/ai/context";
+import {
+  createServerClient,
+  isSupabaseServerConfigured,
+} from "@/lib/supabase/server";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 
 // ─── Config ───
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -62,12 +67,38 @@ export async function POST(request: Request) {
       );
     }
 
+    if (history.length > MAX_HISTORY) {
+      return NextResponse.json(
+        { error: "History too long" },
+        { status: 400 }
+      );
+    }
+
+    // Validate license key against DB and determine admin status server-side
+    let validatedAdmin = false;
+    if (isSupabaseServerConfigured) {
+      const supabase = createServerClient()!;
+      const { data: license } = await supabase
+        .from("license_keys")
+        .select("key, suspended_until")
+        .eq("key", licenseKey)
+        .single();
+
+      if (!license) {
+        return NextResponse.json({ error: "Invalid license key" }, { status: 401 });
+      }
+      if (license.suspended_until && new Date(license.suspended_until) > new Date()) {
+        return NextResponse.json({ error: "Account suspended" }, { status: 403 });
+      }
+      validatedAdmin = await isAdminFromCookies();
+    }
+
     // Build system prompt with subject context
     const systemPrompt = buildSystemPrompt(subjectId);
 
     // Route: VIP or Admin → DeepSeek, else → Gemini
     // Images always go to Gemini (DeepSeek doesn't support vision)
-    const useDeepSeek = (packageTier === "vip" || packageTier === "diamond" || isAdmin) && isDeepSeekConfigured && !image;
+    const useDeepSeek = (packageTier === "vip" || packageTier === "diamond" || validatedAdmin) && isDeepSeekConfigured && !image;
 
     // Mock mode - return non-streaming response
     if (!useDeepSeek && !isGeminiConfigured) {
@@ -163,13 +194,24 @@ export async function POST(request: Request) {
       { text: message },
     ];
     if (image) {
-      // Extract base64 data and mime type from data URL
-      const match = image.match(/^data:(image\/\w+);base64,(.+)$/);
-      if (match) {
-        messageParts.push({
-          inlineData: { mimeType: match[1], data: match[2] },
-        });
+      // Extract base64 data and mime type from data URL — surface errors rather than silently dropping
+      const match = image.match(/^data:(image\/(png|jpeg|jpg|webp|gif));base64,(.+)$/);
+      if (!match) {
+        return NextResponse.json(
+          { error: "Invalid image format (png/jpeg/webp/gif only)" },
+          { status: 400 }
+        );
       }
+      // Base64 is ~1.37× the raw byte size; 7MB encoded ≈ 5MB raw
+      if (match[3].length > 7_000_000) {
+        return NextResponse.json(
+          { error: "Image too large (max 5MB)" },
+          { status: 413 }
+        );
+      }
+      messageParts.push({
+        inlineData: { mimeType: match[1], data: match[3] },
+      });
     }
 
     const result = await chat.sendMessageStream(messageParts);

@@ -39,7 +39,7 @@ export async function POST(request: Request) {
             try {
               await supabase.rpc("increment_license_field", {
                 p_key: licenseKey,
-                p_field: "online_minutes",
+                p_field: "total_online_minutes",
                 p_amount: fullMinutes,
               });
             } catch {

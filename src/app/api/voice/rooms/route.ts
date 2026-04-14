@@ -207,16 +207,33 @@ export async function POST(request: Request) {
     // ── Create custom room ──
     if (action === "create") {
       const { name, maxParticipants = 8, creatorId, creatorName } = body;
-      if (!name || !creatorId || !creatorName) {
+      if (!name?.trim() || !creatorId || !creatorName) {
         return NextResponse.json(
           { error: "name, creatorId, and creatorName are required" },
           { status: 400 }
         );
       }
+
+      // Validate creatorId against DB (prevents spam room creation with fake IDs)
+      if (isSupabaseServerConfigured) {
+        const supabase = createServerClient()!;
+        const { data: license } = await supabase
+          .from("license_keys")
+          .select("key, suspended_until")
+          .eq("key", creatorId)
+          .single();
+        if (!license) {
+          return NextResponse.json({ error: "Invalid creator license" }, { status: 401 });
+        }
+        if (license.suspended_until && new Date(license.suspended_until) > new Date()) {
+          return NextResponse.json({ error: "Account suspended" }, { status: 403 });
+        }
+      }
+
       const id = crypto.randomUUID();
       const newRoom: Omit<VoiceRoom, "participants"> = {
         id,
-        name: name.slice(0, 30),
+        name: name.trim().slice(0, 30),
         description: `Room oleh ${creatorName}`,
         maxParticipants: Math.min(Math.max(maxParticipants, 2), 20),
         creatorId,
@@ -408,6 +425,24 @@ export async function POST(request: Request) {
         return NextResponse.json(
           { error: "Gagal menambahkan peserta ke room" },
           { status: 500 }
+        );
+      }
+
+      // Post-insert overflow check: guard against concurrent joins exceeding max
+      const { count: newCount } = await supabase
+        .from("voice_participants")
+        .select("*", { count: "exact", head: true })
+        .eq("room_id", roomId);
+
+      if (newCount !== null && newCount > room.maxParticipants) {
+        // We caused overflow — remove ourselves
+        await supabase
+          .from("voice_participants")
+          .delete()
+          .eq("id", data.id);
+        return NextResponse.json(
+          { error: "Room is full" },
+          { status: 409 }
         );
       }
 

@@ -3,7 +3,8 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import type { ForumThread } from "@/types";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import type { ForumThread, Attachment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
 const mockThreads = new Map<string, ForumThread[]>();
@@ -34,27 +35,50 @@ export async function GET(request: Request) {
       .from("forum_threads")
       .select("*")
       .eq("subject_id", subjectId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (error) throw error;
 
-    const threads: ForumThread[] = (data || []).map((row) => ({
-      id: row.id,
-      subjectId: row.subject_id,
-      title: row.title,
-      content: row.content,
-      authorId: row.author_id,
-      authorName: row.author_name,
-      authorClass: row.author_class,
-      isAdmin: row.is_admin,
-      isTester: row.is_tester || false,
-      packageTier: row.package_tier || undefined,
-      imageUrl: row.image_url,
-      mediaUrl: row.media_url,
-      closed: row.closed,
-      commentCount: row.comment_count,
-      createdAt: row.created_at,
-    }));
+    const threads: ForumThread[] = (data || []).map((row) => {
+      // Build attachments from new column or fall back to legacy
+      let attachments: Attachment[] | undefined;
+      if (row.attachments && Array.isArray(row.attachments) && row.attachments.length > 0) {
+        attachments = row.attachments as Attachment[];
+      } else {
+        const legacy: Attachment[] = [];
+        if (row.image_url) legacy.push({ type: "image", url: row.image_url });
+        if (row.media_url) {
+          // Detect type from URL
+          const url = row.media_url as string;
+          let type: Attachment["type"] = "link";
+          if (url.includes("youtube.com") || url.includes("youtu.be")) type = "youtube";
+          else if (url.includes("docs.google.com/presentation")) type = "google-slides";
+          else if (url.includes("drive.google.com/file") || url.includes("docs.google.com/document") || url.includes("docs.google.com/spreadsheets")) type = "google-pdf";
+          legacy.push({ type, url });
+        }
+        if (legacy.length > 0) attachments = legacy;
+      }
+
+      return {
+        id: row.id,
+        subjectId: row.subject_id,
+        title: row.title,
+        content: row.content,
+        authorId: row.author_id,
+        authorName: row.author_name,
+        authorClass: row.author_class,
+        isAdmin: row.is_admin,
+        isTester: row.is_tester || false,
+        packageTier: row.package_tier || undefined,
+        imageUrl: row.image_url,
+        mediaUrl: row.media_url,
+        attachments,
+        closed: row.closed,
+        commentCount: row.comment_count,
+        createdAt: row.created_at,
+      };
+    });
 
     return NextResponse.json({ threads });
   } catch (error) {
@@ -74,16 +98,32 @@ export async function POST(request: Request) {
       authorId,
       authorName,
       authorClass,
-      isAdmin,
       isTester,
       packageTier,
       imageUrl,
       mediaUrl,
+      attachments,
     } = body;
+
+    // Validate attachments
+    const validAttachments: Attachment[] | null =
+      attachments && Array.isArray(attachments) && attachments.length > 0
+        ? (attachments as Attachment[]).slice(0, 5)
+        : null;
+
+    // Trust cookies, not client-provided flags
+    const isAdmin = await isAdminFromCookies();
 
     if (!subjectId || !title?.trim() || !authorId || !authorName) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    if (title.length > 200 || (content || "").length > 10_000) {
+      return NextResponse.json(
+        { error: "Title max 200, content max 10000 characters" },
         { status: 400 }
       );
     }
@@ -102,6 +142,7 @@ export async function POST(request: Request) {
         packageTier: packageTier || undefined,
         imageUrl: imageUrl || null,
         mediaUrl: mediaUrl || null,
+        attachments: validAttachments || undefined,
         closed: false,
         commentCount: 0,
         createdAt: new Date().toISOString(),
@@ -126,6 +167,7 @@ export async function POST(request: Request) {
         package_tier: packageTier || null,
         image_url: imageUrl || null,
         media_url: mediaUrl || null,
+        ...(validAttachments ? { attachments: validAttachments } : {}),
       })
       .select()
       .single();
@@ -145,6 +187,7 @@ export async function POST(request: Request) {
       packageTier: data.package_tier || undefined,
       imageUrl: data.image_url,
       mediaUrl: data.media_url,
+      attachments: data.attachments || undefined,
       closed: data.closed,
       commentCount: data.comment_count,
       createdAt: data.created_at,
@@ -202,7 +245,8 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { threadId, requesterId, isAdmin } = body;
+    const { threadId, requesterId } = body;
+    const isAdmin = await isAdminFromCookies();
 
     if (!threadId || !requesterId) {
       return NextResponse.json(
@@ -260,7 +304,8 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { threadId, closed, isAdmin } = body;
+    const { threadId, closed } = body;
+    const isAdmin = await isAdminFromCookies();
 
     if (!threadId || closed === undefined) {
       return NextResponse.json(

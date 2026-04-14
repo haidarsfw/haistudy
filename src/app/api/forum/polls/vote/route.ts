@@ -29,6 +29,18 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      typeof optionIndex !== "number" ||
+      !Number.isInteger(optionIndex) ||
+      optionIndex < 0 ||
+      optionIndex > 20
+    ) {
+      return NextResponse.json(
+        { error: "Invalid optionIndex" },
+        { status: 400 }
+      );
+    }
+
     if (!isSupabaseServerConfigured) {
       // Check if already voted
       const pollVotes = mockVotes.get(pollId) || new Map<string, number>();
@@ -75,9 +87,16 @@ export async function POST(request: Request) {
 
     if (poll) {
       const options = [...(poll.options as Array<{ text: string; votes: number }>)];
-      if (options[optionIndex]) {
-        options[optionIndex].votes += 1;
+      if (optionIndex >= options.length) {
+        // Roll back the vote row we just inserted (phantom vote with no tally change)
+        await supabase
+          .from("poll_votes")
+          .delete()
+          .eq("poll_id", pollId)
+          .eq("voter_id", voterId);
+        return NextResponse.json({ error: "Invalid option" }, { status: 400 });
       }
+      options[optionIndex].votes += 1;
       await supabase
         .from("forum_polls")
         .update({

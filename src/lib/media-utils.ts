@@ -2,7 +2,9 @@
  * Media URL detection and embed utilities for forum posts.
  */
 
-export function detectMediaType(url: string): "youtube" | "google-slides" | null {
+export type MediaType = "youtube" | "google-slides" | "google-pdf" | null;
+
+export function detectMediaType(url: string): MediaType {
   if (!url) return null;
   try {
     const u = new URL(url);
@@ -19,6 +21,14 @@ export function detectMediaType(url: string): "youtube" | "google-slides" | null
       u.pathname.includes("/presentation")
     ) {
       return "google-slides";
+    }
+    // Google Drive file viewer / pdf
+    if (
+      (u.hostname === "drive.google.com" && u.pathname.includes("/file/d/")) ||
+      (u.hostname === "docs.google.com" && u.pathname.includes("/document/")) ||
+      (u.hostname === "docs.google.com" && u.pathname.includes("/spreadsheets/"))
+    ) {
+      return "google-pdf";
     }
   } catch {
     // Invalid URL
@@ -48,6 +58,35 @@ export function getGoogleSlidesEmbedUrl(url: string): string | null {
     );
     if (match) {
       return `https://docs.google.com/presentation/d/${match[1]}/embed?start=false&loop=false&delayms=3000`;
+    }
+  } catch {
+    // Invalid URL
+  }
+  return null;
+}
+
+export function getGoogleDriveEmbedUrl(url: string): string | null {
+  try {
+    // Google Drive file: drive.google.com/file/d/FILE_ID/...
+    const driveMatch = url.match(
+      /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/
+    );
+    if (driveMatch) {
+      return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+    }
+    // Google Docs: docs.google.com/document/d/FILE_ID/...
+    const docMatch = url.match(
+      /docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/
+    );
+    if (docMatch) {
+      return `https://docs.google.com/document/d/${docMatch[1]}/preview`;
+    }
+    // Google Sheets: docs.google.com/spreadsheets/d/FILE_ID/...
+    const sheetMatch = url.match(
+      /docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/
+    );
+    if (sheetMatch) {
+      return `https://docs.google.com/spreadsheets/d/${sheetMatch[1]}/preview`;
     }
   } catch {
     // Invalid URL
