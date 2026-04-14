@@ -294,6 +294,11 @@ export function LoginForm() {
         </Button>
       </motion.div>
 
+      {/* Incognito warning */}
+      <p className="text-center text-[11px] text-muted-foreground/70 leading-relaxed">
+        Jangan login menggunakan mode Private / Incognito. Setiap sesi incognito dihitung sebagai perangkat baru dan dapat melebihi batas perangkat Anda.
+      </p>
+
       {/* Dev hint */}
       {process.env.NODE_ENV === "development" && (
         <p className="text-center text-[10px] text-muted-foreground/50">
