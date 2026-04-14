@@ -59,8 +59,8 @@ export function Statistics() {
           .on("postgres_changes", { event: "*", schema: "public", table: "activations" }, () => fetchUsers())
           .subscribe();
 
-        // Polling fallback every 10s
-        const interval = setInterval(fetchUsers, 10_000);
+        // Polling fallback every 30s (Realtime covers live updates)
+        const interval = setInterval(fetchUsers, 30_000);
         return () => {
           clearInterval(interval);
           supabase.removeChannel(channel);
@@ -68,8 +68,8 @@ export function Statistics() {
       }
     }
 
-    // Fallback: poll every 10s
-    const interval = setInterval(fetchUsers, 10_000);
+    // Fallback: poll every 30s
+    const interval = setInterval(fetchUsers, 30_000);
     return () => clearInterval(interval);
   }, []);
 

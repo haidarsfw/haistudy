@@ -137,9 +137,12 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
 
   const { data } = await supabase
     .from("presence")
-    .select("*")
+    .select(
+      "user_id, user_name, device_type, current_subject, hide_status, license_key, last_seen"
+    )
     .eq("online", true)
-    .order("last_seen", { ascending: false });
+    .order("last_seen", { ascending: false })
+    .limit(200);
 
   // Filter stale entries (last_seen older than 4 minutes — heartbeats are every 60s)
   const STALE_MS = 150_000; // 2.5 minutes (2.5 missed 60s heartbeats)

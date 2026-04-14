@@ -62,7 +62,7 @@ export function QuickLicense() {
     };
 
     fetchCounter();
-    const interval = setInterval(fetchCounter, 10_000);
+    const interval = setInterval(fetchCounter, 30_000);
     return () => clearInterval(interval);
   }, []);
 
