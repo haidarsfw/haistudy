@@ -20,19 +20,19 @@ import type { OnlineUser } from "@/types";
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let hasSentOffline = false;
 
-// Module-level hide status — updated via updateHideStatus() without
-// restarting the presence setup. This avoids the critical bug where
-// settings?.hideStatus changes caused the entire presence system to
-// restart, resetting accumulated time.
+// Module-level state — updated via updateHideStatus / updateCurrentSubject
+// without restarting the presence setup. This avoids the critical bug where
+// any prop change (settings?.hideStatus, route change) caused the entire
+// presence system to restart, resetting accumulated time.
 let currentHideStatus = false;
+let currentSubject: string | null = null;
 
-/**
- * Update the hide status sent with heartbeats.
- * Called from usePresence when settings.hideStatus changes.
- * Does NOT restart the heartbeat system.
- */
 export function updateHideStatus(hide: boolean) {
   currentHideStatus = hide;
+}
+
+export function updateCurrentSubject(subject: string | null) {
+  currentSubject = subject;
 }
 
 export async function setupPresence(opts: {
@@ -41,8 +41,10 @@ export async function setupPresence(opts: {
   licenseKey: string;
   deviceType: string;
   hideStatus: boolean;
+  currentSubject: string | null;
 }): Promise<() => void> {
   currentHideStatus = opts.hideStatus;
+  currentSubject = opts.currentSubject;
   hasSentOffline = false;
 
   // ── Simple heartbeat — no time tracking on client ──
@@ -58,6 +60,7 @@ export async function setupPresence(opts: {
           licenseKey: opts.licenseKey,
           deviceType: opts.deviceType,
           hideStatus: currentHideStatus,
+          currentSubject,
         }),
       });
     } catch {

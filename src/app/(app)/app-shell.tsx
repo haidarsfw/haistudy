@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, usePathname } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -34,6 +34,7 @@ import { useSupportUnread } from "@/hooks/use-support-unread";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
   const { session, isLoading, updateSession } = useSession();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
@@ -45,6 +46,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Detect current subject from URL (e.g. /subject/statistik)
   const currentSubjectId = (params.id as string) || null;
+
+  // Location key for presence — subject ID on /subject/[id], else top-level
+  // path segment (e.g. "dashboard", "forum", "admin"). Admin sees this on
+  // the online-users card to know what page each user is on.
+  const currentLocationKey: string | null =
+    currentSubjectId ||
+    (pathname ? pathname.replace(/^\//, "").split("/")[0] || null : null);
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
   const { notifications, dismissNotification } = useNotifications();
   const { settings, isLoading: settingsLoading } = useSettings();
@@ -57,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useVersionCheck();
 
   // Presence tracking — globally active on all app pages
-  usePresence();
+  usePresence(currentLocationKey);
 
   // Lock body scroll when any overlay panel is open
   const anyPanelOpen = isChatOpen || isAiOpen || isVoiceOpen || isSupportOpen;

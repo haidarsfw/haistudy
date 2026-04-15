@@ -15,6 +15,20 @@ const deviceIcons: Record<string, typeof Monitor> = {
   tablet: Tablet,
 };
 
+// Human labels for non-subject routes. Subject IDs resolve via getSubjectById.
+const PAGE_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
+  subjects: "Subjects",
+  bookmarks: "Bookmarks",
+  notes: "Catatan",
+  analytics: "Analytics",
+  feedback: "Feedback",
+  voice: "Voice",
+  admin: "Admin",
+  settings: "Settings",
+  "jadwal-uts": "Jadwal UTS",
+};
+
 export function OnlineUsers() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
@@ -58,6 +72,15 @@ export function OnlineUsers() {
             const subject = user.currentSubject
               ? getSubjectById(user.currentSubject)
               : null;
+            // Subjects: visible to all (preserves existing UX).
+            // Page labels (dashboard, forum, etc.): admin-only — others don't
+            // need to know what non-subject page a user is viewing.
+            const locationText =
+              subject?.name ||
+              (isAdmin && user.currentSubject
+                ? PAGE_LABELS[user.currentSubject]
+                : null) ||
+              null;
             const isSelf = user.licenseKey === myLicenseKey;
             // Masking logic:
             // - Admin: always sees real names
@@ -113,10 +136,10 @@ export function OnlineUsers() {
                   <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
                 )}
 
-                {/* Subject badge */}
-                {subject && !masked && (
-                  <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
-                    {subject.name}
+                {/* Location badge — subject name or page label */}
+                {locationText && !masked && (
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[90px]">
+                    {locationText}
                   </span>
                 )}
 

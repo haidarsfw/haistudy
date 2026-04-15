@@ -4,29 +4,37 @@ import { useEffect, useRef } from "react";
 import { useSession } from "@/components/providers/session-provider";
 import { useSettings } from "@/hooks/use-settings";
 import { getDeviceId, getDeviceType } from "@/lib/auth/device";
-import { setupPresence, updateHideStatus } from "@/lib/presence";
+import {
+  setupPresence,
+  updateCurrentSubject,
+  updateHideStatus,
+} from "@/lib/presence";
 
 /**
  * Sets up presence tracking for the current user.
  *
- * CRITICAL FIX: hideStatus is passed via a module-level setter
- * (updateHideStatus) instead of being a dependency of the setup effect.
- * This prevents the entire presence system from restarting every time
- * settings change — which was the root cause of inaccurate time tracking.
+ * CRITICAL FIX: hideStatus + currentSubject pass via module-level setters
+ * (updateHideStatus / updateCurrentSubject) instead of being deps of the
+ * setup effect. Restarting the presence system on every nav or settings
+ * change was the root cause of inaccurate time tracking.
  *
  * The setup effect only re-runs on login/logout (session.licenseKey change).
  */
-export function usePresence() {
+export function usePresence(currentSubject: string | null = null) {
   const { session } = useSession();
   const { settings } = useSettings();
   const cleanupRef = useRef<(() => void) | null>(null);
+  const currentSubjectRef = useRef(currentSubject);
+  currentSubjectRef.current = currentSubject;
 
-  // Update hideStatus WITHOUT restarting the presence system
   useEffect(() => {
     updateHideStatus(settings?.hideStatus ?? false);
   }, [settings?.hideStatus]);
 
-  // Setup presence — ONLY restart on login/logout
+  useEffect(() => {
+    updateCurrentSubject(currentSubject);
+  }, [currentSubject]);
+
   useEffect(() => {
     if (!session) return;
 
@@ -39,6 +47,7 @@ export function usePresence() {
       licenseKey: session.licenseKey,
       deviceType,
       hideStatus: settings?.hideStatus ?? false,
+      currentSubject: currentSubjectRef.current,
     }).then((cleanup) => {
       cleanupRef.current = cleanup;
     });

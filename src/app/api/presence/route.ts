@@ -22,15 +22,23 @@ const MAX_ACTIVE_ELAPSED_S = 180;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, userId, userName, licenseKey, deviceType, hideStatus } =
-      body as {
-        action: "heartbeat" | "offline";
-        userId: string;
-        userName?: string;
-        licenseKey?: string;
-        deviceType?: string;
-        hideStatus?: boolean;
-      };
+    const {
+      action,
+      userId,
+      userName,
+      licenseKey,
+      deviceType,
+      hideStatus,
+      currentSubject,
+    } = body as {
+      action: "heartbeat" | "offline";
+      userId: string;
+      userName?: string;
+      licenseKey?: string;
+      deviceType?: string;
+      hideStatus?: boolean;
+      currentSubject?: string | null;
+    };
 
     if (!userId) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
@@ -97,6 +105,7 @@ export async function POST(request: Request) {
           license_key: licenseKey || null,
           device_type: deviceType || "desktop",
           hide_status: hideStatus ?? false,
+          current_subject: currentSubject ?? null,
           online: true,
           last_seen: nowISO,
           online_seconds_accumulator: newAccumulator,
