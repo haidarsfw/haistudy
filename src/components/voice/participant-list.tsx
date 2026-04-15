@@ -2,10 +2,11 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Shield, Crown, Gem } from "lucide-react";
 import type { VoiceParticipant } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
 interface ParticipantListProps {
   participants: VoiceParticipant[];
@@ -53,13 +54,46 @@ export function ParticipantList({
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="truncate text-sm font-medium">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span
+                  className={`truncate text-sm font-semibold ${
+                    ROLE_COLORS[
+                      resolveRole({
+                        isAdmin: p.isAdmin,
+                        isTester: p.isTester,
+                        packageTier: p.packageTier ?? null,
+                      })
+                    ].text
+                  }`}
+                >
                   {p.userName}
                 </span>
                 {isMe && (
                   <Badge variant="outline" className="text-[9px]">
                     Kamu
+                  </Badge>
+                )}
+                {p.isAdmin && (
+                  <Badge variant="admin-outline" className="gap-0.5 text-[9px] px-1 py-0">
+                    <Shield className="h-2 w-2" />
+                    Admin
+                  </Badge>
+                )}
+                {p.packageTier === "diamond" && (
+                  <Badge variant="diamond-outline" className="gap-0.5 text-[9px] px-1 py-0">
+                    <Gem className="h-2 w-2" />
+                    Diamond
+                  </Badge>
+                )}
+                {(p.packageTier === "vip" || p.packageTier === "diamond") && (
+                  <Badge variant="vip-outline" className="gap-0.5 text-[9px] px-1 py-0">
+                    <Crown className="h-2 w-2" />
+                    VIP
+                  </Badge>
+                )}
+                {p.isTester && (
+                  <Badge variant="tester-outline" className="text-[9px] px-1 py-0">
+                    Tester
                   </Badge>
                 )}
               </div>

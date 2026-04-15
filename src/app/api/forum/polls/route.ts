@@ -65,18 +65,46 @@ export async function GET(request: Request) {
       }
     }
 
-    const polls: ForumPoll[] = (pollsData || []).map((row) => ({
-      id: row.id,
-      subjectId: row.subject_id,
-      question: row.question,
-      options: row.options as PollOption[],
-      totalVotes: row.total_votes,
-      authorId: row.author_id,
-      authorName: row.author_name,
-      active: row.active,
-      createdAt: row.created_at,
-      userVote: userVotes.get(row.id) ?? null,
-    }));
+    // Batch-fetch role info for poll authors (single query)
+    const roleMap = new Map<
+      string,
+      { isAdmin: boolean; isTester: boolean; packageTier: "share" | "normal" | "vip" | "diamond" | null }
+    >();
+    const authorIds = Array.from(
+      new Set((pollsData || []).map((p) => p.author_id as string).filter(Boolean))
+    );
+    if (authorIds.length > 0) {
+      const { data: licenses } = await supabase
+        .from("license_keys")
+        .select("key, is_admin, is_tester, package_tier")
+        .in("key", authorIds);
+      for (const l of licenses || []) {
+        roleMap.set(l.key as string, {
+          isAdmin: Boolean(l.is_admin),
+          isTester: Boolean(l.is_tester),
+          packageTier: (l.package_tier as "share" | "normal" | "vip" | "diamond" | null) ?? null,
+        });
+      }
+    }
+
+    const polls: ForumPoll[] = (pollsData || []).map((row) => {
+      const role = roleMap.get(row.author_id as string);
+      return {
+        id: row.id,
+        subjectId: row.subject_id,
+        question: row.question,
+        options: row.options as PollOption[],
+        totalVotes: row.total_votes,
+        authorId: row.author_id,
+        authorName: row.author_name,
+        active: row.active,
+        createdAt: row.created_at,
+        userVote: userVotes.get(row.id) ?? null,
+        isAdmin: role?.isAdmin ?? false,
+        isTester: role?.isTester ?? false,
+        packageTier: role?.packageTier ?? null,
+      };
+    });
 
     return NextResponse.json({ polls });
   } catch (error) {

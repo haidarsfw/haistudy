@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { CommentInput } from "./comment-input";
 import { parseForumContent } from "@/lib/content-parser";
 import type { ForumComment } from "@/types";
+import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
 interface CommentCardProps {
   comment: ForumComment;
@@ -52,7 +53,19 @@ export function CommentCard({
       <div className="py-3">
         {/* Author info */}
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{comment.authorName}</span>
+          <span
+            className={`text-sm font-semibold ${
+              ROLE_COLORS[
+                resolveRole({
+                  isAdmin: comment.isAdmin,
+                  isTester: comment.isTester,
+                  packageTier: comment.packageTier ?? null,
+                })
+              ].text
+            }`}
+          >
+            {comment.authorName}
+          </span>
           {comment.authorClass && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
               {comment.authorClass}

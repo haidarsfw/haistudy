@@ -11,6 +11,8 @@ import {
   Trash2,
   Shield,
   MessageSquare,
+  Crown,
+  Gem,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import { MediaEmbed } from "./media-embed";
 import { parseForumContent } from "@/lib/content-parser";
 import { detectMediaType } from "@/lib/media-utils";
 import type { ForumThread, Attachment } from "@/types";
+import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
 interface ThreadViewProps {
   thread: ForumThread;
@@ -104,7 +107,19 @@ export function ThreadView({
 
         {/* Author info */}
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">{thread.authorName}</span>
+          <span
+            className={`text-sm font-semibold ${
+              ROLE_COLORS[
+                resolveRole({
+                  isAdmin: thread.isAdmin,
+                  isTester: thread.isTester,
+                  packageTier: thread.packageTier ?? null,
+                })
+              ].text
+            }`}
+          >
+            {thread.authorName}
+          </span>
           {thread.authorClass && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
               {thread.authorClass}
@@ -114,6 +129,23 @@ export function ThreadView({
             <Badge variant="admin-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
               <Shield className="h-2.5 w-2.5" />
               Admin
+            </Badge>
+          )}
+          {thread.packageTier === "diamond" && (
+            <Badge variant="diamond-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
+              <Gem className="h-2.5 w-2.5" />
+              Diamond
+            </Badge>
+          )}
+          {(thread.packageTier === "vip" || thread.packageTier === "diamond") && (
+            <Badge variant="vip-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
+              <Crown className="h-2.5 w-2.5" />
+              VIP
+            </Badge>
+          )}
+          {thread.isTester && (
+            <Badge variant="tester-outline" className="text-[10px] px-1.5 py-0">
+              Tester
             </Badge>
           )}
           <span className="text-xs text-muted-foreground">

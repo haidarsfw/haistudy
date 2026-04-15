@@ -77,6 +77,23 @@ export async function GET(req: NextRequest) {
       grouped.set(key, arr);
     }
 
+    // Batch-fetch role info for all conversation owners (single query)
+    const licenseKeys = Array.from(grouped.keys());
+    const roleMap = new Map<string, { isAdmin: boolean; isTester: boolean; packageTier: string | null }>();
+    if (licenseKeys.length > 0) {
+      const { data: licenses } = await supabase
+        .from("license_keys")
+        .select("key, is_admin, is_tester, package_tier")
+        .in("key", licenseKeys);
+      for (const l of licenses || []) {
+        roleMap.set(l.key as string, {
+          isAdmin: Boolean(l.is_admin),
+          isTester: Boolean(l.is_tester),
+          packageTier: (l.package_tier as string) ?? null,
+        });
+      }
+    }
+
     const conversations = Array.from(grouped.entries()).map(([key, msgs]) => {
       const last = msgs[msgs.length - 1];
       const userMsgs = msgs.filter((m: SupportMessage) => !m.is_admin && !m.is_system);
@@ -105,6 +122,7 @@ export async function GET(req: NextRequest) {
         (m: SupportMessage) => new Date(m.created_at).getTime() > lastAdminTime
       ).length;
 
+      const roleInfo = roleMap.get(key);
       return {
         license_key: key,
         user_name: userMsgs[0]?.sender_name || key.slice(0, 8),
@@ -113,6 +131,9 @@ export async function GET(req: NextRequest) {
         message_count: msgs.length,
         is_resolved: currentlyResolved || false,
         unread_count: currentlyResolved ? 0 : unreadCount,
+        is_admin: roleInfo?.isAdmin ?? false,
+        is_tester: roleInfo?.isTester ?? false,
+        package_tier: roleInfo?.packageTier ?? null,
       };
     });
 

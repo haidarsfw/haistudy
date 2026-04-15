@@ -7,6 +7,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getSubjectById } from "@/data/subjects";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
 const deviceIcons: Record<string, typeof Monitor> = {
   desktop: Monitor,
@@ -86,7 +87,21 @@ export function OnlineUsers() {
                 <div className={`h-2 w-2 rounded-full shrink-0 ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
 
                 {/* Name + device count */}
-                <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
+                <span
+                  className={`truncate flex-1 font-semibold ${
+                    user.hideStatus && isAdmin ? "text-muted-foreground" : ""
+                  } ${masked ? "italic text-muted-foreground" : ""} ${
+                    !masked && !(user.hideStatus && isAdmin)
+                      ? ROLE_COLORS[
+                          resolveRole({
+                            isAdmin: user.isAdmin,
+                            isTester: user.isTester,
+                            packageTier: user.packageTier ?? null,
+                          })
+                        ].text
+                      : ""
+                  }`}
+                >
                   {displayName}
                   {!masked && user.deviceCount > 1 && (
                     <span className="text-muted-foreground font-normal ml-1">({user.deviceCount})</span>

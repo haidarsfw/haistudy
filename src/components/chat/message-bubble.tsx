@@ -25,6 +25,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import type { ChatMessage } from "@/types";
+import {
+  ROLE_COLORS,
+  resolveRole,
+  type UserRole,
+} from "@/lib/role-colors";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -36,7 +41,7 @@ interface MessageBubbleProps {
   onPin: (messageId: string) => void;
   onUnpin: (messageId: string) => void;
   onImageClick?: (src: string) => void;
-  userRoleMap?: Map<string, "admin" | "diamond" | "vip" | "tester" | "normal">;
+  userRoleMap?: Map<string, UserRole>;
 }
 
 export function MessageBubble({
@@ -67,27 +72,24 @@ export function MessageBubble({
     locale: idLocale,
   });
 
-  // Render mention highlights with role-based colors
   const getMentionClasses = (mentionName: string) => {
-    const name = mentionName.slice(1).toLowerCase(); // remove @ prefix
-    const role = userRoleMap?.get(name);
-    switch (role) {
-      case "admin":
-        return "font-semibold text-red-500 dark:text-red-400";
-      case "diamond":
-        return "font-semibold text-sky-500 dark:text-sky-400 drop-shadow-[0_0_6px_oklch(0.7_0.15_230/0.5)]";
-      case "vip":
-        return "font-semibold text-amber-500 dark:text-amber-300 drop-shadow-[0_0_6px_oklch(0.7_0.15_80/0.5)]";
-      case "tester":
-        return "font-semibold text-emerald-500 dark:text-emerald-400";
-      case "normal":
-        return "font-semibold text-blue-500 dark:text-blue-400";
-      default:
-        // @all or unknown — use blue
-        if (name === "all") return "font-semibold text-blue-500 dark:text-blue-400";
-        return "font-semibold text-blue-500 dark:text-blue-400";
+    const name = mentionName.slice(1).toLowerCase();
+    const role: UserRole = userRoleMap?.get(name) || "normal";
+    const base = `font-semibold ${ROLE_COLORS[role].text}`;
+    if (role === "diamond") {
+      return `${base} drop-shadow-[0_0_6px_oklch(0.7_0.15_230/0.5)]`;
     }
+    if (role === "vip") {
+      return `${base} drop-shadow-[0_0_6px_oklch(0.7_0.15_80/0.5)]`;
+    }
+    return base;
   };
+
+  const authorRole = resolveRole({
+    isAdmin: message.isAdmin,
+    isTester: message.isTester,
+    packageTier: message.packageTier ?? null,
+  });
 
   const renderContent = (text: string) => {
     const parts = text.split(/(@\w+)/g);
@@ -130,7 +132,7 @@ export function MessageBubble({
         <div className="flex items-center gap-2">
           <span
             className={`text-sm font-semibold ${
-              isOwn ? "text-primary" : "text-foreground"
+              isOwn ? "text-primary" : ROLE_COLORS[authorRole].text
             }`}
           >
             {message.authorName}

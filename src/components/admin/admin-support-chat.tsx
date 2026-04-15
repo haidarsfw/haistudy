@@ -17,6 +17,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { sounds } from "@/lib/sounds";
+import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
 interface SupportMessage {
   id: string;
@@ -36,6 +37,9 @@ interface ConversationSummary {
   message_count: number;
   is_resolved: boolean;
   unread_count: number;
+  is_admin?: boolean;
+  is_tester?: boolean;
+  package_tier?: "share" | "normal" | "vip" | "diamond" | null;
 }
 
 export function AdminSupportChat() {
@@ -277,7 +281,19 @@ export function AdminSupportChat() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold truncate">{conv.user_name}</span>
+                      <span
+                        className={`text-xs font-semibold truncate ${
+                          ROLE_COLORS[
+                            resolveRole({
+                              isAdmin: conv.is_admin,
+                              isTester: conv.is_tester,
+                              packageTier: conv.package_tier ?? null,
+                            })
+                          ].text
+                        }`}
+                      >
+                        {conv.user_name}
+                      </span>
                       {conv.is_resolved && (
                         <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
                       )}
@@ -328,7 +344,21 @@ export function AdminSupportChat() {
                     {selectedConv?.user_name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold truncate">{selectedConv?.user_name}</p>
+                    <p
+                      className={`text-xs font-semibold truncate ${
+                        selectedConv
+                          ? ROLE_COLORS[
+                              resolveRole({
+                                isAdmin: selectedConv.is_admin,
+                                isTester: selectedConv.is_tester,
+                                packageTier: selectedConv.package_tier ?? null,
+                              })
+                            ].text
+                          : ""
+                      }`}
+                    >
+                      {selectedConv?.user_name}
+                    </p>
                     <p className="text-[10px] text-muted-foreground truncate">
                       {selectedKey?.slice(0, 12)}...
                     </p>
@@ -401,7 +431,19 @@ export function AdminSupportChat() {
                             }`}
                           >
                             {!msg.is_admin && (
-                              <p className="text-[10px] font-semibold mb-0.5 text-muted-foreground">
+                              <p
+                                className={`text-[10px] font-semibold mb-0.5 ${
+                                  selectedConv
+                                    ? ROLE_COLORS[
+                                        resolveRole({
+                                          isAdmin: selectedConv.is_admin,
+                                          isTester: selectedConv.is_tester,
+                                          packageTier: selectedConv.package_tier ?? null,
+                                        })
+                                      ].text
+                                    : "text-muted-foreground"
+                                }`}
+                              >
                                 {msg.sender_name}
                               </p>
                             )}

@@ -311,7 +311,7 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
                               }`}
                             >
                               {!isOwn && (
-                                <p className={`text-[10px] font-semibold mb-0.5 ${msg.is_admin ? "text-primary" : "text-muted-foreground"}`}>
+                                <p className={`text-[10px] font-semibold mb-0.5 ${msg.is_admin ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}`}>
                                   {msg.sender_name}{msg.is_admin ? " (Admin)" : ""}
                                 </p>
                               )}

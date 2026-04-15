@@ -56,12 +56,20 @@ const customRooms = new Map<string, Omit<VoiceRoom, "participants">>();
 // ─── Mock participants ───
 const mockParticipants = new Map<string, VoiceParticipant[]>();
 
-function mapParticipantRow(row: Record<string, unknown>): VoiceParticipant {
+function mapParticipantRow(
+  row: Record<string, unknown>,
+  roleMap?: Map<string, { isAdmin: boolean; isTester: boolean; packageTier: "share" | "normal" | "vip" | "diamond" | null }>
+): VoiceParticipant {
+  const licenseKey = (row.license_key as string) || null;
+  const role = licenseKey ? roleMap?.get(licenseKey) : undefined;
   return {
     id: row.id as string,
     userName: row.user_name as string,
-    licenseKey: (row.license_key as string) || null,
+    licenseKey,
     joinedAt: row.joined_at as string,
+    isAdmin: role?.isAdmin ?? false,
+    isTester: role?.isTester ?? false,
+    packageTier: role?.packageTier ?? null,
   };
 }
 
@@ -170,13 +178,39 @@ export async function GET() {
 
     if (error) throw error;
 
+    // Batch-fetch role info for all participants' license_keys (single query)
+    const participantKeys = Array.from(
+      new Set(
+        (participants || [])
+          .map((p) => p.license_key as string)
+          .filter(Boolean)
+      )
+    );
+    const roleMap = new Map<
+      string,
+      { isAdmin: boolean; isTester: boolean; packageTier: "share" | "normal" | "vip" | "diamond" | null }
+    >();
+    if (participantKeys.length > 0) {
+      const { data: licenses } = await supabase
+        .from("license_keys")
+        .select("key, is_admin, is_tester, package_tier")
+        .in("key", participantKeys);
+      for (const l of licenses || []) {
+        roleMap.set(l.key as string, {
+          isAdmin: Boolean(l.is_admin),
+          isTester: Boolean(l.is_tester),
+          packageTier: (l.package_tier as "share" | "normal" | "vip" | "diamond" | null) ?? null,
+        });
+      }
+    }
+
     const participantsByRoom = new Map<string, VoiceParticipant[]>();
     for (const p of participants || []) {
       const roomId = p.room_id as string;
       if (!participantsByRoom.has(roomId)) {
         participantsByRoom.set(roomId, []);
       }
-      participantsByRoom.get(roomId)!.push(mapParticipantRow(p));
+      participantsByRoom.get(roomId)!.push(mapParticipantRow(p, roleMap));
     }
 
     const rooms: VoiceRoom[] = getAllRoomDefs().map((r) => ({

@@ -1,15 +1,17 @@
 "use client";
 
-import { Trash2, CheckCircle2 } from "lucide-react";
+import { Trash2, CheckCircle2, Shield, Crown, Gem } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useTranslation } from "@/components/providers/language-provider";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
 import type { ForumPoll } from "@/types";
 import { sounds } from "@/lib/sounds";
+import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
 interface PollWidgetProps {
   poll: ForumPoll;
@@ -27,15 +29,54 @@ export function PollWidget({ poll, isAdmin, onVote, onDelete }: PollWidgetProps)
     <div className="rounded-xl border border-border bg-card p-4">
       {/* Question */}
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0 flex-1">
           <h4 className="text-sm font-semibold">{poll.question}</h4>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            oleh {poll.authorName} &middot;{" "}
-            {formatDistanceToNow(new Date(poll.createdAt), {
-              addSuffix: true,
-              locale: idLocale,
-            })}
-          </p>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <span>oleh</span>
+            <span
+              className={`font-semibold ${
+                ROLE_COLORS[
+                  resolveRole({
+                    isAdmin: poll.isAdmin,
+                    isTester: poll.isTester,
+                    packageTier: poll.packageTier ?? null,
+                  })
+                ].text
+              }`}
+            >
+              {poll.authorName}
+            </span>
+            {poll.isAdmin && (
+              <Badge variant="admin-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
+                <Shield className="h-2.5 w-2.5" />
+                Admin
+              </Badge>
+            )}
+            {poll.packageTier === "diamond" && (
+              <Badge variant="diamond-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
+                <Gem className="h-2.5 w-2.5" />
+                Diamond
+              </Badge>
+            )}
+            {(poll.packageTier === "vip" || poll.packageTier === "diamond") && (
+              <Badge variant="vip-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
+                <Crown className="h-2.5 w-2.5" />
+                VIP
+              </Badge>
+            )}
+            {poll.isTester && (
+              <Badge variant="tester-outline" className="text-[10px] px-1.5 py-0">
+                Tester
+              </Badge>
+            )}
+            <span>&middot;</span>
+            <span>
+              {formatDistanceToNow(new Date(poll.createdAt), {
+                addSuffix: true,
+                locale: idLocale,
+              })}
+            </span>
+          </div>
         </div>
         {isAdmin && (
           <ConfirmDialog

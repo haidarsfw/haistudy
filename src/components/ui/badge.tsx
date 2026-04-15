@@ -26,7 +26,7 @@ const badgeVariants = cva(
         "diamond-outline":
           "border-sky-400/70 text-sky-500 dark:border-sky-300/60 dark:text-sky-300 bg-transparent animate-shimmer bg-gradient-to-r from-sky-500/5 via-cyan-400/15 to-sky-500/5 bg-[length:200%_auto] shadow-[0_0_10px_oklch(0.7_0.15_220/0.5),0_0_20px_oklch(0.7_0.15_220/0.25)] dark:shadow-[0_0_10px_oklch(0.75_0.12_220/0.6),0_0_24px_oklch(0.75_0.12_220/0.3)]",
         "tester-outline":
-          "border-emerald-500/60 text-emerald-600 dark:border-emerald-400/50 dark:text-emerald-400 bg-transparent",
+          "border-emerald-500/60 text-emerald-500 dark:border-emerald-400/50 dark:text-emerald-400 bg-transparent",
       },
     },
     defaultVariants: {

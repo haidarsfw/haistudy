@@ -124,6 +124,9 @@ export interface OnlineUser {
   licenseKey: string;
   lastSeen: string;
   deviceCount: number;
+  isAdmin?: boolean;
+  isTester?: boolean;
+  packageTier?: "share" | "normal" | "vip" | "diamond" | null;
 }
 
 export interface ChatMessage {
@@ -175,6 +178,9 @@ export interface VoiceParticipant {
   userName: string;
   licenseKey: string | null;
   joinedAt: string;
+  isAdmin?: boolean;
+  isTester?: boolean;
+  packageTier?: "share" | "normal" | "vip" | "diamond" | null;
 }
 
 export interface PurchaseRequest {
@@ -247,6 +253,9 @@ export interface ForumPoll {
   active: boolean;
   createdAt: string;
   userVote?: number | null;
+  isAdmin?: boolean;
+  isTester?: boolean;
+  packageTier?: "share" | "normal" | "vip" | "diamond" | null;
 }
 
 export interface PollOption {

@@ -152,19 +152,57 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     return now - lastSeen < STALE_MS;
   });
 
-  const rawUsers = freshData.map((row: Record<string, unknown>) => ({
-    id: (row.user_id as string) || (row.id as string) || "",
-    userName: (row.user_name as string) || "Unknown",
-    deviceType: ((row.device_type as string) || "desktop") as
-      | "desktop"
-      | "mobile"
-      | "tablet",
-    currentSubject: (row.current_subject as string) || null,
-    hideStatus: (row.hide_status as boolean) ?? false,
-    licenseKey: (row.license_key as string) || "",
-    lastSeen: (row.last_seen as string) || new Date().toISOString(),
-    deviceCount: 1,
-  }));
+  // Batch-fetch role info for all online users (single extra query)
+  const licenseKeys = Array.from(
+    new Set(
+      freshData
+        .map((r: Record<string, unknown>) => (r.license_key as string) || "")
+        .filter(Boolean)
+    )
+  );
+  const roleMap = new Map<
+    string,
+    {
+      isAdmin: boolean;
+      isTester: boolean;
+      packageTier: "share" | "normal" | "vip" | "diamond" | null;
+    }
+  >();
+  if (licenseKeys.length > 0) {
+    const { data: licenses } = await supabase
+      .from("license_keys")
+      .select("key, is_admin, is_tester, package_tier")
+      .in("key", licenseKeys);
+    for (const l of licenses || []) {
+      roleMap.set(l.key as string, {
+        isAdmin: Boolean(l.is_admin),
+        isTester: Boolean(l.is_tester),
+        packageTier:
+          (l.package_tier as "share" | "normal" | "vip" | "diamond" | null) ?? null,
+      });
+    }
+  }
+
+  const rawUsers = freshData.map((row: Record<string, unknown>) => {
+    const licenseKey = (row.license_key as string) || "";
+    const role = roleMap.get(licenseKey);
+    return {
+      id: (row.user_id as string) || (row.id as string) || "",
+      userName: (row.user_name as string) || "Unknown",
+      deviceType: ((row.device_type as string) || "desktop") as
+        | "desktop"
+        | "mobile"
+        | "tablet",
+      currentSubject: (row.current_subject as string) || null,
+      hideStatus: (row.hide_status as boolean) ?? false,
+      licenseKey,
+      lastSeen: (row.last_seen as string) || new Date().toISOString(),
+      deviceCount: 1,
+      isAdmin: role?.isAdmin ?? false,
+      isTester: role?.isTester ?? false,
+      packageTier: role?.packageTier ?? null,
+    };
+  });
 
   // Stack users with the same licenseKey (same person, multiple devices)
   const grouped = new Map<string, OnlineUser>();

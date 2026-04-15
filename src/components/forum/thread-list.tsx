@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ForumThread } from "@/types";
 import { springSmooth } from "@/lib/motion";
 import { useThreadRead } from "@/hooks/use-thread-read";
+import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
 interface ThreadListProps {
   threads: ForumThread[];
@@ -96,7 +97,17 @@ export function ThreadList({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-muted-foreground">
+                <span
+                  className={`text-xs font-medium ${
+                    ROLE_COLORS[
+                      resolveRole({
+                        isAdmin: thread.isAdmin,
+                        isTester: thread.isTester,
+                        packageTier: thread.packageTier ?? null,
+                      })
+                    ].text
+                  }`}
+                >
                   {thread.authorName}
                 </span>
                 {thread.authorClass && (

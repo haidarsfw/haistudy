@@ -9,6 +9,7 @@ import { VoiceRecorder } from "./voice-recorder";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
 import type { ChatMessage } from "@/types";
 import { sounds } from "@/lib/sounds";
+import { ROLE_COLORS, type UserRole } from "@/lib/role-colors";
 
 interface MessageInputProps {
   onSend: (
@@ -22,16 +23,8 @@ interface MessageInputProps {
   disabled?: boolean;
   onlineUserNames?: string[];
   isAdmin?: boolean;
-  userRoleMap?: Map<string, "admin" | "diamond" | "vip" | "tester" | "normal">;
+  userRoleMap?: Map<string, UserRole>;
 }
-
-const ROLE_COLORS: Record<string, string> = {
-  admin: "text-red-500",
-  diamond: "text-sky-400",
-  vip: "text-amber-400",
-  tester: "text-green-500",
-  normal: "text-blue-500",
-};
 
 export function MessageInput({
   onSend,
@@ -201,8 +194,8 @@ export function MessageInput({
       {showMentions && (
         <div className="mb-2 rounded-md border border-border bg-popover p-1 shadow-md">
           {getFilteredUsers().map((name) => {
-            const role = userRoleMap?.get(name.toLowerCase()) || (name === "all" ? "normal" : "normal");
-            const colorClass = ROLE_COLORS[role] || ROLE_COLORS.normal;
+            const role: UserRole = userRoleMap?.get(name.toLowerCase()) || "normal";
+            const colorClass = ROLE_COLORS[role].text;
             return (
               <button
                 key={name}
