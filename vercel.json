@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-presence",
+      "schedule": "0 3 * * 0"
+    }
+  ],
+  "functions": {
+    "src/app/api/ai/chat/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}

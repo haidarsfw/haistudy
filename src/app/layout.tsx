@@ -3,8 +3,10 @@ import { Plus_Jakarta_Sans, Inter, Geist_Mono, Poppins } from "next/font/google"
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { LanguageProvider } from "@/components/providers/language-provider";
+import { MotionProvider } from "@/components/providers/motion-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -25,6 +27,8 @@ const poppins = Poppins({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "600", "700"],
+  // Only users who explicitly pick Poppins trigger the font fetch via CSS
+  preload: false,
 });
 
 const geistMono = Geist_Mono({
@@ -101,9 +105,12 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <LanguageProvider>
-              {children}
-              <Toaster position="top-right" richColors closeButton />
+              <MotionProvider>
+                {children}
+                <Toaster position="top-right" richColors closeButton />
+              </MotionProvider>
               <Analytics />
+              <SpeedInsights />
             </LanguageProvider>
           </SessionProvider>
         </ThemeProvider>
