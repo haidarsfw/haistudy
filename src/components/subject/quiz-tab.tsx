@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Play,
   RotateCcw,
   CheckCircle2,
   XCircle,
   Timer,
+  TimerOff,
   Trophy,
-  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { QuizQuestion } from "@/types";
 import { parseInline } from "@/lib/content-parser";
-import { calculateQuizScore, type QuizResult } from "@/lib/quiz-scoring";
 import { QUIZ_TIMER_SECONDS } from "@/lib/constants";
 import {
   springSmooth,
@@ -28,6 +26,8 @@ import {
   popScale,
 } from "@/lib/motion";
 import { sounds } from "@/lib/sounds";
+import { useQuiz, type QuizSettings, TIMED_OUT_ANSWER } from "@/hooks/use-quiz";
+import { QuizSettingsScreen } from "@/components/subject/quiz-settings";
 
 interface QuizTabProps {
   questions: QuizQuestion[];
@@ -35,84 +35,109 @@ interface QuizTabProps {
   subjectId?: string;
 }
 
-type QuizState = "idle" | "playing" | "review";
+const QUIZ_PREFS_KEY = "hs-quiz-prefs";
+
+interface QuizPreferences {
+  lastModuleFilter: Record<string, string | null>;
+  defaultShuffled: boolean;
+  defaultTimerEnabled: boolean;
+}
+
+function loadQuizPrefs(): QuizPreferences {
+  const defaults: QuizPreferences = {
+    lastModuleFilter: {},
+    defaultShuffled: false,
+    defaultTimerEnabled: true,
+  };
+  if (typeof window === "undefined") return defaults;
+  try {
+    const raw = localStorage.getItem(QUIZ_PREFS_KEY);
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw) as Partial<QuizPreferences>;
+    return {
+      lastModuleFilter: parsed.lastModuleFilter ?? {},
+      defaultShuffled: parsed.defaultShuffled ?? false,
+      defaultTimerEnabled: parsed.defaultTimerEnabled ?? true,
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+function saveQuizPrefs(prefs: QuizPreferences) {
+  try {
+    localStorage.setItem(QUIZ_PREFS_KEY, JSON.stringify(prefs));
+  } catch {}
+}
 
 export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
-  const [state, setState] = useState<QuizState>("idle");
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [timer, setTimer] = useState(QUIZ_TIMER_SECONDS);
-  const [result, setResult] = useState<QuizResult | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const {
+    phase,
+    settings,
+    filteredQuestions,
+    currentIdx,
+    answers,
+    timer,
+    timerRunning,
+    result,
+    start,
+    selectAnswer,
+    nextOrFinish,
+    resetToSettings,
+  } = useQuiz({ questions, onFinish: onScoreSave });
 
-  const current = questions[currentIdx];
-  const total = questions.length;
+  const handleStart = useCallback(
+    (s: QuizSettings) => {
+      start(s);
+      const current = loadQuizPrefs();
+      const nextPrefs: QuizPreferences = {
+        lastModuleFilter: subjectId
+          ? { ...current.lastModuleFilter, [subjectId]: s.moduleFilter }
+          : current.lastModuleFilter,
+        defaultShuffled: s.shuffled,
+        defaultTimerEnabled: s.timerEnabled,
+      };
+      saveQuizPrefs(nextPrefs);
+    },
+    [start, subjectId]
+  );
 
-  // Timer countdown
-  useEffect(() => {
-    if (state !== "playing") return;
-
-    setTimer(QUIZ_TIMER_SECONDS);
-    if (timerRef.current) clearInterval(timerRef.current);
-
-    timerRef.current = setInterval(() => {
-      setTimer((t) => {
-        if (t <= 1) {
-          // Time's up - auto advance
-          handleNext();
-          return QUIZ_TIMER_SECONDS;
-        }
-        return t - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [state, currentIdx]);
-
-  const start = useCallback(() => {
-    sounds.toggle();
-    setAnswers({});
-    setCurrentIdx(0);
-    setResult(null);
-    setState("playing");
-  }, []);
-
-  const selectAnswer = useCallback(
+  const handleSelectAnswer = useCallback(
     (optionIdx: number) => {
-      if (state !== "playing") return;
-      if (answers[current.id] !== undefined) return; // Already answered
-
-      if (optionIdx === current.answer) {
-        sounds.correct();
-      } else {
-        sounds.wrong();
-      }
-      setAnswers((prev) => ({ ...prev, [current.id]: optionIdx }));
-      // Scroll parent <main> to bottom after animation renders explanation + Next button
+      const current = filteredQuestions[currentIdx];
+      if (!current) return;
+      if (answers[current.id] !== undefined) return;
+      if (optionIdx === current.answer) sounds.correct();
+      else sounds.wrong();
+      selectAnswer(optionIdx);
+      // Scroll parent <main> after explanation renders
       setTimeout(() => {
         const main = document.querySelector("main");
         if (main) main.scrollTo({ top: main.scrollHeight, behavior: "smooth" });
       }, 500);
     },
-    [state, current, answers]
+    [filteredQuestions, currentIdx, answers, selectAnswer]
   );
 
   const handleNext = useCallback(() => {
     sounds.click();
-    if (currentIdx < total - 1) {
-      setCurrentIdx((i) => i + 1);
-      setTimer(QUIZ_TIMER_SECONDS);
-    } else {
-      // Quiz finished
-      if (timerRef.current) clearInterval(timerRef.current);
-      const quizResult = calculateQuizScore(questions, answers);
-      setResult(quizResult);
-      setState("review");
-      onScoreSave?.(quizResult.totalScore, quizResult.maxScore);
-    }
-  }, [currentIdx, total, questions, answers, onScoreSave]);
+    nextOrFinish();
+  }, [nextOrFinish]);
+
+  // Fire the wrong-sound exactly once when the current question flips to
+  // timed-out. Defined at top-level to satisfy rules-of-hooks across the
+  // component's conditional early returns below.
+  const lastTimeoutQidRef = useRef<number | null>(null);
+  const playingCurrent =
+    phase === "playing" ? filteredQuestions[currentIdx] : undefined;
+  const playingTimedOut =
+    !!playingCurrent && answers[playingCurrent.id] === TIMED_OUT_ANSWER;
+  useEffect(() => {
+    if (!playingCurrent || !playingTimedOut) return;
+    if (lastTimeoutQidRef.current === playingCurrent.id) return;
+    lastTimeoutQidRef.current = playingCurrent.id;
+    sounds.wrong();
+  }, [playingCurrent, playingTimedOut]);
 
   if (questions.length === 0) {
     return (
@@ -122,44 +147,18 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
     );
   }
 
-  // Idle state
-  if (state === "idle") {
+  if (phase === "settings") {
     return (
-      <motion.div
-        className="flex flex-col items-center gap-4 py-8"
-        variants={scaleIn}
-        initial="hidden"
-        animate="visible"
-      >
-        {subjectId === "cbkwn" && (
-          <div className="flex items-start gap-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 w-full max-w-md">
-            <Monitor className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
-            <p className="text-xs text-blue-700 dark:text-blue-400">
-              Ujian mata kuliah ini dilaksanakan secara <span className="font-semibold">online</span>. Silakan kunjungi{" "}
-              <a href="https://exam.apps.binus.ac.id" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">exam.apps.binus.ac.id</a>{" "}
-              untuk informasi lebih lanjut.
-            </p>
-          </div>
-        )}
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <Play className="h-8 w-8 text-primary" />
-        </div>
-        <div className="text-center">
-          <h3 className="font-heading text-lg font-semibold">Quiz Time!</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {total} pertanyaan &middot; {QUIZ_TIMER_SECONDS}s per soal &middot;
-            Max 100 poin
-          </p>
-        </div>
-        <motion.div whileHover={hoverLift} whileTap={tapScale}>
-          <Button onClick={start}>Mulai Quiz</Button>
-        </motion.div>
-      </motion.div>
+      <QuizSettingsScreen
+        questions={questions}
+        subjectId={subjectId}
+        onStart={handleStart}
+      />
     );
   }
 
-  // Review state
-  if (state === "review" && result) {
+  if (phase === "review" && result) {
+    const scopeLabel = settings.moduleFilter ?? "Semua Modul";
     return (
       <motion.div
         className="flex flex-col gap-4 py-4"
@@ -167,20 +166,18 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
         initial="hidden"
         animate="visible"
       >
-        {/* Score summary */}
         <motion.div
           className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center"
           variants={staggerItem}
         >
-          <motion.div
-            variants={scaleIn}
-            initial="hidden"
-            animate="visible"
-          >
+          <motion.div variants={scaleIn} initial="hidden" animate="visible">
             <Trophy className="h-10 w-10 text-primary" />
           </motion.div>
           <div>
-            <p className="font-heading text-3xl font-bold tabular-nums">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              Hasil · {scopeLabel}
+            </p>
+            <p className="font-heading text-3xl font-bold tabular-nums mt-1">
               {result.totalScore}
               <span className="text-lg text-muted-foreground">
                 /{result.maxScore}
@@ -191,7 +188,6 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
             </p>
           </div>
 
-          {/* Category breakdown */}
           <motion.div
             className="w-full mt-3 flex flex-col gap-1"
             variants={staggerContainer(0.05)}
@@ -213,12 +209,12 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
           </motion.div>
         </motion.div>
 
-        {/* Question review */}
         <div className="flex flex-col gap-2">
-          {questions.map((q) => {
+          {filteredQuestions.map((q) => {
             const userAnswer = answers[q.id];
-            const isCorrect = userAnswer === q.answer;
             const wasSkipped = userAnswer === undefined;
+            const wasTimedOut = userAnswer === TIMED_OUT_ANSWER;
+            const isCorrect = !wasSkipped && !wasTimedOut && userAnswer === q.answer;
 
             return (
               <div
@@ -234,19 +230,30 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
                 <div className="flex items-start gap-2">
                   {wasSkipped ? (
                     <Timer className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                  ) : wasTimedOut ? (
+                    <TimerOff className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
                   ) : isCorrect ? (
                     <CheckCircle2 className="h-4 w-4 mt-0.5 text-emerald-600 shrink-0" />
                   ) : (
                     <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{parseInline(q.question)}</p>
+                    <p className="text-sm font-medium">
+                      {parseInline(q.question)}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Jawaban: {parseInline(q.options[q.answer])}
-                      {!wasSkipped && !isCorrect && (
+                      {wasTimedOut && (
                         <span className="text-destructive">
                           {" "}
-                          &middot; Kamu pilih: {parseInline(q.options[userAnswer])}
+                          &middot; Waktu habis (0 poin)
+                        </span>
+                      )}
+                      {!wasSkipped && !wasTimedOut && !isCorrect && (
+                        <span className="text-destructive">
+                          {" "}
+                          &middot; Kamu pilih:{" "}
+                          {parseInline(q.options[userAnswer])}
                         </span>
                       )}
                     </p>
@@ -264,7 +271,7 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
 
         <motion.div variants={staggerItem} className="self-center">
           <motion.div whileHover={hoverLift} whileTap={tapScale}>
-            <Button onClick={start} variant="outline">
+            <Button onClick={resetToSettings} variant="outline">
               <RotateCcw className="h-4 w-4 mr-1" />
               Coba Lagi
             </Button>
@@ -274,41 +281,57 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
     );
   }
 
-  // Playing state
+  // Playing phase
+  const current = filteredQuestions[currentIdx];
+  if (!current) return null;
+
+  const total = filteredQuestions.length;
   const selectedAnswer = answers[current.id];
   const hasAnswered = selectedAnswer !== undefined;
+  const didTimeOut = selectedAnswer === TIMED_OUT_ANSWER;
   const timerPercent = (timer / QUIZ_TIMER_SECONDS) * 100;
+  const showTimer = settings.timerEnabled;
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground tabular-nums">
           {currentIdx + 1}/{total}
         </span>
-        <div className="flex items-center gap-2">
-          <Timer
-            className={`h-4 w-4 ${timer <= 5 ? "text-destructive animate-pulse" : "text-muted-foreground"}`}
+        {showTimer && (
+          <div className="flex items-center gap-2">
+            <Timer
+              className={`h-4 w-4 transition-opacity ${
+                timer <= 5 && timerRunning
+                  ? "text-destructive animate-pulse"
+                  : "text-muted-foreground"
+              } ${!timerRunning ? "opacity-50" : ""}`}
+            />
+            <span
+              className={`text-sm font-mono tabular-nums transition-opacity ${
+                timer <= 5 && timerRunning
+                  ? "text-destructive font-bold"
+                  : ""
+              } ${!timerRunning ? "opacity-50" : ""}`}
+              aria-live="polite"
+            >
+              {timer}s
+            </span>
+          </div>
+        )}
+      </div>
+
+      {showTimer && (
+        <div className="h-1 w-full rounded-full bg-border overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-[width] duration-1000 linear ${
+              timer <= 5 ? "bg-destructive" : "bg-primary"
+            } ${!timerRunning ? "opacity-40" : ""}`}
+            style={{ width: `${timerPercent}%` }}
           />
-          <span
-            className={`text-sm font-mono tabular-nums ${timer <= 5 ? "text-destructive font-bold" : ""}`}
-          >
-            {timer}s
-          </span>
         </div>
-      </div>
+      )}
 
-      {/* Timer bar */}
-      <div className="h-1 w-full rounded-full bg-border overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-[width] duration-1000 linear ${
-            timer <= 5 ? "bg-destructive" : "bg-primary"
-          }`}
-          style={{ width: `${timerPercent}%` }}
-        />
-      </div>
-
-      {/* Question - animated between questions */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIdx}
@@ -327,7 +350,29 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Options */}
+      <AnimatePresence>
+        {didTimeOut && (
+          <motion.div
+            className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <TimerOff className="h-4 w-4 shrink-0 text-destructive mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-destructive">
+                Waktu habis
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Jawaban ditandai salah (0 poin). Jawaban yang benar disorot di
+                bawah.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col gap-2">
         {current.options.map((option, idx) => {
           const isSelected = selectedAnswer === idx;
@@ -337,7 +382,7 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
           return (
             <motion.button
               key={idx}
-              onClick={() => selectAnswer(idx)}
+              onClick={() => handleSelectAnswer(idx)}
               disabled={hasAnswered}
               className={`flex items-center gap-3 rounded-xl border p-4 text-left text-sm transition-colors ${
                 isCorrect
@@ -348,13 +393,7 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
                       ? "border-primary bg-primary/5"
                       : "border-border bg-card hover:border-primary/30"
               }`}
-              animate={
-                isCorrect
-                  ? popScale
-                  : isWrong
-                    ? shakeX
-                    : {}
-              }
+              animate={isCorrect ? popScale : isWrong ? shakeX : {}}
               transition={springSmooth}
             >
               <span
@@ -380,7 +419,6 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
         })}
       </div>
 
-      {/* Explanation + Next button */}
       <AnimatePresence>
         {hasAnswered && current.explanation && (
           <motion.div
@@ -390,13 +428,16 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
             animate="visible"
             exit="hidden"
           >
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Penjelasan</p>
-            <p className="text-sm leading-relaxed">{parseInline(current.explanation)}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+              Penjelasan
+            </p>
+            <p className="text-sm leading-relaxed">
+              {parseInline(current.explanation)}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Next button */}
       <AnimatePresence>
         {hasAnswered && (
           <motion.div
@@ -412,7 +453,6 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }

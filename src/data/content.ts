@@ -15,12 +15,13 @@ import { akuntansiQuiz } from "./akuntansi-quiz";
 export const content: Record<string, SubjectContent> = {
   statistik: {
     materi: [
-      { id: 1, title: "Introduction to Statistics", driveId: "1iJW_GQiv9fSMQZAZTJVRWIiGxBqxnZ4jsqsYP-dIh98", type: "drive-gslides", session: "1", xp: 10 },
-      { id: 2, title: "Describing Data: Frequency Tables, Frequency Distributions, and Graphic Presentation", driveId: "10VWWLcEqE9m98dsb0k-J9xhwSBRzcCv6YlqHBs2a5vE", type: "drive-gslides", session: "2", xp: 10 },
-      { id: 3, title: "Describing Data: Numerical Measures", driveId: "1zuTLNB-_JXf3oVdjNDOacI4vfAPKsiMmZfsB5BPy1Ic", type: "drive-gslides", session: "3", xp: 10 },
-      { id: 4, title: "Introduction to Probability - A Survey of Probability Concepts", driveId: "1fptNciNWzhXfEyQyAISVl_VQSgCIWdK_oaIBX3zr0cw", type: "drive-gslides", session: "4", xp: 10 },
-      { id: 5, title: "Continuous Probability Distributions", driveId: "1EGIHIxNhIMnPDM1EpfZIBEzhLv9WrLrHYvBLbSnx8Ys", type: "drive-gslides", session: "5-6", xp: 10 },
-      { id: 6, title: "Discrete Probability Distributions", driveId: "1BfkJrC8Yqx0FKUFrBm90jHPO8YlnK-tcWWKs1XD_fNw", type: "drive-gslides", session: "7", xp: 10 },
+      // Verified 2026-04-15 — audit hasil swap-pair (driveIds sebelumnya terbalik urutannya)
+      { id: 1, title: "Introduction to Statistics", driveId: "1BfkJrC8Yqx0FKUFrBm90jHPO8YlnK-tcWWKs1XD_fNw", type: "drive-gslides", session: "1", xp: 10 },
+      { id: 2, title: "Describing Data: Frequency Tables, Frequency Distributions, and Graphic Presentation", driveId: "1EGIHIxNhIMnPDM1EpfZIBEzhLv9WrLrHYvBLbSnx8Ys", type: "drive-gslides", session: "2", xp: 10 },
+      { id: 3, title: "Describing Data: Numerical Measures", driveId: "1fptNciNWzhXfEyQyAISVl_VQSgCIWdK_oaIBX3zr0cw", type: "drive-gslides", session: "3", xp: 10 },
+      { id: 4, title: "Introduction to Probability - A Survey of Probability Concepts", driveId: "1zuTLNB-_JXf3oVdjNDOacI4vfAPKsiMmZfsB5BPy1Ic", type: "drive-gslides", session: "4", xp: 10 },
+      { id: 5, title: "Continuous Probability Distributions", driveId: "10VWWLcEqE9m98dsb0k-J9xhwSBRzcCv6YlqHBs2a5vE", type: "drive-gslides", session: "5-6", xp: 10 },
+      { id: 6, title: "Discrete Probability Distributions", driveId: "1iJW_GQiv9fSMQZAZTJVRWIiGxBqxnZ4jsqsYP-dIh98", type: "drive-gslides", session: "7", xp: 10 },
       // Materi tambahan dari dosen LE86
       { id: 101, title: "Frequency Distribution", driveId: "1sJJxdAHSZGckdG0eTTb4XUaeSOUOCIy54s4sJF1ETMU", type: "drive-gslides", xp: 5, sectionLabel: "Materi Tambahan — LE86", sectionNote: "Rangkuman yang lebih mudah dipahami dari Prof. Dr. PURWANTO, A.Md., S.T., M.M." },
       { id: 102, title: "Tabel Z", driveId: "1nPcVv2ot0fqrwsi5xhfwAUfSnV7xRHQw", type: "drive-pdf", xp: 5 },
