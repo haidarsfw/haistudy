@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const CHECK_INTERVAL_MS = 5 * 60 * 1000; // Poll every 5 minutes
+const CHECK_INTERVAL_MS = 30 * 60 * 1000; // Poll every 30 minutes (reduced from 5m to stay under Vercel free invocation limit)
 
 /**
  * Polls /api/version to detect new deploys.

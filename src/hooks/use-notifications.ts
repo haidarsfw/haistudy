@@ -77,14 +77,9 @@ export function useNotifications() {
     };
   }, [session]);
 
-  // Polling fallback — every 120s as safety net (Realtime handles instant delivery)
-  useEffect(() => {
-    if (!session) return;
-    const interval = setInterval(() => {
-      fetchNotifications();
-    }, 120_000);
-    return () => clearInterval(interval);
-  }, [session, fetchNotifications]);
+  // Polling fallback disabled — Realtime subscription provides instant delivery
+  // Previous: setInterval every 120s was redundant and contributed to invocation limit
+  // If Realtime fails, user will see stale data but page won't crash
 
   // Mark notifications as read
   const markAsRead = useCallback(
