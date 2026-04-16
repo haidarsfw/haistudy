@@ -3,22 +3,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { SubjectProgress } from "@/types";
 import { useSession } from "@/components/providers/session-provider";
-
-const STORAGE_KEY = "hs-progress";
-
-function getAllProgress(): Record<string, SubjectProgress> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveAllProgress(progress: Record<string, SubjectProgress>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-}
+import {
+  getAllProgress,
+  saveAllProgress,
+  calcSubjectPercent,
+  mergeProgress,
+} from "@/lib/progress";
 
 const defaultProgress: SubjectProgress = {
   materi: [],
@@ -74,7 +64,7 @@ export function useProgress(subjectId: string) {
           if (syncRef.current) clearTimeout(syncRef.current);
           syncRef.current = setTimeout(async () => {
             try {
-              await fetch("/api/settings", {
+              const res = await fetch("/api/settings", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -82,6 +72,14 @@ export function useProgress(subjectId: string) {
                   settings: { progress: getAllProgress() },
                 }),
               });
+              const data = await res.json();
+              if (data.conflict && data.settings?.progress) {
+                // Server had newer data — merge and re-save
+                const local = getAllProgress();
+                const merged = mergeProgress(local, data.settings.progress);
+                saveAllProgress(merged);
+                window.dispatchEvent(new Event("hs-progress-synced"));
+              }
             } catch {}
           }, 2000);
         }
@@ -136,32 +134,9 @@ export function useProgress(subjectId: string) {
     [update]
   );
 
-  // Calculate completion percentage
   const getCompletionPercent = useCallback(
-    (totalMateri: number, hasFlashcards: boolean, hasQuiz: boolean) => {
-      let sections = 0;
-      let completed = 0;
-
-      // Materi completion
-      if (totalMateri > 0) {
-        sections++;
-        completed += progress.materi.length / totalMateri;
-      }
-
-      // Flashcards
-      if (hasFlashcards) {
-        sections++;
-        if (progress.flashcardsCompleted) completed += 1;
-      }
-
-      // Quiz (any attempt counts)
-      if (hasQuiz) {
-        sections++;
-        if (Object.keys(progress.quizScores).length > 0) completed += 1;
-      }
-
-      return sections > 0 ? Math.round((completed / sections) * 100) : 0;
-    },
+    (totalMateri: number, hasFlashcards: boolean, hasQuiz: boolean) =>
+      calcSubjectPercent(progress, totalMateri, hasFlashcards, hasQuiz),
     [progress]
   );
 

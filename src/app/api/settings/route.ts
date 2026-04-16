@@ -136,25 +136,30 @@ export async function PUT(request: Request) {
       }
     }
 
+    // Build upsert payload dynamically — only include fields that were
+    // explicitly provided so a progress-only sync doesn't overwrite notes,
+    // streak, language, etc. with defaults.
+    const row: Record<string, unknown> = {
+      license_key: licenseKey,
+      updated_at: now,
+    };
+    if ("darkMode" in settings) row.dark_mode = settings.darkMode;
+    if ("theme" in settings) row.theme = settings.theme;
+    if ("font" in settings) row.font = settings.font;
+    if ("language" in settings) row.language = settings.language || "id";
+    if ("selectedClass" in settings) row.selected_class = settings.selectedClass;
+    if ("reminder" in settings) row.reminder = settings.reminder;
+    if ("hideStatus" in settings) row.hide_status = settings.hideStatus;
+    if ("hideStatusChangedAt" in settings) row.hide_status_changed_at = settings.hideStatusChangedAt;
+    if ("darkModeSchedule" in settings) row.dark_mode_schedule = settings.darkModeSchedule;
+    if ("progress" in settings) row.progress = settings.progress;
+    if ("notes" in settings) row.notes = settings.notes ?? {};
+    if ("recentSubjects" in settings) row.recent_subjects = settings.recentSubjects ?? [];
+    if ("countdownDetailed" in settings) row.countdown_detailed = settings.countdownDetailed ?? true;
+    if ("streak" in settings) row.streak = settings.streak ?? null;
+
     const { error } = await supabase.from("user_settings").upsert(
-      {
-        license_key: licenseKey,
-        dark_mode: settings.darkMode,
-        theme: settings.theme,
-        font: settings.font,
-        language: settings.language || "id",
-        selected_class: settings.selectedClass,
-        reminder: settings.reminder,
-        hide_status: settings.hideStatus,
-        hide_status_changed_at: settings.hideStatusChangedAt,
-        dark_mode_schedule: settings.darkModeSchedule,
-        progress: settings.progress,
-        notes: settings.notes ?? {},
-        recent_subjects: settings.recentSubjects ?? [],
-        countdown_detailed: settings.countdownDetailed ?? true,
-        streak: settings.streak ?? null,
-        updated_at: now,
-      },
+      row,
       { onConflict: "license_key" }
     );
 

@@ -7,48 +7,10 @@ import { subjects } from "@/data/subjects";
 import { content } from "@/data/content";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerItem } from "@/lib/motion";
-import type { SubjectProgress } from "@/types";
+import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progress";
 
 function calcOverallProgress(): number {
-  if (typeof window === "undefined") return 0;
-  try {
-    const raw = localStorage.getItem("hs-progress");
-    const allProgress: Record<string, SubjectProgress> = raw
-      ? JSON.parse(raw)
-      : {};
-    const defaultProgress: SubjectProgress = {
-      materi: [],
-      flashcardsCompleted: false,
-      quizScores: {},
-    };
-
-    let total = 0;
-    let sum = 0;
-    for (const s of subjects) {
-      const c = content[s.id];
-      if (!c) continue;
-      total++;
-      const p = allProgress[s.id] || defaultProgress;
-      let sections = 0;
-      let completed = 0;
-      if (c.materi.length > 0) {
-        sections++;
-        completed += p.materi.length / c.materi.length;
-      }
-      if (c.flashcards.length > 0) {
-        sections++;
-        if (p.flashcardsCompleted) completed += 1;
-      }
-      if (c.quiz.length > 0) {
-        sections++;
-        if (Object.keys(p.quizScores).length > 0) completed += 1;
-      }
-      sum += sections > 0 ? completed / sections : 0;
-    }
-    return total > 0 ? Math.round((sum / total) * 100) : 0;
-  } catch {
-    return 0;
-  }
+  return calcOverall(getAllProgress(), subjects, content);
 }
 
 function ProgressRing({ percent }: { percent: number }) {

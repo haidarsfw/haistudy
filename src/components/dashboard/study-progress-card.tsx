@@ -8,42 +8,7 @@ import { subjects } from "@/data/subjects";
 import { content } from "@/data/content";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
-import type { SubjectProgress } from "@/types";
-
-function getAllProgress(): Record<string, SubjectProgress> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem("hs-progress");
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function calcPercent(
-  progress: SubjectProgress,
-  totalMateri: number,
-  hasFlashcards: boolean,
-  hasQuiz: boolean
-): number {
-  let sections = 0;
-  let completed = 0;
-
-  if (totalMateri > 0) {
-    sections++;
-    completed += progress.materi.length / totalMateri;
-  }
-  if (hasFlashcards) {
-    sections++;
-    if (progress.flashcardsCompleted) completed += 1;
-  }
-  if (hasQuiz) {
-    sections++;
-    if (Object.keys(progress.quizScores).length > 0) completed += 1;
-  }
-
-  return sections > 0 ? Math.round((completed / sections) * 100) : 0;
-}
+import { getAllProgress, calcSubjectPercent } from "@/lib/progress";
 
 export function StudyProgressCard() {
   const { t } = useTranslation();
@@ -55,18 +20,12 @@ export function StudyProgressCard() {
   useEffect(() => {
     const recalculate = () => {
       const allProgress = getAllProgress();
-      const defaultProgress: SubjectProgress = {
-        materi: [],
-        flashcardsCompleted: false,
-        quizScores: {},
-      };
 
       const data = subjects.map((s) => {
         const subContent = content[s.id];
-        const progress = allProgress[s.id] || defaultProgress;
         const percent = subContent
-          ? calcPercent(
-              progress,
+          ? calcSubjectPercent(
+              allProgress[s.id],
               subContent.materi.length,
               subContent.flashcards.length > 0,
               subContent.quiz.length > 0
@@ -87,9 +46,11 @@ export function StudyProgressCard() {
 
     // Re-calculate when progress syncs from server or updates locally
     window.addEventListener("hs-progress-synced", recalculate);
+    window.addEventListener("hs-progress-updated", recalculate);
     window.addEventListener("storage", recalculate);
     return () => {
       window.removeEventListener("hs-progress-synced", recalculate);
+      window.removeEventListener("hs-progress-updated", recalculate);
       window.removeEventListener("storage", recalculate);
     };
   }, []);

@@ -10,16 +10,8 @@ import { useStudyStreak } from "@/hooks/use-study-streak";
 import { subjects } from "@/data/subjects";
 import { getContentBySubjectId } from "@/data/content";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { getAllProgress, calcSubjectPercent } from "@/lib/progress";
 import type { SubjectProgress } from "@/types";
-
-function getProgress(): Record<string, SubjectProgress> {
-  try {
-    const raw = localStorage.getItem("hs-progress");
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
 
 function getQuizScores(): Record<string, { score: number; total: number }> {
   try {
@@ -55,7 +47,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     const refresh = () => {
-      setProgress(getProgress());
+      setProgress(getAllProgress());
       setQuizScores(getQuizScores());
     };
     refresh();
@@ -63,16 +55,17 @@ export default function AnalyticsPage() {
 
     // Re-calculate when progress syncs from server or updates locally
     window.addEventListener("hs-progress-synced", refresh);
+    window.addEventListener("hs-progress-updated", refresh);
     window.addEventListener("storage", refresh);
     return () => {
       window.removeEventListener("hs-progress-synced", refresh);
+      window.removeEventListener("hs-progress-updated", refresh);
       window.removeEventListener("storage", refresh);
     };
   }, [recordActivity]);
 
   if (!session) return null;
 
-  // Calculate per-subject completion (same weighted formula as dashboard widget)
   const subjectStats = subjects.map((subject) => {
     const content = getContentBySubjectId(subject.id);
     const sp = progress[subject.id];
@@ -81,24 +74,7 @@ export default function AnalyticsPage() {
     const materiDone = sp?.materi?.length || 0;
     const hasFlashcards = (content?.flashcards?.length || 0) > 0;
     const hasQuiz = (content?.quiz?.length || 0) > 0;
-
-    // Weighted sections: materi is proportional, flashcards/quiz are binary
-    let sections = 0;
-    let completed = 0;
-    if (materiTotal > 0) {
-      sections++;
-      completed += materiDone / materiTotal;
-    }
-    if (hasFlashcards) {
-      sections++;
-      if (sp?.flashcardsCompleted) completed += 1;
-    }
-    if (hasQuiz) {
-      sections++;
-      if (sp?.quizScores && Object.keys(sp.quizScores).length > 0) completed += 1;
-    }
-    const percent = sections > 0 ? Math.round((completed / sections) * 100) : 0;
-
+    const percent = calcSubjectPercent(sp, materiTotal, hasFlashcards, hasQuiz);
     const quizScore = quizScores[subject.id];
 
     return {

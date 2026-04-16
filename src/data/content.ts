@@ -195,13 +195,13 @@ export const content: Record<string, SubjectContent> = {
 
   akuntansi: {
     materi: [
-      { id: 1, title: "Introduction to Financial Statements", driveId: "1VwlgNlumK0iFGNM_oJueRe009SbQPje4sf2ekxbxicw", type: "drive-gslides", session: "1-2", xp: 10 },
-      { id: 2, title: "The Accounting Information System", driveId: "1JxsMOoFx2pVze-EXriAOsrkCo7pdYP0xhYQxtMsIlRg", type: "drive-gslides", session: "3-4", xp: 10 },
-      { id: 3, title: "Accrual Accounting Concepts", driveId: "1A9KZKpcv7SxXbS83PkR_hSlSS6Cil1HX6eUwL7a_5EI", type: "drive-gslides", session: "5-6", xp: 10 },
+      { id: 1, title: "Introduction to Financial Statements", driveId: "1LcbiKXHUAYLXdUEqD0D0tK91pUyTmg5Gy1qYCe6LM5o", type: "drive-gslides", session: "1-2", xp: 10 },
+      { id: 2, title: "The Accounting Information System", driveId: "1XEurk_BdkOEagXF-cgRl8YlRy2Auo7jLciyLCIH0cI0", type: "drive-gslides", session: "3-4", xp: 10 },
+      { id: 3, title: "Accrual Accounting Concepts", driveId: "1aoODbRPZRCiYHPFu1Ihja8ZynSH2Gs-k3MklG3hAfc0", type: "drive-gslides", session: "5-6", xp: 10 },
       { id: 4, title: "Merchandising Operations and the Multiple-Step Income Statement", driveId: "1AR_HcOXxPXl1GeZHmJg2PpVUl1nGcqWVeiND_rKk0Es", type: "drive-gslides", session: "7-8", xp: 10 },
-      { id: 5, title: "Fraud, Internal Control, and Cash", driveId: "1aoODbRPZRCiYHPFu1Ihja8ZynSH2Gs-k3MklG3hAfc0", type: "drive-gslides", session: "9-10", xp: 10 },
-      { id: 6, title: "Statement of Cash Flows", driveId: "1XEurk_BdkOEagXF-cgRl8YlRy2Auo7jLciyLCIH0cI0", type: "drive-gslides", session: "11-12", xp: 10 },
-      { id: 7, title: "Financial Analysis: The Big Picture", driveId: "1LcbiKXHUAYLXdUEqD0D0tK91pUyTmg5Gy1qYCe6LM5o", type: "drive-gslides", session: "13-14", xp: 10 },
+      { id: 5, title: "Fraud, Internal Control, and Cash", driveId: "1VwlgNlumK0iFGNM_oJueRe009SbQPje4sf2ekxbxicw", type: "drive-gslides", session: "9-10", xp: 10 },
+      { id: 6, title: "Statement of Cash Flows", driveId: "1A9KZKpcv7SxXbS83PkR_hSlSS6Cil1HX6eUwL7a_5EI", type: "drive-gslides", session: "11-12", xp: 10 },
+      { id: 7, title: "Financial Analysis: The Big Picture", driveId: "1JxsMOoFx2pVze-EXriAOsrkCo7pdYP0xhYQxtMsIlRg", type: "drive-gslides", session: "13-14", xp: 10 },
     ],
     kisiKisi: [
       { topic: "Bagian 1: Teori (Bobot 50%)", items: [
