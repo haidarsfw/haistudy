@@ -3,36 +3,36 @@ export const akuntansiModule2 = `
 
 <h2>Konsep Dasar dan Analisis Transaksi</h2>
 
-Sistem informasi akuntansi berfungsi mengumpulkan, memproses, serta mengomunikasikan data keuangan entitas bisnis kepada pihak berkepentingan. Kejadian ekonomi wajib dianalisis dan dicatat ke dalam sistem hanya jika kejadian tersebut mengubah posisi keuangan entitas secara objektif.
+Sistem informasi akuntansi bertugas mengumpulkan, memproses, dan menyampaikan data keuangan bisnis ke pihak-pihak yang berkepentingan. Suatu kejadian ekonomi baru boleh dicatat ke dalam sistem kalau kejadian itu benar-benar mengubah posisi keuangan perusahaan secara objektif.
 
-<bullet><b>Persamaan Akuntansi Dasar:</b> $Aset = Liabilitas + Ekuitas\\ Pemegang\\ Saham$. Nilai persamaan mutlak harus selalu seimbang pascatransaksi.</bullet>
-<bullet><b>Komponen Ekuitas:</b> Ekuitas pemegang saham bertambah melalui Saham Biasa dan Pendapatan, serta berkurang melalui Beban dan Dividen.</bullet>
-<bullet><b>Sistem Ganda:</b> Setiap transaksi memiliki dampak minimal pada dua akun berbeda demi menjaga keseimbangan persamaan (lihat materi sesi 3, slide "Transaction Analysis").</bullet>
+<bullet><b>Persamaan Akuntansi Dasar:</b> $Aset = Liabilitas + Ekuitas\\ Pemegang\\ Saham$. Persamaan ini harus selalu seimbang setelah setiap transaksi.</bullet>
+<bullet><b>Komponen Ekuitas:</b> Ekuitas pemegang saham bertambah lewat Saham Biasa dan Pendapatan, serta berkurang lewat Beban dan Dividen.</bullet>
+<bullet><b>Sistem Ganda:</b> Setiap transaksi paling sedikit memengaruhi dua akun supaya persamaan tetap seimbang (lihat materi sesi 3, slide "Transaction Analysis").</bullet>
 
-<b>Contoh:</b> Pembelian peralatan Rp10.000.000 secara tunai menurunkan aset Kas Rp10.000.000 dan menaikkan aset Peralatan Rp10.000.000 secara bersamaan.
+<b>Contoh:</b> Beli peralatan Rp10.000.000 tunai — Kas turun Rp10.000.000, Peralatan naik Rp10.000.000 secara bersamaan.
 
 <h2>Akun, Debit, dan Kredit</h2>
 
-Akun (Account) merupakan rekaman spesifik mengenai peningkatan dan penurunan satu item spesifik aset, liabilitas, atau ekuitas. Format paling fundamental adalah <b>Akun-T</b> yang memuat sisi kiri (Debit) dan sisi kanan (Kredit).
+Akun (Account) adalah catatan khusus yang melacak naik-turunnya satu item aset, liabilitas, atau ekuitas. Format paling sederhana disebut <b>Akun-T</b> — sisi kiri adalah Debit, sisi kanan adalah Kredit.
 
-<b>Sistem Double-Entry:</b> Total nominal debit mutlak ekuivalen dengan total nominal kredit pada setiap pencatatan.
+<b>Sistem Double-Entry:</b> Dalam setiap pencatatan, total debit harus selalu sama dengan total kredit.
 
 Aturan Saldo Normal (lihat materi sesi 3, slide "Debit and Credit Rules" atau "Normal Balances"):
-<bullet>Aset, Beban, dan Dividen memiliki <b>saldo normal Debit</b> (pencatatan bertambah di Debit, berkurang di Kredit).</bullet>
-<bullet>Liabilitas, Saham Biasa, Saldo Laba, dan Pendapatan memiliki <b>saldo normal Kredit</b> (pencatatan bertambah di Kredit, berkurang di Debit).</bullet>
+<bullet>Aset, Beban, dan Dividen punya <b>saldo normal Debit</b> (bertambah di Debit, berkurang di Kredit).</bullet>
+<bullet>Liabilitas, Saham Biasa, Saldo Laba, dan Pendapatan punya <b>saldo normal Kredit</b> (bertambah di Kredit, berkurang di Debit).</bullet>
 
 <h2>Alur Proses Pencatatan</h2>
 
-Dokumen sumber berupa bukti struk, faktur, nota, atau kuitansi menjadi basis awal analisis bukti transaksi. Terdapat tiga tahapan utama proses akuntansi:
-<bullet><b>Penjurnalan (Journalizing):</b> Transaksi dicatat secara kronologis ke dalam Jurnal Umum. Fungsi jurnal mencakup pengungkapan efek lengkap satu transaksi di satu tempat, penyediaan rekaman historis urut waktu, dan pencegahan kesalahan nominal (lihat materi sesi 3, slide "The Journal").</bullet>
-<bullet><b>Buku Besar (Ledger):</b> Pusat kumpulan seluruh akun individual beserta detail perubahan saldonya yang dikelola perusahaan.</bullet>
-<bullet><b>Pemindahan (Posting):</b> Proses mentransfer nominal dari kolom jurnal ke akun buku besar yang relevan untuk memperbarui saldo akhir setiap akun secara berkala (lihat materi sesi 3, slide "Posting").</bullet>
+Langkah awal pencatatan dimulai dari dokumen sumber seperti struk, faktur, nota, atau kuitansi. Ada tiga tahap utama dalam proses akuntansi:
+<bullet><b>Penjurnalan (Journalizing):</b> Transaksi dicatat urut waktu ke dalam Jurnal Umum. Fungsi jurnal: menampilkan efek lengkap satu transaksi di satu tempat, menyediakan catatan historis berurutan, dan mencegah kesalahan nominal (lihat materi sesi 3, slide "The Journal").</bullet>
+<bullet><b>Buku Besar (Ledger):</b> Kumpulan semua akun individual beserta perubahan saldonya yang dimiliki perusahaan.</bullet>
+<bullet><b>Pemindahan (Posting):</b> Proses memindahkan angka dari jurnal ke akun buku besar yang sesuai untuk memperbarui saldo setiap akun (lihat materi sesi 3, slide "Posting").</bullet>
 
 <h2>Neraca Saldo (Trial Balance)</h2>
 
-Neraca saldo merupakan daftar keseluruhan akun beserta saldo akhirnya pada satu periode waktu tertentu, disusun urut mulai dari aset, liabilitas, ekuitas, pendapatan, hingga ditutup oleh beban.
+Neraca saldo adalah daftar semua akun beserta saldo akhirnya pada suatu waktu tertentu, diurutkan dari aset, liabilitas, ekuitas, pendapatan, sampai beban.
 
-<bullet><b>Fungsi Primer:</b> Membuktikan kesamaan matematis antara total kolom Debit dan total kolom Kredit pascaproses posting (lihat materi sesi 3, slide "The Trial Balance").</bullet>
-<bullet><b>Limitasi Deteksi:</b> Neraca saldo seimbang tidak menjamin absolut kebenaran pencatatan.</bullet>
-<bullet><b>Kondisi lolos deteksi:</b> Transaksi terlewat dijurnal, jurnal tidak diposting sama sekali, pencatatan jurnal diposting ganda, nominal salah saat penjurnalan awal, atau nominal diposting ke nama akun yang keliru namun posisinya tetap benar.</bullet>
+<bullet><b>Fungsi Utama:</b> Membuktikan bahwa total Debit sama dengan total Kredit setelah posting (lihat materi sesi 3, slide "The Trial Balance").</bullet>
+<bullet><b>Keterbatasan:</b> Neraca saldo yang seimbang tidak menjamin pencatatan sudah 100% benar.</bullet>
+<bullet><b>Kesalahan yang lolos deteksi:</b> Transaksi lupa dijurnal, jurnal tidak diposting, jurnal diposting dua kali, nominal salah sejak penjurnalan awal, atau nominal diposting ke akun yang salah tapi posisi debit/kreditnya tetap benar.</bullet>
 `;

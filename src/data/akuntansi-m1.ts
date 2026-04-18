@@ -3,43 +3,43 @@ export const akuntansiModule1 = `
 
 <h2>Bentuk Organisasi Bisnis & Penggunaan Informasi Akuntansi</h2>
 
-Tujuan utama akuntansi adalah menyediakan input bagi pengguna untuk pengambilan keputusan. Pemahaman akuntansi krusial untuk menganalisis data keuangan secara akurat.
+Tujuan utama akuntansi adalah menyediakan informasi supaya pengguna bisa mengambil keputusan yang tepat. Makanya, paham akuntansi itu penting banget buat menganalisis data keuangan secara akurat.
 
-Bentuk organisasi bisnis mencakup:
-<bullet><b>Perusahaan Perseorangan (Sole Proprietorship):</b> Dimiliki satu orang, sangat mudah didirikan, memberikan keuntungan pajak.</bullet>
-<bullet><b>Kemitraan (Partnership):</b> Dimiliki dua orang atau lebih, menawarkan kontrol bersama, sumber daya lebih luas, dan keuntungan pajak.</bullet>
-<bullet><b>Korporasi (Corporation):</b> Merupakan entitas hukum terpisah dengan kemudahan transfer kepemilikan melalui penjualan saham di bursa. Bentuk ini tidak memiliki tanggung jawab pribadi bagi pemilik, sangat mudah mengumpulkan dana, dikenakan pajak lebih tinggi, dan menghasilkan pendapatan terbesar di Amerika Serikat.</bullet>
-<bullet><b>Bentuk Hibrida:</b> Menawarkan gabungan keuntungan pajak kemitraan dengan perlindungan kewajiban terbatas dari korporasi (contoh: LLC, Subchapter S).</bullet>
+Ada beberapa bentuk organisasi bisnis:
+<bullet><b>Perusahaan Perseorangan (Sole Proprietorship):</b> Dimiliki satu orang, gampang didirikan, dan punya keuntungan pajak.</bullet>
+<bullet><b>Kemitraan (Partnership):</b> Dimiliki dua orang atau lebih, kontrolnya dibagi bersama, sumber dayanya lebih luas, dan ada keuntungan pajak juga.</bullet>
+<bullet><b>Korporasi (Corporation):</b> Badan hukum yang terpisah dari pemiliknya. Kepemilikan gampang dipindahkan lewat jual-beli saham di bursa. Pemilik tidak punya tanggung jawab pribadi atas utang perusahaan, mudah mengumpulkan dana, tapi pajaknya lebih tinggi. Di Amerika Serikat, korporasi menghasilkan pendapatan paling besar.</bullet>
+<bullet><b>Bentuk Hibrida:</b> Gabungan keuntungan pajak kemitraan dengan perlindungan kewajiban terbatas korporasi (contoh: LLC, Subchapter S).</bullet>
 
-Pengguna informasi akuntansi terbagi menjadi dua kategori:
-<bullet><b>Pengguna Internal:</b> Terdiri dari manajer lini fungsional (Keuangan, Pemasaran, SDM, Manajemen) yang merencanakan dan menjalankan bisnis perusahaan.</bullet>
-<bullet><b>Pengguna Eksternal:</b> Terdiri dari investor untuk analisis saham, kreditor untuk mengevaluasi risiko pinjaman, otoritas pajak, pelanggan, serikat pekerja, dan agen pengatur.</bullet>
+Pengguna informasi akuntansi dibagi dua:
+<bullet><b>Pengguna Internal:</b> Manajer dari berbagai divisi (Keuangan, Pemasaran, SDM, Manajemen) yang merencanakan dan menjalankan bisnis perusahaan.</bullet>
+<bullet><b>Pengguna Eksternal:</b> Investor (untuk analisis saham), kreditor (untuk menilai risiko pinjaman), otoritas pajak, pelanggan, serikat pekerja, dan regulator.</bullet>
 
-Perusahaan memanfaatkan analitik data melalui perangkat lunak dan statistik untuk menarik simpulan dari transaksi ekonomi. Klasifikasi analitik data mencakup deskriptif (apa yang terjadi), diagnostik (alasan terjadi), prediktif (proyeksi), dan preskriptif (tindakan lanjutan) (lihat materi, slide "Four Types of Data Analytics").
+Perusahaan juga pakai analitik data lewat software dan statistik untuk menarik kesimpulan dari transaksi ekonomi. Ada empat jenis analitik data: deskriptif (apa yang terjadi), diagnostik (kenapa terjadi), prediktif (apa yang akan terjadi), dan preskriptif (apa yang harus dilakukan) (lihat materi, slide "Four Types of Data Analytics").
 
-Kegagalan etika pelaporan memicu lahirnya <b>Sarbanes-Oxley Act (SOX)</b> untuk mengurangi penipuan perusahaan. SOX mewajibkan manajemen puncak mensertifikasi kewajaran informasi, memperberat penalti pidana, meningkatkan independensi auditor luar, dan memperkuat fungsi pengawasan dewan direksi. Penyelesaian dilema etis membutuhkan identifikasi isu, analisis dampak pada pemangku kepentingan, dan pemilihan alternatif paling etis.
+Dulu pernah ada kasus kegagalan etika pelaporan keuangan, yang akhirnya melahirkan <b>Sarbanes-Oxley Act (SOX)</b> untuk mengurangi penipuan perusahaan. SOX mewajibkan manajemen puncak menyertifikasi kebenaran informasi, memperberat hukuman pidana, meningkatkan independensi auditor luar, dan memperkuat pengawasan dewan direksi. Kalau menghadapi dilema etis, langkahnya: kenali masalahnya, analisis dampaknya ke pemangku kepentingan, lalu pilih alternatif yang paling etis.
 
 <h2>Tiga Jenis Aktivitas Bisnis</h2>
 
-<bullet><b>Aktivitas Pendanaan (Financing):</b> Mendapatkan dana melalui pihak luar. Pendanaan utang menciptakan kewajiban (liabilities) berupa wesel bayar atau obligasi kepada kreditor. Pendanaan ekuitas terjadi dengan menerbitkan saham biasa (common stock) kepada pemilik (pemegang saham). Kreditor memiliki hak hukum memaksa penjualan aset untuk pelunasan utang, menempatkan klaim mereka di atas pemegang saham.</bullet>
-<bullet><b>Aktivitas Investasi (Investing):</b> Pembelian aset perusahaan. Elemen ini mencakup properti, pabrik, peralatan, kas, serta sekuritas perusahaan lain.</bullet>
-<bullet><b>Aktivitas Operasi (Operating):</b> Rangkaian tindakan harian untuk memproduksi dan menjual barang atau jasa. Aktivitas ini menghasilkan pendapatan (revenue) serta mengonsumsi biaya atau beban (expenses). Aset berumur pendek meliputi perlengkapan, persediaan, dan piutang. Liabilitas operasi meliputi utang usaha, utang bunga, utang upah, dan utang pajak. Laba bersih muncul saat pendapatan melebihi beban, sebaliknya rugi bersih terjadi saat beban lebih besar. <b>Contoh:</b> Perusahaan meraup pendapatan Rp50.000.000 dengan total beban Rp35.000.000, maka perusahaan membukukan laba bersih Rp15.000.000.</bullet>
+<bullet><b>Aktivitas Pendanaan (Financing):</b> Cara perusahaan mendapatkan dana dari pihak luar. Pendanaan utang menciptakan kewajiban (liabilities) berupa wesel bayar atau obligasi kepada kreditor. Pendanaan ekuitas dilakukan dengan menerbitkan saham biasa (common stock) ke pemilik (pemegang saham). Kreditor punya hak hukum untuk memaksa penjualan aset demi pelunasan utang — jadi klaim kreditor lebih tinggi dari pemegang saham.</bullet>
+<bullet><b>Aktivitas Investasi (Investing):</b> Pembelian aset yang dipakai perusahaan, seperti properti, pabrik, peralatan, kas, dan sekuritas perusahaan lain.</bullet>
+<bullet><b>Aktivitas Operasi (Operating):</b> Kegiatan sehari-hari untuk memproduksi dan menjual barang atau jasa. Dari sini muncul pendapatan (revenue) dan biaya atau beban (expenses). Aset jangka pendek contohnya perlengkapan, persediaan, dan piutang. Liabilitas operasi contohnya utang usaha, utang bunga, utang upah, dan utang pajak. Kalau pendapatan lebih besar dari beban, hasilnya laba bersih. Sebaliknya, kalau beban lebih besar, hasilnya rugi bersih. <b>Contoh:</b> Perusahaan dapat pendapatan Rp50.000.000 dengan total beban Rp35.000.000, maka laba bersihnya Rp15.000.000.</bullet>
 
 <h2>Empat Laporan Keuangan dan Elemen Laporan Tahunan</h2>
 
-<bullet><b>Laporan Laba Rugi (Income Statement):</b> Menunjukkan operasi perusahaan selama satu periode spesifik dengan menyajikan daftar pendapatan lalu beban (lihat materi, slide "Income Statement Presentation"). Laporan ini esensial bagi investor maupun kreditor untuk memprediksi margin masa depan dan kepastian pembayaran utang.</bullet>
-<bullet><b>Laporan Saldo Laba (Retained Earnings Statement):</b> Mencatat perubahan porsi laba selama periode yang sama. Laba bersih bertindak sebagai penambah, kerugian dan distribusi dividen bertindak sebagai pengurang (lihat materi, slide "Retained Earnings Statement Illustrated"). Laporan ini memantau praktik rasio pembayaran dividen dan reinvestasi pertumbuhan.</bullet>
-<bullet><b>Neraca (Balance Sheet):</b> Memotret aset dan klaim kreditor beserta pemilik pada satu titik waktu spesifik berdasarkan persamaan $Aset = Liabilitas + Ekuitas\\ Pemegang\\ Saham$ (lihat materi, slide "Balance Sheet Illustrated"). Aset dicatat menurut tingkat likuiditas. Ekuitas dipecah menjadi saham biasa dan saldo laba. Neraca wajib dianalisis untuk mengevaluasi proporsi utang dan ketersediaan dana.</bullet>
-<bullet><b>Laporan Arus Kas (Statement of Cash Flows):</b> Melacak penerimaan dan pembayaran kas netto berdasarkan tiga aktivitas bisnis. Analisis kas mutlak diperlukan guna menjawab sumber kas, pengeluaran, serta jaminan pendanaan operasi (lihat materi, slide "Statement of Cash Flows Illustrated").</bullet>
+<bullet><b>Laporan Laba Rugi (Income Statement):</b> Menunjukkan kinerja operasi perusahaan selama satu periode tertentu — isinya daftar pendapatan lalu beban (lihat materi, slide "Income Statement Presentation"). Investor dan kreditor butuh laporan ini untuk memperkirakan keuntungan di masa depan dan kemampuan bayar utang.</bullet>
+<bullet><b>Laporan Saldo Laba (Retained Earnings Statement):</b> Mencatat perubahan laba yang ditahan selama periode yang sama. Laba bersih menambah saldo, sementara kerugian dan pembagian dividen menguranginya (lihat materi, slide "Retained Earnings Statement Illustrated"). Laporan ini berguna untuk memantau berapa banyak laba yang dibagikan sebagai dividen dan berapa yang diinvestasikan kembali.</bullet>
+<bullet><b>Neraca (Balance Sheet):</b> Foto kondisi keuangan perusahaan pada satu titik waktu — menunjukkan aset beserta klaim kreditor dan pemilik. Dasarnya persamaan $Aset = Liabilitas + Ekuitas\\ Pemegang\\ Saham$ (lihat materi, slide "Balance Sheet Illustrated"). Aset disusun berdasarkan tingkat likuiditas. Ekuitas terdiri dari saham biasa dan saldo laba. Neraca penting untuk menilai proporsi utang dan ketersediaan dana.</bullet>
+<bullet><b>Laporan Arus Kas (Statement of Cash Flows):</b> Melacak uang masuk dan keluar berdasarkan tiga aktivitas bisnis. Laporan ini penting untuk menjawab dari mana kas berasal, dipakai untuk apa, dan apakah cukup untuk mendanai operasi (lihat materi, slide "Statement of Cash Flows Illustrated").</bullet>
 
-Terdapat hierarki transfer angka antar laporan (lihat materi, slide "Interrelationship of Statements"). Laba bersih berpindah ke Laporan Saldo Laba. Hasil saldo laba akhir masuk menempati komponen ekuitas di Neraca. Saldo akhir kas di Neraca harus cocok seratus persen dengan saldo akhir Laporan Arus Kas.
+Angka-angka di keempat laporan ini saling terhubung (lihat materi, slide "Interrelationship of Statements"). Laba bersih masuk ke Laporan Saldo Laba. Saldo laba akhir masuk ke bagian ekuitas di Neraca. Saldo akhir kas di Neraca harus cocok persis dengan saldo akhir di Laporan Arus Kas.
 
-Laporan Tahunan perusahaan publik memuat laporan keuangan, opini independen akuntan publik (Auditor's Report) mengenai kesesuaian prinsip akuntansi, analisis manajemen (MD&A) tentang probabilitas operasi masa depan, dan catatan tambahan laporan keuangan yang menjabarkan detail metode akuntansi dan ketidakpastian.
+Laporan Tahunan perusahaan publik berisi laporan keuangan, opini akuntan publik independen (Auditor's Report) soal kesesuaian dengan prinsip akuntansi, analisis manajemen (MD&A) tentang prospek operasi ke depan, dan catatan tambahan yang menjelaskan metode akuntansi serta hal-hal yang belum pasti.
 
 <h2>Peluang Karier Akuntansi</h2>
 
-Permintaan tenaga kerja meningkat drastis berkat otomatisasi sistem, analitik data, dan penegakan SOX.
-<bullet><b>Akuntansi Publik:</b> Menawarkan jasa audit kelayakan laporan keuangan, konsultasi pajak, dan manajemen sistem berbekal sertifikasi wajib CPA (Certified Public Accountant). Lisensi CPA mendorong negosiasi gaji awal naik sekitar 10% hingga 15%.</bullet>
-<bullet><b>Akuntansi Privat:</b> Meliputi posisi akuntan perusahaan for-profit dan non-profit, perumus anggaran (managerial accountant), serta auditor internal pemonitor standar operasional.</bullet>
-<bullet><b>Pemerintahan & Forensik:</b> Rekrutmen khusus FBI, kepolisian, dan kantor dinas pajak (IRS) untuk investigasi penipuan moneter skala besar.</bullet>
+Permintaan tenaga akuntansi naik pesat berkat otomatisasi, analitik data, dan penegakan SOX.
+<bullet><b>Akuntansi Publik:</b> Menyediakan jasa audit laporan keuangan, konsultasi pajak, dan manajemen sistem. Wajib punya sertifikasi CPA (Certified Public Accountant). Punya lisensi CPA bisa menaikkan gaji awal sekitar 10% sampai 15%.</bullet>
+<bullet><b>Akuntansi Privat:</b> Bekerja sebagai akuntan di perusahaan (for-profit maupun non-profit), penyusun anggaran (managerial accountant), atau auditor internal yang memantau standar operasional.</bullet>
+<bullet><b>Pemerintahan & Forensik:</b> Posisi khusus di FBI, kepolisian, dan kantor pajak (IRS) untuk investigasi penipuan keuangan berskala besar.</bullet>
 `;
