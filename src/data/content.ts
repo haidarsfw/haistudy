@@ -164,7 +164,7 @@ export const content: Record<string, SubjectContent> = {
       { topic: "Analisis PESTEL: Makroekonomi", items: ["Analisis PESTEL/STEEPLE dengan fokus pada faktor makroekonomi"] },
       { topic: "Demand and Supply: 4 Jenis Pasar", items: ["Perfect Competition", "Monopoly (Imperfect Competition)", "Oligopoly", "Monopolistic Competition"] },
       { topic: "Hitungan", items: ["Revenue dan Profit", "Profit Maximisation Under Imperfect Competition (sesi 11 & 12)"] },
-      { topic: "Game Theory (Sesi 19 & 20)", items: ["Oligopoly Game Theory"] },
+      { topic: "Game Theory", items: ["Oligopoly Game Theory"] },
     ],
     kisiKisiNote: "Format: Essay (soal hitungan pasti ada). Sumber: LB86.",
     flashcards: bisekoFlashcards,
