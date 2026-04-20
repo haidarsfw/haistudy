@@ -1,17 +1,27 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
 import { RATE_LIMITS } from "@/lib/constants";
 import { getDeviceId } from "@/lib/auth/device";
+import { getPinnedThreads } from "@/data/pinned-threads";
 import type { ForumThread } from "@/types";
 
 export function useThreads(subjectId: string) {
   const { session } = useSession();
-  const [threads, setThreads] = useState<ForumThread[]>([]);
+  const [dbThreads, setDbThreads] = useState<ForumThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const lastPostTime = useRef(0);
+
+  const pinnedThreads = useMemo(() => getPinnedThreads(subjectId), [subjectId]);
+
+  // Pinned threads are prepended and shadow any DB row with the same id.
+  const threads = useMemo<ForumThread[]>(() => {
+    if (pinnedThreads.length === 0) return dbThreads;
+    const pinnedIds = new Set(pinnedThreads.map((t) => t.id));
+    return [...pinnedThreads, ...dbThreads.filter((t) => !pinnedIds.has(t.id))];
+  }, [pinnedThreads, dbThreads]);
 
   const fetchThreads = useCallback(async () => {
     try {
@@ -19,7 +29,7 @@ export function useThreads(subjectId: string) {
         `/api/forum/threads?subjectId=${encodeURIComponent(subjectId)}`
       );
       const data = await res.json();
-      if (data.threads) setThreads(data.threads);
+      if (data.threads) setDbThreads(data.threads);
     } catch (error) {
       console.error("Failed to fetch threads:", error);
     } finally {
@@ -70,10 +80,10 @@ export function useThreads(subjectId: string) {
               commentCount: row.comment_count,
               createdAt: row.created_at,
             };
-            setThreads((prev) => [thread, ...prev.filter((t) => t.id !== thread.id)]);
+            setDbThreads((prev) => [thread, ...prev.filter((t) => t.id !== thread.id)]);
           } else if (payload.eventType === "UPDATE") {
             const row = payload.new;
-            setThreads((prev) =>
+            setDbThreads((prev) =>
               prev.map((t) =>
                 t.id === row.id
                   ? {
@@ -88,7 +98,7 @@ export function useThreads(subjectId: string) {
             );
           } else if (payload.eventType === "DELETE") {
             const row = payload.old;
-            setThreads((prev) => prev.filter((t) => t.id !== row.id));
+            setDbThreads((prev) => prev.filter((t) => t.id !== row.id));
           }
         }
       )
@@ -168,7 +178,7 @@ export function useThreads(subjectId: string) {
       }
 
       if (!isSupabaseConfigured) {
-        setThreads((prev) => prev.filter((t) => t.id !== threadId));
+        setDbThreads((prev) => prev.filter((t) => t.id !== threadId));
       }
     },
     [session]
@@ -189,7 +199,7 @@ export function useThreads(subjectId: string) {
       }
 
       if (!isSupabaseConfigured) {
-        setThreads((prev) =>
+        setDbThreads((prev) =>
           prev.map((t) => (t.id === threadId ? { ...t, closed } : t))
         );
       }

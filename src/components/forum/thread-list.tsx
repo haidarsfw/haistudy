@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { MessageSquare, Lock, Shield, Crown, Gem, Plus } from "lucide-react";
+import { MessageSquare, Lock, Shield, Crown, Gem, Plus, Pin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,8 @@ export function ThreadList({
   onThreadRead,
 }: ThreadListProps) {
   const { isRead, markRead } = useThreadRead();
-  if (isLoading) {
+  const hasPinned = threads.some((t) => t.isPinned);
+  if (isLoading && !hasPinned) {
     return (
       <div className="space-y-3 py-4">
         <ThreadSkeleton />
@@ -89,9 +90,11 @@ export function ThreadList({
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-destructive shrink-0" />
                 )}
                 <h3 className="flex-1 text-sm font-semibold leading-snug">
-                  {thread.closed && (
+                  {thread.isPinned ? (
+                    <Pin className="mr-1 inline h-3.5 w-3.5 text-primary" />
+                  ) : thread.closed ? (
                     <Lock className="mr-1 inline h-3.5 w-3.5 text-muted-foreground" />
-                  )}
+                  ) : null}
                   {thread.title}
                 </h3>
               </div>

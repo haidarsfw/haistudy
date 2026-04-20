@@ -224,6 +224,7 @@ export interface ForumThread {
   closed: boolean;
   commentCount: number;
   createdAt: string;
+  isPinned?: boolean;
 }
 
 export interface ForumComment {

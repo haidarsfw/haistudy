@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Crown,
   Gem,
+  Pin,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ export function ThreadView({
   const { t } = useTranslation();
   const isAdmin = session?.isAdmin || false;
   const isAuthor = deviceId === thread.authorId;
+  const isPinned = !!thread.isPinned;
 
   // Build merged attachments: prefer new attachments, fall back to legacy fields
   const attachments = useMemo<Attachment[]>(() => {
@@ -99,7 +101,10 @@ export function ThreadView({
       <div className="rounded-xl border border-border bg-card p-4">
         {/* Title */}
         <h2 className="font-heading text-base font-bold leading-snug">
-          {thread.closed && (
+          {isPinned && (
+            <Pin className="mr-1.5 inline h-4 w-4 text-primary" />
+          )}
+          {!isPinned && thread.closed && (
             <Lock className="mr-1.5 inline h-4 w-4 text-muted-foreground" />
           )}
           {thread.title}
@@ -198,7 +203,7 @@ export function ThreadView({
         )}
 
         {/* Admin / author actions */}
-        {(isAdmin || isAuthor) && (
+        {!isPinned && (isAdmin || isAuthor) && (
           <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
             {isAdmin && (
               <Button
@@ -238,15 +243,24 @@ export function ThreadView({
         )}
       </div>
 
+      {/* Pinned notice */}
+      {isPinned && (
+        <div className="mt-4 rounded-lg border border-border bg-muted/50 px-4 py-3 text-center text-sm text-muted-foreground">
+          <Pin className="mr-1.5 inline h-3.5 w-3.5" />
+          Thread resmi dari admin. Komentar dinonaktifkan.
+        </div>
+      )}
+
       {/* Closed notice */}
-      {thread.closed && (
+      {!isPinned && thread.closed && (
         <div className="mt-4 rounded-lg border border-border bg-muted/50 px-4 py-3 text-center text-sm text-muted-foreground">
           <Lock className="mr-1.5 inline h-3.5 w-3.5" />
           Thread ini sudah ditutup. Tidak bisa menambah komentar baru.
         </div>
       )}
 
-      {/* Comments section */}
+      {/* Comments section (hidden for pinned threads) */}
+      {!isPinned && (
       <div className="mt-6">
         <h3 className="flex items-center gap-1.5 text-sm font-semibold">
           <MessageSquare className="h-4 w-4" />
@@ -296,6 +310,7 @@ export function ThreadView({
           </div>
         )}
       </div>
+      )}
       <MediaPreviewer
         src={previewSrc}
         type={previewType}
