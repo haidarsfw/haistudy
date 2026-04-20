@@ -1,0 +1,2527 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modul Belajar UTS Akuntansi</title>
+<style>
+/* ═══════════════════════════════════════════════
+   THEME VARIABLES
+═══════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  --bg:        #fafaf8;
+  --bg-card:   #ffffff;
+  --bg-soft:   #f5f4ef;
+  --bg-hover:  #f0eee8;
+  --border:    #e3e0d8;
+  --border-soft: #ebe8df;
+  --border-strong: #c8c4b8;
+  --text:      #1c1c1a;
+  --text-soft: #555551;
+  --text-mute: #8a867d;
+  --accent:    #2b5cc4;
+  --accent-bg: #eef3fc;
+  --accent-bd: #cddbf3;
+  --success:   #1a7f3e;
+  --success-bg:#ecf6ef;
+  --success-bd:#c9e4d1;
+  --warn:      #9a6700;
+  --warn-bg:   #fcf4e0;
+  --warn-bd:   #ecdfb3;
+  --danger:    #b9403e;
+  --danger-bg: #fbeceb;
+  --danger-bd: #ecc9c7;
+  --shadow:    0 1px 2px rgba(0,0,0,.04);
+}
+:root[data-theme="dark"] {
+  --bg:        #17181b;
+  --bg-card:   #1e2024;
+  --bg-soft:   #23262b;
+  --bg-hover:  #2a2d33;
+  --border:    #2d3138;
+  --border-soft: #262a30;
+  --border-strong: #3a3f47;
+  --text:      #e8e6e0;
+  --text-soft: #b0ada4;
+  --text-mute: #7d7970;
+  --accent:    #7ca8f5;
+  --accent-bg: #1b2638;
+  --accent-bd: #2e4470;
+  --success:   #5dc282;
+  --success-bg:#142820;
+  --success-bd:#234a35;
+  --warn:      #e5b76e;
+  --warn-bg:   #2d2517;
+  --warn-bd:   #4d3e22;
+  --danger:    #e88682;
+  --danger-bg: #2c1b1b;
+  --danger-bd: #4d2c2a;
+  --shadow:    0 1px 2px rgba(0,0,0,.25);
+}
+
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  display: flex;
+  min-height: 100vh;
+  transition: background .2s, color .2s;
+}
+h1, h2, h3, h4, h5, h6 { color: var(--text); }
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+.sidebar {
+  width: 268px;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+}
+.sb-head {
+  padding: 20px 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.sb-head .brand {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+.sb-head .sub {
+  font-size: 11.5px;
+  color: var(--text-mute);
+  margin-top: 2px;
+}
+.theme-toggle {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 9px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-soft);
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+}
+.theme-toggle:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  padding: 16px 20px 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 20px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: background .12s;
+}
+.nav-item:hover { background: var(--bg-soft); }
+.nav-item.active {
+  background: var(--accent-bg);
+  border-left-color: var(--accent);
+}
+.nav-item.active .nav-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+.nav-item.active .nav-txt { color: var(--accent); font-weight: 600; }
+.nav-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-mute);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 19px; height: 19px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.nav-item.soal .nav-num { background: var(--warn-bg); color: var(--warn); border-color: var(--warn-bd); }
+.nav-item.ref .nav-num { background: var(--success-bg); color: var(--success); border-color: var(--success-bd); }
+.nav-item.active.soal .nav-num,
+.nav-item.active.ref .nav-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+.nav-txt {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+.nav-divider { height: 1px; background: var(--border-soft); margin: 8px 0; }
+
+/* ═══════════════════════════════════════════════
+   MAIN AREA
+═══════════════════════════════════════════════ */
+.main { margin-left: 268px; flex: 1; padding: 0 0 80px; }
+.page { display: none; max-width: 860px; padding: 40px 48px; }
+.page.active { display: block; }
+
+/* PAGE HEADER */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-bottom: 7px;
+}
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.02em;
+  margin-bottom: 7px;
+  line-height: 1.2;
+}
+.page-desc {
+  font-size: 14.5px;
+  color: var(--text-soft);
+  line-height: 1.65;
+  max-width: 600px;
+  padding-bottom: 22px;
+  margin-bottom: 26px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════════════ */
+h2.sec-head {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 28px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 22px 0 10px;
+}
+h4 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 16px 0 7px;
+}
+p {
+  font-size: 14px;
+  color: var(--text-soft);
+  line-height: 1.72;
+  margin-bottom: 10px;
+}
+p:last-child { margin-bottom: 0; }
+p strong { color: var(--text); font-weight: 700; }
+ul, ol { padding-left: 20px; margin: 8px 0; }
+li { font-size: 14px; color: var(--text-soft); line-height: 1.72; padding: 2px 0; }
+li strong { color: var(--text); font-weight: 700; }
+
+/* INLINE TEXT ACCENTS */
+.term {
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px dotted var(--border-strong);
+  cursor: help;
+}
+
+/* ═══════════════════════════════════════════════
+   ACCORDION
+═══════════════════════════════════════════════ */
+.acc {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.acc-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  padding: 13px 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  gap: 12px;
+  transition: background .12s;
+}
+.acc-btn:hover { background: var(--bg-soft); }
+.acc-btn.open {
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+}
+.acc-icon {
+  color: var(--text-mute);
+  font-size: 13px;
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.acc-btn.open .acc-icon { transform: rotate(90deg); }
+.acc-body { display: none; padding: 18px 18px 16px; }
+.acc-body.open { display: block; }
+
+/* ═══════════════════════════════════════════════
+   CALLOUT BOXES
+═══════════════════════════════════════════════ */
+.callout {
+  border-radius: 7px;
+  padding: 11px 15px;
+  margin: 12px 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  border-left: 3px solid;
+}
+.callout strong { font-weight: 700; }
+.callout.info    { background: var(--accent-bg);  border-color: var(--accent);  color: var(--text); }
+.callout.ok      { background: var(--success-bg); border-color: var(--success); color: var(--text); }
+.callout.warn    { background: var(--warn-bg);    border-color: var(--warn);    color: var(--text); }
+.callout.alert   { background: var(--danger-bg);  border-color: var(--danger);  color: var(--text); }
+.callout.neutral { background: var(--bg-soft);    border-color: var(--border-strong); color: var(--text); }
+
+.callout-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 4px;
+  opacity: .85;
+}
+.callout.info .callout-title    { color: var(--accent); }
+.callout.ok .callout-title      { color: var(--success); }
+.callout.warn .callout-title    { color: var(--warn); }
+.callout.alert .callout-title   { color: var(--danger); }
+
+/* ═══════════════════════════════════════════════
+   FORMULA BOX
+═══════════════════════════════════════════════ */
+.formula {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bd);
+  border-radius: 7px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  font-size: 14.5px;
+  color: var(--text);
+  line-height: 1.9;
+  text-align: center;
+}
+.formula .lhs { font-weight: 700; color: var(--accent); }
+.formula .op { color: var(--text-mute); font-weight: 400; }
+
+/* ═══════════════════════════════════════════════
+   CALC BLOCK (perhitungan)
+═══════════════════════════════════════════════ */
+.calc {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  font-family: "SF Mono", ui-monospace, "Consolas", "Monaco", monospace;
+  font-size: 13px;
+  line-height: 2;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.calc .lbl-ok { color: var(--success); font-weight: 700; }
+.calc .lbl-rd { color: var(--danger); }
+.calc .lbl-bl { color: var(--accent); font-weight: 700; }
+.calc .lbl-am { color: var(--warn); }
+.calc .lbl-gy { color: var(--text-mute); }
+
+/* ═══════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════ */
+.tbl-wrap {
+  overflow-x: auto;
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-card);
+}
+table.std {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+table.std thead tr {
+  background: var(--bg-soft);
+}
+table.std th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-soft);
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+}
+table.std td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text);
+  vertical-align: top;
+  line-height: 1.55;
+}
+table.std tr:last-child td { border-bottom: none; }
+table.std tr:hover td { background: var(--bg-soft); }
+table.std td.num, table.std td.mono { font-family: "SF Mono", ui-monospace, monospace; font-size: 12.5px; }
+table.std td.num { text-align: right; }
+table.std td.ok   { color: var(--success); }
+table.std td.bad  { color: var(--danger); }
+
+/* ═══════════════════════════════════════════════
+   JOURNAL — FORMAT STANDAR
+═══════════════════════════════════════════════ */
+.journal {
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 14px 0;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+}
+.journal-title {
+  background: var(--bg-soft);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  text-align: center;
+}
+.j-head {
+  display: grid;
+  grid-template-columns: 90px 1fr 60px 105px 105px;
+  background: var(--bg-soft);
+  border-bottom: 2px solid var(--border-strong);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.j-head > span { padding: 8px 10px; }
+.j-head .r { text-align: right; }
+.j-head .c { text-align: center; }
+
+.j-entry { border-bottom: 1px solid var(--border-soft); }
+.j-entry:last-child { border-bottom: none; }
+
+.j-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 60px 105px 105px;
+  align-items: baseline;
+}
+.j-row > span {
+  padding: 7px 10px;
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.4;
+}
+.j-date {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+.j-acc { }
+.j-acc.cr {
+  padding-left: 32px !important;
+  color: var(--text-soft);
+}
+.j-ref { font-size: 12px; color: var(--text-mute); text-align: center; }
+.j-dr, .j-cr {
+  font-family: "SF Mono", ui-monospace, "Consolas", monospace;
+  font-size: 13px;
+  text-align: right;
+  color: var(--text);
+}
+.j-narr {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  padding-bottom: 8px;
+}
+.j-narr > span {
+  font-size: 12px;
+  color: var(--text-mute);
+  font-style: italic;
+  line-height: 1.5;
+}
+.j-narr > span:nth-child(2) { padding-left: 10px; padding-right: 10px; }
+.j-spacer {
+  height: 6px;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* ═══════════════════════════════════════════════
+   BALANCE SHEET / STATEMENT
+═══════════════════════════════════════════════ */
+.stmt {
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 14px 0;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+}
+.stmt-head {
+  text-align: center;
+  padding: 14px 20px 10px;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+}
+.stmt-co { font-size: 15px; font-weight: 700; color: var(--text); }
+.stmt-doc { font-size: 13.5px; color: var(--text-soft); margin-top: 2px; }
+.stmt-date { font-size: 13px; color: var(--text-soft); }
+.stmt-sec {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  background: var(--bg-soft);
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.stmt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border-soft);
+}
+.stmt-row:last-child { border-bottom: none; }
+.stmt-row.indent { padding-left: 36px; }
+.stmt-row.sub {
+  border-top: 1px solid var(--border-strong);
+  font-weight: 600;
+  background: var(--bg-soft);
+}
+.stmt-row.total {
+  border-top: 2px solid var(--text);
+  border-bottom: 2px solid var(--text);
+  font-weight: 700;
+  background: var(--bg-soft);
+}
+.stmt-val { font-family: "SF Mono", ui-monospace, monospace; font-size: 13px; }
+.stmt-val.neg { color: var(--danger); }
+
+/* ═══════════════════════════════════════════════
+   GRID CARDS
+═══════════════════════════════════════════════ */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 14px 0; }
+.mini {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+}
+.mini-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 6px;
+}
+.mini-lbl.a { color: var(--accent); }
+.mini-lbl.g { color: var(--success); }
+.mini-lbl.w { color: var(--warn); }
+.mini-lbl.d { color: var(--danger); }
+.mini-lbl.n { color: var(--text-mute); }
+.mini-val { font-size: 13.2px; color: var(--text-soft); line-height: 1.55; }
+.mini-val strong { color: var(--text); font-weight: 700; }
+
+/* ═══════════════════════════════════════════════
+   FLOW / TIMELINE
+═══════════════════════════════════════════════ */
+.flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+  padding: 14px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.flow-node {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.flow-node.hi {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.flow-arr { color: var(--text-mute); font-size: 15px; font-weight: 700; }
+
+/* ═══════════════════════════════════════════════
+   TAG / CHIP
+═══════════════════════════════════════════════ */
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.tag.a { background: var(--accent-bg);  color: var(--accent); }
+.tag.g { background: var(--success-bg); color: var(--success); }
+.tag.w { background: var(--warn-bg);    color: var(--warn); }
+.tag.d { background: var(--danger-bg);  color: var(--danger); }
+.tag.n { background: var(--bg-soft);    color: var(--text-soft); }
+
+/* ═══════════════════════════════════════════════
+   STEP INDICATOR
+═══════════════════════════════════════════════ */
+.step-lbl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 10px;
+}
+.step-cir {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-cir.a { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-bd); }
+.step-cir.g { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-bd); }
+.step-cir.w { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-bd); }
+.step-txt {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-soft);
+}
+
+/* ═══════════════════════════════════════════════
+   SOAL SECTIONS
+═══════════════════════════════════════════════ */
+.scenario-box {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.scenario-box .sbox-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-mute);
+  margin-bottom: 8px;
+}
+.scenario-box p {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.scenario-box p:last-child { margin-bottom: 0; }
+.scenario-box .lang-id {
+  padding-top: 10px;
+  margin-top: 10px;
+  border-top: 1px dashed var(--border);
+  color: var(--text-soft);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.asked-box {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-bd);
+  border-left: 3px solid var(--warn);
+  border-radius: 7px;
+  padding: 11px 15px;
+  margin-bottom: 22px;
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.65;
+}
+
+/* ANSWER — open by default since we want the answers visible */
+.ans {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: var(--bg-card);
+}
+.ans-head {
+  background: var(--bg-soft);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+.ans-head:hover { background: var(--bg-hover); }
+.ans-icon { color: var(--text-mute); font-size: 13px; transition: transform .2s; flex-shrink: 0; }
+.ans-head.closed .ans-icon { transform: rotate(-90deg); }
+.ans-body { padding: 18px 18px 14px; display: block; }
+.ans-head.closed + .ans-body { display: none; }
+
+/* ═══════════════════════════════════════════════
+   REFERENCE CARDS — Istilah & Akun
+═══════════════════════════════════════════════ */
+.ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.ref-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+  transition: border-color .15s;
+}
+.ref-card:hover { border-color: var(--border-strong); }
+.ref-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.ref-name .ref-bal {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.ref-bal.dr { background: var(--accent-bg); color: var(--accent); }
+.ref-bal.cr { background: var(--warn-bg); color: var(--warn); }
+.ref-type {
+  font-size: 11px;
+  color: var(--text-mute);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.ref-desc {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+/* RATIO GRID — khusus untuk halaman rasio */
+.ratio-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+.ratio-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+}
+.ratio-name { font-size: 13.2px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.ratio-formula {
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-size: 11.8px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bd);
+  border-radius: 4px;
+  padding: 5px 9px;
+  margin: 6px 0 5px;
+  line-height: 1.6;
+}
+.ratio-hint { font-size: 12px; color: var(--text-soft); line-height: 1.55; }
+
+/* ═══════════════════════════════════════════════
+   HAFALAN — Quick reference box
+═══════════════════════════════════════════════ */
+.hafalan {
+  background: linear-gradient(0deg, var(--success-bg) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--success-bd);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 14px 0;
+}
+.hafalan-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--success);
+  margin-bottom: 8px;
+}
+.hafalan-content {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.7;
+}
+.hafalan-content strong { font-weight: 700; }
+
+/* ═══════════════════════════════════════════════
+   MOBILE
+═══════════════════════════════════════════════ */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 100;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 11px;
+  cursor: pointer;
+  font-size: 17px;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+@media (max-width: 860px) {
+  .sidebar { transform: translateX(-100%); transition: transform .22s; width: 280px; }
+  .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+  .main { margin-left: 0; }
+  .page { padding: 60px 20px 40px; }
+  .hamburger { display: flex; align-items: center; }
+  .overlay { display: block; }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .ratio-grid { grid-template-columns: 1fr; }
+  .j-head, .j-row, .j-narr { grid-template-columns: 68px 1fr 0 90px 90px; }
+  .j-head > span:nth-child(3), .j-row > span:nth-child(3) { display: none; }
+  .j-narr { grid-template-columns: 68px 1fr; }
+}
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-mute); }
+</style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div>
+      <div class="brand">Modul UTS Akuntansi</div>
+      <div class="sub">Kimmel · Weygandt · Mitchell</div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle Dark/Light Mode">☀</button>
+  </div>
+
+  <div class="nav-label">Teori — 50%</div>
+  <div class="nav-item active" onclick="go('p1',this)"><span class="nav-num">1</span><span class="nav-txt">Pengantar Laporan Keuangan</span></div>
+  <div class="nav-item" onclick="go('p2',this)"><span class="nav-num">2</span><span class="nav-txt">Fraud, Internal Control &amp; Cash</span></div>
+  <div class="nav-item" onclick="go('p3',this)"><span class="nav-num">3</span><span class="nav-txt">Statement of Cash Flows</span></div>
+  <div class="nav-item" onclick="go('p4',this)"><span class="nav-num">4</span><span class="nav-txt">Further Financial Statements</span></div>
+
+  <div class="nav-divider"></div>
+  <div class="nav-label">Praktika — 50%</div>
+  <div class="nav-item" onclick="go('p5',this)"><span class="nav-num">5</span><span class="nav-txt">Siklus Akuntansi Jasa</span></div>
+  <div class="nav-item" onclick="go('p6',this)"><span class="nav-num">6</span><span class="nav-txt">Adjusting Entries</span></div>
+  <div class="nav-item" onclick="go('p7',this)"><span class="nav-num">7</span><span class="nav-txt">Multiple-Step Income Statement</span></div>
+  <div class="nav-item" onclick="go('p8',this)"><span class="nav-num">8</span><span class="nav-txt">Analisis Rasio Keuangan</span></div>
+
+  <div class="nav-divider"></div>
+  <div class="nav-label">Referensi Hafalan</div>
+  <div class="nav-item ref" onclick="go('r1',this)"><span class="nav-num">★</span><span class="nav-txt">Istilah &amp; Terminologi</span></div>
+  <div class="nav-item ref" onclick="go('r2',this)"><span class="nav-num">★</span><span class="nav-txt">Akun-akun Kunci</span></div>
+  <div class="nav-item ref" onclick="go('r3',this)"><span class="nav-num">★</span><span class="nav-txt">Semua Rumus</span></div>
+
+  <div class="nav-divider"></div>
+  <div class="nav-label">Latihan Soal</div>
+  <div class="nav-item soal" onclick="go('q1',this)"><span class="nav-num">Q1</span><span class="nav-txt">Equipment &amp; Depresiasi</span></div>
+  <div class="nav-item soal" onclick="go('q2',this)"><span class="nav-num">Q2</span><span class="nav-txt">Net Income Adjusted</span></div>
+  <div class="nav-item soal" onclick="go('q3',this)"><span class="nav-num">Q3</span><span class="nav-txt">Perpetual — Jayhawk</span></div>
+  <div class="nav-item soal" onclick="go('q4',this)"><span class="nav-num">Q4</span><span class="nav-txt">Perpetual — Reid Supply</span></div>
+  <div class="nav-item soal" onclick="go('q5',this)"><span class="nav-num">Q5</span><span class="nav-txt">Periodic — Paxson</span></div>
+</nav>
+
+<main class="main">
+
+<!-- ═══════════════════════════════════════════════
+     P1 — PENGANTAR LAPORAN KEUANGAN
+═══════════════════════════════════════════════ -->
+<div class="page active" id="p1">
+  <div class="eyebrow">Teori · Kisi-kisi 1 · Sesi 1</div>
+  <h1 class="page-title">Pengantar Laporan Keuangan</h1>
+  <div class="page-desc">Empat laporan keuangan dasar, komponen-komponennya, dan bagaimana keempatnya saling terhubung membentuk gambaran keuangan perusahaan yang utuh.</div>
+
+  <div class="callout info">
+    <div class="callout-title">Inti yang harus dikuasai</div>
+    Pahami apa isi <strong>setiap laporan</strong>, apa yang <strong>membedakannya</strong>, dan bagaimana <strong>angka dari satu laporan "mengalir"</strong> ke laporan berikutnya. Tidak bisa lompat — urutan ini saling bergantung.
+  </div>
+
+  <h2 class="sec-head">Urutan Penyusunan</h2>
+  <p>Keempat laporan harus disusun berurutan karena masing-masing memerlukan angka dari laporan sebelumnya.</p>
+  <div class="flow">
+    <div class="flow-node hi">1. Income Statement</div>
+    <div class="flow-arr">→</div>
+    <div class="flow-node hi">2. Retained Earnings Stmt.</div>
+    <div class="flow-arr">→</div>
+    <div class="flow-node hi">3. Balance Sheet</div>
+    <div class="flow-arr">→</div>
+    <div class="flow-node hi">4. Statement of Cash Flows</div>
+  </div>
+
+  <h2 class="sec-head">1 · Income Statement (Laporan Laba Rugi)</h2>
+  <p><strong>Fungsi:</strong> Mengukur kinerja operasional perusahaan — untung atau rugi <em>selama satu periode waktu</em> (bulan, kuartal, tahun).</p>
+  <div class="formula">
+    <span class="lhs">Net Income</span> <span class="op">=</span> Total Revenues <span class="op">−</span> Total Expenses
+  </div>
+  <div class="callout warn">
+    <div class="callout-title">Perhatikan Kata Kuncinya</div>
+    Income Statement dibuat untuk <strong>periode waktu</strong> ("For the Year Ended December 31, 2025"), bukan per satu tanggal.
+  </div>
+
+  <h4>Contoh — Tua Corporation</h4>
+  <div class="stmt">
+    <div class="stmt-head">
+      <div class="stmt-co">Tua Corporation</div>
+      <div class="stmt-doc">Income Statement</div>
+      <div class="stmt-date">For the Year Ended December 31, 2025</div>
+    </div>
+    <div class="stmt-sec">Revenues</div>
+    <div class="stmt-row indent"><span>Service Revenue</span><span class="stmt-val">$23,000</span></div>
+    <div class="stmt-sec">Expenses</div>
+    <div class="stmt-row indent"><span>Supplies Expense</span><span class="stmt-val">$2,500</span></div>
+    <div class="stmt-row indent"><span>Rent Expense</span><span class="stmt-val">$7,000</span></div>
+    <div class="stmt-row indent"><span>Insurance Expense</span><span class="stmt-val">$800</span></div>
+    <div class="stmt-row indent"><span>Salaries Expense</span><span class="stmt-val">$7,200</span></div>
+    <div class="stmt-row sub"><span>Total Expenses</span><span class="stmt-val">$17,500</span></div>
+    <div class="stmt-row total"><span>Net Income</span><span class="stmt-val">$5,500</span></div>
+  </div>
+
+  <h2 class="sec-head">2 · Retained Earnings Statement</h2>
+  <p><strong>Fungsi:</strong> Menunjukkan perubahan saldo <span class="term">Retained Earnings</span> — berapa laba yang disimpan perusahaan vs. berapa yang dibagikan ke pemegang saham sebagai dividen.</p>
+  <div class="formula">
+    <span class="lhs">Ending RE</span> <span class="op">=</span> Beginning RE <span class="op">+</span> Net Income <span class="op">−</span> Dividends
+  </div>
+  <div class="stmt">
+    <div class="stmt-head">
+      <div class="stmt-co">Tua Corporation</div>
+      <div class="stmt-doc">Retained Earnings Statement</div>
+      <div class="stmt-date">For the Year Ended December 31, 2025</div>
+    </div>
+    <div class="stmt-row"><span>Retained Earnings, January 1</span><span class="stmt-val">$0</span></div>
+    <div class="stmt-row"><span>Add: Net Income</span><span class="stmt-val">$5,500</span></div>
+    <div class="stmt-row sub"><span></span><span class="stmt-val">$5,500</span></div>
+    <div class="stmt-row"><span>Less: Dividends</span><span class="stmt-val neg">($2,200)</span></div>
+    <div class="stmt-row total"><span>Retained Earnings, December 31</span><span class="stmt-val">$3,300</span></div>
+  </div>
+  <div class="callout info">
+    <div class="callout-title">Keterkaitan</div>
+    Angka <strong>Net Income $5,500</strong> di atas diambil langsung dari Income Statement yang baru saja dibuat. <strong>Ending RE $3,300</strong> nanti akan dipakai di Balance Sheet.
+  </div>
+
+  <h2 class="sec-head">3 · Balance Sheet / Neraca</h2>
+  <p><strong>Fungsi:</strong> Menggambarkan posisi keuangan <em>pada satu titik waktu</em> — apa yang dimiliki (aset) vs. apa yang dihutang (liabilitas + ekuitas).</p>
+  <div class="formula">
+    <span class="lhs">Assets</span> <span class="op">=</span> <span class="lhs">Liabilities</span> <span class="op">+</span> <span class="lhs">Stockholders' Equity</span>
+  </div>
+  <div class="callout warn">
+    <div class="callout-title">Perbedaan dengan Income Statement</div>
+    Balance Sheet dibuat per <strong>satu tanggal</strong> ("As of December 31, 2025") — seperti foto sesaat. Income Statement meringkas aktivitas selama <strong>periode</strong>.
+  </div>
+  <div class="stmt">
+    <div class="stmt-head">
+      <div class="stmt-co">Tua Corporation</div>
+      <div class="stmt-doc">Balance Sheet</div>
+      <div class="stmt-date">December 31, 2025</div>
+    </div>
+    <div class="stmt-sec">Assets</div>
+    <div class="stmt-row indent"><span>Cash</span><span class="stmt-val">$2,400</span></div>
+    <div class="stmt-row indent"><span>Accounts Receivable</span><span class="stmt-val">$1,100</span></div>
+    <div class="stmt-row indent"><span>Supplies</span><span class="stmt-val">$2,000</span></div>
+    <div class="stmt-row indent"><span>Equipment</span><span class="stmt-val">$12,900</span></div>
+    <div class="stmt-row sub"><span>Total Assets</span><span class="stmt-val">$18,400</span></div>
+    <div class="stmt-sec">Liabilities</div>
+    <div class="stmt-row indent"><span>Accounts Payable</span><span class="stmt-val">$1,400</span></div>
+    <div class="stmt-row indent"><span>Notes Payable</span><span class="stmt-val">$5,700</span></div>
+    <div class="stmt-row sub"><span>Total Liabilities</span><span class="stmt-val">$7,100</span></div>
+    <div class="stmt-sec">Stockholders' Equity</div>
+    <div class="stmt-row indent"><span>Common Stock</span><span class="stmt-val">$8,000</span></div>
+    <div class="stmt-row indent"><span>Retained Earnings</span><span class="stmt-val">$3,300</span></div>
+    <div class="stmt-row sub"><span>Total Stockholders' Equity</span><span class="stmt-val">$11,300</span></div>
+    <div class="stmt-row total"><span>Total Liabilities + Equity</span><span class="stmt-val">$18,400</span></div>
+  </div>
+  <div class="hafalan">
+    <div class="hafalan-title">★ Poin Hafalan</div>
+    <div class="hafalan-content">
+      <strong>Urutan Aset:</strong> diurutkan dari yang <strong>paling likuid</strong> (mudah dicairkan) ke yang paling tidak likuid. Cash → Accounts Receivable → Supplies → Equipment.
+    </div>
+  </div>
+
+  <h2 class="sec-head">4 · Statement of Cash Flows</h2>
+  <p><strong>Fungsi:</strong> Menjelaskan dari mana kas masuk dan kemana kas keluar selama satu periode, dibagi menjadi 3 jenis aktivitas.</p>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Aktivitas</th><th>Contoh Kas Masuk</th><th>Contoh Kas Keluar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Operating</strong></td><td>Dari pelanggan; bunga/dividen diterima</td><td>Bayar gaji, sewa, pajak, bunga</td></tr>
+      <tr><td><strong>Investing</strong></td><td>Jual peralatan; jual investasi</td><td>Beli gedung, peralatan, investasi</td></tr>
+      <tr><td><strong>Financing</strong></td><td>Terbitkan saham/obligasi; pinjam uang</td><td>Bayar dividen; lunasi utang jangka panjang</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">Alur Keterkaitan 4 Laporan</h2>
+  <div class="calc"><span class="lbl-bl">① Income Statement</span>
+  Net Income  ────────────────────────────→  <span class="lbl-gy">masuk ke</span>
+
+<span class="lbl-bl">② Retained Earnings Statement</span>
+  Ending Retained Earnings  ──────────────→  <span class="lbl-gy">masuk ke</span>
+
+<span class="lbl-bl">③ Balance Sheet</span>  <span class="lbl-gy">(sisi Stockholders' Equity)</span>
+  Saldo Cash  ────────────────────────────→  <span class="lbl-gy">harus sama dengan</span>
+
+<span class="lbl-bl">④ Statement of Cash Flows</span>  <span class="lbl-gy">(Cash at End of Period)</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     P2 — FRAUD, INTERNAL CONTROL & CASH
+═══════════════════════════════════════════════ -->
+<div class="page" id="p2">
+  <div class="eyebrow">Teori · Kisi-kisi 2 · Bab 7</div>
+  <h1 class="page-title">Fraud, Internal Control &amp; Cash</h1>
+  <div class="page-desc">Mencakup definisi fraud, segitiga fraud, 6 prinsip pengendalian internal, pengelolaan Petty Cash, dan Bank Reconciliation.</div>
+
+  <h2 class="sec-head">A · Fraud &amp; Fraud Triangle</h2>
+  <p><strong>Fraud</strong> adalah tindakan tidak jujur oleh karyawan yang menguntungkan dirinya sendiri dengan merugikan perusahaan. Ada tiga faktor yang harus ada bersamaan agar fraud terjadi — dikenal sebagai <strong>Fraud Triangle</strong>.</p>
+  <div class="grid3">
+    <div class="mini"><div class="mini-lbl d">Opportunity</div><div class="mini-val">Sistem kontrol yang lemah memungkinkan fraud terjadi dan tidak terdeteksi. Kesempatan terbuka karena tidak ada pengawasan yang memadai.</div></div>
+    <div class="mini"><div class="mini-lbl w">Financial Pressure</div><div class="mini-val">Karyawan punya tekanan finansial — hutang menumpuk, gaya hidup melebihi kemampuan, masalah kesehatan keluarga.</div></div>
+    <div class="mini"><div class="mini-lbl a">Rationalization</div><div class="mini-val">Pelaku membenarkan diri sendiri — "saya hanya meminjam", "saya layak dapat lebih", "perusahaan tidak akan rugi".</div></div>
+  </div>
+  <p>Menghilangkan <em>salah satu</em> faktor saja — terutama <strong>Opportunity</strong> dengan kontrol internal yang kuat — bisa menurunkan risiko fraud secara signifikan.</p>
+  <div class="callout neutral">
+    <div class="callout-title">Tentang SOX</div>
+    <strong>Sarbanes-Oxley Act (SOX)</strong> diberlakukan setelah skandal Enron dan WorldCom di awal 2000-an. Mewajibkan manajemen senior dan auditor eksternal memastikan sistem pengendalian internal berjalan andal dan efektif.
+  </div>
+
+  <h2 class="sec-head">B · 6 Prinsip Internal Control</h2>
+  <div class="hafalan">
+    <div class="hafalan-title">★ Cara Hafal</div>
+    <div class="hafalan-content">
+      Singkatan: <strong>E — S — D — P — I — H</strong><br>
+      Jembatan keledai: <em>"Every Smart Dog Plays In Here"</em>
+    </div>
+  </div>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>#</th><th>Prinsip</th><th>Inti</th><th>Risiko jika Dilanggar</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag a">E</span></td><td><strong>Establishment of Responsibility</strong></td><td>1 tugas = 1 orang penanggung jawab</td><td>Tidak ada yang bisa dimintai pertanggungjawaban</td></tr>
+      <tr><td><span class="tag a">S</span></td><td><strong>Segregation of Duties</strong></td><td>Yang pegang aset ≠ yang catat buku</td><td>1 orang bisa mencuri <em>dan</em> menutupinya lewat pembukuan</td></tr>
+      <tr><td><span class="tag a">D</span></td><td><strong>Documentation Procedures</strong></td><td>Dokumen bernomor urut, ada bukti untuk setiap transaksi</td><td>Transaksi fiktif mudah dibuat tanpa terdeteksi</td></tr>
+      <tr><td><span class="tag a">P</span></td><td><strong>Physical Controls</strong></td><td>Brankas, kunci, CCTV, password, access card</td><td>Aset perusahaan dapat diakses siapa saja</td></tr>
+      <tr><td><span class="tag a">I</span></td><td><strong>Independent Internal Verification</strong></td><td>Pihak independen memeriksa catatan berkala/mendadak</td><td>Penyimpangan tidak terdeteksi dalam waktu lama</td></tr>
+      <tr><td><span class="tag a">H</span></td><td><strong>Human Resource Controls</strong></td><td>Background check, rotasi tugas, cuti wajib, bonding</td><td>Karyawan bermasalah terus bertahan dan melakukan fraud</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">C · Petty Cash (Kas Kecil)</h2>
+  <p>Dana tunai kecil untuk pengeluaran kecil yang tidak praktis dibayar pakai cek. Sistemnya disebut <strong>imprest system</strong> — jumlah dana selalu dijaga tetap di angka tertentu.</p>
+
+  <div class="step-lbl"><span class="step-cir a">1</span><span class="step-txt">Establishing — Membentuk Dana</span></div>
+  <p>Akun Petty Cash dibuat dan diisi pertama kali. Seorang kustodian ditunjuk sebagai penanggung jawab.</p>
+  <div class="journal">
+    <div class="journal-title">General Journal — Establishing Petty Cash</div>
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Mar. 1</span><span class="j-acc">Petty Cash</span><span class="j-ref"></span><span class="j-dr">100.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">100.00</span></div>
+      <div class="j-narr"><span></span><span>(To establish a petty cash fund of $100)</span></div>
+    </div>
+  </div>
+
+  <div class="step-lbl"><span class="step-cir w">2</span><span class="step-txt">Making Payments — Membayar dari Dana</span></div>
+  <p><strong>Tidak ada jurnal</strong> saat membayar. Kustodian menyimpan kuitansi/voucher di kotak. Saldo Petty Cash di buku tidak berubah.</p>
+
+  <div class="step-lbl"><span class="step-cir g">3</span><span class="step-txt">Replenishing — Mengisi Ulang Dana</span></div>
+  <p>Saat dana menipis, kustodian kumpulkan semua voucher dan minta cek penggantian. <strong>Jurnal baru dibuat di tahap ini.</strong></p>
+  <div class="journal">
+    <div class="journal-title">General Journal — Replenishing Petty Cash</div>
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Mar. 15</span><span class="j-acc">Postage Expense</span><span class="j-ref"></span><span class="j-dr">44.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc">Freight-Out</span><span class="j-ref"></span><span class="j-dr">38.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc">Miscellaneous Expense</span><span class="j-ref"></span><span class="j-dr">5.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">87.00</span></div>
+      <div class="j-narr"><span></span><span>(To replenish petty cash fund)</span></div>
+    </div>
+  </div>
+  <div class="callout warn">
+    <div class="callout-title">Perhatian</div>
+    Akun <strong>Petty Cash</strong> hanya dipakai saat membentuk atau mengubah ukuran dana. Saat mengisi ulang, yang di-kredit adalah <strong>Cash</strong>, bukan Petty Cash.
+  </div>
+
+  <h4>Jika Ada Selisih (Cash Over and Short)</h4>
+  <div class="journal">
+    <div class="journal-title">General Journal — Replenishment with $1 Shortage</div>
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Mar. 15</span><span class="j-acc">Postage Expense</span><span class="j-ref"></span><span class="j-dr">44.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc">Freight-Out</span><span class="j-ref"></span><span class="j-dr">38.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc">Miscellaneous Expense</span><span class="j-ref"></span><span class="j-dr">5.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc">Cash Over and Short</span><span class="j-ref"></span><span class="j-dr">1.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">88.00</span></div>
+      <div class="j-narr"><span></span><span>(To replenish fund with $1 shortage)</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">D · Bank Reconciliation</h2>
+  <p>Proses mencocokkan saldo kas menurut <strong>catatan perusahaan (per books)</strong> dengan saldo menurut <strong>laporan bank (per bank statement)</strong>.</p>
+  <p><strong>Mengapa berbeda?</strong> Karena <em>time lag</em> — satu pihak sudah mencatat, yang lain belum. Atau ada item yang hanya diketahui salah satu pihak.</p>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Sisi BANK (per bank statement)</th><th>Sisi BUKU (per perusahaan)</th></tr></thead>
+    <tbody>
+      <tr><td>Saldo per bank statement</td><td>Saldo per buku (Cash ledger)</td></tr>
+      <tr><td><span class="tag g">+</span> Deposits in Transit</td><td><span class="tag g">+</span> EFT / koleksi bank belum dicatat</td></tr>
+      <tr><td><span class="tag d">−</span> Outstanding Checks</td><td><span class="tag g">+</span> Koreksi error pencatatan buku</td></tr>
+      <tr><td><span class="tag w">±</span> Kesalahan Bank</td><td><span class="tag d">−</span> NSF Check (cek ditolak)</td></tr>
+      <tr><td></td><td><span class="tag d">−</span> Bank Service Charges</td></tr>
+      <tr><td><strong>= Adjusted Balance (Bank)</strong></td><td><strong>= Adjusted Balance (Books)</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout ok">
+    <div class="callout-title">Kunci</div>
+    Hanya item di <strong>sisi Buku</strong> yang memerlukan <strong>jurnal penyesuaian</strong>. Sisi Bank tidak perlu jurnal — bank akan menyesuaikan sendiri.
+  </div>
+
+  <h4>Contoh Jurnal Hasil Rekonsiliasi</h4>
+  <div class="journal">
+    <div class="journal-title">General Journal — Bank Reconciliation Adjustments</div>
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Apr. 30</span><span class="j-acc">Cash</span><span class="j-ref"></span><span class="j-dr">1,035.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accounts Receivable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,035.00</span></div>
+      <div class="j-narr"><span></span><span>(To record EFT collection from customer)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Apr. 30</span><span class="j-acc">Accounts Receivable</span><span class="j-ref"></span><span class="j-dr">425.60</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">425.60</span></div>
+      <div class="j-narr"><span></span><span>(To record NSF check returned by bank)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Apr. 30</span><span class="j-acc">Bank Charge Expense</span><span class="j-ref"></span><span class="j-dr">150.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">150.00</span></div>
+      <div class="j-narr"><span></span><span>(To record bank service charges)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     P3 — STATEMENT OF CASH FLOWS
+═══════════════════════════════════════════════ -->
+<div class="page" id="p3">
+  <div class="eyebrow">Teori · Kisi-kisi 3 · Bab 12</div>
+  <h1 class="page-title">Statement of Cash Flows</h1>
+  <div class="page-desc">Kegunaan, 3 klasifikasi arus kas, perbedaan metode Direct vs. Indirect, dan cara menyusunnya.</div>
+
+  <h2 class="sec-head">A · Kegunaan SCF</h2>
+  <p>SCF menjawab pertanyaan yang tidak bisa dijawab oleh laporan lain:</p>
+  <div class="grid2">
+    <div class="mini"><div class="mini-lbl a">Kemampuan Masa Depan</div><div class="mini-val">Seberapa mampu perusahaan menghasilkan kas di masa depan?</div></div>
+    <div class="mini"><div class="mini-lbl g">Bayar Kewajiban</div><div class="mini-val">Bisakah perusahaan membayar dividen dan melunasi utang tepat waktu?</div></div>
+    <div class="mini"><div class="mini-lbl w">Net Income vs. Kas</div><div class="mini-val">Mengapa laba bersih berbeda dengan kas yang benar-benar masuk?</div></div>
+    <div class="mini"><div class="mini-lbl n">Transaksi Utama</div><div class="mini-val">Apa saja transaksi investing dan financing yang melibatkan kas periode ini?</div></div>
+  </div>
+
+  <h2 class="sec-head">B · 3 Klasifikasi Arus Kas</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Aktivitas</th><th>Kas Masuk (Inflows)</th><th>Kas Keluar (Outflows)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Operating</strong><br><small style="color:var(--text-mute)">Operasi sehari-hari</small></td><td>Dari pelanggan; bunga &amp; dividen diterima</td><td>Ke supplier; gaji; pajak; bunga dibayar</td></tr>
+      <tr><td><strong>Investing</strong><br><small style="color:var(--text-mute)">Aset jangka panjang</small></td><td>Jual properti/peralatan; jual sekuritas</td><td>Beli properti/peralatan; beli sekuritas</td></tr>
+      <tr><td><strong>Financing</strong><br><small style="color:var(--text-mute)">Utang &amp; ekuitas</small></td><td>Terbitkan saham/obligasi; pinjam uang</td><td>Bayar dividen; lunasi utang jangka panjang</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn">
+    <div class="callout-title">Penting!</div>
+    <strong>Interest received</strong>, <strong>dividends received</strong>, dan <strong>interest paid</strong> → tetap masuk ke <strong>Operating</strong>, karena semuanya muncul di Income Statement.
+  </div>
+
+  <h2 class="sec-head">C · Indirect vs. Direct Method</h2>
+  <p>Kedua metode menghasilkan <strong>angka Net Cash from Operating yang sama</strong>. Yang berbeda hanya cara penyajian bagian Operating.</p>
+  <div class="grid2">
+    <div class="mini">
+      <div class="mini-lbl a">Indirect Method</div>
+      <div class="mini-val">Mulai dari <strong>Net Income</strong>, lalu disesuaikan untuk item non-kas dan perubahan working capital. <strong>98% perusahaan</strong> pakai metode ini karena lebih mudah &amp; murah.</div>
+    </div>
+    <div class="mini">
+      <div class="mini-lbl g">Direct Method</div>
+      <div class="mini-val">Langsung tampilkan kas masuk/keluar per kategori (dari pelanggan, ke supplier, dll). Disukai FASB tapi jarang dipakai di praktik.</div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">D · Tabel Penyesuaian Indirect Method</h2>
+  <div class="hafalan">
+    <div class="hafalan-title">★ Wajib Hafal</div>
+    <div class="hafalan-content">Tabel ini adalah <strong>jantung</strong> dari soal SCF metode Indirect.</div>
+  </div>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Item</th><th>Penyesuaian ke Net Income</th><th>Alasan</th></tr></thead>
+    <tbody>
+      <tr><td>Depreciation / Amortization</td><td><span class="tag g">+ Tambah</span></td><td>Beban non-kas — mengurangi laba tapi tidak mengurangi kas</td></tr>
+      <tr><td>Loss on disposal of assets</td><td><span class="tag g">+ Tambah</span></td><td>Rugi non-kas — mengurangi laba tapi tidak mengurangi kas operasi</td></tr>
+      <tr><td>Gain on disposal of assets</td><td><span class="tag d">− Kurangi</span></td><td>Untung non-kas — menambah laba tapi tidak menambah kas operasi</td></tr>
+      <tr><td>Kenaikan Current Asset (non-kas)</td><td><span class="tag d">− Kurangi</span></td><td>Revenue dicatat tapi kas belum diterima</td></tr>
+      <tr><td>Penurunan Current Asset (non-kas)</td><td><span class="tag g">+ Tambah</span></td><td>Terima kas lebih dari revenue periode ini</td></tr>
+      <tr><td>Kenaikan Current Liability</td><td><span class="tag g">+ Tambah</span></td><td>Belanja tapi belum bayar — kas keluar lebih sedikit</td></tr>
+      <tr><td>Penurunan Current Liability</td><td><span class="tag d">− Kurangi</span></td><td>Bayar lebih dari beban — kas keluar lebih banyak</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Contoh Lengkap — Indirect Method</h4>
+  <div class="stmt">
+    <div class="stmt-head">
+      <div class="stmt-co">Computer Services Company</div>
+      <div class="stmt-doc">Statement of Cash Flows — Indirect Method</div>
+      <div class="stmt-date">For the Year Ended December 31, 2025</div>
+    </div>
+    <div class="stmt-sec">Cash Flows from Operating Activities</div>
+    <div class="stmt-row"><span>Net income</span><span class="stmt-val">$145,000</span></div>
+    <div class="stmt-row indent"><span>Depreciation expense</span><span class="stmt-val">9,000</span></div>
+    <div class="stmt-row indent"><span>Loss on disposal of plant assets</span><span class="stmt-val">3,000</span></div>
+    <div class="stmt-row indent"><span>Decrease in accounts receivable</span><span class="stmt-val">10,000</span></div>
+    <div class="stmt-row indent"><span>Increase in inventory</span><span class="stmt-val neg">(5,000)</span></div>
+    <div class="stmt-row indent"><span>Increase in prepaid expenses</span><span class="stmt-val neg">(4,000)</span></div>
+    <div class="stmt-row indent"><span>Increase in accounts payable</span><span class="stmt-val">16,000</span></div>
+    <div class="stmt-row indent"><span>Decrease in income taxes payable</span><span class="stmt-val neg">(2,000)</span></div>
+    <div class="stmt-row sub"><span>Net cash from operating activities</span><span class="stmt-val">$172,000</span></div>
+    <div class="stmt-sec">Cash Flows from Investing Activities</div>
+    <div class="stmt-row indent"><span>Purchase of building</span><span class="stmt-val neg">(120,000)</span></div>
+    <div class="stmt-row indent"><span>Purchase of equipment</span><span class="stmt-val neg">(25,000)</span></div>
+    <div class="stmt-row indent"><span>Sale of equipment</span><span class="stmt-val">4,000</span></div>
+    <div class="stmt-row sub"><span>Net cash used by investing activities</span><span class="stmt-val neg">$(141,000)</span></div>
+    <div class="stmt-sec">Cash Flows from Financing Activities</div>
+    <div class="stmt-row indent"><span>Issuance of common stock</span><span class="stmt-val">20,000</span></div>
+    <div class="stmt-row indent"><span>Payment of cash dividends</span><span class="stmt-val neg">(29,000)</span></div>
+    <div class="stmt-row sub"><span>Net cash used by financing activities</span><span class="stmt-val neg">$(9,000)</span></div>
+    <div class="stmt-row"><span>Net increase in cash</span><span class="stmt-val">22,000</span></div>
+    <div class="stmt-row"><span>Cash at beginning of period</span><span class="stmt-val">33,000</span></div>
+    <div class="stmt-row total"><span>Cash at end of period</span><span class="stmt-val">$55,000</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     P4 — FURTHER FS
+═══════════════════════════════════════════════ -->
+<div class="page" id="p4">
+  <div class="eyebrow">Teori · Kisi-kisi 4 · Bab 2</div>
+  <h1 class="page-title">Further Financial Statements</h1>
+  <div class="page-desc">Pendalaman struktur laporan keuangan: bentuk usaha, pengguna informasi, 3 aktivitas bisnis.</div>
+
+  <h2 class="sec-head">3 Bentuk Usaha</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Bentuk</th><th>Kepemilikan</th><th>Kelebihan</th><th>Kekurangan</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Sole Proprietorship</strong></td><td>1 orang</td><td>Mudah dibentuk; keuntungan pajak</td><td>Tanggung jawab pribadi penuh</td></tr>
+      <tr><td><strong>Partnership</strong></td><td>2+ orang; kontrol bersama</td><td>Sumber daya lebih luas; keuntungan pajak</td><td>Tanggung jawab pribadi penuh</td></tr>
+      <tr><td><strong>Corporation</strong></td><td>Pemegang saham; saham diperdagangkan</td><td>Tidak ada tanggung jawab pribadi; mudah kumpulkan modal</td><td>Pajak lebih tinggi</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">Pengguna Informasi Akuntansi</h2>
+  <div class="grid2">
+    <div class="mini"><div class="mini-lbl a">Internal Users</div><div class="mini-val">Manajer, direktur, karyawan — untuk pengambilan keputusan operasional dan strategis.</div></div>
+    <div class="mini"><div class="mini-lbl g">External Users</div><div class="mini-val">Investor, kreditur, otoritas pajak, regulator, pelanggan, serikat pekerja.</div></div>
+  </div>
+
+  <h2 class="sec-head">3 Aktivitas Bisnis</h2>
+  <div class="formula"><span class="lhs">Assets</span> <span class="op">=</span> <span class="lhs">Liabilities</span> <span class="op">+</span> <span class="lhs">Stockholders' Equity</span></div>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Aktivitas</th><th>Definisi</th><th>Contoh Transaksi</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Financing</strong></td><td>Mengumpulkan dana dari luar</td><td>Terbitkan saham, pinjam dari bank, bayar dividen</td></tr>
+      <tr><td><strong>Investing</strong></td><td>Beli sumber daya untuk operasi</td><td>Beli gedung, peralatan, investasi di perusahaan lain</td></tr>
+      <tr><td><strong>Operating</strong></td><td>Kegiatan harian menghasilkan produk/jasa</td><td>Jual barang/jasa, bayar gaji, bayar sewa</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     P5 — SIKLUS AKUNTANSI JASA
+═══════════════════════════════════════════════ -->
+<div class="page" id="p5">
+  <div class="eyebrow">Praktika · Kisi-kisi 5 · Bab 2-3</div>
+  <h1 class="page-title">Siklus Akuntansi Perusahaan Jasa</h1>
+  <div class="page-desc">Aturan debit-kredit, penjurnalan transaksi umum untuk perusahaan jasa, dan posting ke ledger.</div>
+
+  <h2 class="sec-head">Aturan Debit &amp; Kredit — Fondasi Segalanya</h2>
+  <div class="callout info">
+    <div class="callout-title">Prinsip Dasar</div>
+    Setiap transaksi selalu: <strong>Total Debit = Total Kredit</strong>. Sistem ini disebut <strong>double-entry accounting</strong>.
+  </div>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Tipe Akun</th><th>Normal Balance</th><th>Bertambah</th><th>Berkurang</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Assets</strong> — Cash, A/R, Equipment</td><td><span class="tag a">Debit</span></td><td>Debit</td><td>Credit</td></tr>
+      <tr><td><strong>Liabilities</strong> — A/P, Notes Payable</td><td><span class="tag w">Credit</span></td><td>Credit</td><td>Debit</td></tr>
+      <tr><td><strong>Common Stock</strong></td><td><span class="tag w">Credit</span></td><td>Credit</td><td>Debit</td></tr>
+      <tr><td><strong>Retained Earnings</strong></td><td><span class="tag w">Credit</span></td><td>Credit</td><td>Debit</td></tr>
+      <tr><td><strong>Revenues</strong></td><td><span class="tag g">Credit</span></td><td>Credit</td><td>Debit</td></tr>
+      <tr><td><strong>Expenses</strong></td><td><span class="tag d">Debit</span></td><td>Debit</td><td>Credit</td></tr>
+      <tr><td><strong>Dividends</strong></td><td><span class="tag d">Debit</span></td><td>Debit</td><td>Credit</td></tr>
+    </tbody>
+  </table></div>
+  <div class="hafalan">
+    <div class="hafalan-title">★ Cara Hafal Normal Balance</div>
+    <div class="hafalan-content">
+      <strong>DEBIT</strong> normal balance: <strong>A·E·D</strong> — Assets, Expenses, Dividends<br>
+      <strong>CREDIT</strong> normal balance: <strong>L·E·R</strong> — Liabilities, Equity, Revenue
+    </div>
+  </div>
+
+  <h2 class="sec-head">Contoh Jurnal — Sierra Corporation</h2>
+  <div class="journal">
+    <div class="journal-title">General Journal — October</div>
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 1</span><span class="j-acc">Cash</span><span class="j-ref"></span><span class="j-dr">10,000.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Common Stock</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">10,000.00</span></div>
+      <div class="j-narr"><span></span><span>(Issued common stock for cash)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 1</span><span class="j-acc">Cash</span><span class="j-ref"></span><span class="j-dr">5,000.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Notes Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">5,000.00</span></div>
+      <div class="j-narr"><span></span><span>(Borrowed cash, signed 3-month, 12% note)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 2</span><span class="j-acc">Equipment</span><span class="j-ref"></span><span class="j-dr">5,000.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">5,000.00</span></div>
+      <div class="j-narr"><span></span><span>(Purchased equipment for cash)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 2</span><span class="j-acc">Cash</span><span class="j-ref"></span><span class="j-dr">1,200.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Unearned Service Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,200.00</span></div>
+      <div class="j-narr"><span></span><span>(Received cash advance from R. Knox)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 3</span><span class="j-acc">Cash</span><span class="j-ref"></span><span class="j-dr">10,000.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Service Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">10,000.00</span></div>
+      <div class="j-narr"><span></span><span>(Received cash for guide services performed)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 3</span><span class="j-acc">Rent Expense</span><span class="j-ref"></span><span class="j-dr">900.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">900.00</span></div>
+      <div class="j-narr"><span></span><span>(Paid October office rent)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 5</span><span class="j-acc">Supplies</span><span class="j-ref"></span><span class="j-dr">2,500.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accounts Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">2,500.00</span></div>
+      <div class="j-narr"><span></span><span>(Purchased supplies on account)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     P6 — ADJUSTING ENTRIES
+═══════════════════════════════════════════════ -->
+<div class="page" id="p6">
+  <div class="eyebrow">Praktika · Kisi-kisi 6 · Bab 3-4</div>
+  <h1 class="page-title">Adjusting Entries — 5 Kategori</h1>
+  <div class="page-desc">Jurnal penyesuaian yang wajib dibuat di akhir setiap periode untuk memastikan laporan keuangan mencerminkan kondisi yang sebenarnya.</div>
+
+  <div class="callout info">
+    <div class="callout-title">Aturan Emas</div>
+    Setiap adjusting entry <strong>selalu</strong> melibatkan tepat 1 akun neraca (Balance Sheet) + 1 akun laba rugi (Income Statement).
+  </div>
+
+  <h2 class="sec-head">1 · Prepaid Expenses</h2>
+  <p>Biaya yang sudah dibayar tunai namun belum dikonsumsi. Awalnya dicatat sebagai aset, lalu dipindahkan ke beban saat terkonsumsi.</p>
+  <div class="grid2">
+    <div class="mini"><div class="mini-lbl d">Sebelum Disesuaikan</div><div class="mini-val">Aset <strong>terlalu besar</strong> (overstated)<br>Beban <strong>terlalu kecil</strong> (understated)</div></div>
+    <div class="mini"><div class="mini-lbl g">Pola Jurnal</div><div class="mini-val"><strong>Dr:</strong> Expense<br><strong>Cr:</strong> Asset</div></div>
+  </div>
+
+  <h4>Supplies</h4>
+  <div class="journal">
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 31</span><span class="j-acc">Supplies Expense</span><span class="j-ref"></span><span class="j-dr">1,500.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Supplies</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,500.00</span></div>
+      <div class="j-narr"><span></span><span>(Supplies used: $2,500 − $1,000 on hand = $1,500)</span></div>
+    </div>
+  </div>
+
+  <h4>Prepaid Insurance</h4>
+  <div class="journal">
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 31</span><span class="j-acc">Insurance Expense</span><span class="j-ref"></span><span class="j-dr">50.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Prepaid Insurance</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">50.00</span></div>
+      <div class="j-narr"><span></span><span>(Monthly insurance: $600 ÷ 12 months = $50)</span></div>
+    </div>
+  </div>
+
+  <h4>Depreciation</h4>
+  <div class="journal">
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 31</span><span class="j-acc">Depreciation Expense</span><span class="j-ref"></span><span class="j-dr">40.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accumulated Depreciation — Equipment</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">40.00</span></div>
+      <div class="j-narr"><span></span><span>(Monthly depreciation on equipment)</span></div>
+    </div>
+  </div>
+  <div class="callout warn">
+    <div class="callout-title">Accumulated Depreciation</div>
+    Ini adalah <strong>contra asset account</strong> — muncul di Balance Sheet sebagai pengurang akun Equipment. <strong>Book Value = Cost − Accumulated Depreciation</strong>.
+  </div>
+
+  <h2 class="sec-head">2 · Unearned Revenues</h2>
+  <p>Kas sudah diterima dari pelanggan, namun jasa belum dilaksanakan. Awalnya dicatat sebagai liabilitas (utang jasa), lalu dipindahkan ke revenue saat jasa dilakukan.</p>
+  <div class="grid2">
+    <div class="mini"><div class="mini-lbl d">Sebelum Disesuaikan</div><div class="mini-val">Liabilitas <strong>terlalu besar</strong><br>Revenue <strong>terlalu kecil</strong></div></div>
+    <div class="mini"><div class="mini-lbl g">Pola Jurnal</div><div class="mini-val"><strong>Dr:</strong> Liability (Unearned Rev.)<br><strong>Cr:</strong> Revenue</div></div>
+  </div>
+  <div class="journal">
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 31</span><span class="j-acc">Unearned Service Revenue</span><span class="j-ref"></span><span class="j-dr">400.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Service Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">400.00</span></div>
+      <div class="j-narr"><span></span><span>(Revenue earned from R. Knox contract)</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">3 · Accrued Revenues</h2>
+  <p>Jasa sudah dilaksanakan, namun belum ditagih/diterima bayarannya — dan belum dicatat.</p>
+  <div class="grid2">
+    <div class="mini"><div class="mini-lbl d">Sebelum Disesuaikan</div><div class="mini-val">A/R <strong>terlalu kecil</strong><br>Revenue <strong>terlalu kecil</strong></div></div>
+    <div class="mini"><div class="mini-lbl g">Pola Jurnal</div><div class="mini-val"><strong>Dr:</strong> Accounts Receivable<br><strong>Cr:</strong> Revenue</div></div>
+  </div>
+  <div class="journal">
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 31</span><span class="j-acc">Accounts Receivable</span><span class="j-ref"></span><span class="j-dr">200.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Service Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">200.00</span></div>
+      <div class="j-narr"><span></span><span>(To accrue revenue for services not yet billed)</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">4 · Accrued Expenses</h2>
+  <p>Beban sudah terjadi, namun belum dibayar dan belum dicatat.</p>
+  <div class="grid2">
+    <div class="mini"><div class="mini-lbl d">Sebelum Disesuaikan</div><div class="mini-val">Beban <strong>terlalu kecil</strong><br>Liabilitas <strong>terlalu kecil</strong></div></div>
+    <div class="mini"><div class="mini-lbl g">Pola Jurnal</div><div class="mini-val"><strong>Dr:</strong> Expense<br><strong>Cr:</strong> Payable (Liability)</div></div>
+  </div>
+
+  <h4>Accrued Interest</h4>
+  <div class="journal">
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 31</span><span class="j-acc">Interest Expense</span><span class="j-ref"></span><span class="j-dr">50.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Interest Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">50.00</span></div>
+      <div class="j-narr"><span></span><span>($5,000 × 12% × 1/12 = $50)</span></div>
+    </div>
+  </div>
+
+  <h4>Accrued Salaries</h4>
+  <div class="journal">
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Oct. 31</span><span class="j-acc">Salaries and Wages Expense</span><span class="j-ref"></span><span class="j-dr">1,200.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Salaries and Wages Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,200.00</span></div>
+      <div class="j-narr"><span></span><span>(3 days × $400/day = $1,200)</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Ringkasan 5 Tipe Adjusting Entries</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Tipe</th><th>Kondisi Sebelum</th><th>Debit</th><th>Credit</th></tr></thead>
+    <tbody>
+      <tr><td>Prepaid Expense</td><td>Asset ↑ · Expense ↓</td><td>Expense</td><td>Asset</td></tr>
+      <tr><td>Unearned Revenue</td><td>Liability ↑ · Revenue ↓</td><td>Liability</td><td>Revenue</td></tr>
+      <tr><td>Accrued Revenue</td><td>A/R ↓ · Revenue ↓</td><td>Asset (Receivable)</td><td>Revenue</td></tr>
+      <tr><td>Accrued Expense</td><td>Expense ↓ · Payable ↓</td><td>Expense</td><td>Liability (Payable)</td></tr>
+      <tr><td>Depreciation</td><td>Asset ↑ · Expense ↓</td><td>Depreciation Expense</td><td>Accumulated Depreciation</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     P7 — MULTIPLE-STEP INCOME STATEMENT
+═══════════════════════════════════════════════ -->
+<div class="page" id="p7">
+  <div class="eyebrow">Praktika · Kisi-kisi 7 · Bab 5</div>
+  <h1 class="page-title">Multiple-Step Income Statement</h1>
+  <div class="page-desc">Format laporan laba rugi bertahap untuk perusahaan dagang — memisahkan aktivitas operasional dari non-operasional.</div>
+
+  <h2 class="sec-head">Format Lengkap</h2>
+  <div class="stmt">
+    <div class="stmt-head">
+      <div class="stmt-co">PW Audio Supply, Inc.</div>
+      <div class="stmt-doc">Income Statement</div>
+      <div class="stmt-date">For the Year Ended December 31, 2025</div>
+    </div>
+    <div class="stmt-sec">Sales</div>
+    <div class="stmt-row indent"><span>Sales Revenue</span><span class="stmt-val">$480,000</span></div>
+    <div class="stmt-row indent"><span>Less: Sales Returns and Allowances</span><span class="stmt-val neg">(12,000)</span></div>
+    <div class="stmt-row indent"><span>Less: Sales Discounts</span><span class="stmt-val neg">(8,000)</span></div>
+    <div class="stmt-row sub"><span>Net Sales</span><span class="stmt-val">$460,000</span></div>
+    <div class="stmt-row indent"><span>Cost of Goods Sold</span><span class="stmt-val neg">(316,000)</span></div>
+    <div class="stmt-row sub"><span>Gross Profit</span><span class="stmt-val">$144,000</span></div>
+    <div class="stmt-sec">Operating Expenses</div>
+    <div class="stmt-row indent"><span>Salaries and Wages Expense</span><span class="stmt-val">64,000</span></div>
+    <div class="stmt-row indent"><span>Utilities Expense</span><span class="stmt-val">17,000</span></div>
+    <div class="stmt-row indent"><span>Advertising Expense</span><span class="stmt-val">16,000</span></div>
+    <div class="stmt-row indent"><span>Depreciation Expense</span><span class="stmt-val">8,000</span></div>
+    <div class="stmt-row indent"><span>Freight-Out</span><span class="stmt-val">7,000</span></div>
+    <div class="stmt-row indent"><span>Insurance Expense</span><span class="stmt-val">2,000</span></div>
+    <div class="stmt-row sub"><span>Total Operating Expenses</span><span class="stmt-val">(114,000)</span></div>
+    <div class="stmt-row sub"><span>Income from Operations</span><span class="stmt-val">$30,000</span></div>
+    <div class="stmt-sec">Other Revenues, Gains, Expenses, Losses</div>
+    <div class="stmt-row indent"><span>Interest Revenue</span><span class="stmt-val">3,000</span></div>
+    <div class="stmt-row indent"><span>Gain on Disposal of Plant Assets</span><span class="stmt-val">600</span></div>
+    <div class="stmt-row indent"><span>Interest Expense</span><span class="stmt-val neg">(1,800)</span></div>
+    <div class="stmt-row indent"><span>Casualty Loss from Vandalism</span><span class="stmt-val neg">(200)</span></div>
+    <div class="stmt-row sub"><span>Income Before Income Taxes</span><span class="stmt-val">$31,600</span></div>
+    <div class="stmt-row indent"><span>Income Tax Expense</span><span class="stmt-val neg">(10,100)</span></div>
+    <div class="stmt-row total"><span>Net Income</span><span class="stmt-val">$21,500</span></div>
+  </div>
+
+  <h2 class="sec-head">Rumus Kunci</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Yang Dicari</th><th>Rumus</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Net Sales</strong></td><td>Sales Revenue − Sales Returns &amp; Allowances − Sales Discounts</td></tr>
+      <tr><td><strong>Gross Profit</strong></td><td>Net Sales − Cost of Goods Sold</td></tr>
+      <tr><td><strong>Income from Operations</strong></td><td>Gross Profit − Total Operating Expenses</td></tr>
+      <tr><td><strong>Income Before Tax</strong></td><td>Income from Operations + Other Revenues − Other Expenses</td></tr>
+      <tr><td><strong>Net Income</strong></td><td>Income Before Tax − Income Tax Expense</td></tr>
+      <tr><td><strong>COGS (Periodic)</strong></td><td>Beginning Inventory + Cost of Goods Purchased − Ending Inventory</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     P8 — RASIO KEUANGAN
+═══════════════════════════════════════════════ -->
+<div class="page" id="p8">
+  <div class="eyebrow">Praktika · Kisi-kisi 8 · Bab 13</div>
+  <h1 class="page-title">Analisis Rasio Keuangan</h1>
+  <div class="page-desc">Tiga kategori rasio utama: Likuiditas, Solvabilitas, dan Profitabilitas — rumus, interpretasi, dan arah yang diinginkan.</div>
+
+  <div class="callout info">
+    <div class="callout-title">Kapan Rasio Bermakna?</div>
+    Rasio keuangan hanya bermakna jika dibandingkan: <strong>(1)</strong> dengan tahun lalu perusahaan yang sama, <strong>(2)</strong> dengan kompetitor, atau <strong>(3)</strong> dengan rata-rata industri.
+  </div>
+
+  <h2 class="sec-head">A · Rasio Likuiditas (Jangka Pendek)</h2>
+  <p>Mengukur kemampuan perusahaan membayar kewajiban yang jatuh tempo dalam waktu dekat.</p>
+  <div class="ratio-grid">
+    <div class="ratio-card"><div class="ratio-name">Working Capital</div><div class="ratio-formula">Current Assets − Current Liabilities</div><div class="ratio-hint">Semakin besar = semakin baik</div></div>
+    <div class="ratio-card"><div class="ratio-name">Current Ratio</div><div class="ratio-formula">Current Assets ÷ Current Liabilities</div><div class="ratio-hint">Semakin tinggi = lebih likuid</div></div>
+    <div class="ratio-card"><div class="ratio-name">A/R Turnover</div><div class="ratio-formula">Net Credit Sales ÷ Average Net A/R</div><div class="ratio-hint">Semakin tinggi = lebih cepat ditagih</div></div>
+    <div class="ratio-card"><div class="ratio-name">Average Collection Period</div><div class="ratio-formula">365 ÷ A/R Turnover</div><div class="ratio-hint">Semakin pendek = lebih baik</div></div>
+    <div class="ratio-card"><div class="ratio-name">Inventory Turnover</div><div class="ratio-formula">COGS ÷ Average Inventory</div><div class="ratio-hint">Semakin tinggi = lebih cepat terjual</div></div>
+    <div class="ratio-card"><div class="ratio-name">Days in Inventory</div><div class="ratio-formula">365 ÷ Inventory Turnover</div><div class="ratio-hint">Semakin pendek = lebih baik</div></div>
+  </div>
+
+  <h2 class="sec-head">B · Rasio Solvabilitas (Jangka Panjang)</h2>
+  <p>Mengukur kemampuan perusahaan bertahan dan memenuhi kewajiban jangka panjang.</p>
+  <div class="ratio-grid">
+    <div class="ratio-card"><div class="ratio-name">Debt to Assets Ratio</div><div class="ratio-formula">Total Liabilities ÷ Total Assets</div><div class="ratio-hint">Semakin rendah = lebih aman</div></div>
+    <div class="ratio-card"><div class="ratio-name">Times Interest Earned</div><div class="ratio-formula">(Net Income + Int. Exp + Tax Exp) ÷ Int. Exp</div><div class="ratio-hint">Semakin tinggi = mampu bayar bunga</div></div>
+    <div class="ratio-card"><div class="ratio-name">Free Cash Flow</div><div class="ratio-formula">Net Cash Operating − CapEx − Dividends</div><div class="ratio-hint">Semakin tinggi = lebih fleksibel</div></div>
+  </div>
+
+  <h2 class="sec-head">C · Rasio Profitabilitas</h2>
+  <p>Mengukur kemampuan perusahaan menghasilkan laba relatif terhadap penjualan, aset, atau modal.</p>
+  <div class="ratio-grid">
+    <div class="ratio-card"><div class="ratio-name">Gross Profit Rate</div><div class="ratio-formula">Gross Profit ÷ Net Sales</div><div class="ratio-hint">Laba kotor per dollar penjualan</div></div>
+    <div class="ratio-card"><div class="ratio-name">Profit Margin</div><div class="ratio-formula">Net Income ÷ Net Sales</div><div class="ratio-hint">Laba bersih per dollar penjualan</div></div>
+    <div class="ratio-card"><div class="ratio-name">Return on Assets (ROA)</div><div class="ratio-formula">Net Income ÷ Average Total Assets</div><div class="ratio-hint">Laba per dollar aset</div></div>
+    <div class="ratio-card"><div class="ratio-name">Return on Equity (ROE)</div><div class="ratio-formula">(Net Income − Pref. Div.) ÷ Avg. Common Equity</div><div class="ratio-hint">Laba per dollar modal pemegang saham</div></div>
+    <div class="ratio-card"><div class="ratio-name">Asset Turnover</div><div class="ratio-formula">Net Sales ÷ Average Total Assets</div><div class="ratio-hint">Efisiensi aset menghasilkan sales</div></div>
+    <div class="ratio-card"><div class="ratio-name">Earnings Per Share (EPS)</div><div class="ratio-formula">(Net Income − Pref. Div.) ÷ Wtd-Avg Shares</div><div class="ratio-hint">Laba per lembar saham biasa</div></div>
+  </div>
+
+  <div class="hafalan">
+    <div class="hafalan-title">★ Arah yang Diinginkan</div>
+    <div class="hafalan-content">
+      <strong>Naik (↑) lebih baik:</strong> Working Capital, Current Ratio, semua Turnover, semua Profitability ratios, Free Cash Flow, Times Interest Earned<br>
+      <strong>Turun (↓) lebih baik:</strong> Collection Period, Days in Inventory, Debt to Assets Ratio
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     R1 — ISTILAH & TERMINOLOGI
+═══════════════════════════════════════════════ -->
+<div class="page" id="r1">
+  <div class="eyebrow">Referensi Hafalan</div>
+  <h1 class="page-title">Istilah &amp; Terminologi</h1>
+  <div class="page-desc">Daftar istilah penting (English → Indonesia) yang wajib dipahami untuk UTS. Singkat dan to-the-point.</div>
+
+  <h2 class="sec-head">Istilah Umum Akuntansi</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>English</th><th>Indonesia</th><th>Arti Singkat</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Journal</strong></td><td>Jurnal</td><td>Catatan kronologis transaksi</td></tr>
+      <tr><td><strong>Ledger</strong></td><td>Buku Besar</td><td>Kumpulan semua akun &amp; saldonya</td></tr>
+      <tr><td><strong>Posting</strong></td><td>Pemindahbukuan</td><td>Transfer dari jurnal ke ledger</td></tr>
+      <tr><td><strong>Trial Balance</strong></td><td>Neraca Saldo</td><td>Daftar akun &amp; saldonya untuk cek Dr = Cr</td></tr>
+      <tr><td><strong>Adjusting Entry</strong></td><td>Jurnal Penyesuaian</td><td>Jurnal akhir periode agar Rev &amp; Exp benar</td></tr>
+      <tr><td><strong>Closing Entry</strong></td><td>Jurnal Penutup</td><td>Nolkan akun revenue, expense, dividend</td></tr>
+      <tr><td><strong>Fiscal Year</strong></td><td>Tahun Fiskal</td><td>Periode akuntansi 12 bulan</td></tr>
+      <tr><td><strong>Accrual Basis</strong></td><td>Basis Akrual</td><td>Akui saat terjadi, bukan saat kas bergerak</td></tr>
+      <tr><td><strong>Cash Basis</strong></td><td>Basis Kas</td><td>Akui saat kas bergerak (bukan GAAP)</td></tr>
+      <tr><td><strong>Contra Account</strong></td><td>Akun Kontra</td><td>Akun pengurang (ex: Accumulated Depreciation)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">Istilah Laporan Keuangan</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>English</th><th>Indonesia</th><th>Fungsi</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Income Statement</strong></td><td>Laporan Laba Rugi</td><td>Untung/rugi selama periode</td></tr>
+      <tr><td><strong>Balance Sheet</strong></td><td>Neraca</td><td>Posisi keuangan per tanggal tertentu</td></tr>
+      <tr><td><strong>Retained Earnings Stmt.</strong></td><td>Laporan Laba Ditahan</td><td>Perubahan laba yang disimpan perusahaan</td></tr>
+      <tr><td><strong>Statement of Cash Flows</strong></td><td>Laporan Arus Kas</td><td>Sumber &amp; penggunaan kas</td></tr>
+      <tr><td><strong>Net Income</strong></td><td>Laba Bersih</td><td>Revenue − Expenses (untung)</td></tr>
+      <tr><td><strong>Net Loss</strong></td><td>Rugi Bersih</td><td>Expenses &gt; Revenue (rugi)</td></tr>
+      <tr><td><strong>Gross Profit</strong></td><td>Laba Kotor</td><td>Net Sales − COGS</td></tr>
+      <tr><td><strong>Operating Income</strong></td><td>Laba Operasi</td><td>Laba dari kegiatan utama</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">Istilah Pengendalian &amp; Fraud</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>English</th><th>Indonesia</th><th>Arti Singkat</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Fraud</strong></td><td>Kecurangan</td><td>Tindakan tidak jujur demi keuntungan pribadi</td></tr>
+      <tr><td><strong>Internal Control</strong></td><td>Pengendalian Internal</td><td>Sistem untuk melindungi aset &amp; keandalan catatan</td></tr>
+      <tr><td><strong>Segregation of Duties</strong></td><td>Pemisahan Tugas</td><td>Tugas terkait dipisah ke orang berbeda</td></tr>
+      <tr><td><strong>NSF Check</strong></td><td>Cek Kosong</td><td>Cek yang ditolak bank (dana tidak cukup)</td></tr>
+      <tr><td><strong>Outstanding Check</strong></td><td>Cek dalam Peredaran</td><td>Cek sudah dicatat tapi belum dicairkan bank</td></tr>
+      <tr><td><strong>Deposit in Transit</strong></td><td>Setoran dalam Perjalanan</td><td>Setoran sudah dicatat tapi belum sampai bank</td></tr>
+      <tr><td><strong>Bank Reconciliation</strong></td><td>Rekonsiliasi Bank</td><td>Proses mencocokkan saldo buku &amp; bank</td></tr>
+      <tr><td><strong>Petty Cash</strong></td><td>Kas Kecil</td><td>Dana kecil untuk pengeluaran kecil</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">Istilah Persediaan &amp; Perdagangan</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>English</th><th>Indonesia</th><th>Arti Singkat</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Perpetual System</strong></td><td>Sistem Perpetual</td><td>Inventory diupdate setiap transaksi</td></tr>
+      <tr><td><strong>Periodic System</strong></td><td>Sistem Periodik</td><td>Inventory diupdate akhir periode saja</td></tr>
+      <tr><td><strong>Cost of Goods Sold</strong></td><td>Harga Pokok Penjualan</td><td>Total cost barang yang terjual</td></tr>
+      <tr><td><strong>FOB Shipping Point</strong></td><td>Franco Gudang Penjual</td><td>Kepemilikan berpindah di gudang penjual</td></tr>
+      <tr><td><strong>FOB Destination</strong></td><td>Franco Gudang Pembeli</td><td>Kepemilikan berpindah di gudang pembeli</td></tr>
+      <tr><td><strong>Freight-In</strong></td><td>Biaya Kirim Masuk</td><td>Ongkos kirim saat beli — masuk cost inventory</td></tr>
+      <tr><td><strong>Freight-Out</strong></td><td>Biaya Kirim Keluar</td><td>Ongkos kirim saat jual — operating expense</td></tr>
+      <tr><td><strong>2/10, n/30</strong></td><td>Diskon 2% 10 hari, lunas 30 hari</td><td>Term pembayaran dengan diskon tunai</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">Istilah Analisis</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>English</th><th>Indonesia</th><th>Arti Singkat</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Liquidity</strong></td><td>Likuiditas</td><td>Kemampuan bayar utang jangka pendek</td></tr>
+      <tr><td><strong>Solvency</strong></td><td>Solvabilitas</td><td>Kemampuan bayar utang jangka panjang</td></tr>
+      <tr><td><strong>Profitability</strong></td><td>Profitabilitas</td><td>Kemampuan menghasilkan laba</td></tr>
+      <tr><td><strong>Working Capital</strong></td><td>Modal Kerja</td><td>Current Assets − Current Liabilities</td></tr>
+      <tr><td><strong>Book Value</strong></td><td>Nilai Buku</td><td>Cost − Accumulated Depreciation</td></tr>
+      <tr><td><strong>Capital Expenditure</strong></td><td>Belanja Modal</td><td>Pengeluaran untuk aset jangka panjang</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     R2 — AKUN-AKUN KUNCI
+═══════════════════════════════════════════════ -->
+<div class="page" id="r2">
+  <div class="eyebrow">Referensi Hafalan</div>
+  <h1 class="page-title">Akun-akun Kunci</h1>
+  <div class="page-desc">Setiap akun beserta klasifikasinya dan normal balance-nya. Badge <span class="tag a">DR</span> = normal balance Debit, <span class="tag w">CR</span> = normal balance Credit.</div>
+
+  <h2 class="sec-head">Aset (Assets) — Normal Balance: Debit</h2>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-name">Cash <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Current Asset</div>
+      <div class="ref-desc">Uang tunai, cek, saldo rekening bank.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Accounts Receivable <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Current Asset</div>
+      <div class="ref-desc">Piutang — tagihan ke pelanggan atas penjualan kredit.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Inventory <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Current Asset · Perpetual</div>
+      <div class="ref-desc">Persediaan barang dagang. Dipakai dalam sistem <strong>perpetual</strong>.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Supplies <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Current Asset</div>
+      <div class="ref-desc">Perlengkapan kantor/operasi yang akan dipakai.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Prepaid Insurance <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Current Asset · Prepayment</div>
+      <div class="ref-desc">Asuransi yang sudah dibayar untuk periode ke depan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Prepaid Rent <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Current Asset · Prepayment</div>
+      <div class="ref-desc">Sewa yang sudah dibayar untuk periode ke depan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Equipment <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Long-Term Asset</div>
+      <div class="ref-desc">Peralatan operasi (komputer, mesin, dll). Disusutkan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Building <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Long-Term Asset</div>
+      <div class="ref-desc">Bangunan/gedung perusahaan. Disusutkan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Land <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Long-Term Asset</div>
+      <div class="ref-desc">Tanah. <strong>Tidak disusutkan</strong>.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Accumulated Depreciation <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Contra Asset</div>
+      <div class="ref-desc">Akumulasi penyusutan — pengurang Equipment/Building.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Petty Cash <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Current Asset</div>
+      <div class="ref-desc">Dana kas kecil. Hanya dipakai saat membentuk/ubah dana.</div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Liabilitas (Liabilities) — Normal Balance: Credit</h2>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-name">Accounts Payable <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Current Liability</div>
+      <div class="ref-desc">Utang ke supplier atas pembelian kredit.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Notes Payable <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Current / Long-Term</div>
+      <div class="ref-desc">Utang wesel dengan janji tertulis, biasanya berbunga.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Unearned Revenue <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Current Liability</div>
+      <div class="ref-desc">Uang muka dari pelanggan — jasa/barang belum diserahkan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Salaries &amp; Wages Payable <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Current Liability · Accrued</div>
+      <div class="ref-desc">Gaji terutang yang belum dibayar.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Interest Payable <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Current Liability · Accrued</div>
+      <div class="ref-desc">Bunga terutang atas notes/obligasi.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Income Taxes Payable <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Current Liability</div>
+      <div class="ref-desc">Pajak penghasilan terutang.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Bonds Payable <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Long-Term Liability</div>
+      <div class="ref-desc">Utang obligasi jangka panjang.</div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Ekuitas (Stockholders' Equity)</h2>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-name">Common Stock <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Equity</div>
+      <div class="ref-desc">Modal dari penerbitan saham biasa.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Retained Earnings <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Equity</div>
+      <div class="ref-desc">Laba kumulatif yang ditahan di perusahaan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Dividends <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Equity · Contra</div>
+      <div class="ref-desc">Pembagian laba ke pemegang saham. Mengurangi RE.</div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Pendapatan (Revenues) — Normal Balance: Credit</h2>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-name">Service Revenue <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Revenue</div>
+      <div class="ref-desc">Pendapatan dari jasa (perusahaan jasa).</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Sales Revenue <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Revenue</div>
+      <div class="ref-desc">Pendapatan dari penjualan barang (perusahaan dagang).</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Interest Revenue <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Other Revenue</div>
+      <div class="ref-desc">Pendapatan bunga dari investasi/notes.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Sales Returns &amp; Allowances <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Contra Revenue</div>
+      <div class="ref-desc">Pengembalian barang dari pelanggan. Pengurang Sales Revenue.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Sales Discounts <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Contra Revenue</div>
+      <div class="ref-desc">Diskon tunai yang diberikan ke pelanggan. Pengurang Sales Revenue.</div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Beban (Expenses) — Normal Balance: Debit</h2>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-name">Cost of Goods Sold <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Expense · Perpetual</div>
+      <div class="ref-desc">Harga pokok penjualan — cost dari barang yang terjual.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Salaries &amp; Wages Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Gaji karyawan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Rent Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Sewa gedung/kantor.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Utilities Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Listrik, air, internet, telepon.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Insurance Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Beban asuransi yang sudah terpakai periode ini.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Supplies Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Perlengkapan yang sudah terpakai.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Depreciation Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Beban penyusutan aset tetap periode ini.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Interest Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Other Expense</div>
+      <div class="ref-desc">Beban bunga atas utang.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Income Tax Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Expense</div>
+      <div class="ref-desc">Beban pajak penghasilan perusahaan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Freight-Out <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Ongkos kirim saat menjual ke pelanggan.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Advertising Expense <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Operating Expense</div>
+      <div class="ref-desc">Biaya iklan &amp; pemasaran.</div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Akun Khusus Sistem Periodik</h2>
+  <div class="callout warn">
+    <div class="callout-title">Hati-hati!</div>
+    Akun berikut <strong>hanya</strong> dipakai dalam sistem <strong>Periodic</strong>, tidak dalam sistem Perpetual.
+  </div>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-name">Purchases <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Periodic Only</div>
+      <div class="ref-desc">Pengganti akun Inventory saat pembelian dalam sistem periodic.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Purchase Returns &amp; Allowances <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Periodic Only · Contra</div>
+      <div class="ref-desc">Retur pembelian dalam sistem periodic.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Purchase Discounts <span class="ref-bal cr">CR</span></div>
+      <div class="ref-type">Periodic Only · Contra</div>
+      <div class="ref-desc">Diskon pembelian yang diambil dalam sistem periodic.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-name">Freight-In <span class="ref-bal dr">DR</span></div>
+      <div class="ref-type">Periodic Only</div>
+      <div class="ref-desc">Ongkos kirim saat membeli — masuk ke Cost of Goods Purchased.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     R3 — SEMUA RUMUS
+═══════════════════════════════════════════════ -->
+<div class="page" id="r3">
+  <div class="eyebrow">Referensi Hafalan</div>
+  <h1 class="page-title">Semua Rumus Penting</h1>
+  <div class="page-desc">Kumpulan rumus kunci untuk UTS — disusun berdasarkan topik.</div>
+
+  <h2 class="sec-head">Persamaan Dasar</h2>
+  <div class="formula"><span class="lhs">Assets</span> <span class="op">=</span> <span class="lhs">Liabilities</span> <span class="op">+</span> <span class="lhs">Stockholders' Equity</span></div>
+  <div class="formula"><span class="lhs">Stockholders' Equity</span> <span class="op">=</span> Common Stock <span class="op">+</span> Retained Earnings</div>
+
+  <h2 class="sec-head">Laba Rugi</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Item</th><th>Rumus</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Net Income</strong></td><td>Revenues − Expenses</td></tr>
+      <tr><td><strong>Net Sales</strong></td><td>Sales Revenue − Sales Returns &amp; Allowances − Sales Discounts</td></tr>
+      <tr><td><strong>Gross Profit</strong></td><td>Net Sales − Cost of Goods Sold</td></tr>
+      <tr><td><strong>Income from Operations</strong></td><td>Gross Profit − Operating Expenses</td></tr>
+      <tr><td><strong>Income Before Tax</strong></td><td>Income from Operations + Other Revenues − Other Expenses</td></tr>
+      <tr><td><strong>Net Income (Multiple-Step)</strong></td><td>Income Before Tax − Income Tax Expense</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-head">Retained Earnings</h2>
+  <div class="formula"><span class="lhs">Ending RE</span> <span class="op">=</span> Beginning RE <span class="op">+</span> Net Income <span class="op">−</span> Dividends</div>
+
+  <h2 class="sec-head">Persediaan (Periodic)</h2>
+  <div class="formula"><span class="lhs">COGS</span> <span class="op">=</span> Beginning Inventory <span class="op">+</span> Cost of Goods Purchased <span class="op">−</span> Ending Inventory</div>
+  <div class="formula"><span class="lhs">Net Purchases</span> <span class="op">=</span> Purchases <span class="op">−</span> Purchase Returns <span class="op">−</span> Purchase Discounts</div>
+  <div class="formula"><span class="lhs">Cost of Goods Purchased</span> <span class="op">=</span> Net Purchases <span class="op">+</span> Freight-In</div>
+
+  <h2 class="sec-head">Depresiasi</h2>
+  <div class="formula"><span class="lhs">Book Value</span> <span class="op">=</span> Cost <span class="op">−</span> Accumulated Depreciation</div>
+  <div class="formula"><span class="lhs">Depresiasi per Bulan</span> <span class="op">=</span> Depresiasi Tahunan <span class="op">÷</span> 12</div>
+
+  <h2 class="sec-head">Bunga</h2>
+  <div class="formula"><span class="lhs">Interest</span> <span class="op">=</span> Face Value <span class="op">×</span> Annual Rate <span class="op">×</span> Time (fraksi tahun)</div>
+
+  <h2 class="sec-head">Diskon Tunai (2/10, n/30)</h2>
+  <div class="formula"><span class="lhs">Cash Discount</span> <span class="op">=</span> (Invoice <span class="op">−</span> Returns) <span class="op">×</span> Discount %</div>
+  <div class="formula"><span class="lhs">Cash Paid</span> <span class="op">=</span> (Invoice <span class="op">−</span> Returns) <span class="op">−</span> Cash Discount</div>
+
+  <h2 class="sec-head">Rasio Likuiditas</h2>
+  <div class="ratio-grid">
+    <div class="ratio-card"><div class="ratio-name">Working Capital</div><div class="ratio-formula">Current Assets − Current Liabilities</div></div>
+    <div class="ratio-card"><div class="ratio-name">Current Ratio</div><div class="ratio-formula">Current Assets ÷ Current Liabilities</div></div>
+    <div class="ratio-card"><div class="ratio-name">A/R Turnover</div><div class="ratio-formula">Net Credit Sales ÷ Avg Net A/R</div></div>
+    <div class="ratio-card"><div class="ratio-name">Collection Period</div><div class="ratio-formula">365 ÷ A/R Turnover</div></div>
+    <div class="ratio-card"><div class="ratio-name">Inventory Turnover</div><div class="ratio-formula">COGS ÷ Avg Inventory</div></div>
+    <div class="ratio-card"><div class="ratio-name">Days in Inventory</div><div class="ratio-formula">365 ÷ Inventory Turnover</div></div>
+  </div>
+
+  <h2 class="sec-head">Rasio Solvabilitas</h2>
+  <div class="ratio-grid">
+    <div class="ratio-card"><div class="ratio-name">Debt to Assets</div><div class="ratio-formula">Total Liabilities ÷ Total Assets</div></div>
+    <div class="ratio-card"><div class="ratio-name">Times Interest Earned</div><div class="ratio-formula">(NI + Int.Exp + Tax) ÷ Int.Exp</div></div>
+    <div class="ratio-card"><div class="ratio-name">Free Cash Flow</div><div class="ratio-formula">Cash from Op. − CapEx − Dividends</div></div>
+  </div>
+
+  <h2 class="sec-head">Rasio Profitabilitas</h2>
+  <div class="ratio-grid">
+    <div class="ratio-card"><div class="ratio-name">Gross Profit Rate</div><div class="ratio-formula">Gross Profit ÷ Net Sales</div></div>
+    <div class="ratio-card"><div class="ratio-name">Profit Margin</div><div class="ratio-formula">Net Income ÷ Net Sales</div></div>
+    <div class="ratio-card"><div class="ratio-name">ROA</div><div class="ratio-formula">Net Income ÷ Avg Total Assets</div></div>
+    <div class="ratio-card"><div class="ratio-name">ROE</div><div class="ratio-formula">(NI − Pref.Div) ÷ Avg Common Equity</div></div>
+    <div class="ratio-card"><div class="ratio-name">Asset Turnover</div><div class="ratio-formula">Net Sales ÷ Avg Total Assets</div></div>
+    <div class="ratio-card"><div class="ratio-name">EPS</div><div class="ratio-formula">(NI − Pref.Div) ÷ Wtd-Avg Shares</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SOAL 1 — TRENCH AND FOG GARMENT
+═══════════════════════════════════════════════ -->
+<div class="page" id="q1">
+  <div class="eyebrow">Latihan Soal · Q1</div>
+  <h1 class="page-title">Equipment, Depresiasi &amp; Balance Sheet</h1>
+  <div class="page-desc">Trench and Fog Garment Company — akuisisi aset tetap dengan kombinasi kas dan wesel bayar.</div>
+
+  <div class="scenario-box">
+    <div class="sbox-title">Question 1 — Original</div>
+    <p>Trench and Fog Garment Company purchased equipment on June 1 for <strong>$108,000</strong>, paying <strong>$24,000</strong> cash and signing a <strong>6%, 2-month note</strong> for the remaining balance. The equipment is depreciated <strong>$24,000 each year</strong>. Trench and Fog Garment Company prepares monthly financial statements.</p>
+    <p class="lang-id">Trench and Fog Garment Company membeli peralatan pada 1 Juni seharga $108,000, membayar $24,000 tunai dan menandatangani wesel 6% 2 bulan untuk sisa saldonya. Peralatan disusutkan $24,000 per tahun. Perusahaan menyusun laporan keuangan setiap bulan.</p>
+  </div>
+
+  <div class="asked-box">
+    <strong>Instructions:</strong> (a) Catat jurnal akuisisi peralatan pada 1 Juni &nbsp;·&nbsp; (b) Catat semua adjusting entries yang diperlukan pada 30 Juni &nbsp;·&nbsp; (c) Tunjukkan penyajian peralatan di Balance Sheet per 30 Juni.
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>(a) Jurnal Akuisisi Equipment — 1 Juni</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <h4>Analisis Transaksi</h4>
+      <div class="calc"><span class="lbl-gy">Harga total equipment  =</span>  $108,000
+<span class="lbl-gy">Dibayar tunai          =</span>   $24,000
+<span class="lbl-gy">Sisa (Notes Payable)   =</span>  $108,000 − $24,000 = <span class="lbl-bl">$84,000</span></div>
+
+      <div class="journal">
+        <div class="journal-title">General Journal · June 1</div>
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">June 1</span><span class="j-acc">Equipment</span><span class="j-ref"></span><span class="j-dr">108,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">24,000.00</span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Notes Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">84,000.00</span></div>
+          <div class="j-narr"><span></span><span>(To record purchase of equipment; paid $24,000 cash and signed 6%, 2-month note for $84,000)</span></div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-title">Penjelasan</div>
+        <strong>Equipment (aset)</strong> bertambah sebesar harga penuh $108,000 → didebit. <strong>Cash (aset)</strong> berkurang $24,000 → dikredit. <strong>Notes Payable (liabilitas baru)</strong> muncul $84,000 → dikredit. Total debit = total kredit = $108,000. ✓
+      </div>
+    </div>
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>(b) Adjusting Entries — 30 Juni</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <p>Di akhir bulan Juni, ada <strong>2 penyesuaian</strong> yang harus dilakukan: penyusutan peralatan untuk Juni, dan bunga wesel yang sudah "berjalan".</p>
+
+      <div class="step-lbl"><span class="step-cir a">b.1</span><span class="step-txt">Depreciation Expense</span></div>
+      <div class="calc"><span class="lbl-gy">Depresiasi tahunan      =</span>  $24,000
+<span class="lbl-gy">Depresiasi per bulan    =</span>  $24,000 ÷ 12 = <span class="lbl-bl">$2,000</span></div>
+
+      <div class="journal">
+        <div class="journal-title">Adjusting Entry · Depreciation</div>
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">June 30</span><span class="j-acc">Depreciation Expense</span><span class="j-ref"></span><span class="j-dr">2,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accumulated Depreciation — Equipment</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">2,000.00</span></div>
+          <div class="j-narr"><span></span><span>(To record one month of depreciation: $24,000 ÷ 12 = $2,000)</span></div>
+        </div>
+      </div>
+
+      <div class="callout neutral">
+        <strong>Mengapa begini?</strong> Equipment sudah dipakai sepanjang Juni — sebagian nilainya "terpakai" dan harus diakui sebagai beban. Akun Equipment TIDAK diubah langsung; kita pakai akun <strong>Accumulated Depreciation</strong> (contra asset) agar cost asli tetap terlihat di Balance Sheet.
+      </div>
+
+      <div class="step-lbl"><span class="step-cir a">b.2</span><span class="step-txt">Accrued Interest Expense</span></div>
+      <div class="calc"><span class="lbl-gy">Rumus: Face × Rate × Time</span>
+       = $84,000 × 6% × (1 ÷ 12)
+       = $84,000 × 0.06 × 0.0833
+       = <span class="lbl-bl">$420</span></div>
+
+      <div class="journal">
+        <div class="journal-title">Adjusting Entry · Accrued Interest</div>
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">June 30</span><span class="j-acc">Interest Expense</span><span class="j-ref"></span><span class="j-dr">420.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Interest Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">420.00</span></div>
+          <div class="j-narr"><span></span><span>(To accrue interest on note: $84,000 × 6% × 1/12 = $420)</span></div>
+        </div>
+      </div>
+
+      <div class="callout neutral">
+        <strong>Mengapa begini?</strong> Meskipun wesel belum jatuh tempo dan kas belum keluar, bunga sudah "berjalan" selama bulan Juni. Ini adalah <strong>Accrued Expense</strong> — beban sudah terjadi, liabilitas terkait harus diakui sekarang agar laporan keuangan akurat.
+      </div>
+    </div>
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>(c) Penyajian di Balance Sheet — 30 Juni</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <p>Di Balance Sheet, akun Equipment tetap dilaporkan pada harga perolehan asli ($108,000). Accumulated Depreciation ditampilkan <strong>tepat di bawahnya</strong> sebagai pengurang, sehingga pembaca laporan bisa melihat nilai buku (book value) saat ini.</p>
+
+      <div class="stmt">
+        <div class="stmt-head">
+          <div class="stmt-co">Trench and Fog Garment Company</div>
+          <div class="stmt-doc">Statement of Financial Position (Partial)</div>
+          <div class="stmt-date">June 30</div>
+        </div>
+        <div class="stmt-sec">Property, Plant and Equipment</div>
+        <div class="stmt-row indent"><span>Equipment</span><span class="stmt-val">$108,000</span></div>
+        <div class="stmt-row indent"><span>Less: Accumulated Depreciation — Equipment</span><span class="stmt-val neg">(2,000)</span></div>
+        <div class="stmt-row sub"><span>Equipment, net</span><span class="stmt-val">$106,000</span></div>
+        <div class="stmt-sec">Current Liabilities</div>
+        <div class="stmt-row indent"><span>Notes Payable (due August 1)</span><span class="stmt-val">$84,000</span></div>
+        <div class="stmt-row indent"><span>Interest Payable</span><span class="stmt-val">$420</span></div>
+      </div>
+
+      <div class="callout ok">
+        <div class="callout-title">Penjelasan</div>
+        <strong>Book Value = $108,000 − $2,000 = $106,000</strong>. Notes Payable jatuh tempo 2 bulan (sebelum 30 Agustus) sehingga masuk Current Liabilities. Interest Payable juga current karena akan dibayar bersama notes saat jatuh tempo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SOAL 2 — ALICE'S ADVENTURES
+═══════════════════════════════════════════════ -->
+<div class="page" id="q2">
+  <div class="eyebrow">Latihan Soal · Q2</div>
+  <h1 class="page-title">Net Income Setelah Penyesuaian</h1>
+  <div class="page-desc">Alice's Adventures — menghitung net income yang benar setelah lima adjusting entries.</div>
+
+  <div class="scenario-box">
+    <div class="sbox-title">Question 2 — Original</div>
+    <p>Before month-end adjustments are made, the February 28 trial balance of Alice's Adventures contains revenue of <strong>$7,000</strong> and expenses of <strong>$3,900</strong>. Adjustments are necessary for the following items:</p>
+    <ul style="padding-left:20px;margin:6px 0;color:var(--text);">
+      <li>(a) Depreciation for February is $1,500.</li>
+      <li>(b) Revenue earned but not yet billed is $2,300.</li>
+      <li>(c) Accrued interest expense is $700.</li>
+      <li>(d) Revenue collected in advance that is now earned is $3,500.</li>
+      <li>(e) Portion of prepaid insurance expired during February is $600.</li>
+    </ul>
+    <p class="lang-id">Sebelum penyesuaian akhir bulan, trial balance Alice's Adventures per 28 Februari menunjukkan Revenue $7,000 dan Expenses $3,900. Perlu 5 item penyesuaian di atas.</p>
+  </div>
+
+  <div class="asked-box">
+    <strong>Instructions:</strong> Hitung net income yang benar untuk Income Statement Alice's Adventures bulan Februari.
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>Langkah 1 — Analisis Setiap Item</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <div class="tbl-wrap"><table class="std">
+        <thead><tr><th>Item</th><th>Jenis Adjustment</th><th>Efek Revenue</th><th>Efek Expenses</th><th>Penjelasan</th></tr></thead>
+        <tbody>
+          <tr><td>(a) Depreciation $1,500</td><td><span class="tag n">Prepaid Exp.</span></td><td>—</td><td class="bad">+$1,500</td><td>Beban penyusutan bulan Februari</td></tr>
+          <tr><td>(b) Revenue earned not billed $2,300</td><td><span class="tag n">Accrued Rev.</span></td><td class="ok">+$2,300</td><td>—</td><td>Jasa selesai, belum ditagih</td></tr>
+          <tr><td>(c) Accrued interest $700</td><td><span class="tag n">Accrued Exp.</span></td><td>—</td><td class="bad">+$700</td><td>Bunga sudah berjalan, belum dibayar</td></tr>
+          <tr><td>(d) Unearned now earned $3,500</td><td><span class="tag n">Unearned Rev.</span></td><td class="ok">+$3,500</td><td>—</td><td>Uang muka yang sudah dipenuhi jasanya</td></tr>
+          <tr><td>(e) Prepaid insurance expired $600</td><td><span class="tag n">Prepaid Exp.</span></td><td>—</td><td class="bad">+$600</td><td>Porsi asuransi yang sudah kedaluwarsa</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>Langkah 2 — Hitung Net Income yang Benar</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <div class="calc"><span class="lbl-gy">──────── REVENUE ────────</span>
+Revenue per trial balance               $7,000
+Add: Accrued Revenue (b)               +$2,300
+Add: Unearned → Earned (d)             +$3,500
+                                       ────────
+<span class="lbl-bl">Total Revenue (Adjusted)              $12,800</span>
+
+<span class="lbl-gy">──────── EXPENSES ────────</span>
+Expenses per trial balance              $3,900
+Add: Depreciation (a)                  +$1,500
+Add: Accrued Interest (c)              +$  700
+Add: Insurance Expired (e)             +$  600
+                                       ────────
+<span class="lbl-bl">Total Expenses (Adjusted)              $6,700</span>
+
+<span class="lbl-gy">──────── NET INCOME ────────</span>
+<span class="lbl-ok">Net Income = $12,800 − $6,700 =        $6,100  ✓</span></div>
+
+      <div class="callout ok">
+        <div class="callout-title">Jawaban: $6,100</div>
+        Net income awal terlihat hanya <strong>$3,100</strong> (sebelum penyesuaian). Setelah disesuaikan, naik menjadi <strong>$6,100</strong> — terutama karena ada $5,800 revenue tambahan yang belum dicatat.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SOAL 3 — JAYHAWK CARPET
+═══════════════════════════════════════════════ -->
+<div class="page" id="q3">
+  <div class="eyebrow">Latihan Soal · Q3</div>
+  <h1 class="page-title">Perpetual — Jayhawk Carpet Company</h1>
+  <div class="page-desc">Mencatat pembelian, retur, dan pembayaran dengan diskon dalam sistem perpetual.</div>
+
+  <div class="scenario-box">
+    <div class="sbox-title">Question 3 — Original</div>
+    <p>Prepare the necessary journal entries on the books of Jayhawk Carpet Company to record the following transactions, assuming a perpetual inventory system:</p>
+    <ul style="padding-left:20px;margin:6px 0;color:var(--text);">
+      <li>(a) Jayhawk purchased <strong>$45,000</strong> of merchandise on account, terms <strong>2/10, n/30</strong>.</li>
+      <li>(b) Returned <strong>$4,000</strong> of damaged merchandise for credit.</li>
+      <li>(c) Paid for the merchandise purchased within 10 days.</li>
+    </ul>
+    <p class="lang-id">Siapkan jurnal untuk Jayhawk Carpet Company (sistem perpetual): (a) Beli $45,000 kredit, 2/10 n/30, (b) Retur $4,000 barang rusak, (c) Bayar dalam 10 hari.</p>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">Kunci Perpetual System</div>
+    Pembelian → akun <strong>Inventory</strong> (bukan "Purchases"). Retur pembelian → kredit Inventory. Diskon pembelian → kredit Inventory.
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>(a) Pembelian Merchandise Kredit</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <p>Perusahaan menerima barang dagang. Karena belum membayar, timbul utang dagang ke supplier.</p>
+      <div class="journal">
+        <div class="journal-title">General Journal</div>
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">(a)</span><span class="j-acc">Inventory</span><span class="j-ref"></span><span class="j-dr">45,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accounts Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">45,000.00</span></div>
+          <div class="j-narr"><span></span><span>(Purchased merchandise on account, terms 2/10, n/30)</span></div>
+        </div>
+      </div>
+      <div class="callout neutral">
+        <strong>Penjelasan:</strong> Inventory (aset) bertambah → didebit. Accounts Payable (liabilitas) bertambah → dikredit. Di sistem perpetual, akun yang dipakai adalah <strong>Inventory</strong> bukan "Purchases".
+      </div>
+    </div>
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>(b) Retur Barang Rusak $4,000</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <p>Barang dikembalikan ke supplier. Hutang berkurang, inventory berkurang (barang tidak lagi dimiliki).</p>
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">(b)</span><span class="j-acc">Accounts Payable</span><span class="j-ref"></span><span class="j-dr">4,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Inventory</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">4,000.00</span></div>
+          <div class="j-narr"><span></span><span>(Returned damaged merchandise for credit)</span></div>
+        </div>
+      </div>
+      <div class="callout neutral">
+        <strong>Penjelasan:</strong> Accounts Payable berkurang (hutang turun) → didebit. Inventory berkurang → dikredit. Di perpetual, tidak ada akun "Purchase Returns" — langsung ke Inventory.
+      </div>
+    </div>
+  </div>
+
+  <div class="ans">
+    <div class="ans-head"><span>(c) Pembayaran dalam 10 Hari — Dapat Diskon 2%</span><span class="ans-icon">▶</span></div>
+    <div class="ans-body">
+      <div class="calc"><span class="lbl-gy">Saldo A/P setelah retur   =</span> $45,000 − $4,000 = <span class="lbl-bl">$41,000</span>
+<span class="lbl-gy">Diskon 2% (bayar ≤ 10 hr) =</span> 2% × $41,000    = <span class="lbl-am">$820</span>
+<span class="lbl-gy">Kas dibayar               =</span> $41,000 − $820  = <span class="lbl-ok">$40,180</span></div>
+
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">(c)</span><span class="j-acc">Accounts Payable</span><span class="j-ref"></span><span class="j-dr">41,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">40,180.00</span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Inventory</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">820.00</span></div>
+          <div class="j-narr"><span></span><span>(Paid within discount period; 2% × $41,000 = $820 discount)</span></div>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-title">Mengapa Inventory Dikredit?</div>
+        Di sistem perpetual, diskon pembelian <strong>mengurangi harga perolehan</strong> inventory. Artinya harga beli efektif hanya $40,180 — bukan $41,000. Akun Inventory disesuaikan agar mencerminkan harga perolehan sesungguhnya.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SOAL 4 — REID SUPPLY
+═══════════════════════════════════════════════ -->
+<div class="page" id="q4">
+  <div class="eyebrow">Latihan Soal · Q4</div>
+  <h1 class="page-title">Perpetual — Reid Supply</h1>
+  <div class="page-desc">Jurnal lengkap bulan September untuk perusahaan yang menggunakan sistem perpetual.</div>
+
+  <div class="scenario-box">
+    <div class="sbox-title">Question 4 — Original</div>
+    <p>On September 1, Reid Supply had an inventory of <strong>15 backpacks at $20 each</strong>. The company uses a perpetual inventory system. During September, the following transactions and events occurred:</p>
+    <ul style="padding-left:20px;margin:6px 0;color:var(--text);">
+      <li><strong>Sept. 4:</strong> Purchased 80 backpacks at $20 each from Hunter, terms 2/10, n/30.</li>
+      <li><strong>Sept. 6:</strong> Received credit of $120 for the return of 6 defective backpacks.</li>
+      <li><strong>Sept. 9:</strong> Sold 40 backpacks for $25 each to Oliver Books, terms 2/10, n/30.</li>
+      <li><strong>Sept. 13:</strong> Sold 15 backpacks for $25 each to Heller Office Supply, terms n/30.</li>
+      <li><strong>Sept. 14:</strong> Paid Hunter in full, less discount.</li>
+    </ul>
+    <p class="lang-id">Reid Supply (sistem perpetual), inventory awal 15 backpacks @ $20. Catat transaksi September sesuai detail di atas.</p>
+  </div>
+
+  <div class="asked-box">
+    <strong>Instructions:</strong> Journalize the September transactions for Reid Supply.
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">Ingat!</div>
+    Setiap penjualan di sistem <strong>perpetual</strong> perlu <strong>2 jurnal</strong>: (1) Revenue + A/R, dan (2) COGS + pengurangan Inventory.
+  </div>
+
+  <div class="journal">
+    <div class="journal-title">Reid Supply · General Journal · September</div>
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 4</span><span class="j-acc">Inventory</span><span class="j-ref"></span><span class="j-dr">1,600.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accounts Payable (Hunter)</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,600.00</span></div>
+      <div class="j-narr"><span></span><span>(Purchased 80 backpacks @ $20 from Hunter, terms 2/10, n/30)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 6</span><span class="j-acc">Accounts Payable (Hunter)</span><span class="j-ref"></span><span class="j-dr">120.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Inventory</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">120.00</span></div>
+      <div class="j-narr"><span></span><span>(Returned 6 defective backpacks: 6 × $20 = $120)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 9</span><span class="j-acc">Accounts Receivable (Oliver Books)</span><span class="j-ref"></span><span class="j-dr">1,000.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Sales Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,000.00</span></div>
+      <div class="j-narr"><span></span><span>(Sold 40 backpacks @ $25 to Oliver Books, terms 2/10, n/30)</span></div>
+    </div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 9</span><span class="j-acc">Cost of Goods Sold</span><span class="j-ref"></span><span class="j-dr">800.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Inventory</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">800.00</span></div>
+      <div class="j-narr"><span></span><span>(To record cost of 40 backpacks sold: 40 × $20 = $800)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 13</span><span class="j-acc">Accounts Receivable (Heller Office Supply)</span><span class="j-ref"></span><span class="j-dr">375.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Sales Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">375.00</span></div>
+      <div class="j-narr"><span></span><span>(Sold 15 backpacks @ $25 to Heller Office Supply, terms n/30)</span></div>
+    </div>
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 13</span><span class="j-acc">Cost of Goods Sold</span><span class="j-ref"></span><span class="j-dr">300.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Inventory</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">300.00</span></div>
+      <div class="j-narr"><span></span><span>(To record cost of 15 backpacks sold: 15 × $20 = $300)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 14</span><span class="j-acc">Accounts Payable (Hunter)</span><span class="j-ref"></span><span class="j-dr">1,480.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,450.40</span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Inventory</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">29.60</span></div>
+      <div class="j-narr"><span></span><span>(Paid Hunter in full less 2% discount: cash = $1,480 − $29.60 = $1,450.40)</span></div>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <div class="callout-title">Perhitungan Sept 14</div>
+    Pembelian Sept 4: $1,600 − Retur Sept 6: $120 = Saldo A/P <strong>$1,480</strong>.<br>
+    Beli Sept 4 → bayar Sept 14 = <strong>10 hari</strong> → masih dalam periode diskon 2/10 ✓<br>
+    Diskon: 2% × $1,480 = <strong>$29.60</strong> · Kas: $1,480 − $29.60 = <strong>$1,450.40</strong>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SOAL 5 — PAXSON
+═══════════════════════════════════════════════ -->
+<div class="page" id="q5">
+  <div class="eyebrow">Latihan Soal · Q5</div>
+  <h1 class="page-title">Periodic — Paxson Supply Company</h1>
+  <div class="page-desc">Jurnal bulan September untuk perusahaan yang menggunakan sistem periodik.</div>
+
+  <div class="scenario-box">
+    <div class="sbox-title">Question 5 — Original</div>
+    <p>Paxson Supply Company uses a <strong>periodic inventory system</strong>. During September, the following transactions and events occurred:</p>
+    <ul style="padding-left:20px;margin:6px 0;color:var(--text);">
+      <li><strong>Sept. 3:</strong> Purchased 90 backpacks at $30 each from Barnes Company, terms 2/10, n/30.</li>
+      <li><strong>Sept. 6:</strong> Received credit of $150 for the return of 5 defective backpacks.</li>
+      <li><strong>Sept. 9:</strong> Sold 15 backpacks for $40 each to Starr Books, terms 2/10, n/30.</li>
+      <li><strong>Sept. 13:</strong> Paid Barnes Company in full.</li>
+    </ul>
+    <p class="lang-id">Paxson Supply Company menggunakan sistem periodik. Catat transaksi September sesuai detail di atas.</p>
+  </div>
+
+  <div class="asked-box">
+    <strong>Instructions:</strong> Journalize the September transactions for Paxson Supply Company.
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">Perbedaan Kunci Periodic vs. Perpetual</div>
+    Pembelian → <strong>Purchases</strong> (bukan Inventory) · Retur pembelian → <strong>Purchase Returns &amp; Allowances</strong> · Diskon pembelian → <strong>Purchase Discounts</strong> · Penjualan → <strong>1 jurnal saja</strong> (revenue, tanpa COGS).
+  </div>
+
+  <div class="journal">
+    <div class="journal-title">Paxson Supply · General Journal · September</div>
+    <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 3</span><span class="j-acc">Purchases</span><span class="j-ref"></span><span class="j-dr">2,700.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accounts Payable (Barnes Company)</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">2,700.00</span></div>
+      <div class="j-narr"><span></span><span>(Purchased 90 backpacks @ $30 from Barnes, terms 2/10, n/30)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 6</span><span class="j-acc">Accounts Payable (Barnes Company)</span><span class="j-ref"></span><span class="j-dr">150.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Purchase Returns and Allowances</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">150.00</span></div>
+      <div class="j-narr"><span></span><span>(Returned 5 defective backpacks: 5 × $30 = $150)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 9</span><span class="j-acc">Accounts Receivable (Starr Books)</span><span class="j-ref"></span><span class="j-dr">600.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Sales Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">600.00</span></div>
+      <div class="j-narr"><span></span><span>(Sold 15 backpacks @ $40, terms 2/10, n/30 — no COGS entry in periodic)</span></div>
+    </div>
+    <div class="j-spacer"></div>
+
+    <div class="j-entry">
+      <div class="j-row"><span class="j-date">Sept. 13</span><span class="j-acc">Accounts Payable (Barnes Company)</span><span class="j-ref"></span><span class="j-dr">2,550.00</span><span class="j-cr"></span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">2,499.00</span></div>
+      <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Purchase Discounts</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">51.00</span></div>
+      <div class="j-narr"><span></span><span>(Paid Barnes in full less 2% discount: cash = $2,550 − $51 = $2,499)</span></div>
+    </div>
+  </div>
+
+  <div class="callout neutral" style="margin-top:18px">
+    <div class="callout-title">Perhitungan Sept 13</div>
+    Pembelian Sept 3: $2,700 − Retur Sept 6: $150 = Saldo A/P <strong>$2,550</strong>.<br>
+    Beli Sept 3 → bayar Sept 13 = <strong>10 hari</strong> → masih dalam periode diskon 2/10 ✓<br>
+    Diskon: 2% × $2,550 = <strong>$51</strong> · Kas: $2,550 − $51 = <strong>$2,499</strong>
+  </div>
+
+  <h2 class="sec-head">Perbandingan Langsung — Perpetual vs. Periodic</h2>
+  <div class="tbl-wrap"><table class="std">
+    <thead><tr><th>Transaksi</th><th>Perpetual (Q4)</th><th>Periodic (Q5)</th></tr></thead>
+    <tbody>
+      <tr><td>Beli merchandise</td><td><strong>Dr: Inventory</strong></td><td><strong>Dr: Purchases</strong></td></tr>
+      <tr><td>Retur pembelian</td><td><strong>Cr: Inventory</strong></td><td><strong>Cr: Purchase Returns &amp; Allowances</strong></td></tr>
+      <tr><td>Diskon pembelian</td><td><strong>Cr: Inventory</strong></td><td><strong>Cr: Purchase Discounts</strong></td></tr>
+      <tr><td>Penjualan</td><td>2 jurnal (Revenue + COGS)</td><td>1 jurnal (Revenue saja)</td></tr>
+      <tr><td>COGS dihitung</td><td>Otomatis tiap transaksi</td><td>Akhir periode: BI + Purchases − EI</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+</main>
+
+<script>
+// ═══ NAVIGATION ═══
+function go(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+  if (window.innerWidth <= 860) toggleSidebar();
+}
+
+// ═══ ANSWER COLLAPSE/EXPAND ═══
+document.addEventListener('click', function(e) {
+  const head = e.target.closest('.ans-head');
+  if (head) {
+    head.classList.toggle('closed');
+  }
+});
+
+// ═══ SIDEBAR TOGGLE (mobile) ═══
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+// ═══ THEME TOGGLE ═══
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeBtn').textContent = next === 'light' ? '☀' : '☾';
+  try { localStorage.setItem('uts-theme', next); } catch(e){}
+}
+
+// Load theme preference
+try {
+  const saved = localStorage.getItem('uts-theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeBtn').textContent = saved === 'light' ? '☀' : '☾';
+  }
+} catch(e){}
+</script>
+</body>
+</html>

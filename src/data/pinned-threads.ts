@@ -14,8 +14,15 @@ export const PINNED_THREADS: Record<string, ForumThread[]> = {
       content: [
         "Halaman HTML interaktif berisi rangkuman lengkap materi UTS Accounting for Business: konsep dasar, persamaan akuntansi, jurnal, laporan keuangan, sampai siklus akuntansi perusahaan jasa.",
         "",
+        "Versi terbaru:",
+        "• Dark / Light mode (tap toggle di pojok)",
+        "• Penjelasan tiap konsep lebih jelas",
+        "• Sudah mobile compatible — responsive di HP",
+        "• Cheatsheet rumus akuntansi",
+        "• Daftar nama akun lengkap (Assets, Liabilities, Equity, Revenue, Expenses)",
+        "",
         "CATATAN PENTING — BACA DULU:",
-        "File ini harus dibuka di BROWSER (Chrome, Safari, Firefox, Edge) supaya semua fitur interaktif (accordion, navigasi, tabel) bisa jalan normal.",
+        "File ini harus dibuka di BROWSER (Chrome, Safari, Firefox, Edge) supaya semua fitur interaktif (accordion, navigasi, dark mode, tabel) bisa jalan normal.",
         "",
         "Kalau setelah di-download kamu cuma lihat tampilan teks polos lewat preview (misalnya preview Files iOS, preview Google Drive, atau preview Gmail), itu BUKAN rusak — kamu cuma perlu buka via browser:",
         "• Android/iOS: tap file → pilih \"Open with...\" → pilih Chrome/Safari.",
@@ -36,7 +43,7 @@ export const PINNED_THREADS: Record<string, ForumThread[]> = {
       attachments: [
         {
           type: "link",
-          url: "/downloads/uts_akuntansi_v2.html",
+          url: "/downloads/uts_akuntansi_final.html",
           label: "UTS Akuntansi — Modul Belajar Interaktif",
         },
       ],
