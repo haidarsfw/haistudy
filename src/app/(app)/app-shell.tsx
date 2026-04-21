@@ -20,6 +20,7 @@ import { OnboardingOverlay } from "@/components/onboarding/onboarding-overlay";
 import { PreviewWatermark } from "@/components/shared/preview-watermark";
 import { ClassSelector } from "@/components/auth/class-selector";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
+import { AnnouncementModal } from "@/components/shared/announcement-modal";
 import { SupportPanel } from "@/components/support/support-panel";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
@@ -299,6 +300,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setPopupNotification(null);
       }}
     />
+
+    {/* One-shot announcement popup (per-user, localStorage-gated) */}
+    <AnnouncementModal />
     </>
   );
 }

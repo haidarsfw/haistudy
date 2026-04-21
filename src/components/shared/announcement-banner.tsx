@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Info, AlertTriangle, Wrench } from "lucide-react";
+import Link from "next/link";
+import { X, Info, AlertTriangle, Wrench, ArrowRight } from "lucide-react";
 import type { Announcement } from "@/types";
+import { parseAnnouncementCta } from "@/lib/announcement-cta";
 
 const TYPE_CONFIG = {
   info: {
@@ -50,6 +52,7 @@ export function AnnouncementBanner() {
       {visible.map((ann) => {
         const config = TYPE_CONFIG[ann.type];
         const Icon = config.icon;
+        const { message, cta } = parseAnnouncementCta(ann.message);
 
         return (
           <div
@@ -57,7 +60,16 @@ export function AnnouncementBanner() {
             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${config.bg} ${config.text}`}
           >
             <Icon className={`h-3.5 w-3.5 shrink-0 ${config.iconColor}`} />
-            <span className="flex-1 overflow-hidden break-words">{ann.message}</span>
+            <span className="flex-1 overflow-hidden break-words">{message}</span>
+            {cta && (
+              <Link
+                href={cta.url}
+                className="inline-flex shrink-0 items-center gap-1 rounded-md bg-black/10 px-2 py-0.5 text-[11px] font-medium hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
+              >
+                {cta.label}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
             <button
               onClick={() =>
                 setDismissed((prev) => new Set([...prev, ann.id]))

@@ -823,6 +823,179 @@ table.std td.bad  { color: var(--danger); }
 .hafalan-content strong { font-weight: 700; }
 
 /* ═══════════════════════════════════════════════
+   CONTOH BOX — Example with explanation
+═══════════════════════════════════════════════ */
+.contoh {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bd);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 14px 0;
+}
+.contoh-tag {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  padding: 3px 9px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+.contoh-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.contoh-body { font-size: 13.5px; color: var(--text); line-height: 1.7; }
+.contoh-body p { color: var(--text); font-size: 13.5px; margin-bottom: 8px; }
+.contoh-body p:last-child { margin-bottom: 0; }
+.contoh-body strong { color: var(--text); }
+
+/* ═══════════════════════════════════════════════
+   LATIHAN SOAL — Practice Quiz
+═══════════════════════════════════════════════ */
+.quiz {
+  background: var(--bg-card);
+  border: 2px solid var(--warn-bd);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 18px 0;
+  position: relative;
+}
+.quiz-tag {
+  display: inline-block;
+  background: var(--warn);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  padding: 3px 9px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+.quiz-question {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+.quiz-question strong { font-weight: 700; }
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 12px 0;
+}
+.quiz-opt {
+  background: var(--bg-soft);
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+  line-height: 1.55;
+}
+.quiz-opt:hover:not(.correct):not(.wrong) {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+.quiz-opt .opt-letter {
+  font-weight: 700;
+  color: var(--text-mute);
+  flex-shrink: 0;
+  min-width: 16px;
+}
+.quiz-opt.correct {
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--text);
+}
+.quiz-opt.correct .opt-letter { color: var(--success); }
+.quiz-opt.wrong {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+.quiz-opt.wrong .opt-letter { color: var(--danger); }
+.quiz-opt.disabled { cursor: default; opacity: .6; }
+.quiz-opt.disabled:hover { background: var(--bg-soft); border-color: var(--border); }
+.quiz-check {
+  margin-left: auto;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.quiz-explanation {
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: 6px;
+  background: var(--bg-soft);
+  border-left: 3px solid var(--accent);
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.65;
+  display: none;
+}
+.quiz-explanation.show { display: block; }
+.quiz-explanation-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+/* Quiz with free-text / reveal answer */
+.quiz-reveal-btn {
+  background: var(--warn);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  transition: opacity .15s;
+}
+.quiz-reveal-btn:hover { opacity: .85; }
+.quiz-answer {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: var(--success-bg);
+  border: 1px solid var(--success-bd);
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.65;
+  display: none;
+}
+.quiz-answer.show { display: block; }
+.quiz-answer-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--success);
+  margin-bottom: 6px;
+}
+
+/* ═══════════════════════════════════════════════
    MOBILE
 ═══════════════════════════════════════════════ */
 .hamburger {
@@ -1051,6 +1224,87 @@ table.std td.bad  { color: var(--danger); }
   Saldo Cash  ────────────────────────────→  <span class="lbl-gy">harus sama dengan</span>
 
 <span class="lbl-bl">④ Statement of Cash Flows</span>  <span class="lbl-gy">(Cash at End of Period)</span></div>
+
+  <h2 class="sec-head">Contoh Terapan</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Mengidentifikasi Laporan yang Tepat</div>
+    <div class="contoh-body">
+      <p><strong>Skenario:</strong> PT Maju Jaya ingin mengetahui apakah perusahaannya menghasilkan laba selama tahun 2025.</p>
+      <p><strong>Laporan yang dipakai:</strong> <span class="tag a">Income Statement</span> — karena menunjukkan revenue dikurangi expenses untuk suatu periode.</p>
+      <p><strong>Skenario:</strong> Seorang investor ingin tahu berapa total aset dan total utang perusahaan per 31 Desember 2025.</p>
+      <p><strong>Laporan yang dipakai:</strong> <span class="tag a">Balance Sheet</span> — karena menunjukkan posisi keuangan per tanggal tertentu.</p>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">Menghitung Ending Retained Earnings</div>
+    <div class="contoh-body">
+      <p><strong>Data:</strong> Beginning RE $12,000 · Net Income $8,500 · Dividends dibayar $3,000</p>
+      <div class="calc">Ending RE = $12,000 + $8,500 − $3,000 = <span class="lbl-ok">$17,500</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Manakah laporan keuangan yang menjelaskan <strong>posisi keuangan perusahaan pada satu tanggal tertentu?</strong></div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Income Statement</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Retained Earnings Statement</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>Balance Sheet</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Statement of Cash Flows</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      <strong>Balance Sheet</strong> dibuat untuk <em>satu tanggal tertentu</em> (contoh: "As of December 31, 2025") — seperti foto sesaat. Income Statement dan laporan lainnya meringkas aktivitas selama <em>periode</em>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Jika Beginning Retained Earnings $20,000, Net Income $15,000, dan Dividends $6,000, maka <strong>Ending Retained Earnings</strong> adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$9,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>$26,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>$29,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$41,000</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Rumus: Ending RE = Beg. RE + Net Income − Dividends = $20,000 + $15,000 − $6,000 = <strong>$29,000</strong>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Urutan penyusunan 4 laporan keuangan yang <strong>benar</strong> adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Balance Sheet → Income Statement → Retained Earnings → Cash Flows</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Income Statement → Retained Earnings → Balance Sheet → Cash Flows</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Cash Flows → Balance Sheet → Income Statement → Retained Earnings</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Retained Earnings → Income Statement → Balance Sheet → Cash Flows</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Net Income dari <strong>Income Statement</strong> dipakai untuk menghitung Retained Earnings. Ending RE dipakai di <strong>Balance Sheet</strong>. Cash balance di Balance Sheet harus sama dengan Cash at End di <strong>Cash Flows</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Perusahaan Alpha memiliki: Service Revenue $50,000 · Salaries Expense $18,000 · Rent Expense $7,000 · Supplies Expense $3,000. Hitung <strong>Net Income</strong>.</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="calc">Total Expenses = $18,000 + $7,000 + $3,000 = $28,000
+Net Income = Revenue − Expenses
+           = $50,000 − $28,000
+           = <span class="lbl-ok">$22,000</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -1185,6 +1439,96 @@ table.std td.bad  { color: var(--danger); }
       <div class="j-narr"><span></span><span>(To record bank service charges)</span></div>
     </div>
   </div>
+
+  <h2 class="sec-head">Contoh Terapan</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Identifikasi Prinsip Internal Control yang Dilanggar</div>
+    <div class="contoh-body">
+      <p><strong>Kasus:</strong> Di toko Bu Ani, satu karyawan bernama Dian bertugas menerima uang dari pelanggan <em>sekaligus</em> mencatat transaksi di kasir.</p>
+      <p><strong>Prinsip yang dilanggar:</strong> <span class="tag d">Segregation of Duties</span> — orang yang memegang kas (aset) seharusnya berbeda dengan yang mencatatnya di pembukuan.</p>
+      <p><strong>Risiko:</strong> Dian bisa mengambil uang dan menutupinya dengan tidak mencatat transaksi tersebut.</p>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">Rekonsiliasi Bank — Menempatkan Item di Sisi yang Benar</div>
+    <div class="contoh-body">
+      <p>Tempatkan masing-masing item berikut di sisi <strong>Bank</strong> atau <strong>Buku</strong>:</p>
+      <div class="tbl-wrap"><table class="std">
+        <thead><tr><th>Item</th><th>Sisi</th><th>Tambah/Kurang</th></tr></thead>
+        <tbody>
+          <tr><td>Deposit in transit $500</td><td>Bank</td><td class="ok">+ Tambah</td></tr>
+          <tr><td>Outstanding check $800</td><td>Bank</td><td class="bad">− Kurang</td></tr>
+          <tr><td>NSF check $300</td><td>Buku</td><td class="bad">− Kurang</td></tr>
+          <tr><td>Bank service charge $25</td><td>Buku</td><td class="bad">− Kurang</td></tr>
+          <tr><td>EFT collection belum dicatat $1,000</td><td>Buku</td><td class="ok">+ Tambah</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Dari ketiga komponen Fraud Triangle, manakah yang bisa <strong>dikontrol langsung</strong> oleh perusahaan melalui sistem internal control?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Financial Pressure</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Opportunity</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Rationalization</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Ketiganya sama-sama bisa dikontrol</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Perusahaan tidak bisa mengontrol tekanan finansial karyawan atau cara mereka merasionalisasi tindakan. Tapi perusahaan <em>bisa</em> menutup <strong>Opportunity</strong> dengan pengendalian internal yang kuat — inilah faktor paling efektif untuk dicegah.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Jurnal saat <strong>mengisi ulang Petty Cash</strong> sebesar $87 untuk: Postage $44, Freight-out $38, Misc $5 adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Dr Petty Cash $87 / Cr Cash $87</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Dr Postage $44, Freight-out $38, Misc $5 / Cr Cash $87</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Dr Postage $44, Freight-out $38, Misc $5 / Cr Petty Cash $87</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Tidak perlu jurnal</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Saat <em>mengisi ulang</em>, yang di-kredit adalah <strong>Cash</strong> (kas di bank berkurang karena dicairkan untuk mengisi kotak petty cash), bukan Petty Cash. Akun Petty Cash hanya dipakai saat membentuk atau mengubah jumlah dana.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Pada rekonsiliasi bank, item manakah yang <strong>TIDAK</strong> memerlukan jurnal penyesuaian?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>NSF check dari pelanggan</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Bank service charges</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>Outstanding checks</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>EFT collection yang belum dicatat di buku</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      <strong>Outstanding checks</strong> adalah item di sisi <em>Bank</em> — bank yang akan menyesuaikan saat cek dicairkan. Hanya item di sisi <em>Buku</em> yang perlu jurnal penyesuaian di catatan perusahaan.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Saldo per bank statement $5,200 · Deposits in transit $800 · Outstanding checks $1,500. Berapa <strong>Adjusted Balance (Bank)</strong>?</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="calc">Saldo per bank statement      =  $5,200
++ Deposits in transit         = +  $800
+− Outstanding checks          = − $1,500
+                              ──────────
+<span class="lbl-ok">Adjusted Balance (Bank)      =  $4,500</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -1279,6 +1623,89 @@ table.std td.bad  { color: var(--danger); }
     <div class="stmt-row"><span>Cash at beginning of period</span><span class="stmt-val">33,000</span></div>
     <div class="stmt-row total"><span>Cash at end of period</span><span class="stmt-val">$55,000</span></div>
   </div>
+
+  <h2 class="sec-head">Contoh Terapan</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Klasifikasikan Setiap Transaksi ke Kategori yang Benar</div>
+    <div class="contoh-body">
+      <div class="tbl-wrap"><table class="std">
+        <thead><tr><th>Transaksi</th><th>Klasifikasi</th></tr></thead>
+        <tbody>
+          <tr><td>Menjual peralatan kantor lama</td><td><span class="tag a">Investing</span></td></tr>
+          <tr><td>Membayar gaji karyawan</td><td><span class="tag g">Operating</span></td></tr>
+          <tr><td>Menerbitkan saham biasa</td><td><span class="tag w">Financing</span></td></tr>
+          <tr><td>Membayar dividen</td><td><span class="tag w">Financing</span></td></tr>
+          <tr><td>Menerima kas dari pelanggan</td><td><span class="tag g">Operating</span></td></tr>
+          <tr><td>Membayar bunga atas wesel</td><td><span class="tag g">Operating</span> (bukan Financing!)</td></tr>
+          <tr><td>Membeli gedung baru</td><td><span class="tag a">Investing</span></td></tr>
+          <tr><td>Melunasi pinjaman jangka panjang</td><td><span class="tag w">Financing</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">Penyesuaian Indirect Method</div>
+    <div class="contoh-body">
+      <p><strong>Data 2025:</strong> Net Income $80,000 · Depreciation $12,000 · A/R naik $5,000 · Inventory turun $3,000 · A/P naik $4,000</p>
+      <div class="calc">Net income                                     $80,000
++ Depreciation (non-kas)                      + $12,000
+− Kenaikan A/R (revenue blm diterima kas)     −  $5,000
++ Penurunan Inventory (jual dari stok lama)   +  $3,000
++ Kenaikan A/P (belanja belum bayar)          +  $4,000
+                                              ─────────
+<span class="lbl-ok">Net cash from operating activities            $94,000</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Pembelian peralatan seharga $15,000 tunai termasuk aktivitas…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Operating</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Investing</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Financing</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Non-cash activity</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Pembelian aset jangka panjang (peralatan, gedung, kendaraan, dll) termasuk <strong>Investing Activities</strong>. Financing berkaitan dengan utang/ekuitas. Operating adalah kegiatan harian.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Dalam metode Indirect, kenaikan <strong>Accounts Payable</strong> sebesar $7,000 akan…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">A.</span>Ditambahkan ke Net Income</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Dikurangkan dari Net Income</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Dilaporkan sebagai Investing</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Tidak berpengaruh pada SCF</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Kenaikan Current Liability = belanja dicatat tapi belum dibayar → kas tidak berkurang → <strong>tambahkan</strong> ke Net Income untuk mendapatkan kas sesungguhnya.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Perusahaan punya: Net Income $60,000 · Depreciation $10,000 · Inventory naik $8,000 · A/P turun $3,000. Berapa <strong>Net Cash from Operating</strong>?</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="calc">Net income                        $60,000
++ Depreciation                   + $10,000
+− Kenaikan Inventory             −  $8,000
+− Penurunan A/P                  −  $3,000
+                                 ─────────
+<span class="lbl-ok">Net cash from operating          $59,000</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -1315,6 +1742,61 @@ table.std td.bad  { color: var(--danger); }
       <tr><td><strong>Operating</strong></td><td>Kegiatan harian menghasilkan produk/jasa</td><td>Jual barang/jasa, bayar gaji, bayar sewa</td></tr>
     </tbody>
   </table></div>
+
+  <h2 class="sec-head">Contoh Terapan</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Identifikasi Bentuk Usaha</div>
+    <div class="contoh-body">
+      <p><strong>Skenario A:</strong> Pak Budi membuka warung kopi sendiri dan menjadi pemilik tunggal. → <span class="tag a">Sole Proprietorship</span></p>
+      <p><strong>Skenario B:</strong> Tiga dokter membuka klinik bersama dan berbagi keuntungan. → <span class="tag a">Partnership</span></p>
+      <p><strong>Skenario C:</strong> PT XYZ Tbk menjual saham di Bursa Efek Indonesia dan memiliki ribuan pemegang saham. → <span class="tag a">Corporation</span></p>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">Verifikasi Persamaan Akuntansi</div>
+    <div class="contoh-body">
+      <p>PT Sejahtera memiliki: Cash $25,000 · Equipment $40,000 · A/P $15,000 · Common Stock $30,000 · Retained Earnings $20,000</p>
+      <div class="calc">Assets      = $25,000 + $40,000 = <span class="lbl-bl">$65,000</span>
+Liabilities = $15,000
+Equity      = $30,000 + $20,000 = $50,000
+Liab + Eq   = $15,000 + $50,000 = <span class="lbl-bl">$65,000</span>  ✓ seimbang</div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Keuntungan utama dari bentuk usaha <strong>Corporation</strong> dibandingkan Sole Proprietorship adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Pajak lebih rendah</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Lebih mudah dibentuk secara legal</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>Tidak ada tanggung jawab pribadi pemilik</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Tidak perlu laporan keuangan</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Corporation adalah entitas hukum tersendiri, sehingga pemegang saham <strong>tidak bertanggung jawab pribadi</strong> atas utang perusahaan. Sebaliknya Sole Proprietorship & Partnership memiliki tanggung jawab pribadi penuh.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Jika Total Assets $100,000 dan Total Liabilities $35,000, maka <strong>Total Stockholders' Equity</strong> adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$35,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>$65,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>$100,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$135,000</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Persamaan: Assets = Liab + Equity → Equity = Assets − Liab = $100,000 − $35,000 = <strong>$65,000</strong>.
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -1401,6 +1883,104 @@ table.std td.bad  { color: var(--danger); }
       <div class="j-row"><span class="j-date">Oct. 5</span><span class="j-acc">Supplies</span><span class="j-ref"></span><span class="j-dr">2,500.00</span><span class="j-cr"></span></div>
       <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Accounts Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">2,500.00</span></div>
       <div class="j-narr"><span></span><span>(Purchased supplies on account)</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Contoh Terapan — Menjurnal Transaksi</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Pemilik Menyetor Modal Tunai $20,000</div>
+    <div class="contoh-body">
+      <p><strong>Analisis:</strong> Cash (aset) bertambah → <em>Debit</em>. Common Stock (ekuitas) bertambah → <em>Credit</em>.</p>
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">Jan 1</span><span class="j-acc">Cash</span><span class="j-ref"></span><span class="j-dr">20,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Common Stock</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">20,000.00</span></div>
+          <div class="j-narr"><span></span><span>(Owner invested cash for common stock)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">Menerima Jasa Tunai $3,500</div>
+    <div class="contoh-body">
+      <p><strong>Analisis:</strong> Cash (aset) bertambah → <em>Debit</em>. Service Revenue (pendapatan, normal CR) bertambah → <em>Credit</em>.</p>
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">Feb 5</span><span class="j-acc">Cash</span><span class="j-ref"></span><span class="j-dr">3,500.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Service Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">3,500.00</span></div>
+          <div class="j-narr"><span></span><span>(Received cash for services performed)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 3</span>
+    <div class="contoh-title">Membayar Sewa $1,200 Tunai</div>
+    <div class="contoh-body">
+      <p><strong>Analisis:</strong> Rent Expense (beban, normal DR) bertambah → <em>Debit</em>. Cash berkurang → <em>Credit</em>.</p>
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun &amp; Keterangan</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">Feb 28</span><span class="j-acc">Rent Expense</span><span class="j-ref"></span><span class="j-dr">1,200.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,200.00</span></div>
+          <div class="j-narr"><span></span><span>(Paid February rent)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Akun <strong>Dividends</strong> memiliki normal balance…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">A.</span>Debit</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Credit</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Tergantung jenis transaksi</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Zero balance</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Dividends adalah pengurang Retained Earnings. Karena RE normal balance-nya Credit, maka pengurangnya (Dividends) normal balance-nya <strong>Debit</strong>. Ingat: <strong>A·E·D</strong> — Assets, Expenses, Dividends = DR.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Perusahaan menerima $500 kas dari pelanggan atas jasa yang <strong>akan</strong> dilakukan bulan depan. Jurnal yang tepat adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Dr Cash $500 / Cr Service Revenue $500</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Dr Cash $500 / Cr Unearned Service Revenue $500</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Dr Accounts Receivable $500 / Cr Service Revenue $500</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Dr Unearned Revenue $500 / Cr Cash $500</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Jasa belum dilakukan → belum boleh diakui sebagai revenue. Kas masuk (Dr Cash) menimbulkan kewajiban melakukan jasa di masa depan (Cr <strong>Unearned Service Revenue</strong>, akun liabilitas).
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Perusahaan Jaya membeli peralatan $8,000: $3,000 tunai, sisanya wesel bayar. Buat jurnalnya!</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="journal" style="margin-top:6px">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date"></span><span class="j-acc">Equipment</span><span class="j-ref"></span><span class="j-dr">8,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Cash</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">3,000.00</span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Notes Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">5,000.00</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1527,6 +2107,119 @@ table.std td.bad  { color: var(--danger); }
       <tr><td>Depreciation</td><td>Asset ↑ · Expense ↓</td><td>Depreciation Expense</td><td>Accumulated Depreciation</td></tr>
     </tbody>
   </table></div>
+
+  <h2 class="sec-head">Contoh Terapan</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Prepaid Insurance — Mengidentifikasi Beban Bulanan</div>
+    <div class="contoh-body">
+      <p><strong>Kasus:</strong> 1 Januari, perusahaan bayar asuransi $2,400 untuk 1 tahun ke depan. Per 31 Januari, berapa Insurance Expense yang harus diakui?</p>
+      <div class="calc">Per bulan = $2,400 ÷ 12 = <span class="lbl-bl">$200</span></div>
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">Jan 31</span><span class="j-acc">Insurance Expense</span><span class="j-ref"></span><span class="j-dr">200.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Prepaid Insurance</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">200.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">Accrued Salaries — Gaji Belum Dibayar</div>
+    <div class="contoh-body">
+      <p><strong>Kasus:</strong> Gaji mingguan $5,000 (5 hari kerja × $1,000/hari) dibayar tiap Jumat. 31 Januari jatuh pada hari Rabu — artinya 3 hari kerja (Sen-Sel-Rab) belum dibayar saat tutup buku.</p>
+      <div class="calc">Accrued Salaries = 3 hari × $1,000 = <span class="lbl-bl">$3,000</span></div>
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">Jan 31</span><span class="j-acc">Salaries and Wages Expense</span><span class="j-ref"></span><span class="j-dr">3,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Salaries and Wages Payable</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">3,000.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 3</span>
+    <div class="contoh-title">Unearned Revenue Menjadi Earned</div>
+    <div class="contoh-body">
+      <p><strong>Kasus:</strong> 1 Okt, perusahaan terima $6,000 uang muka dari klien untuk 3 bulan jasa konsultasi (Okt, Nov, Des). Per 31 Okt, 1 bulan jasa sudah dikerjakan.</p>
+      <div class="calc">Revenue diakui Oktober = $6,000 × (1/3) = <span class="lbl-bl">$2,000</span></div>
+      <div class="journal">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date">Oct 31</span><span class="j-acc">Unearned Service Revenue</span><span class="j-ref"></span><span class="j-dr">2,000.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Service Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">2,000.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Supplies awal $800. Sisa fisik akhir periode $300. Jurnal penyesuaian yang tepat adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Dr Supplies $500 / Cr Supplies Expense $500</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Dr Supplies Expense $500 / Cr Supplies $500</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Dr Supplies Expense $300 / Cr Supplies $300</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Dr Supplies $300 / Cr Supplies Expense $300</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Yang terpakai = $800 − $300 = <strong>$500</strong>. Ini adalah <em>Prepaid Expense</em> — pola jurnalnya Dr Expense / Cr Asset.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Equipment $36,000 disusutkan secara garis lurus dengan umur ekonomis 6 tahun. Berapa <strong>Depreciation Expense</strong> per bulan?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$250</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>$500</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>$6,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$3,000</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Per tahun = $36,000 ÷ 6 = $6,000. Per bulan = $6,000 ÷ 12 = <strong>$500</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Perusahaan meminjam $10,000 dengan bunga 9% per tahun pada 1 April. Bunga untuk bulan <strong>April</strong> (akrual per 30 April) adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$900</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>$90</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>$75</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$7.50</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Rumus: Face × Rate × Time = $10,000 × 9% × (1/12) = <strong>$75</strong>. Jurnal: Dr Interest Expense $75 / Cr Interest Payable $75.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Jasa sebesar $1,800 sudah dilakukan untuk klien, tapi belum ditagih dan belum dicatat. Buat jurnal penyesuaiannya!</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <p>Ini adalah <strong>Accrued Revenue</strong>. Pola jurnal: Dr Asset (Receivable) / Cr Revenue.</p>
+      <div class="journal" style="margin-top:6px">
+        <div class="j-head"><span>Tanggal</span><span>Nama Akun</span><span class="c">Ref</span><span class="r">Debit</span><span class="r">Kredit</span></div>
+        <div class="j-entry">
+          <div class="j-row"><span class="j-date"></span><span class="j-acc">Accounts Receivable</span><span class="j-ref"></span><span class="j-dr">1,800.00</span><span class="j-cr"></span></div>
+          <div class="j-row"><span class="j-date"></span><span class="j-acc cr">Service Revenue</span><span class="j-ref"></span><span class="j-dr"></span><span class="j-cr">1,800.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -1582,6 +2275,90 @@ table.std td.bad  { color: var(--danger); }
       <tr><td><strong>COGS (Periodic)</strong></td><td>Beginning Inventory + Cost of Goods Purchased − Ending Inventory</td></tr>
     </tbody>
   </table></div>
+
+  <h2 class="sec-head">Contoh Terapan</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Hitung Net Sales, Gross Profit, dan Net Income</div>
+    <div class="contoh-body">
+      <p><strong>Data:</strong> Sales Revenue $300,000 · Sales Returns $10,000 · Sales Discounts $5,000 · COGS $170,000 · Operating Expenses $60,000 · Interest Expense $4,000 · Income Tax Expense $15,000</p>
+      <div class="calc">Net Sales               = $300,000 − $10,000 − $5,000   = $285,000
+Gross Profit            = $285,000 − $170,000             = $115,000
+Income from Operations  = $115,000 − $60,000              =  $55,000
+Income Before Tax       = $55,000 − $4,000                =  $51,000
+<span class="lbl-ok">Net Income              = $51,000 − $15,000               =  $36,000</span></div>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">COGS dalam Sistem Periodic</div>
+    <div class="contoh-body">
+      <p><strong>Data:</strong> Beginning Inventory $25,000 · Purchases $80,000 · Purchase Returns $3,000 · Purchase Discounts $2,000 · Freight-In $5,000 · Ending Inventory $22,000</p>
+      <div class="calc">Net Purchases = $80,000 − $3,000 − $2,000     = $75,000
+Cost of Goods Purchased = $75,000 + $5,000     = $80,000
+COGS = $25,000 + $80,000 − $22,000             = <span class="lbl-bl">$83,000</span></div>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question"><strong>Freight-Out</strong> (ongkos kirim saat menjual ke pelanggan) dilaporkan di Multiple-Step Income Statement sebagai…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Pengurang Sales Revenue</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Bagian dari COGS</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>Operating Expense</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Other Expense</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Freight-Out adalah beban operasional terkait penjualan. Berbeda dengan <em>Freight-In</em> (ongkos kirim saat beli) yang masuk ke cost inventory.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Sales Revenue $200,000 · Sales Returns $8,000 · Sales Discounts $2,000 · COGS $120,000. Berapa <strong>Gross Profit</strong>?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$80,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>$70,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>$190,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$72,000</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Net Sales = $200,000 − $8,000 − $2,000 = $190,000. Gross Profit = $190,000 − $120,000 = <strong>$70,000</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Manakah yang termasuk <strong>Other Revenues and Gains</strong> (bukan operational)?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Sales Revenue</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Service Revenue</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>Gain on Disposal of Plant Assets</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Advertising Expense</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Gain on disposal, Interest Revenue, Casualty Loss, dll <strong>bukan dari kegiatan utama</strong> perusahaan — dilaporkan terpisah setelah Income from Operations.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Beginning Inventory $30,000 · Purchases $90,000 · Ending Inventory $25,000 (abaikan freight &amp; diskon). Berapa <strong>COGS</strong>?</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="calc">COGS = Beg. Inventory + Purchases − End. Inventory
+     = $30,000 + $90,000 − $25,000
+     = <span class="lbl-ok">$95,000</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -1632,6 +2409,100 @@ table.std td.bad  { color: var(--danger); }
     <div class="hafalan-content">
       <strong>Naik (↑) lebih baik:</strong> Working Capital, Current Ratio, semua Turnover, semua Profitability ratios, Free Cash Flow, Times Interest Earned<br>
       <strong>Turun (↓) lebih baik:</strong> Collection Period, Days in Inventory, Debt to Assets Ratio
+    </div>
+  </div>
+
+  <h2 class="sec-head">Contoh Terapan</h2>
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 1</span>
+    <div class="contoh-title">Menghitung Current Ratio &amp; Working Capital</div>
+    <div class="contoh-body">
+      <p><strong>Data:</strong> Current Assets $150,000 · Current Liabilities $90,000</p>
+      <div class="calc">Working Capital = $150,000 − $90,000         = <span class="lbl-ok">$60,000</span>
+Current Ratio   = $150,000 ÷ $90,000         = <span class="lbl-ok">1.67</span>  (sehat, di atas 1.0)</div>
+      <p><strong>Interpretasi:</strong> Setiap $1 kewajiban jangka pendek dijamin dengan $1.67 aset lancar.</p>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 2</span>
+    <div class="contoh-title">Profit Margin &amp; ROA</div>
+    <div class="contoh-body">
+      <p><strong>Data:</strong> Net Income $40,000 · Net Sales $500,000 · Total Assets awal $180,000 · akhir $220,000</p>
+      <div class="calc">Profit Margin          = $40,000 ÷ $500,000           = <span class="lbl-ok">8.0%</span>
+Average Total Assets   = ($180,000 + $220,000) ÷ 2    = $200,000
+ROA                    = $40,000 ÷ $200,000           = <span class="lbl-ok">20.0%</span></div>
+      <p><strong>Interpretasi:</strong> Setiap $1 penjualan menghasilkan $0.08 laba. Setiap $1 aset menghasilkan $0.20 laba — angka yang sangat sehat.</p>
+    </div>
+  </div>
+
+  <div class="contoh">
+    <span class="contoh-tag">Contoh 3</span>
+    <div class="contoh-title">Inventory Turnover &amp; Days in Inventory</div>
+    <div class="contoh-body">
+      <p><strong>Data:</strong> COGS $240,000 · Inventory awal $35,000 · akhir $45,000</p>
+      <div class="calc">Avg Inventory      = ($35,000 + $45,000) ÷ 2    = $40,000
+Inventory Turnover = $240,000 ÷ $40,000         = <span class="lbl-ok">6x</span>
+Days in Inventory  = 365 ÷ 6                    = <span class="lbl-ok">61 hari</span></div>
+      <p><strong>Interpretasi:</strong> Inventory berputar 6 kali per tahun — rata-rata barang dijual dalam 61 hari.</p>
+    </div>
+  </div>
+
+  <h2 class="sec-head">Latihan Soal</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Perusahaan A memiliki Debt to Assets Ratio 80%, Perusahaan B memiliki 40%. Kesimpulan yang <strong>benar</strong>…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Perusahaan A lebih sehat secara solvabilitas</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Perusahaan B lebih aman — hanya 40% asetnya dibiayai utang</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Kedua perusahaan sama sehatnya</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Rasio Debt to Assets tidak berpengaruh pada solvabilitas</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Debt to Assets semakin <strong>rendah</strong> semakin baik. 40% berarti 60% aset dibiayai modal sendiri — risiko utang lebih rendah.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Current Assets $80,000 · Current Liabilities $50,000. Berapa <strong>Current Ratio</strong>?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>0.625</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>1.60</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>$30,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>62.5%</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Current Ratio = $80,000 ÷ $50,000 = <strong>1.60</strong>. Setiap $1 kewajiban dijamin $1.60 aset lancar.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">A/R Turnover naik dari 8x menjadi 12x dari tahun lalu. Apa artinya?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Penjualan kredit menurun — kurang baik</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Piutang ditagih lebih cepat — lebih baik</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Perusahaan memberikan kredit lebih lama</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Inventory lebih lama terjual</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      A/R Turnover <strong>naik</strong> = piutang berputar lebih cepat = waktu penagihan lebih singkat. Collection Period: 365 ÷ 8 = 45.6 hari vs. 365 ÷ 12 = 30.4 hari.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Net Income $75,000 · Net Sales $600,000 · Avg Total Assets $500,000. Hitung <strong>Profit Margin</strong> dan <strong>ROA</strong>.</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="calc">Profit Margin = $75,000 ÷ $600,000   = <span class="lbl-ok">12.5%</span>
+ROA           = $75,000 ÷ $500,000   = <span class="lbl-ok">15.0%</span></div>
     </div>
   </div>
 </div>
@@ -1718,6 +2589,68 @@ table.std td.bad  { color: var(--danger); }
       <tr><td><strong>Capital Expenditure</strong></td><td>Belanja Modal</td><td>Pengeluaran untuk aset jangka panjang</td></tr>
     </tbody>
   </table></div>
+
+  <h2 class="sec-head">Latihan — Uji Pemahaman Istilah</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">"Cek dari pelanggan yang ditolak bank karena dana tidak cukup" dalam akuntansi disebut…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Outstanding Check</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>NSF Check</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Deposit in Transit</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Bank Service Charge</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      <strong>NSF = Not Sufficient Funds</strong>. Cek ditolak bank karena saldo pelanggan tidak cukup. Di rekonsiliasi bank → kurangi sisi Buku.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Jurnal yang dibuat untuk menolkan akun revenue dan expense di akhir tahun disebut…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Adjusting Entry</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Closing Entry</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Reversing Entry</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Opening Entry</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      <strong>Closing Entry</strong> menolkan akun temporer (revenue, expense, dividend) dan memindahkan saldonya ke Retained Earnings. Dibuat di akhir periode setelah adjusting entries.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Apa beda <strong>Freight-In</strong> dengan <strong>Freight-Out</strong>?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Freight-In = ongkos kirim domestik, Freight-Out = internasional</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Freight-In = saat beli (masuk cost), Freight-Out = saat jual (operating expense)</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Keduanya sama saja, beda nama</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Freight-In = dibayar pelanggan, Freight-Out = dibayar perusahaan</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      <strong>Freight-In</strong> (saat beli) → masuk ke cost inventory. <strong>Freight-Out</strong> (saat jual) → Operating Expense di Income Statement.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Term <strong>"2/10, n/30"</strong> artinya…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Beli 2 unit, bayar dalam 10 hari, gratis ongkir 30 hari</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Diskon 2% jika bayar dalam 10 hari, jatuh tempo 30 hari</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Cicil 2 kali dalam 10 hari, nominal $30</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Diskon 10% jika bayar dalam 2 hari, lunas 30 hari</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Format: <strong>[discount%]/[discount days], n/[net days]</strong>. Jadi 2/10, n/30 = diskon 2% bila bayar dalam 10 hari, kalau tidak harus lunas dalam 30 hari tanpa diskon.
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -1960,6 +2893,87 @@ table.std td.bad  { color: var(--danger); }
       <div class="ref-desc">Ongkos kirim saat membeli — masuk ke Cost of Goods Purchased.</div>
     </div>
   </div>
+
+  <h2 class="sec-head">Latihan — Tebak Normal Balance &amp; Klasifikasi</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Akun <strong>Accumulated Depreciation</strong> memiliki normal balance…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Debit, karena ini bagian dari Asset</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Credit, karena ini contra asset</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Debit, karena ini expense</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Zero — akun temporer</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Accumulated Depreciation adalah <strong>contra asset</strong> — berlawanan dengan asset. Karena asset normal DR, maka contra asset normal <strong>CR</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Akun <strong>Unearned Service Revenue</strong> termasuk kategori…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Revenue — karena ada kata "Revenue"</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>Asset — karena terkait jasa</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>Liability — kewajiban memberikan jasa ke pelanggan</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Equity — mempengaruhi laba ditahan</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      <strong>Unearned</strong> artinya belum diperoleh — jasa belum dilakukan. Uang dari pelanggan menciptakan <em>kewajiban</em> untuk memberikan jasa di masa depan → <strong>Liability</strong> (normal balance CR).
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Saat menjurnal transaksi "Membayar gaji karyawan $3,000 tunai", akun yang didebit adalah…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Cash</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Salaries and Wages Expense</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Salaries and Wages Payable</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Retained Earnings</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Salaries Expense (beban) bertambah → <strong>Dr Salaries and Wages Expense</strong>. Cash berkurang → Cr Cash.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Dalam sistem <strong>Periodic</strong>, pembelian barang dagang dicatat di akun…</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>Inventory</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>Purchases</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>Cost of Goods Sold</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>Accounts Payable</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Di <strong>Periodic</strong>: pakai akun <strong>Purchases</strong>. Di <strong>Perpetual</strong>: langsung ke <strong>Inventory</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 5</span>
+    <div class="quiz-question">Klasifikasikan akun berikut (tulis: Asset / Liability / Equity / Revenue / Expense):<br>
+    (a) Prepaid Rent · (b) Bonds Payable · (c) Interest Revenue · (d) Dividends · (e) Unearned Revenue</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="tbl-wrap" style="margin:0"><table class="std">
+        <tbody>
+          <tr><td>(a) Prepaid Rent</td><td><strong>Asset</strong> (prepayment, normal DR)</td></tr>
+          <tr><td>(b) Bonds Payable</td><td><strong>Liability</strong> (jangka panjang, normal CR)</td></tr>
+          <tr><td>(c) Interest Revenue</td><td><strong>Revenue</strong> (other revenue, normal CR)</td></tr>
+          <tr><td>(d) Dividends</td><td><strong>Equity</strong> — contra RE (normal DR)</td></tr>
+          <tr><td>(e) Unearned Revenue</td><td><strong>Liability</strong> (kewajiban jasa, normal CR)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -2031,6 +3045,76 @@ table.std td.bad  { color: var(--danger); }
     <div class="ratio-card"><div class="ratio-name">ROE</div><div class="ratio-formula">(NI − Pref.Div) ÷ Avg Common Equity</div></div>
     <div class="ratio-card"><div class="ratio-name">Asset Turnover</div><div class="ratio-formula">Net Sales ÷ Avg Total Assets</div></div>
     <div class="ratio-card"><div class="ratio-name">EPS</div><div class="ratio-formula">(NI − Pref.Div) ÷ Wtd-Avg Shares</div></div>
+  </div>
+
+  <h2 class="sec-head">Latihan — Aplikasi Rumus Langsung</h2>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 1</span>
+    <div class="quiz-question">Cost Equipment $50,000 · Accumulated Depreciation $12,000. Berapa <strong>Book Value</strong>?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$62,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">B.</span>$38,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">C.</span>$50,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$12,000</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Book Value = Cost − Accumulated Depreciation = $50,000 − $12,000 = <strong>$38,000</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 2</span>
+    <div class="quiz-question">Wesel $20,000 bunga 6% untuk 3 bulan. Berapa <strong>total bunga</strong> selama 3 bulan?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$1,200</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>$100</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>$300</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$600</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Rumus: Face × Rate × Time = $20,000 × 6% × (3/12) = $20,000 × 0.06 × 0.25 = <strong>$300</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 3</span>
+    <div class="quiz-question">Beli $10,000 dengan term 2/10, n/30. Retur $1,000. Dibayar dalam periode diskon. Berapa <strong>kas yang dibayar</strong>?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">A.</span>$10,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">B.</span>$9,000</button>
+      <button class="quiz-opt" onclick="pickOpt(this,true)" data-correct="true"><span class="opt-letter">C.</span>$8,820</button>
+      <button class="quiz-opt" onclick="pickOpt(this,false)"><span class="opt-letter">D.</span>$9,800</button>
+    </div>
+    <div class="quiz-explanation">
+      <div class="quiz-explanation-title">Penjelasan</div>
+      Saldo = $10,000 − $1,000 = $9,000. Diskon 2% = $180. Kas = $9,000 − $180 = <strong>$8,820</strong>.
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 4</span>
+    <div class="quiz-question">Current Assets $60,000 · Current Liabilities $40,000 · Total Liabilities $100,000 · Total Assets $250,000. Hitung (a) Working Capital · (b) Current Ratio · (c) Debt to Assets Ratio.</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="calc">(a) Working Capital = $60,000 − $40,000           = <span class="lbl-ok">$20,000</span>
+(b) Current Ratio   = $60,000 ÷ $40,000           = <span class="lbl-ok">1.50</span>
+(c) Debt to Assets  = $100,000 ÷ $250,000         = <span class="lbl-ok">40.0%</span></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <span class="quiz-tag">Latihan 5</span>
+    <div class="quiz-question">COGS $180,000 · Avg Inventory $20,000. Berapa <strong>Inventory Turnover</strong> dan <strong>Days in Inventory</strong>?</div>
+    <button class="quiz-reveal-btn" onclick="revealAns(this)">Tampilkan Jawaban</button>
+    <div class="quiz-answer">
+      <div class="quiz-answer-title">Jawaban</div>
+      <div class="calc">Inventory Turnover = $180,000 ÷ $20,000     = <span class="lbl-ok">9x</span>
+Days in Inventory  = 365 ÷ 9                = <span class="lbl-ok">40.6 hari</span></div>
+    </div>
   </div>
 </div>
 
@@ -2522,6 +3606,36 @@ try {
     document.getElementById('themeBtn').textContent = saved === 'light' ? '☀' : '☾';
   }
 } catch(e){}
+
+// ═══ QUIZ HANDLER ═══
+function pickOpt(btn, isCorrect) {
+  const parent = btn.parentElement;
+  const allOpts = parent.querySelectorAll('.quiz-opt');
+  allOpts.forEach(o => { o.classList.add('disabled'); });
+  if (isCorrect) {
+    btn.classList.add('correct');
+    btn.insertAdjacentHTML('beforeend', '<span class="quiz-check">✓</span>');
+  } else {
+    btn.classList.add('wrong');
+    btn.insertAdjacentHTML('beforeend', '<span class="quiz-check">✗</span>');
+    // Show correct one
+    allOpts.forEach(o => {
+      if (o.dataset.correct === 'true') {
+        o.classList.add('correct');
+        o.insertAdjacentHTML('beforeend', '<span class="quiz-check">✓</span>');
+      }
+    });
+  }
+  // Show explanation
+  const exp = parent.parentElement.querySelector('.quiz-explanation');
+  if (exp) exp.classList.add('show');
+}
+
+function revealAns(btn) {
+  const ans = btn.nextElementSibling;
+  if (ans) ans.classList.add('show');
+  btn.style.display = 'none';
+}
 </script>
 </body>
 </html>

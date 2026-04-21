@@ -20,6 +20,8 @@ export const PINNED_THREADS: Record<string, ForumThread[]> = {
         "• Sudah mobile compatible — responsive di HP",
         "• Cheatsheet rumus akuntansi",
         "• Daftar nama akun lengkap (Assets, Liabilities, Equity, Revenue, Expenses)",
+        "• Contoh soal per teori, lengkap dengan pembahasan",
+        "• Soal latihan per teori untuk uji pemahaman",
         "",
         "CATATAN PENTING — BACA DULU:",
         "File ini harus dibuka di BROWSER (Chrome, Safari, Firefox, Edge) supaya semua fitur interaktif (accordion, navigasi, dark mode, tabel) bisa jalan normal.",
