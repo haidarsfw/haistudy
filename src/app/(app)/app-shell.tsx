@@ -21,6 +21,7 @@ import { PreviewWatermark } from "@/components/shared/preview-watermark";
 import { ClassSelector } from "@/components/auth/class-selector";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
 import { AnnouncementModal } from "@/components/shared/announcement-modal";
+import { SurveyPopup } from "@/components/shared/survey-popup";
 import { SupportPanel } from "@/components/support/support-panel";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
@@ -303,6 +304,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     {/* One-shot announcement popup (per-user, localStorage-gated) */}
     <AnnouncementModal />
+
+    {/* Per-session survey popup (sessionStorage-gated) */}
+    <SurveyPopup />
     </>
   );
 }
