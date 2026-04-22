@@ -19,6 +19,7 @@ import { useAiChat } from "@/hooks/use-ai-chat";
 import { AiMessageBubble } from "./ai-message";
 import { AiInput } from "./ai-input";
 import { AiSuggestions } from "./ai-suggestions";
+import { AI_ENABLED, AI_DISABLED_MESSAGE } from "@/lib/feature-flags";
 
 interface AiChatPanelProps {
   isOpen: boolean;
@@ -228,6 +229,13 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
                 </Button>
               </div>
             </div>
+
+            {/* Cohort shutdown notice */}
+            {!AI_ENABLED && (
+              <div className="border-b border-border bg-amber-500/10 px-4 py-2.5 text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
+                {AI_DISABLED_MESSAGE}
+              </div>
+            )}
 
             {/* Conversation pills */}
             {conversations.filter(

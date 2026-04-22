@@ -4,6 +4,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET;
@@ -26,6 +27,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "roomId, userName, and licenseKey are required" },
         { status: 400 }
+      );
+    }
+
+    // Cohort shutdown — short-circuit before LiveKit token issuance.
+    if (!VOICE_ENABLED) {
+      return NextResponse.json(
+        { error: VOICE_DISABLED_MESSAGE },
+        { status: 503 }
       );
     }
 

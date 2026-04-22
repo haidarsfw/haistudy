@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import type { VoiceRoom, VoiceParticipant } from "@/types";
+import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
 
 // ─── Pre-created rooms (seed data) ───
 // UUIDs must match migration 010_fix_presence_voice.sql
@@ -228,6 +229,13 @@ export async function GET() {
 // ─── POST /api/voice/rooms - Join, leave, create, lock, unlock ───
 export async function POST(request: Request) {
   try {
+    if (!VOICE_ENABLED) {
+      return NextResponse.json(
+        { error: VOICE_DISABLED_MESSAGE },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { action } = body;
 

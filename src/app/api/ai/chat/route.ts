@@ -7,6 +7,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { AI_ENABLED, AI_DISABLED_MESSAGE } from "@/lib/feature-flags";
 
 // ─── Config ───
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -58,6 +59,11 @@ export async function POST(request: Request) {
         { error: "message and licenseKey are required" },
         { status: 400 }
       );
+    }
+
+    // Cohort shutdown — short-circuit before any paid-API call.
+    if (!AI_ENABLED) {
+      return NextResponse.json({ text: AI_DISABLED_MESSAGE, mock: true });
     }
 
     if (message.length > 2000) {
