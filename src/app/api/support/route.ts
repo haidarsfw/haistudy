@@ -1,64 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import {
+  resolveSupportSender,
+  rowToSupportMessage,
+} from "@/lib/support/server";
+import type { SupportConversationSummary, SupportMessage } from "@/types";
 
-export interface SupportMessage {
+/* ─────────────────────────── Legacy in-memory fallback ──────────────── */
+
+interface LegacyRow {
   id: string;
   license_key: string;
   content: string;
+  type: string;
+  media_url: string | null;
   is_admin: boolean;
+  is_system: boolean;
   sender_name: string;
+  author_license_key: string | null;
+  reply_to_id: string | null;
+  reply_to_name: string | null;
+  reply_to_content: string | null;
+  edited_at: string | null;
+  deleted: boolean;
+  client_nonce: string | null;
   created_at: string;
-  is_system?: boolean;
 }
 
-// In-memory fallback when Supabase is not configured
-const memoryStore: SupportMessage[] = [];
+const memoryStore: LegacyRow[] = [];
 const resolvedKeys = new Set<string>();
+
+/* ─────────────────────────── GET ─────────────────────────────────── */
 
 export async function GET(req: NextRequest) {
   const licenseKey = req.nextUrl.searchParams.get("licenseKey");
   const fetchAll = req.nextUrl.searchParams.get("all") === "true";
 
-  // ─── Admin: Fetch all conversations ───
+  // ── Admin: list all conversations ──
   if (fetchAll) {
     if (!(await isAdminFromCookies())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
+
     if (!isSupabaseServerConfigured) {
-      // Group memory store by license_key
-      const grouped = new Map<string, SupportMessage[]>();
-      for (const m of memoryStore) {
-        const arr = grouped.get(m.license_key) || [];
-        arr.push(m);
-        grouped.set(m.license_key, arr);
-      }
-
-      const conversations = Array.from(grouped.entries()).map(([key, msgs]) => {
-        const last = msgs[msgs.length - 1];
-        const userMsgs = msgs.filter((m) => !m.is_admin && !m.is_system);
-        const adminMsgs = msgs.filter((m) => m.is_admin);
-        return {
-          license_key: key,
-          user_name: userMsgs[0]?.sender_name || key.slice(0, 8),
-          last_message: last.content.slice(0, 100),
-          last_time: last.created_at,
-          message_count: msgs.length,
-          is_resolved: resolvedKeys.has(key),
-          unread_count: userMsgs.filter((m) => new Date(m.created_at) > new Date(adminMsgs[adminMsgs.length - 1]?.created_at || 0)).length,
-        };
-      });
-
-      conversations.sort(
-        (a, b) => new Date(b.last_time).getTime() - new Date(a.last_time).getTime()
-      );
-
+      const conversations = summarizeMemoryConversations();
       return NextResponse.json({ conversations });
     }
 
     const supabase = createServerClient()!;
-
-    // Fetch all distinct conversations with latest message
     const { data: allMessages, error } = await supabase
       .from("support_messages")
       .select("*")
@@ -68,18 +58,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const messages = (allMessages || []).map(rowToSupportMessage);
+
     // Group by license_key
     const grouped = new Map<string, SupportMessage[]>();
-    for (const msg of allMessages || []) {
-      const key = msg.license_key;
-      const arr = grouped.get(key) || [];
+    for (const msg of messages) {
+      const arr = grouped.get(msg.licenseKey) || [];
       arr.push(msg);
-      grouped.set(key, arr);
+      grouped.set(msg.licenseKey, arr);
     }
 
-    // Batch-fetch role info for all conversation owners (single query)
+    // Batch role lookup
     const licenseKeys = Array.from(grouped.keys());
-    const roleMap = new Map<string, { isAdmin: boolean; isTester: boolean; packageTier: string | null }>();
+    const roleMap = new Map<
+      string,
+      { isAdmin: boolean; isTester: boolean; packageTier: string | null }
+    >();
     if (licenseKeys.length > 0) {
       const { data: licenses } = await supabase
         .from("license_keys")
@@ -94,59 +88,19 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const conversations = Array.from(grouped.entries()).map(([key, msgs]) => {
-      const last = msgs[msgs.length - 1];
-      const userMsgs = msgs.filter((m: SupportMessage) => !m.is_admin && !m.is_system);
-      const adminMsgs = msgs.filter((m: SupportMessage) => m.is_admin);
-      const isResolved = msgs.some(
-        (m: SupportMessage) => m.is_system && m.content.includes("Resolved")
-      );
-      // Check if resolved was after the latest user message
-      const lastResolvedMsg = [...msgs]
-        .reverse()
-        .find((m: SupportMessage) => m.is_system && m.content.includes("Resolved"));
-      const lastUserMsg = [...msgs]
-        .reverse()
-        .find((m: SupportMessage) => !m.is_admin && !m.is_system);
-      const currentlyResolved =
-        isResolved &&
-        lastResolvedMsg &&
-        (!lastUserMsg ||
-          new Date(lastResolvedMsg.created_at) > new Date(lastUserMsg.created_at));
+    const conversations: SupportConversationSummary[] = Array.from(
+      grouped.entries()
+    ).map(([key, msgs]) => buildSummary(key, msgs, roleMap.get(key)));
 
-      // Unread = user messages after last admin message
-      const lastAdminTime = adminMsgs.length > 0
-        ? new Date(adminMsgs[adminMsgs.length - 1].created_at).getTime()
-        : 0;
-      const unreadCount = userMsgs.filter(
-        (m: SupportMessage) => new Date(m.created_at).getTime() > lastAdminTime
-      ).length;
-
-      const roleInfo = roleMap.get(key);
-      return {
-        license_key: key,
-        user_name: userMsgs[0]?.sender_name || key.slice(0, 8),
-        last_message: last.content.slice(0, 100),
-        last_time: last.created_at,
-        message_count: msgs.length,
-        is_resolved: currentlyResolved || false,
-        unread_count: currentlyResolved ? 0 : unreadCount,
-        is_admin: roleInfo?.isAdmin ?? false,
-        is_tester: roleInfo?.isTester ?? false,
-        package_tier: roleInfo?.packageTier ?? null,
-      };
-    });
-
-    // Sort by last activity, unresolved first
     conversations.sort((a, b) => {
-      if (a.is_resolved !== b.is_resolved) return a.is_resolved ? 1 : -1;
-      return new Date(b.last_time).getTime() - new Date(a.last_time).getTime();
+      if (a.isResolved !== b.isResolved) return a.isResolved ? 1 : -1;
+      return new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime();
     });
 
     return NextResponse.json({ conversations });
   }
 
-  // ─── User: Fetch messages for a specific license key ───
+  // ── User/admin: messages for one conversation ──
   if (!licenseKey) {
     return NextResponse.json({ error: "Missing licenseKey" }, { status: 400 });
   }
@@ -154,7 +108,11 @@ export async function GET(req: NextRequest) {
   if (!isSupabaseServerConfigured) {
     const filtered = memoryStore
       .filter((m) => m.license_key === licenseKey)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      .sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
+      .map(rowToSupportMessage);
     return NextResponse.json({ messages: filtered });
   }
 
@@ -169,60 +127,232 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ messages: data || [] });
+  const messages = (data || []).map(rowToSupportMessage);
+  return NextResponse.json({ messages });
 }
+
+/* ─────────────────────────── POST: send ─────────────────────────── */
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { licenseKey, content, senderName } = body;
+    const {
+      licenseKey,
+      content: rawContent,
+      senderName,
+      type: rawType,
+      mediaUrl: rawMediaUrl,
+      replyToId,
+      replyToName,
+      replyToContent,
+      clientNonce,
+    } = body as {
+      licenseKey?: string;
+      content?: string;
+      senderName?: string;
+      type?: string;
+      mediaUrl?: string | null;
+      replyToId?: string | null;
+      replyToName?: string | null;
+      replyToContent?: string | null;
+      clientNonce?: string | null;
+    };
 
-    // Trust cookies, not client-provided flags — controls rate limit + is_admin flag
-    const isAdmin = await isAdminFromCookies();
-
-    if (!licenseKey || !content?.trim() || !senderName) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!licenseKey || !senderName) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
-    // Rate limit: 5s cooldown for non-admin messages
-    if (isSupabaseServerConfigured && !isAdmin) {
-      const supabase = createServerClient()!;
-      const { data: recent } = await supabase
-        .from("support_messages")
-        .select("created_at")
-        .eq("license_key", licenseKey)
-        .eq("is_admin", false)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    const sender = await resolveSupportSender();
+    const isAdmin = sender.isAdmin;
 
-      if (recent && Date.now() - new Date(recent.created_at).getTime() < 5000) {
-        return NextResponse.json({ error: "Please wait before sending another message" }, { status: 429 });
+    // Normalize incoming type/content/media. Backwards compat: if old client
+    // sends content="[image]URL\n..." with no type, normalize to image+media.
+    let type: "text" | "image" | "audio" = "text";
+    if (rawType === "image" || rawType === "audio") type = rawType;
+
+    let content = (rawContent ?? "").trim();
+    let mediaUrl: string | null = rawMediaUrl ?? null;
+
+    if (!type || type === "text") {
+      if (content.startsWith("[image]")) {
+        const lines = content.split("\n");
+        mediaUrl = lines[0].slice(7);
+        content = lines.slice(1).join("\n");
+        type = "image";
       }
     }
 
-    const message: SupportMessage = {
-      id: `sup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      license_key: licenseKey,
-      content: content.trim().slice(0, 2000),
-      is_admin: isAdmin,
-      sender_name: senderName,
-      created_at: new Date().toISOString(),
-    };
+    content = content.slice(0, 2000);
+
+    if (type === "text" && !content) {
+      return NextResponse.json({ error: "Empty message" }, { status: 400 });
+    }
+    if ((type === "image" || type === "audio") && !mediaUrl) {
+      return NextResponse.json({ error: "Missing media URL" }, { status: 400 });
+    }
 
     if (!isSupabaseServerConfigured) {
-      memoryStore.push(message);
-      return NextResponse.json({ success: true, message });
+      // Dedup by clientNonce in memory
+      if (clientNonce) {
+        const existing = memoryStore.find((m) => m.client_nonce === clientNonce);
+        if (existing) {
+          return NextResponse.json({
+            success: true,
+            message: rowToSupportMessage(existing),
+          });
+        }
+      }
+      const row: LegacyRow = {
+        id: `sup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        license_key: licenseKey,
+        content,
+        type,
+        media_url: mediaUrl,
+        is_admin: isAdmin,
+        is_system: false,
+        sender_name: senderName,
+        author_license_key: sender.licenseKey,
+        reply_to_id: replyToId ?? null,
+        reply_to_name: replyToName ?? null,
+        reply_to_content: replyToContent ?? null,
+        edited_at: null,
+        deleted: false,
+        client_nonce: clientNonce ?? null,
+        created_at: new Date().toISOString(),
+      };
+      memoryStore.push(row);
+      return NextResponse.json({
+        success: true,
+        message: rowToSupportMessage(row),
+      });
+    }
+
+    const supabase = createServerClient()!;
+
+    // Dedup by client_nonce — return existing row if already inserted
+    if (clientNonce) {
+      const { data: existing } = await supabase
+        .from("support_messages")
+        .select("*")
+        .eq("client_nonce", clientNonce)
+        .maybeSingle();
+      if (existing) {
+        return NextResponse.json({
+          success: true,
+          message: rowToSupportMessage(existing),
+        });
+      }
+    }
+
+    const { data, error } = await supabase
+      .from("support_messages")
+      .insert({
+        license_key: licenseKey,
+        content,
+        type,
+        media_url: mediaUrl,
+        is_admin: isAdmin,
+        sender_name: senderName,
+        author_license_key: sender.licenseKey,
+        reply_to_id: replyToId ?? null,
+        reply_to_name: replyToName ?? null,
+        reply_to_content: replyToContent ?? null,
+        client_nonce: clientNonce ?? null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      // Unique-violation race: another request beat us with same nonce
+      if (
+        clientNonce &&
+        (error.code === "23505" || /duplicate|unique/i.test(error.message))
+      ) {
+        const { data: existing } = await supabase
+          .from("support_messages")
+          .select("*")
+          .eq("client_nonce", clientNonce)
+          .maybeSingle();
+        if (existing) {
+          return NextResponse.json({
+            success: true,
+            message: rowToSupportMessage(existing),
+          });
+        }
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: rowToSupportMessage(data),
+    });
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
+/* ─────────────────────────── PATCH: resolve ─────────────────────── */
+
+export async function PATCH(req: NextRequest) {
+  try {
+    if (!(await isAdminFromCookies())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { licenseKey, action } = body as {
+      licenseKey?: string;
+      action?: string;
+    };
+
+    if (action !== "resolve" || !licenseKey) {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+
+    const systemContent =
+      "✅ Masalah telah diselesaikan oleh Admin. Jika ada pertanyaan lain, silakan kirim pesan baru.";
+
+    if (!isSupabaseServerConfigured) {
+      const row: LegacyRow = {
+        id: `sys-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        license_key: licenseKey,
+        content: systemContent,
+        type: "system",
+        media_url: null,
+        is_admin: true,
+        is_system: true,
+        sender_name: "System",
+        author_license_key: null,
+        reply_to_id: null,
+        reply_to_name: null,
+        reply_to_content: null,
+        edited_at: null,
+        deleted: false,
+        client_nonce: null,
+        created_at: new Date().toISOString(),
+      };
+      memoryStore.push(row);
+      resolvedKeys.add(licenseKey);
+      return NextResponse.json({
+        success: true,
+        message: rowToSupportMessage(row),
+      });
     }
 
     const supabase = createServerClient()!;
     const { data, error } = await supabase
       .from("support_messages")
       .insert({
-        license_key: message.license_key,
-        content: message.content,
-        is_admin: message.is_admin,
-        sender_name: message.sender_name,
+        license_key: licenseKey,
+        content: systemContent,
+        type: "system",
+        is_admin: true,
+        sender_name: "System",
+        is_system: true,
       })
       .select()
       .single();
@@ -231,61 +361,81 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: data });
+    return NextResponse.json({
+      success: true,
+      message: rowToSupportMessage(data),
+    });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
 
-// ─── PATCH: Resolve a conversation ───
-export async function PATCH(req: NextRequest) {
-  try {
-    if (!(await isAdminFromCookies())) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+/* ─────────────────────────── Conversation summary ─────────────────── */
 
-    const body = await req.json();
-    const { licenseKey, action } = body;
+function buildSummary(
+  key: string,
+  msgs: SupportMessage[],
+  role?: { isAdmin: boolean; isTester: boolean; packageTier: string | null }
+): SupportConversationSummary {
+  const visible = msgs.filter((m) => !m.deleted);
+  const last = visible[visible.length - 1] ?? msgs[msgs.length - 1];
+  const userMsgs = msgs.filter((m) => !m.isAdmin && !m.isSystem);
+  const adminMsgs = msgs.filter((m) => m.isAdmin && !m.isSystem);
 
-    if (action === "resolve" && licenseKey) {
-      const systemMsg: SupportMessage = {
-        id: `sys-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        license_key: licenseKey,
-        content: "✅ Masalah telah diselesaikan oleh Admin. Jika ada pertanyaan lain, silakan kirim pesan baru.",
-        is_admin: true,
-        sender_name: "System",
-        created_at: new Date().toISOString(),
-        is_system: true,
-      };
+  const lastSystemResolve = [...msgs]
+    .reverse()
+    .find((m) => m.isSystem && m.content.includes("diselesaikan"));
+  const lastUserMsg = [...msgs].reverse().find((m) => !m.isAdmin && !m.isSystem);
+  const isResolved = Boolean(
+    lastSystemResolve &&
+      (!lastUserMsg ||
+        new Date(lastSystemResolve.createdAt) > new Date(lastUserMsg.createdAt))
+  );
 
-      if (!isSupabaseServerConfigured) {
-        memoryStore.push(systemMsg);
-        resolvedKeys.add(licenseKey);
-        return NextResponse.json({ success: true, message: systemMsg });
-      }
+  const lastAdminTime =
+    adminMsgs.length > 0
+      ? new Date(adminMsgs[adminMsgs.length - 1].createdAt).getTime()
+      : 0;
+  const unreadCount = userMsgs.filter(
+    (m) => new Date(m.createdAt).getTime() > lastAdminTime
+  ).length;
 
-      const supabase = createServerClient()!;
-      const { data, error } = await supabase
-        .from("support_messages")
-        .insert({
-          license_key: systemMsg.license_key,
-          content: systemMsg.content,
-          is_admin: true,
-          sender_name: "System",
-          is_system: true,
-        })
-        .select()
-        .single();
+  const lastPreview =
+    last.type === "image"
+      ? "[Gambar]"
+      : last.type === "audio"
+      ? "[Pesan suara]"
+      : (last.content || "").slice(0, 100);
 
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
+  return {
+    licenseKey: key,
+    userName: userMsgs[0]?.senderName || key.slice(0, 8),
+    lastMessage: lastPreview,
+    lastTime: last.createdAt,
+    messageCount: msgs.length,
+    isResolved,
+    unreadCount: isResolved ? 0 : unreadCount,
+    isAdmin: role?.isAdmin ?? false,
+    isTester: role?.isTester ?? false,
+    packageTier: (role?.packageTier as SupportConversationSummary["packageTier"]) ?? null,
+  };
+}
 
-      return NextResponse.json({ success: true, message: data });
-    }
-
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+function summarizeMemoryConversations(): SupportConversationSummary[] {
+  const grouped = new Map<string, LegacyRow[]>();
+  for (const row of memoryStore) {
+    const arr = grouped.get(row.license_key) || [];
+    arr.push(row);
+    grouped.set(row.license_key, arr);
   }
+  const out: SupportConversationSummary[] = [];
+  for (const [key, rows] of grouped) {
+    const msgs = rows.map(rowToSupportMessage);
+    out.push(buildSummary(key, msgs));
+  }
+  out.sort((a, b) => {
+    if (a.isResolved !== b.isResolved) return a.isResolved ? 1 : -1;
+    return new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime();
+  });
+  return out;
 }

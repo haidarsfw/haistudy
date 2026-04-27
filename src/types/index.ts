@@ -365,3 +365,79 @@ export interface FontOption {
   id: FontId;
   name: string;
 }
+
+// ============================================
+// Support chat (v2) — admin↔user 1:1 thread
+// ============================================
+
+export type SupportMessageType = "text" | "image" | "audio" | "system";
+
+export type SupportSendStatus = "sending" | "sent" | "error";
+
+export interface SupportMessage {
+  id: string;
+  licenseKey: string;            // conversation owner
+  content: string;
+  type: SupportMessageType;
+  mediaUrl: string | null;
+  isAdmin: boolean;
+  isSystem: boolean;
+  senderName: string;
+  authorLicenseKey: string | null;
+  replyToId: string | null;
+  replyToName: string | null;
+  replyToContent: string | null;
+  editedAt: string | null;
+  deleted: boolean;
+  createdAt: string;
+  // Client-only ephemeral fields (never serialized to DB):
+  clientNonce?: string;
+  status?: SupportSendStatus;
+}
+
+export interface SupportReaction {
+  id: string;
+  messageId: string;
+  licenseKey: string;
+  reactorKey: string;
+  reactorName: string;
+  isAdmin: boolean;
+  emoji: string;
+  createdAt: string;
+}
+
+export type SupportReaderKind = "user" | "admin";
+
+export interface SupportReadReceipt {
+  id: string;
+  licenseKey: string;
+  messageId: string;
+  readerKind: SupportReaderKind;
+  readAt: string;
+}
+
+export interface SupportPresenceState {
+  online: boolean;
+  lastSeen: string | null;       // ISO; null = "never"
+  kind: SupportReaderKind;
+}
+
+export interface SupportTypingState {
+  isTyping: boolean;
+  fromKind: SupportReaderKind;
+  fromName: string;
+  startedAt: string;
+}
+
+export interface SupportConversationSummary {
+  licenseKey: string;
+  userName: string;
+  lastMessage: string;
+  lastTime: string;
+  messageCount: number;
+  isResolved: boolean;
+  unreadCount: number;
+  isAdmin?: boolean;
+  isTester?: boolean;
+  packageTier?: "share" | "normal" | "vip" | "diamond" | null;
+}

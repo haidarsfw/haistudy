@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/components/providers/session-provider";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -8,15 +8,18 @@ const STORAGE_KEY = "hs-support-last-read";
 
 /**
  * Tracks unread support messages.
- * - For users: counts admin messages since last time they opened the support panel
- * - For admins: counts total unread user messages across ALL conversations
+ *  - For users: counts admin messages since last time they opened the support panel
+ *    (kept simple — single conversation, localStorage-tracked).
+ *  - For admins: total unread USER messages across ALL conversations.
+ *    Always derived from server (`/api/support?all=true`) to avoid drift —
+ *    refetch on relevant realtime events + visibility change.
  */
 export function useSupportUnread() {
   const { session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
   const isPanelOpenRef = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Get the stored last-read timestamp
   const getLastRead = useCallback((): string | null => {
     if (!session?.licenseKey) return null;
     try {
@@ -26,66 +29,79 @@ export function useSupportUnread() {
     }
   }, [session?.licenseKey]);
 
-  // Fetch unread count
   const fetchUnread = useCallback(async () => {
     if (!session?.licenseKey) return;
-
     try {
       if (session.isAdmin) {
-        // Admin: fetch total unread across all conversations
-        const res = await fetch("/api/support?all=true");
-        if (res.ok) {
-          const data = await res.json();
-          const total = (data.conversations || []).reduce(
-            (sum: number, c: { unread_count: number }) => sum + (c.unread_count || 0),
-            0
-          );
-          setUnreadCount(total);
-        }
+        // Always derive from server-truth — sum unread across conversations
+        const res = await fetch("/api/support?all=true", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const total = (data.conversations || []).reduce(
+          (sum: number, c: { unreadCount?: number; unread_count?: number }) =>
+            sum + (c.unreadCount ?? c.unread_count ?? 0),
+          0
+        );
+        setUnreadCount(total);
       } else {
-        // User: count admin messages since last read
-        const res = await fetch(`/api/support?licenseKey=${session.licenseKey}`);
-        if (res.ok) {
-          const data = await res.json();
-          const messages = data.messages || [];
-          const lastRead = getLastRead();
-          
-          if (!lastRead) {
-            // Never opened support — count all admin messages
-            const adminMsgs = messages.filter(
-              (m: { is_admin: boolean; is_system?: boolean }) => m.is_admin && !m.is_system
-            );
-            setUnreadCount(adminMsgs.length);
-          } else {
-            const lastReadTime = new Date(lastRead).getTime();
-            const unread = messages.filter(
-              (m: { is_admin: boolean; is_system?: boolean; created_at: string }) =>
-                m.is_admin && !m.is_system && new Date(m.created_at).getTime() > lastReadTime
-            );
-            setUnreadCount(unread.length);
-          }
-        }
+        const res = await fetch(
+          `/api/support?licenseKey=${encodeURIComponent(session.licenseKey)}`,
+          { cache: "no-store" }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const messages = (data.messages || []) as Array<{
+          isAdmin?: boolean;
+          isSystem?: boolean;
+          createdAt?: string;
+          is_admin?: boolean;
+          is_system?: boolean;
+          created_at?: string;
+        }>;
+        const lastRead = getLastRead();
+        const lastReadTime = lastRead ? new Date(lastRead).getTime() : 0;
+        const count = messages.filter((m) => {
+          const isAdmin = m.isAdmin ?? m.is_admin ?? false;
+          const isSystem = m.isSystem ?? m.is_system ?? false;
+          const createdAt = new Date(m.createdAt ?? m.created_at ?? 0).getTime();
+          return isAdmin && !isSystem && (lastReadTime === 0 || createdAt > lastReadTime);
+        }).length;
+        setUnreadCount(count);
       }
     } catch {
       // silent
     }
   }, [session?.licenseKey, session?.isAdmin, getLastRead]);
 
-  // Initial fetch on mount only — Realtime handles subsequent updates
+  // Debounced fetch — coalesce burst of realtime events
+  const debouncedFetch = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(fetchUnread, 350);
+  }, [fetchUnread]);
+
+  /* ── Initial fetch ── */
   useEffect(() => {
     if (!session?.licenseKey) return;
     fetchUnread();
   }, [session?.licenseKey, fetchUnread]);
 
-  // Listen for realtime support messages to update count
+  /* ── Refetch on tab visibility ── */
+  useEffect(() => {
+    const onVis = () => {
+      if (!document.hidden) fetchUnread();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [fetchUnread]);
+
+  /* ── Realtime: refetch on any message change instead of local mutation ── */
   useEffect(() => {
     if (!session?.licenseKey || !isSupabaseConfigured) return;
-
     const supabase = createClient();
     if (!supabase) return;
 
     const filter = session.isAdmin
-      ? undefined // Admin listens to ALL support messages
+      ? undefined
       : `license_key=eq.${session.licenseKey}`;
 
     const channel = supabase
@@ -98,39 +114,26 @@ export function useSupportUnread() {
           table: "support_messages",
           ...(filter ? { filter } : {}),
         },
-        (payload) => {
-          const msg = payload.new as {
-            is_admin: boolean;
-            is_system?: boolean;
-            sender_name: string;
-            license_key: string;
-          };
-
-          if (session.isAdmin) {
-            // Admin: count new USER messages (not admin/system)
-            if (!msg.is_admin && !msg.is_system) {
-              if (!isPanelOpenRef.current) {
-                setUnreadCount((prev) => prev + 1);
-              }
-            }
-          } else {
-            // User: count new ADMIN messages
-            if (msg.is_admin && !msg.is_system) {
-              if (!isPanelOpenRef.current) {
-                setUnreadCount((prev) => prev + 1);
-              }
-            }
-          }
-        }
+        () => debouncedFetch()
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "support_messages",
+          ...(filter ? { filter } : {}),
+        },
+        () => debouncedFetch()
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      void supabase.removeChannel(channel);
     };
-  }, [session?.licenseKey, session?.isAdmin]);
+  }, [session?.licenseKey, session?.isAdmin, debouncedFetch]);
 
-  // Mark as read when support panel is opened
   const markAsRead = useCallback(() => {
     if (!session?.licenseKey) return;
     isPanelOpenRef.current = true;
@@ -140,13 +143,18 @@ export function useSupportUnread() {
         `${STORAGE_KEY}-${session.licenseKey}`,
         new Date().toISOString()
       );
-    } catch {}
-  }, [session?.licenseKey]);
+    } catch {
+      // ignore
+    }
+    // Force a fresh count from server right after mark-as-read; this also
+    // triggers admin to re-derive after navigating to support tab.
+    setTimeout(fetchUnread, 250);
+  }, [session?.licenseKey, fetchUnread]);
 
-  // Call when panel closes
   const markPanelClosed = useCallback(() => {
     isPanelOpenRef.current = false;
-  }, []);
+    fetchUnread();
+  }, [fetchUnread]);
 
   return { unreadCount, markAsRead, markPanelClosed };
 }

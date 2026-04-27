@@ -1,112 +1,51 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useSession } from "@/components/providers/session-provider";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+/**
+ * Backwards-compat shim. Existing callsites import { useSupportChat } and
+ * receive { messages, loading, sendMessage }. Internally we delegate to the
+ * v2 composite hook so legacy callers transparently get the new pipeline.
+ */
 
-interface SupportMessage {
-  id: string;
-  license_key: string;
-  content: string;
-  is_admin: boolean;
-  sender_name: string;
-  created_at: string;
-  is_system?: boolean;
+import { useCallback } from "react";
+import { useSession } from "@/components/providers/session-provider";
+import { useSupportChatThread } from "@/hooks/use-support-chat-thread";
+import type { SupportMessage } from "@/types";
+
+export interface UseSupportChatLegacy {
+  messages: SupportMessage[];
+  loading: boolean;
+  sendMessage: (content: string) => Promise<void>;
 }
 
-export function useSupportChat() {
+export function useSupportChat(): UseSupportChatLegacy {
   const { session } = useSession();
-  const [messages, setMessages] = useState<SupportMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const channelRef = useRef<any>(null);
-
-  // Fetch messages
-  useEffect(() => {
-    if (!session?.licenseKey) return;
-
-    const fetchMessages = async () => {
-      try {
-        const res = await fetch(`/api/support?licenseKey=${session.licenseKey}`);
-        if (res.ok) {
-          const data = await res.json();
-          setMessages(data.messages || []);
-        }
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMessages();
-  }, [session?.licenseKey]);
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!session?.licenseKey || !isSupabaseConfigured) return;
-
-    const supabase = createClient();
-    if (!supabase) return;
-
-    const channel = supabase
-      .channel(`support:${session.licenseKey}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "support_messages",
-          filter: `license_key=eq.${session.licenseKey}`,
-        },
-        (payload) => {
-          const newMsg = payload.new as SupportMessage;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-        }
-      )
-      .subscribe();
-
-    channelRef.current = channel;
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [session?.licenseKey]);
+  const thread = useSupportChatThread({
+    licenseKey: session?.licenseKey ?? null,
+    mode: "user",
+  });
 
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!session?.licenseKey || !content.trim()) return;
-
-      try {
-        const res = await fetch("/api/support", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            licenseKey: session.licenseKey,
-            content: content.trim(),
-            isAdmin: session.isAdmin || false,
-            senderName: session.name || "User",
-          }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.message) {
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === data.message.id)) return prev;
-              return [...prev, data.message];
-            });
-          }
-        }
-      } catch {
-        // silent
+      const trimmed = (content || "").trim();
+      if (!trimmed) return;
+      // Legacy callers send "[image]URL\n..." raw — pass through; the
+      // server normalizes it into proper type/media_url.
+      const isImage = trimmed.startsWith("[image]");
+      if (isImage) {
+        const lines = trimmed.split("\n");
+        const url = lines[0].slice(7);
+        const caption = lines.slice(1).join("\n");
+        await thread.sendMessage(caption, { type: "image", mediaUrl: url });
+      } else {
+        await thread.sendMessage(trimmed);
       }
     },
-    [session]
+    [thread]
   );
 
-  return { messages, loading, sendMessage };
+  return {
+    messages: thread.messages,
+    loading: thread.loading,
+    sendMessage,
+  };
 }

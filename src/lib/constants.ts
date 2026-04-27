@@ -62,6 +62,18 @@ export const MAX_DEVICES = 2;
 export const CHAT_MAX_MESSAGES = 100;
 export const MAX_PINNED_MESSAGES = 3;
 
+// Support chat (v2)
+export const SUPPORT_EDIT_WINDOW_MS = 900_000;          // 15 min
+export const SUPPORT_REACTION_RATE_LIMIT_MS = 167;      // ~6/sec
+export const SUPPORT_EDIT_RATE_LIMIT_MS = 2_000;
+export const SUPPORT_TYPING_DEBOUNCE_MS = 1_500;
+export const SUPPORT_TYPING_CLEAR_MS = 3_000;
+export const SUPPORT_MAX_IMAGES = 5;
+export const SUPPORT_MAX_AUDIO_SECONDS = 120;
+export const SUPPORT_GROUP_WINDOW_MS = 5 * 60_000;      // consecutive grouping
+export const SUPPORT_PRESENCE_STALE_MS = 150_000;
+export const SUPPORT_DEFAULT_REACTIONS = ["❤️", "😂", "😮", "😢", "👍", "🔥"] as const;
+
 // Quiz
 export const MAX_POINTS_PER_SUBJECT = 100;
 export const QUIZ_TIMER_SECONDS = 20;
