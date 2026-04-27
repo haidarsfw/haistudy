@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import type { SupportPresenceState, SupportReaderKind } from "@/types";
-import { SUPPORT_PRESENCE_STALE_MS } from "@/lib/constants";
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 15_000;
 
 /**
  * Read presence of the OTHER side of a support conversation.
  * - User panel: pass licenseKey=null → polls /api/support/presence (no qs) → admin aggregate
  * - Admin panel: pass licenseKey=<conversation owner> → polls per-conversation
  *
- * `kind` reflects which side we're reading.
+ * Server is the single source of truth for `online` (derived from last_seen
+ * freshness). No client-side decay timer — that caused flicker against the
+ * server's authoritative response.
  */
 export function useSupportPresence(
   licenseKey: string | null,
@@ -32,7 +33,7 @@ export function useSupportPresence(
         const url = licenseKey
           ? `/api/support/presence?licenseKey=${encodeURIComponent(licenseKey)}`
           : "/api/support/presence";
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: "no-store" });
         if (!res.ok || cancelled) return;
         const data = await res.json();
         setPresence({
@@ -48,19 +49,6 @@ export function useSupportPresence(
     fetchOnce();
     timer = setInterval(fetchOnce, POLL_INTERVAL_MS);
 
-    // Decay: if we know lastSeen, re-evaluate "online" client-side every 30s
-    // even without a new server poll (covers stale presence).
-    const decay = setInterval(() => {
-      setPresence((prev) => {
-        if (!prev.online || !prev.lastSeen) return prev;
-        const age = Date.now() - new Date(prev.lastSeen).getTime();
-        if (age > SUPPORT_PRESENCE_STALE_MS) {
-          return { ...prev, online: false };
-        }
-        return prev;
-      });
-    }, 30_000);
-
     // Refetch immediately when tab regains focus
     const onVis = () => {
       if (!document.hidden) fetchOnce();
@@ -70,7 +58,6 @@ export function useSupportPresence(
     return () => {
       cancelled = true;
       if (timer) clearInterval(timer);
-      clearInterval(decay);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [licenseKey, kind]);
