@@ -61,10 +61,17 @@ export function useSupportPresence(
       });
     }, 30_000);
 
+    // Refetch immediately when tab regains focus
+    const onVis = () => {
+      if (!document.hidden) fetchOnce();
+    };
+    document.addEventListener("visibilitychange", onVis);
+
     return () => {
       cancelled = true;
       if (timer) clearInterval(timer);
       clearInterval(decay);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, [licenseKey, kind]);
 

@@ -16,13 +16,16 @@ export interface UseSupportTypingResult {
 
 /**
  * Subscribes to support:typing:<licenseKey> broadcast channel.
- *  - `myKind`: which side I am — used to filter OUT my own broadcasts.
+ *  - `myKind`: which side I am (admin/user).
+ *  - `myLicenseKey`: my own license_key — used as primary self-filter; works
+ *    even when admin opens user-side panel (kind=admin from server but myKind="user").
  *  - `notifyTyping()`: debounced server-side broadcast (single in-flight request
  *    per debounce window).
  */
 export function useSupportTyping(
   licenseKey: string | null,
-  myKind: SupportReaderKind
+  myKind: SupportReaderKind,
+  myLicenseKey: string | null
 ): UseSupportTypingResult {
   const [typing, setTyping] = useState<SupportTypingState | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -42,8 +45,17 @@ export function useSupportTyping(
           kind?: SupportReaderKind;
           name?: string;
           startedAt?: string;
+          senderKey?: string;
         };
-        if (!data?.kind || data.kind === myKind) return; // ignore self
+        if (!data?.kind) return;
+        // Primary self-filter: by senderKey identity. Robust for admin in
+        // user-panel (kind=admin but senderKey===myLicenseKey).
+        if (data.senderKey) {
+          if (myLicenseKey && data.senderKey === myLicenseKey) return;
+        } else if (data.kind === myKind) {
+          // Backward compat: old payload (mid-deploy) — fall back to kind filter.
+          return;
+        }
         setTyping({
           isTyping: true,
           fromKind: data.kind,
@@ -62,7 +74,7 @@ export function useSupportTyping(
       if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
       void supabase.removeChannel(channel);
     };
-  }, [licenseKey, myKind]);
+  }, [licenseKey, myKind, myLicenseKey]);
 
   /* ── Sender side: notify server ── */
   const notifyTyping = useCallback(() => {

@@ -184,6 +184,7 @@ export function SupportChatThread({
     >
       <SupportMessageList
         messages={thread.messages}
+        licenseKey={licenseKey}
         myKey={myKey}
         myKind={thread.myKind}
         ownerMeta={ownerMeta}

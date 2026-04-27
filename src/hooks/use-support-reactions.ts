@@ -192,6 +192,8 @@ export function useSupportReactions(
         return next;
       });
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8_000);
       try {
         const res = await fetch(
           `/api/support/messages/${encodeURIComponent(messageId)}/reactions`,
@@ -199,9 +201,23 @@ export function useSupportReactions(
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ emoji }),
+            credentials: "same-origin",
+            signal: controller.signal,
           }
         );
+        clearTimeout(timeoutId);
         if (!res.ok) {
+          let body = "";
+          try {
+            body = await res.text();
+          } catch {
+            // ignore
+          }
+          console.warn(
+            "[support reactions] toggle failed",
+            res.status,
+            body.slice(0, 200)
+          );
           // Rollback: restore previous state for this (messageId, emoji)
           setByMsg((prev) => {
             const next = new Map(prev);
@@ -226,7 +242,9 @@ export function useSupportReactions(
         }
         // Server canonical state will arrive via realtime; the dedup logic
         // in the INSERT handler upgrades temp → real.
-      } catch {
+      } catch (err) {
+        clearTimeout(timeoutId);
+        console.warn("[support reactions] network/abort", err);
         // Rollback on network failure
         setByMsg((prev) => {
           const next = new Map(prev);

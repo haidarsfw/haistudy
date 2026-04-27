@@ -39,14 +39,20 @@ export async function GET(req: NextRequest) {
     const online = rows.some(
       (r) => r.online && new Date(r.last_seen as string).toISOString() >= cutoff
     );
-    const lastSeen =
-      rows.length > 0
-        ? (rows.sort(
-            (a, b) =>
-              new Date(b.last_seen as string).getTime() -
-              new Date(a.last_seen as string).getTime()
-          )[0].last_seen as string)
-        : null;
+    const STALE_DISPLAY_MS_USER = 24 * 60 * 60 * 1000;
+    let lastSeen: string | null = null;
+    if (rows.length > 0) {
+      const sorted = [...rows].sort(
+        (a, b) =>
+          new Date(b.last_seen as string).getTime() -
+          new Date(a.last_seen as string).getTime()
+      );
+      const newest = sorted[0].last_seen as string;
+      const ageMs = Date.now() - new Date(newest).getTime();
+      if (ageMs < STALE_DISPLAY_MS_USER) {
+        lastSeen = newest;
+      }
+    }
 
     return NextResponse.json({ online, lastSeen, kind: "user" });
   }
@@ -72,14 +78,24 @@ export async function GET(req: NextRequest) {
   const online = rows.some(
     (r) => r.online && new Date(r.last_seen as string).toISOString() >= cutoff
   );
-  const lastSeen =
-    rows.length > 0
-      ? (rows.sort(
-          (a, b) =>
-            new Date(b.last_seen as string).getTime() -
-            new Date(a.last_seen as string).getTime()
-        )[0].last_seen as string)
-      : null;
+
+  // Pick the freshest last_seen — but if all admin rows are >24h stale,
+  // suppress the value so the UI shows "Belum pernah aktif" instead of a
+  // misleading frozen "1 hour ago".
+  const STALE_DISPLAY_MS = 24 * 60 * 60 * 1000;
+  let lastSeen: string | null = null;
+  if (rows.length > 0) {
+    const sorted = [...rows].sort(
+      (a, b) =>
+        new Date(b.last_seen as string).getTime() -
+        new Date(a.last_seen as string).getTime()
+    );
+    const newest = sorted[0].last_seen as string;
+    const ageMs = Date.now() - new Date(newest).getTime();
+    if (ageMs < STALE_DISPLAY_MS) {
+      lastSeen = newest;
+    }
+  }
 
   return NextResponse.json({ online, lastSeen, kind: "admin" });
 }

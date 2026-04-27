@@ -180,11 +180,20 @@ export function rateLimit(key: string, perMs: number, max = 1): boolean {
 /**
  * Broadcast a typing event from the server using service-role.
  * Client subscribes to channel `support:typing:<licenseKey>`.
+ *
+ * `senderKey` lets the receiving client filter out broadcasts originated by
+ * itself even when its `kind` differs from the broadcast's kind (e.g. admin
+ * using the user-side panel).
  */
 export async function broadcastTyping(
   supabase: SupabaseClient,
   licenseKey: string,
-  payload: { kind: "user" | "admin"; name: string; startedAt: string }
+  payload: {
+    kind: "user" | "admin";
+    name: string;
+    startedAt: string;
+    senderKey: string;
+  }
 ): Promise<void> {
   const channel = supabase.channel(`support:typing:${licenseKey}`);
   await new Promise<void>((resolve) => {

@@ -21,6 +21,8 @@ interface AuthorMeta {
 
 interface Props {
   messages: SupportMessage[];
+  /** Conversation owner key — used to reset scroll/initial state on switch. */
+  licenseKey: string | null;
   myKey: string | null;
   myKind: SupportReaderKind;
   ownerMeta?: AuthorMeta;
@@ -132,6 +134,7 @@ function buildRenderItems(messages: SupportMessage[]): RenderItem[] {
 
 export function SupportMessageList({
   messages,
+  licenseKey,
   myKey,
   myKind,
   ownerMeta,
@@ -186,6 +189,15 @@ export function SupportMessageList({
 
   /* ── Force-scroll on initial load + when count goes from 0 ── */
   const initialDone = useRef(false);
+
+  // Reset auto-scroll trigger when conversation switches
+  useEffect(() => {
+    initialDone.current = false;
+    lastMessageIdRef.current = null;
+    setIsAtBottom(true);
+    setUnreadCount(0);
+  }, [licenseKey]);
+
   useEffect(() => {
     if (!loading && !initialDone.current && messages.length > 0 && scrollRef.current) {
       initialDone.current = true;

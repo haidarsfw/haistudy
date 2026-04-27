@@ -4,6 +4,7 @@ import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { useVoice } from "@/components/providers/voice-provider";
+import { usePresence } from "@/hooks/use-presence";
 import { VoiceRoom } from "@/components/voice/voice-room";
 import { VoiceMiniBar } from "@/components/voice/voice-mini-bar";
 import { toast } from "sonner";
@@ -17,6 +18,9 @@ export function AdminShell({
   const router = useRouter();
   const { session, isLoading } = useSession();
   const voice = useVoice();
+  // Heartbeat presence so admins appear online to support chat users
+  // (admin-shell is the only layout for /admin/* — does not wrap AppShell).
+  usePresence(null);
 
   useEffect(() => {
     if (!isLoading && (!session || !session.isAdmin)) {

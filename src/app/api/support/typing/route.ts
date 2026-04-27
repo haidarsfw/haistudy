@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       kind: sender.isAdmin ? "admin" : "user",
       name: sender.name ?? sender.licenseKey.slice(0, 8),
       startedAt: new Date().toISOString(),
+      senderKey: sender.licenseKey,
     });
 
     return NextResponse.json({ success: true });

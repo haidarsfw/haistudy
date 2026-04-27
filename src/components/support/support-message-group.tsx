@@ -57,9 +57,15 @@ export function SupportMessageGroup({
   return (
     <div className="space-y-0.5">
       {messages.map((m, i) => {
-        const isOwn =
-          (myKind === "admin" && m.isAdmin) ||
-          (myKind === "user" && !m.isAdmin && !m.isSystem);
+        // Prefer authorLicenseKey-based check (works correctly when admin opens
+        // user-side panel: myKind="user" but message authored by admin self).
+        // Fallback to legacy logic for legacy rows pre-author_license_key column.
+        const isOwn = m.isSystem
+          ? false
+          : m.authorLicenseKey
+            ? m.authorLicenseKey === myKey
+            : (myKind === "admin" && m.isAdmin) ||
+              (myKind === "user" && !m.isAdmin && !m.isSystem);
         // Only the user side gets ownerMeta (admins are uniformly admin role).
         const authorMeta = m.isAdmin ? undefined : ownerMeta;
         return (

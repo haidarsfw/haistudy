@@ -74,7 +74,11 @@ export function useSupportChatThread({
   const messagesHook = useSupportMessages(licenseKey);
   const reactionsHook = useSupportReactions(licenseKey, session?.licenseKey ?? null);
   const receiptsHook = useSupportReadReceipts(licenseKey);
-  const typingHook = useSupportTyping(licenseKey, myKind);
+  const typingHook = useSupportTyping(
+    licenseKey,
+    myKind,
+    session?.licenseKey ?? null
+  );
   // For user side, presence target is "any admin" → pass null. For admin side,
   // presence target is the conversation owner.
   const presenceHook = useSupportPresence(

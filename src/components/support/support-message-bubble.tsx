@@ -123,16 +123,20 @@ export function SupportMessageBubble({
     delay: 450,
   });
 
-  // Close popover when clicking outside
+  // Close popover when clicking outside.
+  // Uses pointerdown (fires before click) but the popover is rendered as a
+  // child of bubbleRef, so contains() returns true for clicks within it —
+  // safe vs. swallowing the emoji button's click event.
   useEffect(() => {
     if (!showReactPopover) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!bubbleRef.current?.contains(e.target as Node)) {
+    const onDoc = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (bubbleRef.current && !bubbleRef.current.contains(target)) {
         setShowReactPopover(false);
       }
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
   }, [showReactPopover]);
 
   const handleReplyQuoteClick = useCallback(() => {
