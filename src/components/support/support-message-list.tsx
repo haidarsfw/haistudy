@@ -13,6 +13,9 @@ import type {
 import { SupportMessageGroup } from "./support-message-group";
 import { SupportTypingIndicator } from "./support-typing-indicator";
 import { SupportJumpToUnread } from "./support-jump-to-unread";
+import { SupportPinnedBar } from "./support-pinned-bar";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { SupportPinnedMessage } from "@/types";
 
 interface AuthorMeta {
   isTester?: boolean;
@@ -42,6 +45,18 @@ interface Props {
   emptyState?: React.ReactNode;
   /** True while messages are being fetched initially. */
   loading?: boolean;
+  /** Locally hidden message IDs (delete-for-me). */
+  hiddenIds?: Set<string>;
+  /** Pin support. */
+  pins?: SupportPinnedMessage[];
+  pinCapReached?: boolean;
+  isPinnedFn?: (messageId: string) => boolean;
+  onPin?: (id: string) => void;
+  onUnpin?: (id: string) => void;
+  /** Admin actions. */
+  onUnsend?: (msg: SupportMessage) => void;
+  onHideForMe?: (id: string) => void;
+  onOpenInfo?: (msg: SupportMessage) => void;
 }
 
 const NEAR_BOTTOM_PX = 80;
@@ -151,6 +166,15 @@ export function SupportMessageList({
   onBottomVisible,
   emptyState,
   loading,
+  hiddenIds,
+  pins,
+  pinCapReached,
+  isPinnedFn,
+  onPin,
+  onUnpin,
+  onUnsend,
+  onHideForMe,
+  onOpenInfo,
 }: Props) {
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -159,7 +183,18 @@ export function SupportMessageList({
   const [unreadCount, setUnreadCount] = useState(0);
   const lastMessageIdRef = useRef<string | null>(null);
 
-  const items = useMemo(() => buildRenderItems(messages), [messages]);
+  // Filter locally-hidden messages (delete-for-me) before rendering.
+  const visibleMessages = useMemo(
+    () =>
+      hiddenIds && hiddenIds.size > 0
+        ? messages.filter((m) => !hiddenIds.has(m.id))
+        : messages,
+    [messages, hiddenIds]
+  );
+  const items = useMemo(
+    () => buildRenderItems(visibleMessages),
+    [visibleMessages]
+  );
   const knownIds = useMemo(
     () => new Set(messages.map((m) => m.id)),
     [messages]
@@ -269,16 +304,37 @@ export function SupportMessageList({
 
   return (
     <div className="relative flex-1 min-h-0">
+      {pins && pins.length > 0 && (
+        <SupportPinnedBar
+          pins={pins}
+          messages={messages}
+          isAdmin={myKind === "admin"}
+          onUnpin={(id) => onUnpin?.(id)}
+          onJump={scrollToMessage}
+        />
+      )}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
         className="h-full overflow-x-hidden overflow-y-auto px-1 py-3 [overscroll-behavior:contain]"
       >
-        {loading ? (
-          <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
-            …
+        {loading && messages.length === 0 ? (
+          <div className="space-y-3 px-3 py-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}
+              >
+                <Skeleton
+                  className="h-10 rounded-2xl"
+                  style={{
+                    width: `${40 + ((i * 17) % 40)}%`,
+                  }}
+                />
+              </div>
+            ))}
           </div>
-        ) : messages.length === 0 ? (
+        ) : visibleMessages.length === 0 ? (
           emptyState ?? (
             <div className="py-8 text-center text-xs text-muted-foreground">
               {t("support.no_messages")}
@@ -312,6 +368,13 @@ export function SupportMessageList({
                   onRetry={onRetry}
                   onRemoveFailed={onRemoveFailed}
                   highlightedId={highlightedId}
+                  onUnsend={onUnsend}
+                  onHideForMe={onHideForMe}
+                  onPin={onPin}
+                  onUnpin={onUnpin}
+                  isPinnedFn={isPinnedFn}
+                  pinCapReached={pinCapReached}
+                  onOpenInfo={onOpenInfo}
                 />
               )
             )}

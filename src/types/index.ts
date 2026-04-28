@@ -389,6 +389,9 @@ export interface SupportMessage {
   replyToContent: string | null;
   editedAt: string | null;
   deleted: boolean;
+  unsentBy: string | null;       // license_key of admin who unsent (null = not unsent)
+  unsentAt: string | null;
+  isInternal: boolean;           // admin-only note, not visible to user
   createdAt: string;
   // Client-only ephemeral fields (never serialized to DB):
   clientNonce?: string;
@@ -440,4 +443,20 @@ export interface SupportConversationSummary {
   isAdmin?: boolean;
   isTester?: boolean;
   packageTier?: "share" | "normal" | "vip" | "diamond" | null;
+}
+
+export interface SupportPinnedMessage {
+  id: string;
+  messageId: string;
+  licenseKey: string;
+  pinnedBy: string;
+  pinnedAt: string;
+}
+
+export interface SupportSearchHit {
+  messageId: string;
+  content: string;
+  senderName: string;
+  isAdmin: boolean;
+  createdAt: string;
 }

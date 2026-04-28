@@ -2,7 +2,21 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Reply, Smile, Pencil, MoreHorizontal, RotateCw } from "lucide-react";
+import {
+  Reply,
+  Smile,
+  Pencil,
+  MoreHorizontal,
+  RotateCw,
+  Trash2,
+  Copy as CopyIcon,
+  Check as CheckIcon,
+  Pin,
+  PinOff,
+  Info,
+  EyeOff,
+  Lock,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +26,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useLongPress } from "@/hooks/use-long-press";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import {
   ROLE_COLORS,
   resolveRole,
@@ -60,6 +76,18 @@ interface Props {
   onRemoveFailed?: () => void;
   /** Highlight target — temporarily ring the bubble (set by parent for 1s). */
   highlight?: boolean;
+  /** Admin-only unsend. Provided when myKind='admin'. */
+  onUnsend?: (msg: SupportMessage) => void;
+  /** Hide locally for current user (own message only). */
+  onHideForMe?: (id: string) => void;
+  /** Admin pin/unpin. */
+  onPin?: (id: string) => void;
+  onUnpin?: (id: string) => void;
+  isPinned?: boolean;
+  /** Whether current pin count has reached the cap (disable Pin action). */
+  pinCapReached?: boolean;
+  /** Open the Info modal (long-press / receipt click). */
+  onOpenInfo?: (msg: SupportMessage) => void;
 }
 
 export function SupportMessageBubble({
@@ -78,6 +106,13 @@ export function SupportMessageBubble({
   onImageClick,
   onReplyQuoteClick,
   replyExists = true,
+  onUnsend,
+  onHideForMe,
+  onPin,
+  onUnpin,
+  isPinned,
+  pinCapReached,
+  onOpenInfo,
   onRetry,
   onRemoveFailed,
   highlight,
@@ -87,6 +122,8 @@ export function SupportMessageBubble({
   const [showReactPopover, setShowReactPopover] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const { copied, copy } = useCopyToClipboard();
+  const reducedMotion = useReducedMotion();
 
   // Tick once per minute so canEdit transitions cleanly from true→false at 15min
   useEffect(() => {
@@ -162,9 +199,9 @@ export function SupportMessageBubble({
     <SupportSwipeReplyWrapper onReply={handleReplyAction} disabled={message.isSystem}>
       <motion.div
         layout
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18 }}
+        initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+        animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+        transition={{ duration: reducedMotion ? 0.04 : 0.18 }}
         className={`group relative flex w-full min-w-0 gap-2 px-3 py-1 ${
           isOwn ? "justify-end" : "justify-start"
         }`}
@@ -185,11 +222,21 @@ export function SupportMessageBubble({
             </span>
           )}
 
+          {/* Internal-note label */}
+          {message.isInternal && (
+            <span className="mb-0.5 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+              <Lock className="h-2.5 w-2.5" />
+              {t("support.internal_note_admin_only")}
+            </span>
+          )}
+
           <div
             ref={bubbleRef}
             {...longPress}
             className={`relative min-w-0 max-w-full overflow-hidden rounded-2xl px-3 py-2 shadow-sm ${
-              isOwn
+              message.isInternal
+                ? "border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-100"
+                : isOwn
                 ? "bg-primary text-primary-foreground"
                 : message.isAdmin
                   ? "border border-primary/20 bg-primary/10 text-foreground"
@@ -310,18 +357,88 @@ export function SupportMessageBubble({
           >
             <Reply className="h-3.5 w-3.5" />
           </Button>
-          {canEdit && (
+          {(canEdit ||
+            (myKind === "admin" && onUnsend) ||
+            (isOwn && onHideForMe) ||
+            (myKind === "admin" && (onPin || onUnpin)) ||
+            onOpenInfo ||
+            message.type === "text") && (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={<Button variant="ghost" size="icon" className="h-7 w-7" />}
               >
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32">
-                <DropdownMenuItem onClick={() => onEdit(message)}>
-                  <Pencil className="mr-2 h-3.5 w-3.5" />
-                  {t("support.edit")}
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-44">
+                {message.type === "text" && message.content && (
+                  <DropdownMenuItem
+                    onClick={() => copy(message.content)}
+                  >
+                    {copied ? (
+                      <CheckIcon className="mr-2 h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <CopyIcon className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    {copied ? t("support.copied") : t("support.copy")}
+                  </DropdownMenuItem>
+                )}
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(message)}>
+                    <Pencil className="mr-2 h-3.5 w-3.5" />
+                    {t("support.edit")}
+                  </DropdownMenuItem>
+                )}
+                {isOwn && onOpenInfo && (
+                  <DropdownMenuItem onClick={() => onOpenInfo(message)}>
+                    <Info className="mr-2 h-3.5 w-3.5" />
+                    {t("support.message_info")}
+                  </DropdownMenuItem>
+                )}
+                {myKind === "admin" &&
+                  onPin &&
+                  onUnpin &&
+                  !message.isInternal &&
+                  !message.deleted && (
+                    <DropdownMenuItem
+                      onClick={() =>
+                        isPinned ? onUnpin(message.id) : onPin(message.id)
+                      }
+                      disabled={!isPinned && pinCapReached}
+                    >
+                      {isPinned ? (
+                        <>
+                          <PinOff className="mr-2 h-3.5 w-3.5" />
+                          {t("support.unpin_message")}
+                        </>
+                      ) : (
+                        <>
+                          <Pin className="mr-2 h-3.5 w-3.5" />
+                          {t("support.pin_message")}
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                  )}
+                {isOwn && onHideForMe && (
+                  <DropdownMenuItem
+                    onClick={() => onHideForMe(message.id)}
+                    className="text-amber-600 focus:text-amber-600"
+                  >
+                    <EyeOff className="mr-2 h-3.5 w-3.5" />
+                    {t("support.hide_for_me")}
+                  </DropdownMenuItem>
+                )}
+                {myKind === "admin" &&
+                  onUnsend &&
+                  !message.deleted &&
+                  !message.isSystem && (
+                    <DropdownMenuItem
+                      onClick={() => onUnsend(message)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      {t("support.unsend_for_everyone")}
+                    </DropdownMenuItem>
+                  )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

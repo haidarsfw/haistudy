@@ -31,6 +31,7 @@ interface SendOptions {
   type?: "text" | "image" | "audio";
   mediaUrl?: string | null;
   replyTo?: { id: string; name: string; content: string } | null;
+  isInternal?: boolean;
 }
 
 export interface UseSupportChatThreadResult {
@@ -51,6 +52,7 @@ export interface UseSupportChatThreadResult {
     error?: string;
     code?: string;
   }>;
+  unsendMessage: (id: string) => Promise<{ ok: boolean; error?: string }>;
   toggleReaction: (id: string, emoji: string) => Promise<void>;
   isReactionInflight: (id: string, emoji: string) => boolean;
   markReadUpTo: (messageId: string) => Promise<void>;
@@ -71,7 +73,10 @@ export function useSupportChatThread({
   const myKind: SupportReaderKind = mode === "admin" ? "admin" : "user";
   const myName = session?.name ?? (mode === "admin" ? "Admin" : "User");
 
-  const messagesHook = useSupportMessages(licenseKey);
+  const messagesHook = useSupportMessages(
+    licenseKey,
+    Boolean(session?.isAdmin)
+  );
   const reactionsHook = useSupportReactions(licenseKey, session?.licenseKey ?? null);
   const receiptsHook = useSupportReadReceipts(licenseKey);
   const typingHook = useSupportTyping(
@@ -109,6 +114,7 @@ export function useSupportChatThread({
 
     sendMessage,
     editMessage: messagesHook.editMessage,
+    unsendMessage: messagesHook.unsendMessage,
     toggleReaction: reactionsHook.toggleReaction,
     isReactionInflight: reactionsHook.isInflight,
     markReadUpTo: receiptsHook.markReadUpTo,

@@ -9,6 +9,7 @@ import {
   SUPPORT_EDIT_RATE_LIMIT_MS,
   SUPPORT_EDIT_WINDOW_MS,
 } from "@/lib/constants";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 
 /**
  * PATCH /api/support/messages/[id]
@@ -94,6 +95,106 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true, message: rowToSupportMessage(updated) });
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
+/**
+ * DELETE /api/support/messages/[id]
+ * Unsend a message — admin-only privilege. Soft-deletes by setting:
+ *   - deleted = true
+ *   - unsent_by = admin license key
+ *   - unsent_at = now()
+ *   - content cleared, media_url nulled
+ * Then cascades:
+ *   - Removes all reactions on this message
+ *   - Removes from pinned messages (if pinned)
+ * Realtime UPDATE event auto-propagates to both sides.
+ */
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: "Missing message id" }, { status: 400 });
+    }
+
+    if (!(await isAdminFromCookies())) {
+      return NextResponse.json(
+        { error: "Admin only" },
+        { status: 403 }
+      );
+    }
+
+    const sender = await resolveSupportSender();
+    if (!sender.licenseKey) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isSupabaseServerConfigured) {
+      return NextResponse.json(
+        { error: "Supabase not configured" },
+        { status: 503 }
+      );
+    }
+
+    const supabase = createServerClient()!;
+
+    const { data: row, error: fetchErr } = await supabase
+      .from("support_messages")
+      .select("id, deleted, is_system")
+      .eq("id", id)
+      .maybeSingle();
+    if (fetchErr) {
+      return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+    }
+    if (!row) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    if (row.is_system) {
+      return NextResponse.json(
+        { error: "Cannot unsend system message" },
+        { status: 400 }
+      );
+    }
+    if (row.deleted) {
+      return NextResponse.json(
+        { error: "Already unsent" },
+        { status: 409 }
+      );
+    }
+
+    const { data: updated, error: updErr } = await supabase
+      .from("support_messages")
+      .update({
+        deleted: true,
+        unsent_by: sender.licenseKey,
+        unsent_at: new Date().toISOString(),
+        content: "",
+        media_url: null,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updErr) {
+      return NextResponse.json({ error: updErr.message }, { status: 500 });
+    }
+
+    // Cascade: remove reactions + pin (best-effort; failures don't undo unsend)
+    await supabase.from("support_reactions").delete().eq("message_id", id);
+    await supabase
+      .from("support_pinned_messages")
+      .delete()
+      .eq("message_id", id);
+
+    return NextResponse.json({
+      success: true,
+      message: rowToSupportMessage(updated),
+    });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }

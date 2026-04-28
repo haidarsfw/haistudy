@@ -1,9 +1,10 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { AudioPlayer } from "@/components/chat/audio-player";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { SupportMessage } from "@/types";
+import { SupportMessageRendered } from "./support-message-rendered";
 
 interface Props {
   message: SupportMessage;
@@ -47,9 +48,13 @@ function resolve(m: SupportMessage): Resolved {
 export function SupportMessageContent({ message, onImageClick }: Props) {
   const { t } = useTranslation();
   if (message.deleted) {
+    const label = message.unsentBy
+      ? t("support.unsent_by_admin")
+      : t("support.message_deleted");
     return (
-      <p className="text-xs italic text-muted-foreground">
-        {t("support.message_deleted")}
+      <p className="flex items-center gap-1 text-xs italic text-muted-foreground">
+        <ShieldAlert className="h-3 w-3 opacity-70" />
+        {label}
       </p>
     );
   }
@@ -85,16 +90,10 @@ export function SupportMessageContent({ message, onImageClick }: Props) {
             loading="lazy"
           />
         </button>
-        {r.caption && (
-          <p className="break-words whitespace-pre-wrap text-xs">{r.caption}</p>
-        )}
+        {r.caption && <SupportMessageRendered content={r.caption} />}
       </div>
     );
   }
 
-  return (
-    <p className="break-words whitespace-pre-wrap text-sm leading-relaxed">
-      {r.text}
-    </p>
-  );
+  return <SupportMessageRendered content={r.text} />;
 }

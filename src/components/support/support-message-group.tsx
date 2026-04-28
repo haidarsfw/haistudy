@@ -30,6 +30,13 @@ interface Props {
   onRetry?: (clientNonce: string) => void;
   onRemoveFailed?: (clientNonce: string) => void;
   highlightedId?: string | null;
+  onUnsend?: (msg: SupportMessage) => void;
+  onHideForMe?: (id: string) => void;
+  onPin?: (id: string) => void;
+  onUnpin?: (id: string) => void;
+  isPinnedFn?: (id: string) => boolean;
+  pinCapReached?: boolean;
+  onOpenInfo?: (msg: SupportMessage) => void;
 }
 
 /**
@@ -53,6 +60,13 @@ export function SupportMessageGroup({
   onRetry,
   onRemoveFailed,
   highlightedId,
+  onUnsend,
+  onHideForMe,
+  onPin,
+  onUnpin,
+  isPinnedFn,
+  pinCapReached,
+  onOpenInfo,
 }: Props) {
   return (
     <div className="space-y-0.5">
@@ -95,6 +109,13 @@ export function SupportMessageGroup({
                 : undefined
             }
             highlight={highlightedId === m.id}
+            onUnsend={onUnsend}
+            onHideForMe={onHideForMe}
+            onPin={onPin}
+            onUnpin={onUnpin}
+            isPinned={isPinnedFn ? isPinnedFn(m.id) : false}
+            pinCapReached={pinCapReached}
+            onOpenInfo={onOpenInfo}
           />
         );
       })}

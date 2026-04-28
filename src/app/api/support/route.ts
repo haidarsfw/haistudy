@@ -24,6 +24,9 @@ interface LegacyRow {
   reply_to_content: string | null;
   edited_at: string | null;
   deleted: boolean;
+  unsent_by: string | null;
+  unsent_at: string | null;
+  is_internal: boolean;
   client_nonce: string | null;
   created_at: string;
 }
@@ -105,9 +108,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing licenseKey" }, { status: 400 });
   }
 
+  // Internal-note filter: non-admin requesters never see is_internal=true rows
+  const requesterIsAdmin = await isAdminFromCookies();
+
   if (!isSupabaseServerConfigured) {
     const filtered = memoryStore
-      .filter((m) => m.license_key === licenseKey)
+      .filter(
+        (m) =>
+          m.license_key === licenseKey &&
+          (requesterIsAdmin || !(m as { is_internal?: boolean }).is_internal)
+      )
       .sort(
         (a, b) =>
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -117,11 +127,14 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createServerClient()!;
-  const { data, error } = await supabase
+  let query = supabase
     .from("support_messages")
     .select("*")
-    .eq("license_key", licenseKey)
-    .order("created_at", { ascending: true });
+    .eq("license_key", licenseKey);
+  if (!requesterIsAdmin) {
+    query = query.eq("is_internal", false);
+  }
+  const { data, error } = await query.order("created_at", { ascending: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -145,6 +158,7 @@ export async function POST(req: NextRequest) {
       replyToId,
       replyToName,
       replyToContent,
+      isInternal: rawIsInternal,
       clientNonce,
     } = body as {
       licenseKey?: string;
@@ -155,6 +169,7 @@ export async function POST(req: NextRequest) {
       replyToId?: string | null;
       replyToName?: string | null;
       replyToContent?: string | null;
+      isInternal?: boolean;
       clientNonce?: string | null;
     };
 
@@ -185,13 +200,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    content = content.slice(0, 2000);
+    content = content.slice(0, 4000); // markdown allows longer
 
     if (type === "text" && !content) {
       return NextResponse.json({ error: "Empty message" }, { status: 400 });
     }
     if ((type === "image" || type === "audio") && !mediaUrl) {
       return NextResponse.json({ error: "Missing media URL" }, { status: 400 });
+    }
+
+    // Internal-note: admin-only privilege
+    const isInternal = Boolean(rawIsInternal);
+    if (isInternal && !isAdmin) {
+      return NextResponse.json(
+        { error: "Internal notes are admin-only" },
+        { status: 403 }
+      );
     }
 
     if (!isSupabaseServerConfigured) {
@@ -220,6 +244,9 @@ export async function POST(req: NextRequest) {
         reply_to_content: replyToContent ?? null,
         edited_at: null,
         deleted: false,
+        unsent_by: null,
+        unsent_at: null,
+        is_internal: isInternal,
         client_nonce: clientNonce ?? null,
         created_at: new Date().toISOString(),
       };
@@ -260,6 +287,7 @@ export async function POST(req: NextRequest) {
         reply_to_id: replyToId ?? null,
         reply_to_name: replyToName ?? null,
         reply_to_content: replyToContent ?? null,
+        is_internal: isInternal,
         client_nonce: clientNonce ?? null,
       })
       .select()
@@ -332,6 +360,9 @@ export async function PATCH(req: NextRequest) {
         reply_to_content: null,
         edited_at: null,
         deleted: false,
+        unsent_by: null,
+        unsent_at: null,
+        is_internal: false,
         client_nonce: null,
         created_at: new Date().toISOString(),
       };
@@ -377,10 +408,12 @@ function buildSummary(
   msgs: SupportMessage[],
   role?: { isAdmin: boolean; isTester: boolean; packageTier: string | null }
 ): SupportConversationSummary {
-  const visible = msgs.filter((m) => !m.deleted);
+  // Last preview: skip deleted + internal notes (those don't represent
+  // conversation surface activity for the admin sidebar).
+  const visible = msgs.filter((m) => !m.deleted && !m.isInternal);
   const last = visible[visible.length - 1] ?? msgs[msgs.length - 1];
-  const userMsgs = msgs.filter((m) => !m.isAdmin && !m.isSystem);
-  const adminMsgs = msgs.filter((m) => m.isAdmin && !m.isSystem);
+  const userMsgs = msgs.filter((m) => !m.isAdmin && !m.isSystem && !m.isInternal);
+  const adminMsgs = msgs.filter((m) => m.isAdmin && !m.isSystem && !m.isInternal);
 
   const lastSystemResolve = [...msgs]
     .reverse()

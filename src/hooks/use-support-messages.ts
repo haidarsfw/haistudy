@@ -12,6 +12,7 @@ interface SendOptions {
   type?: "text" | "image" | "audio";
   mediaUrl?: string | null;
   replyTo?: { id: string; name: string; content: string } | null;
+  isInternal?: boolean;
 }
 
 const PENDING_CAP = 20;
@@ -33,6 +34,7 @@ export interface UseSupportMessagesResult {
     error?: string;
     code?: string;
   }>;
+  unsendMessage: (id: string) => Promise<{ ok: boolean; error?: string }>;
   retryFailed: (clientNonce: string, senderName: string) => Promise<void>;
   removeFailed: (clientNonce: string) => void;
 }
@@ -41,8 +43,15 @@ export interface UseSupportMessagesResult {
  * Source of truth for messages in a single support conversation.
  * Handles initial fetch, INSERT/UPDATE/DELETE realtime, optimistic send with
  * client_nonce dedup, and edit propagation.
+ *
+ * @param viewerIsAdmin if false, internal-note rows are filtered out client-side
+ *   as defense-in-depth (server already filters in GET; realtime broadcast may
+ *   still deliver them, so we drop on insert/update).
  */
-export function useSupportMessages(licenseKey: string | null): UseSupportMessagesResult {
+export function useSupportMessages(
+  licenseKey: string | null,
+  viewerIsAdmin: boolean
+): UseSupportMessagesResult {
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -121,32 +130,45 @@ export function useSupportMessages(licenseKey: string | null): UseSupportMessage
     };
   }, [licenseKey]);
 
-  const applyInsert = useCallback((raw: Record<string, unknown>) => {
-    const incoming = rawToCamel(raw);
-    setMessages((prev) => {
-      // Dedup by id
-      if (prev.some((m) => m.id === incoming.id)) return prev;
-      // Match optimistic by clientNonce (replace pending)
-      if (incoming.clientNonce) {
-        const idx = prev.findIndex((m) => m.clientNonce === incoming.clientNonce);
-        if (idx >= 0) {
-          const next = [...prev];
-          next[idx] = { ...incoming, status: "sent" as SupportSendStatus };
-          return next;
+  const applyInsert = useCallback(
+    (raw: Record<string, unknown>) => {
+      const incoming = rawToCamel(raw);
+      // Drop internal notes for non-admin viewers (defense-in-depth)
+      if (incoming.isInternal && !viewerIsAdmin) return;
+      setMessages((prev) => {
+        // Dedup by id
+        if (prev.some((m) => m.id === incoming.id)) return prev;
+        // Match optimistic by clientNonce (replace pending)
+        if (incoming.clientNonce) {
+          const idx = prev.findIndex((m) => m.clientNonce === incoming.clientNonce);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...incoming, status: "sent" as SupportSendStatus };
+            return next;
+          }
         }
-      }
-      return insertSortedByCreatedAt(prev, incoming);
-    });
-  }, []);
+        return insertSortedByCreatedAt(prev, incoming);
+      });
+    },
+    [viewerIsAdmin]
+  );
 
-  const applyUpdate = useCallback((raw: Record<string, unknown>) => {
-    const incoming = rawToCamel(raw);
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === incoming.id ? { ...incoming, status: "sent" } : m
-      )
-    );
-  }, []);
+  const applyUpdate = useCallback(
+    (raw: Record<string, unknown>) => {
+      const incoming = rawToCamel(raw);
+      // If row flipped to internal-note for non-admin → drop it locally
+      if (incoming.isInternal && !viewerIsAdmin) {
+        setMessages((prev) => prev.filter((m) => m.id !== incoming.id));
+        return;
+      }
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === incoming.id ? { ...incoming, status: "sent" } : m
+        )
+      );
+    },
+    [viewerIsAdmin]
+  );
 
   /* ─────────────── Send (optimistic) ─────────────── */
   const sendMessage = useCallback(
@@ -177,6 +199,9 @@ export function useSupportMessages(licenseKey: string | null): UseSupportMessage
         replyToContent: opts.replyTo?.content ?? null,
         editedAt: null,
         deleted: false,
+        unsentBy: null,
+        unsentAt: null,
+        isInternal: opts.isInternal ?? false,
         createdAt: new Date().toISOString(),
         clientNonce: cn,
         status: "sending",
@@ -197,6 +222,7 @@ export function useSupportMessages(licenseKey: string | null): UseSupportMessage
             replyToId: opts.replyTo?.id ?? null,
             replyToName: opts.replyTo?.name ?? null,
             replyToContent: opts.replyTo?.content ?? null,
+            isInternal: opts.isInternal ?? false,
             clientNonce: cn,
           }),
         });
@@ -244,6 +270,34 @@ export function useSupportMessages(licenseKey: string | null): UseSupportMessage
         const updated = data.message as SupportMessage | undefined;
         if (updated) {
           setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+        }
+        return { ok: true };
+      } catch {
+        return { ok: false, error: "Network error" };
+      }
+    },
+    []
+  );
+
+  /* ─────────────── Unsend (admin only — server enforces) ─────────────── */
+  const unsendMessage = useCallback(
+    async (id: string): Promise<{ ok: boolean; error?: string }> => {
+      try {
+        const res = await fetch(
+          `/api/support/messages/${encodeURIComponent(id)}`,
+          { method: "DELETE" }
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return { ok: false, error: data.error };
+        }
+        const data = await res.json();
+        const updated = data.message as SupportMessage | undefined;
+        if (updated) {
+          // Optimistic local update — realtime UPDATE event will reconcile
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updated.id ? updated : m))
+          );
         }
         return { ok: true };
       } catch {
@@ -303,7 +357,15 @@ export function useSupportMessages(licenseKey: string | null): UseSupportMessage
     setMessages((prev) => prev.filter((m) => m.clientNonce !== clientNonce));
   }, []);
 
-  return { messages, loading, sendMessage, editMessage, retryFailed, removeFailed };
+  return {
+    messages,
+    loading,
+    sendMessage,
+    editMessage,
+    unsendMessage,
+    retryFailed,
+    removeFailed,
+  };
 }
 
 /* ─────────────── Helpers ─────────────── */
@@ -333,6 +395,9 @@ function rawToCamel(raw: Record<string, unknown>): SupportMessage {
     reply_to_content?: string | null;
     edited_at?: string | null;
     deleted?: boolean;
+    unsent_by?: string | null;
+    unsent_at?: string | null;
+    is_internal?: boolean;
     client_nonce?: string | null;
     created_at: string;
   };
@@ -364,6 +429,9 @@ function rawToCamel(raw: Record<string, unknown>): SupportMessage {
     replyToContent: r.reply_to_content ?? null,
     editedAt: r.edited_at ?? null,
     deleted: Boolean(r.deleted),
+    unsentBy: r.unsent_by ?? null,
+    unsentAt: r.unsent_at ?? null,
+    isInternal: Boolean(r.is_internal),
     createdAt: r.created_at,
     clientNonce: r.client_nonce ?? undefined,
   };

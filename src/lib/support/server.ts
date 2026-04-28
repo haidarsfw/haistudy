@@ -74,6 +74,9 @@ type RawMessageRow = {
   reply_to_content?: string | null;
   edited_at?: string | null;
   deleted?: boolean | null;
+  unsent_by?: string | null;
+  unsent_at?: string | null;
+  is_internal?: boolean | null;
   client_nonce?: string | null;
   created_at: string;
 };
@@ -109,6 +112,9 @@ export function rowToSupportMessage(row: RawMessageRow): SupportMessage {
     replyToContent: row.reply_to_content ?? null,
     editedAt: row.edited_at ?? null,
     deleted: Boolean(row.deleted),
+    unsentBy: row.unsent_by ?? null,
+    unsentAt: row.unsent_at ?? null,
+    isInternal: Boolean(row.is_internal),
     createdAt: row.created_at,
     clientNonce: row.client_nonce ?? undefined,
     status: "sent",
@@ -154,6 +160,24 @@ export function rowToSupportReceipt(row: RawReceiptRow): SupportReadReceipt {
     messageId: row.message_id,
     readerKind: row.reader_kind,
     readAt: row.read_at,
+  };
+}
+
+type RawPinRow = {
+  id: string;
+  message_id: string;
+  license_key: string;
+  pinned_by: string;
+  pinned_at: string;
+};
+
+export function rowToSupportPin(row: RawPinRow): import("@/types").SupportPinnedMessage {
+  return {
+    id: row.id,
+    messageId: row.message_id,
+    licenseKey: row.license_key,
+    pinnedBy: row.pinned_by,
+    pinnedAt: row.pinned_at,
   };
 }
 

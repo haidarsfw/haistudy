@@ -41,7 +41,10 @@ interface Props {
   onCancelEdit: () => void;
   onSendText: (
     content: string,
-    opts?: { replyTo?: { id: string; name: string; content: string } | null }
+    opts?: {
+      replyTo?: { id: string; name: string; content: string } | null;
+      isInternal?: boolean;
+    }
   ) => Promise<unknown>;
   onSendImage: (
     url: string,
@@ -58,6 +61,8 @@ interface Props {
   dropContainerRef: React.RefObject<HTMLElement | null>;
   /** Mobile bottom-sheet width hint. Defaults to 384. */
   isMobile?: boolean;
+  /** Show internal-note toggle (admin only). */
+  isAdmin?: boolean;
 }
 
 interface PendingImage {
@@ -79,6 +84,7 @@ export function SupportMessageInput({
   onTyping,
   dropContainerRef,
   isMobile = false,
+  isAdmin = false,
 }: Props) {
   const { t } = useTranslation();
   const [text, setText] = useState("");
@@ -86,6 +92,7 @@ export function SupportMessageInput({
   const [sending, setSending] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [internalNote, setInternalNote] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -237,11 +244,17 @@ export function SupportMessageInput({
           );
         }
       } else {
-        await onSendText(trimmed, reply ? { replyTo: reply } : undefined);
+        await onSendText(trimmed, {
+          replyTo: reply ?? undefined,
+          isInternal: isAdmin && internalNote,
+        });
       }
       setText("");
       clearImages();
       onCancelReply();
+      // Auto-clear internal-note mode after each send so admins don't accidentally
+      // keep sending internal-only messages.
+      if (internalNote) setInternalNote(false);
     } finally {
       setSending(false);
     }
@@ -255,6 +268,8 @@ export function SupportMessageInput({
     onCancelEdit,
     onSendText,
     onSendImage,
+    isAdmin,
+    internalNote,
     onCancelReply,
     clearImages,
     t,
@@ -434,6 +449,24 @@ export function SupportMessageInput({
         </div>
       )}
 
+      {/* Internal-note indicator (admin only) */}
+      {isAdmin && internalNote && !editTarget && (
+        <div className="mb-2 flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-xs">
+          <Lock className="h-3 w-3 text-amber-700 dark:text-amber-400" />
+          <span className="flex-1 text-amber-800 dark:text-amber-300">
+            {t("support.internal_note_admin_only")}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5"
+            onClick={() => setInternalNote(false)}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+
       {/* Reply preview */}
       {replyTo && !editTarget && (
         <div className="mb-2 flex items-center gap-2 rounded-md border-l-2 border-primary bg-muted/40 px-2 py-1.5 text-xs">
@@ -581,6 +614,25 @@ export function SupportMessageInput({
           </PopoverContent>
         </Popover>
 
+        {/* Internal-note toggle (admin only) */}
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-9 w-9 shrink-0 ${
+              internalNote
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                : ""
+            }`}
+            onClick={() => setInternalNote((v) => !v)}
+            disabled={disabled || showRecordingOverlay || Boolean(editTarget)}
+            aria-label={t("support.internal_note_toggle")}
+            title={t("support.internal_note_toggle")}
+          >
+            <Lock className="h-4 w-4" />
+          </Button>
+        )}
+
         <textarea
           ref={textareaRef}
           rows={1}
@@ -588,10 +640,18 @@ export function SupportMessageInput({
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
           onPaste={onPaste}
-          placeholder={t("support.placeholder")}
-          maxLength={2000}
+          placeholder={
+            internalNote
+              ? t("support.internal_note_label")
+              : t("support.placeholder")
+          }
+          maxLength={4000}
           disabled={disabled || showRecordingOverlay}
-          className="min-h-[36px] max-h-[120px] flex-1 min-w-0 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          className={`min-h-[36px] max-h-[120px] flex-1 min-w-0 resize-none rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+            internalNote
+              ? "border-amber-500/60 focus:border-amber-500 focus:ring-amber-500/30"
+              : "border-border focus:border-primary focus:ring-primary/30"
+          }`}
         />
 
         {/* Mic / Send: mic when input empty, send otherwise */}
