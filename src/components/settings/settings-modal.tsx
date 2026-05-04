@@ -9,6 +9,7 @@ import {
   Clock,
   UserCircle,
   Volume2,
+  Bell,
 } from "lucide-react";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import {
@@ -31,6 +32,7 @@ import { ReminderInput } from "./reminder-input";
 import { PrivacyToggle } from "./privacy-toggle";
 import { ReferralCard } from "./referral-card";
 import { SessionInfo } from "./session-info";
+import { NotificationsSettingsTab } from "@/components/notifications/notifications-settings-tab";
 import { Switch } from "@/components/ui/switch";
 import { APP_VERSION } from "@/lib/constants";
 import { getSoundMuted, setSoundMuted, sounds } from "@/lib/sounds";
@@ -43,6 +45,7 @@ interface SettingsModalProps {
 const TABS = [
   { id: "appearance", icon: Palette, labelKey: "settings.appearance" },
   { id: "study", icon: Clock, labelKey: "settings.study" },
+  { id: "notifications", icon: Bell, labelKey: "settings.notifications" },
   { id: "account", icon: UserCircle, labelKey: "settings.session" },
 ] as const;
 
@@ -225,6 +228,10 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                       </div>
                     </motion.div>
                   </motion.div>
+                )}
+
+                {activeTab === "notifications" && (
+                  <NotificationsSettingsTab />
                 )}
 
                 {activeTab === "account" && (

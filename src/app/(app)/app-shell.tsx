@@ -32,8 +32,22 @@ import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
 import { APP_EVENTS } from "@/lib/events";
 import { useSupportUnread } from "@/hooks/use-support-unread";
+import { ActiveSupportProvider } from "@/components/providers/active-support-provider";
+import { SWRegister } from "@/components/notifications/sw-register";
+import { EnableNotificationsBanner } from "@/components/notifications/enable-notifications-banner";
+import { useSupportNotifier } from "@/hooks/use-support-notifier";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <ActiveSupportProvider>
+      <AppShellInner>{children}</AppShellInner>
+    </ActiveSupportProvider>
+  );
+}
+
+function AppShellInner({ children }: { children: React.ReactNode }) {
+  // Mount once: registers /sw.js + listens for support inserts globally.
+  useSupportNotifier();
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
@@ -220,7 +234,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex h-[100dvh] flex-1 flex-col min-w-0">
         <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} />
         <AnnouncementBanner />
+        <EnableNotificationsBanner />
         <SessionTimeout />
+        <SWRegister />
         <main className="flex-1 overflow-y-auto overflow-x-clip pb-14 sm:pb-0">{children}</main>
       </div>
 

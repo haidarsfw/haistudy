@@ -266,6 +266,10 @@ export function useSettings() {
               recentSubjects: row.recent_subjects ?? [],
               countdownDetailed: row.countdown_detailed ?? true,
               streak: row.streak ?? null,
+              notifSoundEnabled: row.notif_sound_enabled ?? true,
+              notifBrowserEnabled: row.notif_browser_enabled ?? true,
+              notifPushEnabled: row.notif_push_enabled ?? true,
+              notifEmailEnabled: row.notif_email_enabled ?? true,
             };
             setSettingsState(incoming);
             saveLocalSettings(incoming);

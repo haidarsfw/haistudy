@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Bell, BellOff, CheckCircle2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 import { sounds } from "@/lib/sounds";
 import { useSupportConversations } from "@/hooks/use-support-conversations";
 import { useSupportPresence } from "@/hooks/use-support-presence";
+import { useSupportMutes } from "@/hooks/use-support-mutes";
 import { SupportConversationList } from "@/components/support/support-conversation-list";
 import { SupportChatThread } from "@/components/support/support-chat-thread";
 import { SupportPresenceBadge } from "@/components/support/support-presence-badge";
@@ -14,8 +16,18 @@ import { SupportPresenceBadge } from "@/components/support/support-presence-badg
 export function AdminSupportChat() {
   const { conversations, loading, resolveConversation } = useSupportConversations();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   // Track presence of the selected user — admin always sees a "user" presence
   const { presence } = useSupportPresence(selectedKey, "user");
+  const { isMuted, toggle: toggleMute } = useSupportMutes();
+  const muted = selectedKey ? isMuted(selectedKey) : false;
+
+  // Deep-link from web push: /admin?tab=7&lk=KEY auto-selects the conversation.
+  useEffect(() => {
+    const lk = searchParams.get("lk");
+    if (lk && lk !== selectedKey) setSelectedKey(lk);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const selectedConv = useMemo(
     () => conversations.find((c) => c.licenseKey === selectedKey) ?? null,
@@ -110,6 +122,24 @@ export function AdminSupportChat() {
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
+                  {selectedKey && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => {
+                        sounds.click();
+                        toggleMute(selectedKey);
+                      }}
+                      aria-label={muted ? "Unmute" : "Mute"}
+                      title={muted ? "Unmute conversation" : "Mute conversation"}
+                    >
+                      {muted ? (
+                        <BellOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Bell className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
                   {!selectedConv?.isResolved && (
                     <Button
                       variant="outline"

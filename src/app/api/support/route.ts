@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import {
   resolveSupportSender,
   rowToSupportMessage,
 } from "@/lib/support/server";
+import { notifyOnSupportMessage } from "@/lib/notifications/fan-out";
 import type { SupportConversationSummary, SupportMessage } from "@/types";
 
 /* ─────────────────────────── Legacy in-memory fallback ──────────────── */
@@ -314,9 +316,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const message = rowToSupportMessage(data);
+
+    // Background fan-out: in-app row + web push to all eligible recipients.
+    // waitUntil keeps the function alive past the response without blocking it.
+    waitUntil(
+      notifyOnSupportMessage({
+        message,
+        senderLicenseKey: sender.licenseKey ?? "",
+        senderName: senderName,
+        senderIsAdmin: isAdmin,
+      }).catch((e) => console.error("[support] fan-out failed", e))
+    );
+
     return NextResponse.json({
       success: true,
-      message: rowToSupportMessage(data),
+      message,
     });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

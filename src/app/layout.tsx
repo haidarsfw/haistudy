@@ -95,6 +95,13 @@ export default function RootLayout({
     >
       <head>
         <link rel="preconnect" href="https://gvjwxccwuyuhgexypgbn.supabase.co" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="theme-color" content="#0f172a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="haistudy" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var d=JSON.parse(localStorage.getItem("dark"));if(d===false)document.documentElement.classList.remove("dark");else document.documentElement.classList.add("dark");var t=JSON.parse(localStorage.getItem("theme"));if(t)document.documentElement.setAttribute("data-theme",t);var f=JSON.parse(localStorage.getItem("font"));if(f){document.documentElement.setAttribute("data-font",f);var m={jakarta:"var(--font-heading), sans-serif",inter:"var(--font-body), sans-serif",poppins:"var(--font-poppins), sans-serif"};document.documentElement.style.setProperty("--font-sans",m[f]||m.jakarta)}}catch(e){}})()`,

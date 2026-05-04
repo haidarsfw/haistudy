@@ -2,8 +2,30 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const PERMISSION_KEY = "hs-support-notif-permission";
-const OPT_IN_KEY = "hs-support-notif-optin";
+const PERMISSION_KEY = "hs-notif-browser-permission";
+const OPT_IN_KEY = "hs-notif-browser-optin";
+const LEGACY_PERMISSION_KEY = "hs-support-notif-permission";
+const LEGACY_OPT_IN_KEY = "hs-support-notif-optin";
+
+// One-shot key migration for users coming from the support-only build.
+function migrateLegacyKeys() {
+  if (typeof window === "undefined") return;
+  try {
+    const legacyPerm = localStorage.getItem(LEGACY_PERMISSION_KEY);
+    if (legacyPerm && !localStorage.getItem(PERMISSION_KEY)) {
+      localStorage.setItem(PERMISSION_KEY, legacyPerm);
+    }
+    const legacyOpt = localStorage.getItem(LEGACY_OPT_IN_KEY);
+    if (legacyOpt && !localStorage.getItem(OPT_IN_KEY)) {
+      localStorage.setItem(OPT_IN_KEY, legacyOpt);
+    }
+    // Clean up legacy keys so we don't drift
+    if (legacyPerm) localStorage.removeItem(LEGACY_PERMISSION_KEY);
+    if (legacyOpt) localStorage.removeItem(LEGACY_OPT_IN_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 type Status = "default" | "granted" | "denied" | "unsupported";
 
@@ -36,8 +58,12 @@ export function useDesktopNotification(): UseDesktopNotificationResult {
   });
   const [optedIn, setOptedInState] = useState(() => {
     if (typeof window === "undefined") return false;
+    migrateLegacyKeys();
     try {
-      return localStorage.getItem(OPT_IN_KEY) === "1";
+      // Default ON so users who already granted permission get notified by default.
+      const v = localStorage.getItem(OPT_IN_KEY);
+      if (v === null) return true;
+      return v === "1";
     } catch {
       return false;
     }
@@ -112,7 +138,7 @@ export function useDesktopNotification(): UseDesktopNotificationResult {
         const n = new Notification(title, {
           body: body?.slice(0, 200),
           tag,
-          icon: "/icon.png",
+          icon: "/icons/icon-192.png",
           silent: false,
         });
         if (tag) lastNotifTagsRef.current.add(tag);

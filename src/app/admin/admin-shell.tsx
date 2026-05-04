@@ -9,12 +9,25 @@ import { VoiceRoom } from "@/components/voice/voice-room";
 import { VoiceMiniBar } from "@/components/voice/voice-mini-bar";
 import { toast } from "sonner";
 import { sounds } from "@/lib/sounds";
+import { ActiveSupportProvider } from "@/components/providers/active-support-provider";
+import { SWRegister } from "@/components/notifications/sw-register";
+import { EnableNotificationsBanner } from "@/components/notifications/enable-notifications-banner";
+import { useSupportNotifier } from "@/hooks/use-support-notifier";
 
 export function AdminShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <ActiveSupportProvider>
+      <AdminShellInner>{children}</AdminShellInner>
+    </ActiveSupportProvider>
+  );
+}
+
+function AdminShellInner({ children }: { children: React.ReactNode }) {
+  useSupportNotifier();
   const router = useRouter();
   const { session, isLoading } = useSession();
   const voice = useVoice();
@@ -53,6 +66,8 @@ export function AdminShell({
 
   return (
     <div className="min-h-screen bg-background">
+      <SWRegister />
+      <EnableNotificationsBanner />
       {children}
 
       {/* Keep voice connection alive when admin is in a voice room */}

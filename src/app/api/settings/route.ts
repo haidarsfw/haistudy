@@ -22,6 +22,10 @@ function mapRowToSettings(data: Record<string, unknown>): UserSettings {
     recentSubjects: (data.recent_subjects as string[]) ?? [],
     countdownDetailed: (data.countdown_detailed as boolean) ?? true,
     streak: (data.streak as UserSettings["streak"]) ?? null,
+    notifSoundEnabled: (data.notif_sound_enabled as boolean | null) ?? true,
+    notifBrowserEnabled: (data.notif_browser_enabled as boolean | null) ?? true,
+    notifPushEnabled: (data.notif_push_enabled as boolean | null) ?? true,
+    notifEmailEnabled: (data.notif_email_enabled as boolean | null) ?? true,
   };
 }
 
@@ -157,6 +161,10 @@ export async function PUT(request: Request) {
     if ("recentSubjects" in settings) row.recent_subjects = settings.recentSubjects ?? [];
     if ("countdownDetailed" in settings) row.countdown_detailed = settings.countdownDetailed ?? true;
     if ("streak" in settings) row.streak = settings.streak ?? null;
+    if ("notifSoundEnabled" in settings) row.notif_sound_enabled = settings.notifSoundEnabled ?? true;
+    if ("notifBrowserEnabled" in settings) row.notif_browser_enabled = settings.notifBrowserEnabled ?? true;
+    if ("notifPushEnabled" in settings) row.notif_push_enabled = settings.notifPushEnabled ?? true;
+    if ("notifEmailEnabled" in settings) row.notif_email_enabled = settings.notifEmailEnabled ?? true;
 
     const { error } = await supabase.from("user_settings").upsert(
       row,

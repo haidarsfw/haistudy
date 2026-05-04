@@ -9,11 +9,14 @@ import {
   MessageCircle,
   ChevronDown,
   Bug,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useSupportPresence } from "@/hooks/use-support-presence";
+import { useSupportMutes } from "@/hooks/use-support-mutes";
 import { sounds } from "@/lib/sounds";
 import { SupportChatThread } from "./support-chat-thread";
 import { SupportPresenceBadge } from "./support-presence-badge";
@@ -39,6 +42,9 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
   const [activeTab, setActiveTab] = useState<"help" | "chat">("chat");
   // For user panel, presence target is "any admin" — pass null to the hook.
   const { presence: adminPresence } = useSupportPresence(null, "admin");
+  const { isMuted, toggle: toggleMute } = useSupportMutes();
+  const ownLk = session?.licenseKey ?? "";
+  const muted = ownLk ? isMuted(ownLk) : false;
 
   return (
     <AnimatePresence>
@@ -84,9 +90,29 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon-sm" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex shrink-0 items-center gap-1">
+                {ownLk && activeTab === "chat" && (
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => {
+                      sounds.click();
+                      toggleMute(ownLk);
+                    }}
+                    aria-label={muted ? t("support.unmute") : t("support.mute")}
+                    title={muted ? t("support.unmute") : t("support.mute")}
+                  >
+                    {muted ? (
+                      <BellOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Bell className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon-sm" onClick={onClose}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Tabs */}

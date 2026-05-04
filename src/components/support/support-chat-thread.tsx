@@ -13,6 +13,7 @@ import { useSupportPins } from "@/hooks/use-support-pins";
 import { useSupportSearch } from "@/hooks/use-support-search";
 import { useHiddenMessages } from "@/hooks/use-hidden-messages";
 import { useDesktopNotification } from "@/hooks/use-desktop-notification";
+import { useActiveSupport } from "@/components/providers/active-support-provider";
 import { setTitleBadge } from "@/lib/title-badge";
 import { toast } from "sonner";
 import type { SupportConversationSummary, SupportMessage } from "@/types";
@@ -52,6 +53,24 @@ export function SupportChatThread({
   const search = useSupportSearch(licenseKey);
   const hidden = useHiddenMessages(licenseKey);
   const desktopNotif = useDesktopNotification();
+  const { setActiveConversation } = useActiveSupport();
+
+  // Tell the global notifier which conversation is open so it can suppress
+  // toasts for in-thread messages while the tab is focused.
+  useEffect(() => {
+    if (visible && licenseKey) {
+      setActiveConversation(licenseKey);
+      // Also clear any open OS push notifications for this conversation.
+      if (typeof navigator !== "undefined" && navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: "clearNotifs",
+          tag: `support:${licenseKey}`,
+        });
+      }
+      return () => setActiveConversation(null);
+    }
+    if (!visible) setActiveConversation(null);
+  }, [visible, licenseKey, setActiveConversation]);
 
   const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
   const [editTarget, setEditTarget] = useState<SupportMessage | null>(null);

@@ -44,6 +44,9 @@ const id: Record<string, string> = {
   "settings.privacy": "Privasi",
   "settings.referral": "Referral",
   "settings.session": "Sesi",
+  "settings.notifications": "Notif",
+  "support.mute": "Bisukan percakapan",
+  "support.unmute": "Aktifkan notifikasi",
 
   // Subject tabs
   "tab.materi": "Materi",

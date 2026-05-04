@@ -112,6 +112,10 @@ export interface UserSettings {
     lastActiveDate: string | null;
     activeDates: string[];
   } | null;
+  notifSoundEnabled?: boolean;
+  notifBrowserEnabled?: boolean;
+  notifPushEnabled?: boolean;
+  notifEmailEnabled?: boolean;
 }
 
 export interface OnlineUser {
@@ -149,7 +153,16 @@ export interface ChatMessage {
 
 export interface Notification {
   id: string;
-  type: "mention" | "mention_all" | "thread_reply" | "announcement" | "forum_thread" | "poll_vote" | "poll_result" | "comment_reply";
+  type:
+    | "mention"
+    | "mention_all"
+    | "thread_reply"
+    | "announcement"
+    | "forum_thread"
+    | "poll_vote"
+    | "poll_result"
+    | "comment_reply"
+    | "support_message";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";
@@ -159,6 +172,25 @@ export interface Notification {
   messageId: string | null;
   read: boolean;
   createdAt: string;
+}
+
+export interface PushSubscriptionRecord {
+  id: string;
+  licenseKey: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  userAgent: string | null;
+  deviceId: string | null;
+  createdAt: string;
+  lastUsedAt: string;
+  revokedAt: string | null;
+}
+
+export interface SupportMute {
+  recipientLk: string;
+  conversationLk: string;
+  mutedAt: string;
 }
 
 export interface VoiceRoom {

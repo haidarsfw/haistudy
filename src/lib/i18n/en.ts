@@ -44,6 +44,9 @@ const en: Record<string, string> = {
   "settings.privacy": "Privacy",
   "settings.referral": "Referral",
   "settings.session": "Session",
+  "settings.notifications": "Notif",
+  "support.mute": "Mute conversation",
+  "support.unmute": "Unmute conversation",
 
   // Subject tabs
   "tab.materi": "Materials",
