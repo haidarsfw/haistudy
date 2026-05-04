@@ -412,7 +412,7 @@ export function SupportMessageInput({
 
   return (
     <div
-      className="border-t border-border bg-background p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+      className="sticky bottom-0 z-10 border-t border-border bg-background p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       onDragOver={(e: ReactDragEvent) => e.preventDefault()}
     >
       {/* Drag-drop overlay (positioned by container) */}
@@ -576,7 +576,7 @@ export function SupportMessageInput({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 shrink-0"
+          className="h-10 w-10 shrink-0 sm:h-9 sm:w-9"
           onClick={() => fileInputRef.current?.click()}
           disabled={
             disabled || images.length >= SUPPORT_MAX_IMAGES || showRecordingOverlay
@@ -592,7 +592,7 @@ export function SupportMessageInput({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-10 w-10 shrink-0 sm:h-9 sm:w-9"
                 disabled={disabled || showRecordingOverlay}
                 aria-label="Emoji"
               />
@@ -619,7 +619,7 @@ export function SupportMessageInput({
           <Button
             variant="ghost"
             size="icon"
-            className={`h-9 w-9 shrink-0 ${
+            className={`h-10 w-10 shrink-0 sm:h-9 sm:w-9 ${
               internalNote
                 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
                 : ""
@@ -647,7 +647,7 @@ export function SupportMessageInput({
           }
           maxLength={4000}
           disabled={disabled || showRecordingOverlay}
-          className={`min-h-[36px] max-h-[120px] flex-1 min-w-0 resize-none rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+          className={`min-h-[40px] max-h-[120px] flex-1 min-w-0 resize-none rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 sm:min-h-[36px] ${
             internalNote
               ? "border-amber-500/60 focus:border-amber-500 focus:ring-amber-500/30"
               : "border-border focus:border-primary focus:ring-primary/30"
@@ -659,7 +659,7 @@ export function SupportMessageInput({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0 text-primary"
+            className="h-10 w-10 shrink-0 text-primary sm:h-9 sm:w-9"
             onPointerDown={onMicDown}
             onPointerMove={onMicMove}
             onPointerUp={onMicUp}
@@ -673,7 +673,7 @@ export function SupportMessageInput({
         ) : (
           <Button
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-10 w-10 shrink-0 sm:h-9 sm:w-9"
             onClick={send}
             disabled={sendDisabled}
           >

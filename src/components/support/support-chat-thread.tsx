@@ -151,7 +151,7 @@ export function SupportChatThread({
   const scrollToMessage = useCallback((id: string) => {
     const el = document.querySelector(`[data-message-id="${id}"]`);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
       el.classList.add("animate-pulse");
       setTimeout(() => el.classList.remove("animate-pulse"), 1500);
     }
@@ -261,10 +261,17 @@ export function SupportChatThread({
 
   const myKey = session?.licenseKey ?? null;
   const isAdminViewer = Boolean(session?.isAdmin);
-  const isMobile =
-    typeof window !== "undefined" && window.matchMedia
-      ? window.matchMedia("(max-width: 640px)").matches
-      : false;
+
+  /* ── Reactive mobile detection (updates on rotate / resize) ── */
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   return (
     <div

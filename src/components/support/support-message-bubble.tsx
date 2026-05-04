@@ -118,8 +118,8 @@ export function SupportMessageBubble({
   highlight,
 }: Props) {
   const { t } = useTranslation();
-  const [showActions, setShowActions] = useState(false);
   const [showReactPopover, setShowReactPopover] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const bubbleRef = useRef<HTMLDivElement>(null);
   const { copied, copy } = useCopyToClipboard();
@@ -155,15 +155,10 @@ export function SupportMessageBubble({
     packageTier: authorMeta?.packageTier ?? null,
   });
 
-  // Long-press → open quick-react popover (mobile)
-  const longPress = useLongPress(() => setShowReactPopover(true), {
-    delay: 450,
-  });
+  // Long-press → open full action menu (mobile primary entry).
+  const longPress = useLongPress(() => setMenuOpen(true), { delay: 450 });
 
   // Close popover when clicking outside.
-  // Uses pointerdown (fires before click) but the popover is rendered as a
-  // child of bubbleRef, so contains() returns true for clicks within it —
-  // safe vs. swallowing the emoji button's click event.
   useEffect(() => {
     if (!showReactPopover) return;
     const onDoc = (e: PointerEvent) => {
@@ -195,6 +190,87 @@ export function SupportMessageBubble({
     );
   }
 
+  // Shared menu items rendered both inside the controlled menu (long-press / desktop ⋯)
+  const menuItems = (
+    <>
+      <DropdownMenuItem onClick={handleReplyAction}>
+        <Reply className="mr-2 h-3.5 w-3.5" />
+        {t("support.reply")}
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => setShowReactPopover(true)}>
+        <Smile className="mr-2 h-3.5 w-3.5" />
+        {t("support.add_reaction")}
+      </DropdownMenuItem>
+      {message.type === "text" && message.content && (
+        <DropdownMenuItem onClick={() => copy(message.content)}>
+          {copied ? (
+            <CheckIcon className="mr-2 h-3.5 w-3.5 text-emerald-500" />
+          ) : (
+            <CopyIcon className="mr-2 h-3.5 w-3.5" />
+          )}
+          {copied ? t("support.copied") : t("support.copy")}
+        </DropdownMenuItem>
+      )}
+      {canEdit && (
+        <DropdownMenuItem onClick={() => onEdit(message)}>
+          <Pencil className="mr-2 h-3.5 w-3.5" />
+          {t("support.edit")}
+        </DropdownMenuItem>
+      )}
+      {isOwn && onOpenInfo && (
+        <DropdownMenuItem onClick={() => onOpenInfo(message)}>
+          <Info className="mr-2 h-3.5 w-3.5" />
+          {t("support.message_info")}
+        </DropdownMenuItem>
+      )}
+      {myKind === "admin" &&
+        onPin &&
+        onUnpin &&
+        !message.isInternal &&
+        !message.deleted && (
+          <DropdownMenuItem
+            onClick={() =>
+              isPinned ? onUnpin(message.id) : onPin(message.id)
+            }
+            disabled={!isPinned && pinCapReached}
+          >
+            {isPinned ? (
+              <>
+                <PinOff className="mr-2 h-3.5 w-3.5" />
+                {t("support.unpin_message")}
+              </>
+            ) : (
+              <>
+                <Pin className="mr-2 h-3.5 w-3.5" />
+                {t("support.pin_message")}
+              </>
+            )}
+          </DropdownMenuItem>
+        )}
+      {isOwn && onHideForMe && (
+        <DropdownMenuItem
+          onClick={() => onHideForMe(message.id)}
+          className="text-amber-600 focus:text-amber-600"
+        >
+          <EyeOff className="mr-2 h-3.5 w-3.5" />
+          {t("support.hide_for_me")}
+        </DropdownMenuItem>
+      )}
+      {myKind === "admin" &&
+        onUnsend &&
+        !message.deleted &&
+        !message.isSystem && (
+          <DropdownMenuItem
+            onClick={() => onUnsend(message)}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-3.5 w-3.5" />
+            {t("support.unsend_for_everyone")}
+          </DropdownMenuItem>
+        )}
+    </>
+  );
+
   return (
     <SupportSwipeReplyWrapper onReply={handleReplyAction} disabled={message.isSystem}>
       <motion.div
@@ -202,11 +278,9 @@ export function SupportMessageBubble({
         initial={reducedMotion ? false : { opacity: 0, y: 6 }}
         animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
         transition={{ duration: reducedMotion ? 0.04 : 0.18 }}
-        className={`group relative flex w-full min-w-0 gap-2 px-3 py-1 ${
+        className={`group relative flex w-full min-w-0 scroll-mt-16 gap-2 px-3 py-1 ${
           isOwn ? "justify-end" : "justify-start"
         }`}
-        onMouseEnter={() => setShowActions(true)}
-        onMouseLeave={() => setShowActions(false)}
         data-message-id={message.id}
       >
         <div
@@ -331,12 +405,36 @@ export function SupportMessageBubble({
           )}
         </div>
 
-        {/* Hover toolbar (desktop only via opacity transition) */}
+        {/* Controlled action menu — opened by long-press (touch) or desktop ⋯ button.
+            Trigger is a hidden 1px anchor positioned at top of bubble corner so the
+            menu floats next to the bubble. The hidden anchor lets BaseUI Menu compute
+            position without any visible UI on touch devices. */}
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger
+            render={
+              <button
+                aria-hidden
+                tabIndex={-1}
+                className={`pointer-events-none absolute top-1 h-1 w-1 opacity-0 ${
+                  isOwn ? "right-2" : "left-2"
+                }`}
+              />
+            }
+          />
+          <DropdownMenuContent
+            align={isOwn ? "end" : "start"}
+            className="w-44"
+          >
+            {menuItems}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Hover toolbar — only visible on hover-capable devices (desktop / mouse).
+            Hidden entirely on touch via @media(hover:hover) so iOS Safari can't
+            leave it stuck-visible after a tap. */}
         <div
-          className={`flex shrink-0 items-center self-center transition-opacity ${
+          className={`hidden shrink-0 items-center self-center opacity-0 transition-opacity [@media(hover:hover)]:flex group-hover:opacity-100 ${
             isOwn ? "order-first" : ""
-          } ${
-            showActions ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           <Button
@@ -357,91 +455,15 @@ export function SupportMessageBubble({
           >
             <Reply className="h-3.5 w-3.5" />
           </Button>
-          {(canEdit ||
-            (myKind === "admin" && onUnsend) ||
-            (isOwn && onHideForMe) ||
-            (myKind === "admin" && (onPin || onUnpin)) ||
-            onOpenInfo ||
-            message.type === "text") && (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={<Button variant="ghost" size="icon" className="h-7 w-7" />}
-              >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {message.type === "text" && message.content && (
-                  <DropdownMenuItem
-                    onClick={() => copy(message.content)}
-                  >
-                    {copied ? (
-                      <CheckIcon className="mr-2 h-3.5 w-3.5 text-emerald-500" />
-                    ) : (
-                      <CopyIcon className="mr-2 h-3.5 w-3.5" />
-                    )}
-                    {copied ? t("support.copied") : t("support.copy")}
-                  </DropdownMenuItem>
-                )}
-                {canEdit && (
-                  <DropdownMenuItem onClick={() => onEdit(message)}>
-                    <Pencil className="mr-2 h-3.5 w-3.5" />
-                    {t("support.edit")}
-                  </DropdownMenuItem>
-                )}
-                {isOwn && onOpenInfo && (
-                  <DropdownMenuItem onClick={() => onOpenInfo(message)}>
-                    <Info className="mr-2 h-3.5 w-3.5" />
-                    {t("support.message_info")}
-                  </DropdownMenuItem>
-                )}
-                {myKind === "admin" &&
-                  onPin &&
-                  onUnpin &&
-                  !message.isInternal &&
-                  !message.deleted && (
-                    <DropdownMenuItem
-                      onClick={() =>
-                        isPinned ? onUnpin(message.id) : onPin(message.id)
-                      }
-                      disabled={!isPinned && pinCapReached}
-                    >
-                      {isPinned ? (
-                        <>
-                          <PinOff className="mr-2 h-3.5 w-3.5" />
-                          {t("support.unpin_message")}
-                        </>
-                      ) : (
-                        <>
-                          <Pin className="mr-2 h-3.5 w-3.5" />
-                          {t("support.pin_message")}
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                  )}
-                {isOwn && onHideForMe && (
-                  <DropdownMenuItem
-                    onClick={() => onHideForMe(message.id)}
-                    className="text-amber-600 focus:text-amber-600"
-                  >
-                    <EyeOff className="mr-2 h-3.5 w-3.5" />
-                    {t("support.hide_for_me")}
-                  </DropdownMenuItem>
-                )}
-                {myKind === "admin" &&
-                  onUnsend &&
-                  !message.deleted &&
-                  !message.isSystem && (
-                    <DropdownMenuItem
-                      onClick={() => onUnsend(message)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-3.5 w-3.5" />
-                      {t("support.unsend_for_everyone")}
-                    </DropdownMenuItem>
-                  )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setMenuOpen(true)}
+            title={t("support.message_info")}
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </motion.div>
     </SupportSwipeReplyWrapper>

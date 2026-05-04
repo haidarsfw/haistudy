@@ -286,7 +286,7 @@ export function SupportMessageList({
   const scrollToMessage = useCallback((id: string) => {
     const el = scrollRef.current?.querySelector(`[data-message-id="${id}"]`);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
       setHighlightedId(id);
       setTimeout(() => setHighlightedId(null), 1100);
     }

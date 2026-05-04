@@ -137,7 +137,7 @@ export function SupportImageLightbox({ images, index, onClose, onIndexChange }: 
               x,
               y,
               scale: zoom,
-              maxHeight: "100vh",
+              maxHeight: "100dvh",
               maxWidth: "100vw",
               touchAction: "none",
               cursor: zoom === 1 ? "grab" : "grabbing",

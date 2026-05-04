@@ -66,7 +66,7 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed right-0 bottom-0 z-50 flex w-full flex-col rounded-t-2xl border-t border-border bg-background shadow-xl max-h-[calc(100dvh-3.5rem)] sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:w-96 sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0"
+            className="fixed inset-x-0 bottom-0 z-50 flex h-[calc(100dvh-3.5rem-env(safe-area-inset-bottom))] w-full flex-col rounded-t-2xl border-t border-border bg-background shadow-xl sm:inset-x-auto sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:max-h-none sm:w-96 sm:rounded-none sm:border-l sm:border-t-0"
           >
             {/* Header */}
             <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
