@@ -8,6 +8,7 @@ import {
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { AI_ENABLED, AI_DISABLED_MESSAGE } from "@/lib/feature-flags";
+import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 
 // ─── Config ───
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -80,6 +81,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Scope context — drives knowledge-base loading + ai_conversations storage.
+    // License identity is scope-agnostic (admin can switch session scope freely),
+    // but the materi fed into the system prompt is locked to this scope: a UAS
+    // request never sees UTS content, and vice versa.
+    const scope = await requireScope(request);
+
     // Validate license key against DB and determine admin status server-side
     let validatedAdmin = false;
     if (isSupabaseServerConfigured) {
@@ -93,14 +100,14 @@ export async function POST(request: Request) {
       if (!license) {
         return NextResponse.json({ error: "Invalid license key" }, { status: 401 });
       }
-      if (license.suspended_until && new Date(license.suspended_until) > new Date()) {
+      if ((license as Record<string, unknown>).suspended_until && new Date((license as Record<string, unknown>).suspended_until as string) > new Date()) {
         return NextResponse.json({ error: "Account suspended" }, { status: 403 });
       }
       validatedAdmin = await isAdminFromCookies();
     }
 
-    // Build system prompt with subject context
-    const systemPrompt = buildSystemPrompt(subjectId);
+    // Build system prompt with scope-locked subject context.
+    const systemPrompt = await buildSystemPrompt(scope, subjectId);
 
     // Route: VIP or Admin → DeepSeek, else → Gemini
     // Images always go to Gemini (DeepSeek doesn't support vision)
@@ -256,6 +263,9 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("AI chat error:", error);
     const errMsg = error instanceof Error ? error.message : "";
     const isQuota = errMsg.includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED");

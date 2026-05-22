@@ -53,7 +53,7 @@ const FEATURES = [
 const FAQ = [
   {
     q: "Apa itu haistudy?",
-    a: "haistudy adalah platform belajar pintar untuk mahasiswa BINUS University. Fokus persiapan UTS angkatan B29 Business Management dengan materi lengkap, quiz interaktif, flashcards, AI assistant, voice room, dan fitur kolaborasi.",
+    a: "haistudy adalah platform belajar pintar untuk mahasiswa Binus University. Kamu akan dapat materi tiap mata kuliah, quiz interaktif, flashcards, AI assistant, voice room, dan komunitas belajar bareng — semua dalam satu platform per periode ujian.",
   },
   {
     q: "Bagaimana cara mendapatkan akses?",
@@ -77,7 +77,7 @@ const FAQ = [
   },
   {
     q: "Apakah AI-nya akurat?",
-    a: "AI menjawab berdasarkan materi kuliah yang ada di platform (flashcards, rangkuman, kisi-kisi) serta informasi lengkap tentang fitur-fitur haistudy. AI hanya membahas materi UTS dan penggunaan haistudy. Untuk kepastian, selalu cek dengan materi dosen.",
+    a: "AI menjawab berdasarkan materi kuliah yang ada di platform (flashcards, rangkuman, kisi-kisi) serta informasi lengkap tentang fitur-fitur haistudy. AI hanya membahas materi periode ujian aktif dan penggunaan haistudy. Untuk kepastian, selalu cek dengan materi dosen.",
   },
   {
     q: "Apa fitur voice room?",
@@ -100,7 +100,7 @@ const FAQ = [
 const TESTIMONIALS = [
   {
     name: "Cindy Baby Gracia",
-    jurusan: "Business Management",
+    jurusan: "Mahasiswa Binus",
     ipk: "3.97",
     rating: 5,
     message:
@@ -108,7 +108,7 @@ const TESTIMONIALS = [
   },
   {
     name: "Erina Amanda Ardiningrum",
-    jurusan: "Business Management",
+    jurusan: "Mahasiswa Binus",
     ipk: "3.80",
     rating: 5,
     message:
@@ -116,7 +116,7 @@ const TESTIMONIALS = [
   },
   {
     name: "Keiza Alma Larasati",
-    jurusan: "Business Management",
+    jurusan: "Mahasiswa Binus",
     ipk: "3.73",
     rating: 5,
     message:
@@ -124,11 +124,11 @@ const TESTIMONIALS = [
   },
   {
     name: "Sutan Jafni Indrayana",
-    jurusan: "Business Management",
+    jurusan: "Mahasiswa Binus",
     ipk: "3.70",
     rating: 5,
     message:
-      "Ngebantu bgt buat persiapan UTS dan UAS, materi yang dikasih lengkap dan mudah aku pahamin, kisi kisi yang dikasih juga banyak yang keluar pas ujian.",
+      "Ngebantu bgt buat persiapan ujian, materi yang dikasih lengkap dan mudah aku pahamin, kisi kisi yang dikasih juga banyak yang keluar pas ujian.",
   },
 ];
 
@@ -182,7 +182,7 @@ function DeviceMockup() {
 export default function LandingPage() {
   return (
     <div className="landing-noise flex min-h-screen flex-col bg-background overflow-x-hidden">
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-3 rounded-full bg-card/60 backdrop-blur-md border border-border/50 px-3 py-2 shadow-lg">
+      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 flex items-center gap-3 rounded-full bg-card/60 backdrop-blur-md border border-border/50 px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg">
         <LandingColorPicker />
         <div className="h-4 w-px bg-border/50" />
         <LandingThemeToggle />
@@ -222,9 +222,9 @@ export default function LandingPage() {
         {/* Text content - show second on mobile, left on desktop */}
         <div className="flex-1 text-center lg:text-left order-last lg:order-first">
           <ScrollReveal>
-            <div className="badge-shimmer inline-flex items-center gap-2 rounded-full border border-border bg-card/80 backdrop-blur-sm px-4 py-1.5 text-sm text-muted-foreground shadow-sm">
+            <div className="badge-shimmer inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 backdrop-blur-sm px-4 py-1.5 text-sm text-foreground shadow-sm">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span>Study Smarter, Together</span>
+              <span>Study smarter, not harder</span>
             </div>
           </ScrollReveal>
 
@@ -245,9 +245,8 @@ export default function LandingPage() {
 
           <ScrollReveal delay={0.2}>
             <p className="mt-4 max-w-md text-lg text-muted-foreground mx-auto lg:mx-0">
-              Platform belajar pintar untuk mahasiswa BINUS. Saat ini fokus
-              persiapan UTS B29 dengan materi lengkap, quiz interaktif, dan
-              fitur belajar bersama.
+              Platform belajar pintar all-in-one buat mahasiswa Binus. Materi,
+              quiz, AI assistant, dan komunitas dalam satu tempat.
             </p>
           </ScrollReveal>
 
@@ -255,14 +254,14 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center lg:justify-start">
               <Link
                 href="/login"
-                className="cta-glow inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 h-11 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] active:scale-[0.98]"
+                className="cta-glow inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 h-11 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <GraduationCap className="h-5 w-5" />
                 Masuk
               </Link>
               <Link
                 href="/preview"
-                className="cta-secondary inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background/80 backdrop-blur-sm px-6 h-11 text-sm font-medium text-foreground transition-all hover:bg-muted hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+                className="cta-secondary inline-flex items-center justify-center gap-2 rounded-lg border border-border/60 bg-background/40 backdrop-blur-sm px-5 h-10 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <BookOpen className="h-5 w-5" />
                 Preview Gratis
@@ -275,27 +274,36 @@ export default function LandingPage() {
       {/* ── Features ── */}
       <section className="section-glow-border relative px-4 py-16 sm:py-20" style={{ backgroundColor: 'var(--section-bg)' }}>
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl text-foreground">
             Semua yang Kamu Butuhkan
           </h2>
           <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-            Fitur lengkap yang dirancang khusus untuk mahasiswa BINUS B29
+            Fitur lengkap yang dirancang buat mahasiswa Binus
           </p>
 
           <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f, i) => (
-              <ScrollReveal key={f.title} delay={i * 0.06}>
-                <div className="feature-card-glow group rounded-xl border border-border bg-card p-5 hover:-translate-y-1 h-full">
-                  <div className="relative mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 transition-all duration-300 group-hover:from-primary/25 group-hover:to-primary/10 group-hover:scale-110 group-hover:shadow-[0_0_24px_oklch(from_var(--primary)_l_c_h_/_0.2)]">
-                    <f.icon className="h-5 w-5 text-primary transition-transform duration-300 group-hover:scale-110" />
+            {FEATURES.map((f, i) => {
+              const useFlat = i >= 3;
+              return (
+                <ScrollReveal key={f.title} delay={i * 0.06}>
+                  <div className="feature-card-glow group rounded-xl border border-border bg-card p-5 hover:-translate-y-1 transition-shadow hover:shadow-md h-full">
+                    <div
+                      className={
+                        useFlat
+                          ? "relative mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/8 transition-all duration-300 group-hover:bg-primary/15 group-hover:scale-110"
+                          : "relative mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 transition-all duration-300 group-hover:from-primary/25 group-hover:to-primary/10 group-hover:scale-110 group-hover:shadow-[0_0_24px_oklch(from_var(--primary)_l_c_h_/_0.2)]"
+                      }
+                    >
+                      <f.icon className="h-5 w-5 text-primary transition-transform duration-300 group-hover:scale-110" />
+                    </div>
+                    <h3 className="font-heading font-semibold">{f.title}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {f.desc}
+                    </p>
                   </div>
-                  <h3 className="font-heading font-semibold">{f.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {f.desc}
-                  </p>
-                </div>
-              </ScrollReveal>
-            ))}
+                </ScrollReveal>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -309,7 +317,7 @@ export default function LandingPage() {
       <section className="section-glow-border relative px-4 py-16 sm:py-20" style={{ backgroundColor: 'var(--section-bg)' }}>
         <div className="mx-auto max-w-4xl">
           <ScrollReveal>
-            <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl text-foreground">
               Apa Kata Mereka
             </h2>
             <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
@@ -365,25 +373,25 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="relative px-4 py-16 sm:py-20">
+      <section id="faq" className="relative px-4 py-14 sm:py-18">
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
           <div className="landing-orb-1 absolute top-20 right-1/4 h-64 w-64 rounded-full bg-primary/10" />
         </div>
         <div className="mx-auto max-w-2xl">
-          <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl text-foreground">
             Pertanyaan Umum
           </h2>
 
           <div className="mt-10 space-y-3">
             {FAQ.map((item, i) => (
               <ScrollReveal key={item.q} delay={i * 0.05}>
-                <details className="faq-smooth group rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/15 hover:shadow-sm">
-                  <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
+                <details className="faq-smooth group rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/15 hover:shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
+                  <summary className="flex cursor-pointer items-center justify-between px-5 py-3.5 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
                     {item.q}
                     <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-open:rotate-180" />
                   </summary>
                   <div>
-                    <div className="border-t border-border px-5 py-4 text-sm text-muted-foreground leading-relaxed">
+                    <div className="border-t border-border px-5 py-3.5 text-sm text-muted-foreground leading-relaxed">
                       {item.a}
                     </div>
                   </div>
@@ -396,8 +404,8 @@ export default function LandingPage() {
 
       {/* ── Disclaimer ── */}
       <section className="px-4 py-6 border-t border-border/50">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs leading-relaxed text-muted-foreground/85">
             haistudy adalah platform belajar independen yang dibuat oleh mahasiswa.
             Platform ini tidak terafiliasi, berafiliasi, didukung, atau disetujui oleh BINUS University.
             Seluruh materi kuliah, merek dagang, dan hak cipta terkait adalah milik pemiliknya masing-masing.
@@ -423,14 +431,14 @@ export default function LandingPage() {
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <Link
               href="/privacy"
-              className="hover:text-foreground transition-colors"
+              className="rounded hover:text-foreground transition-colors hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               Privacy Policy
             </Link>
             <span>&middot;</span>
             <Link
               href="/terms"
-              className="hover:text-foreground transition-colors"
+              className="rounded hover:text-foreground transition-colors hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               Terms of Service
             </Link>

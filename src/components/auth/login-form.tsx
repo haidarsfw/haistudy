@@ -3,12 +3,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { KeyRound, Loader2, AlertCircle, Gift, Eye, EyeOff } from "lucide-react";
+import {
+  KeyRound,
+  Loader2,
+  AlertCircle,
+  Gift,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "@/components/providers/session-provider";
 import { getDeviceId, getDeviceType } from "@/lib/auth/device";
+import { LATEST_SCOPE, scopeKey } from "@/lib/scope";
 import {
   checkRateLimit,
   recordFailedAttempt,
@@ -18,8 +26,126 @@ import {
 import { fadeInDown, scaleIn, tapScale, hoverLift } from "@/lib/motion";
 import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 
-export function LoginForm() {
+export interface LoginFormProps {
+  oauthError?: string | null;
+  oauthEmail?: string | null;
+  oauthDetail?: string | null;
+}
+
+function oauthErrorBanner(
+  code: string,
+  email: string | null,
+  detail: string | null
+): string {
+  switch (code) {
+    case "email_not_linked":
+      return email
+        ? `Email ${email} belum didaftarkan admin. Login dengan license key atau hubungi admin.`
+        : "Email belum didaftarkan admin. Login dengan license key atau hubungi admin.";
+    case "no_email":
+      return "Akun Google tidak memberikan alamat email. Coba dengan akun lain.";
+    case "suspended":
+      return "License terkait sedang disuspend. Hubungi admin.";
+    case "expired":
+      return "License terkait sudah expired. Hubungi admin untuk perpanjangan.";
+    case "device_limit":
+      return "Batas device tercapai. Reset via admin atau hubungi support.";
+    case "cancelled":
+      return "Login dibatalkan.";
+    case "no_code":
+      return "Login Google tidak lengkap. Coba ulang dari awal.";
+    case "license_not_found":
+      return "License key terkait sudah dihapus. Hubungi admin.";
+    case "not_configured":
+      return "Supabase Auth belum terkonfigurasi. Gunakan license key.";
+    case "exchange_failed":
+      return detail
+        ? `Login Google gagal: ${detail}. Cek Supabase Dashboard → Authentication → Providers → Google (Client ID/Secret) dan Google Cloud Console → Authorized redirect URIs.`
+        : "Login Google gagal saat exchange. Cek konfigurasi Google Provider di Supabase.";
+    case "activation_failed":
+      return "Aktivasi license gagal. Hubungi admin.";
+    case "server_error":
+      return "Server error saat login Google. Coba lagi.";
+    default:
+      return "Login Google gagal. Coba lagi atau gunakan license key.";
+  }
+}
+
+export function LoginForm({
+  oauthError,
+  oauthEmail,
+  oauthDetail,
+}: LoginFormProps = {}) {
+  const { t } = useTranslation();
+  const banner = oauthError
+    ? oauthErrorBanner(oauthError, oauthEmail ?? null, oauthDetail ?? null)
+    : null;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <HashErrorListener />
+      {banner && <OauthErrorBanner message={banner} />}
+
+      {isSupabaseConfigured && (
+        <>
+          <GoogleLoginButton />
+
+          <div className="relative flex items-center" aria-hidden="true">
+            <div className="flex-1 border-t border-border" />
+            <span className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/70">
+              {t("login.or_divider")}
+            </span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+        </>
+      )}
+
+      <LicenseKeyLoginForm />
+    </div>
+  );
+}
+
+/**
+ * When Supabase Auth fails server-side (e.g. "Unable to exchange external code"),
+ * it redirects back with the error in the URL hash. The hash is client-only and
+ * never reaches our /auth/callback route handler, so we capture it here and
+ * surface a real error message to the user.
+ */
+function HashErrorListener() {
+  const [hashError, setHashError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash;
+    if (!hash || !hash.includes("error")) return;
+    const params = new URLSearchParams(hash.replace(/^#/, ""));
+    const desc = params.get("error_description");
+    const code = params.get("error_code") || params.get("error");
+    if (desc || code) {
+      const human = desc ? decodeURIComponent(desc.replace(/\+/g, " ")) : code!;
+      setHashError(human);
+      // Clear the hash so refresh doesn't re-show it.
+      window.history.replaceState({}, "", window.location.pathname + window.location.search);
+    }
+  }, []);
+
+  if (!hashError) return null;
+  return <OauthErrorBanner message={`Login Google gagal: ${hashError}`} />;
+}
+
+function OauthErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+      <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+      <span>{message}</span>
+    </div>
+  );
+}
+
+function LicenseKeyLoginForm() {
   const router = useRouter();
   const { login } = useSession();
   const [key, setKey] = useState("");
@@ -59,7 +185,6 @@ export function LoginForm() {
         return;
       }
 
-      // Check rate limit
       const { allowed, remainingMs } = checkRateLimit();
       if (!allowed) {
         setLockoutMs(remainingMs);
@@ -101,7 +226,6 @@ export function LoginForm() {
           return;
         }
 
-        // Success
         resetRateLimit();
 
         // Use settings embedded in validate response (fast path)
@@ -109,7 +233,6 @@ export function LoginForm() {
         const embeddedSettings = data.settings;
 
         if (embeddedSettings) {
-          // Settings came with the validate response — no extra API call needed
           selectedClass = embeddedSettings.selectedClass || "";
           if (embeddedSettings.darkMode !== undefined) {
             localStorage.setItem("dark", JSON.stringify(embeddedSettings.darkMode));
@@ -121,10 +244,12 @@ export function LoginForm() {
             localStorage.setItem("font", JSON.stringify(embeddedSettings.font));
           }
           if (embeddedSettings.darkModeSchedule) {
-            localStorage.setItem("darkModeSchedule", JSON.stringify(embeddedSettings.darkModeSchedule));
+            localStorage.setItem(
+              "darkModeSchedule",
+              JSON.stringify(embeddedSettings.darkModeSchedule)
+            );
           }
         } else {
-          // Fallback: fetch settings separately (mock mode / legacy)
           try {
             const settingsRes = await fetch(
               `/api/settings?licenseKey=${encodeURIComponent(data.session.licenseKey)}`
@@ -142,31 +267,53 @@ export function LoginForm() {
                 localStorage.setItem("font", JSON.stringify(settingsData.settings.font));
               }
               if (settingsData.settings.darkModeSchedule) {
-                localStorage.setItem("darkModeSchedule", JSON.stringify(settingsData.settings.darkModeSchedule));
+                localStorage.setItem(
+                  "darkModeSchedule",
+                  JSON.stringify(settingsData.settings.darkModeSchedule)
+                );
               }
             }
           } catch {
-            const existingSession = JSON.parse(localStorage.getItem("hs-session-data") || "null");
+            const existingSession = JSON.parse(
+              localStorage.getItem("hs-session-data") || "null"
+            );
             selectedClass = existingSession?.selectedClass || "";
           }
         }
 
-        const sessionWithClass = {
+        // Admin login: force LATEST_SCOPE locally even though server cookie is already correct
+        const baseSession = {
           ...data.session,
           selectedClass: data.session.selectedClass || selectedClass,
         };
+        const sessionWithClass = baseSession.isAdmin
+          ? {
+              ...baseSession,
+              scope: LATEST_SCOPE,
+              scopeKey: scopeKey(LATEST_SCOPE),
+            }
+          : baseSession;
+
+        if (sessionWithClass.isAdmin) {
+          try {
+            localStorage.setItem("hs-admin-scope", scopeKey(LATEST_SCOPE));
+          } catch {
+            /* localStorage unavailable */
+          }
+        }
+
         login(sessionWithClass);
         sounds.loginSuccess();
 
-        // Redirect to dashboard (class selector shown there if needed)
-        router.push("/dashboard");
+        const base = `/s${sessionWithClass.scope.semester}/${sessionWithClass.scope.examPeriod}/${sessionWithClass.scope.jurusan}`;
+        router.replace(`${base}/dashboard`);
       } catch {
         setError(t("login.connection_failed"));
       } finally {
         setLoading(false);
       }
     },
-    [key, referralCode, login, router]
+    [key, referralCode, login, router, t]
   );
 
   const isLocked = lockoutMs > 0;
@@ -195,19 +342,18 @@ export function LoginForm() {
             disabled={loading || isLocked}
             autoFocus
             autoComplete="off"
-            className="pl-10 pr-10 uppercase tracking-wider"
+            className="pl-10 pr-10 uppercase tracking-wider placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/40"
           />
           <button
             type="button"
-            onClick={() => { sounds.toggle(); setShowKey((v) => !v); }}
+            onClick={() => {
+              sounds.toggle();
+              setShowKey((v) => !v);
+            }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             tabIndex={-1}
           >
-            {showKey ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
+            {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -218,7 +364,10 @@ export function LoginForm() {
           <motion.button
             key="referral-trigger"
             type="button"
-            onClick={() => { sounds.toggle(); setShowReferral(true); }}
+            onClick={() => {
+              sounds.toggle();
+              setShowReferral(true);
+            }}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors self-start"
             variants={fadeInDown}
             initial="hidden"
@@ -247,7 +396,7 @@ export function LoginForm() {
               value={referralCode}
               onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
               disabled={loading}
-              className="text-sm uppercase tracking-wider"
+              className="text-sm uppercase tracking-wider placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/40"
             />
           </motion.div>
         )}
@@ -281,7 +430,7 @@ export function LoginForm() {
         <Button
           type="submit"
           disabled={loading || isLocked || !key.trim()}
-          className="h-11 text-sm font-medium w-full"
+          className="h-11 text-sm font-medium w-full disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
         >
           {loading ? (
             <>

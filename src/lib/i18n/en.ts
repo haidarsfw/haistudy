@@ -81,7 +81,7 @@ const en: Record<string, string> = {
 
   // Schedule
   "schedule.title": "Exam Schedule",
-  "schedule.subtitle": "Countdown and midterm exam schedule",
+  "schedule.subtitle": "Countdown and exam schedule for the active period",
   "schedule.exam_title": "Exam Schedule",
   "schedule.note": "Schedule may change at any time. Always check official announcements from Binus for the latest information.",
   "schedule.not_announced": "Not yet announced",
@@ -228,7 +228,7 @@ const en: Record<string, string> = {
 
   // Pricing section
   "pricing.title": "Access Plans",
-  "pricing.subtitle": "One-time payment, full access during the UTS period",
+  "pricing.subtitle": "One-time payment, full access for one exam period",
   "pricing.buy": "Buy Access",
   "pricing.select": "Select Plan",
   "pricing.more_info": "More info",
@@ -242,8 +242,8 @@ const en: Record<string, string> = {
   "pricing.normal_desc": "Full access with no requirements.",
   "pricing.vip_desc": "All Normal features + AI priority & exclusive badge.",
   "pricing.per_duration": "30 days",
-  "pricing.share_callout": "Requirement: share the link with 1 friend (LE86: share with 2 friends outside the class → only Rp 15,000!)",
-  "pricing.share_details": "LE86 class special: Rp 15,000 if shared with 2 people outside the class. Content identical to the Normal plan. Contact admin for additional devices.",
+  "pricing.share_callout": "Requirement: pick one — (1) share this site via WhatsApp broadcast to friends, or (2) repost a story on your main (first) Instagram account. LE86 special: share with 2 friends outside the class → Rp 20,000.",
+  "pricing.share_details": "LE86 class special: Rp 20,000 if shared with 2 people outside the class. Content identical to the Normal plan. Contact admin for additional devices.",
   "pricing.normal_details": "Access all features immediately. No sharing required. Contact admin for additional devices.",
   "pricing.vip_details": "AI priority, VIP badge, faster support. Max 2 devices. Contact admin for more.",
   "pricing.feat_all_subjects": "Access all subjects",
@@ -323,7 +323,7 @@ const en: Record<string, string> = {
   "onboarding.skip": "Skip Tutorial",
   "onboarding.finish": "Start Learning!",
   "onboarding.welcome_title": "Welcome to haistudy!",
-  "onboarding.welcome_desc": "Let's get to know the features that will help you study more effectively for midterms.",
+  "onboarding.welcome_desc": "Let's get to know the features that will help you study more effectively for exams.",
   "onboarding.sidebar_title": "Navigation",
   "onboarding.sidebar_desc": "Use the sidebar to switch between pages. Dashboard, Subjects, Schedule, and more are here.",
   "onboarding.subjects_title": "Subjects",
@@ -345,7 +345,7 @@ const en: Record<string, string> = {
   "onboarding.notifications_title": "Notifications",
   "onboarding.notifications_desc": "Get notified when someone mentions you, replies to your thread, or sends an important message.",
   "onboarding.done_title": "Ready to Learn!",
-  "onboarding.done_desc": "You are ready to use haistudy. Happy studying and good luck on your midterms!",
+  "onboarding.done_desc": "You are ready to use haistudy. Happy studying and good luck on your exams!",
 
   // Post-tutorial
   "onboarding.post_contact_title": "Stay Connected (Optional)",
@@ -372,7 +372,7 @@ const en: Record<string, string> = {
   "support.quick_links": "Quick Contact",
   "support.faq_title": "Frequently Asked Questions",
   "support.faq_1_q": "How do I use the AI Assistant?",
-  "support.faq_1_a": "Click the AI chat icon at the bottom-right corner. You can ask anything about exam materials and the AI will help explain.",
+  "support.faq_1_a": "Click the AI chat icon at the bottom-right corner. You can ask anything about your course materials and the AI will help explain.",
   "support.faq_2_q": "How do I join a Voice Room?",
   "support.faq_2_a": "Click the microphone icon in the header or sidebar. Choose an available room or create a new one, then click to join.",
   "support.faq_3_q": "How do I create a Forum thread?",
@@ -487,7 +487,10 @@ const en: Record<string, string> = {
 
   // AI Chat History
   "ai.new_chat": "New Chat",
-  "ai.assistant_subtitle": "UTS Study Assistant",
+  "ai.assistant_subtitle": "Study Assistant",
+
+  // Login divider
+  "login.or_divider": "or",
   "ai.mode_fast": "Fast",
   "ai.mode_reasoning": "Reasoning",
 

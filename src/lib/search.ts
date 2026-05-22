@@ -1,6 +1,7 @@
-import { subjects } from "@/data/subjects";
-import { content } from "@/data/content";
-import { rangkumanContent } from "@/data/rangkuman";
+import { loadCourses, loadContent, loadRangkuman } from "@/data";
+import { scopeKey } from "@/lib/scope";
+import type { ScopeTuple } from "@/types/scope";
+import type { SubjectContent } from "@/types";
 
 export interface SearchResult {
   type: "materi" | "rangkuman" | "kisi-kisi" | "flashcard";
@@ -10,8 +11,8 @@ export interface SearchResult {
   subjectName: string;
   tab?: number;
   href: string;
-  moduleKey?: string; // rangkuman module title for deep linking
-  matchText?: string; // matched text snippet for highlighting
+  moduleKey?: string;
+  matchText?: string;
 }
 
 function stripTags(html: string): string {
@@ -24,7 +25,6 @@ function stripTags(html: string): string {
 /** Extract heading-delimited sections from rangkuman HTML content */
 function extractRangkumanSections(html: string): { heading: string; text: string }[] {
   const sections: { heading: string; text: string }[] = [];
-  // Split by h1/h2/h3 tags
   const parts = html.split(/(?=<h[1-3]>)/);
 
   for (const part of parts) {
@@ -39,7 +39,6 @@ function extractRangkumanSections(html: string): { heading: string; text: string
   return sections;
 }
 
-// Type priority for sorting: higher = shown first
 const TYPE_PRIORITY: Record<SearchResult["type"], number> = {
   materi: 30,
   rangkuman: 20,
@@ -47,18 +46,28 @@ const TYPE_PRIORITY: Record<SearchResult["type"], number> = {
   flashcard: 0,
 };
 
-let cachedIndex: SearchResult[] | null = null;
+// Cache per scope-key — switching scope rebuilds the index lazily.
+const cachedIndexByScope = new Map<string, SearchResult[]>();
 
-function buildSearchIndex(): SearchResult[] {
-  if (cachedIndex) return cachedIndex;
+async function buildSearchIndex(scope: ScopeTuple): Promise<SearchResult[]> {
+  const key = scopeKey(scope);
+  const cached = cachedIndexByScope.get(key);
+  if (cached) return cached;
 
+  const [subjectsList, contentMap, rangkumanMap] = await Promise.all([
+    loadCourses(scope),
+    loadContent(scope) as Promise<Record<string, SubjectContent>>,
+    loadRangkuman(scope) as Promise<Record<string, Record<string, string>>>,
+  ]);
+
+  const base = `/${scope.semester ? `s${scope.semester}/${scope.examPeriod}/${scope.jurusan}` : ""}`;
   const results: SearchResult[] = [];
 
-  for (const subject of subjects) {
-    const subjectContent = content[subject.id];
+  for (const subject of subjectsList) {
+    const subjectContent = contentMap[subject.id];
     if (!subjectContent) continue;
 
-    // Materi (displayed as "Slides")
+    // Materi
     for (const m of subjectContent.materi) {
       results.push({
         type: "materi",
@@ -67,7 +76,7 @@ function buildSearchIndex(): SearchResult[] {
         subjectId: subject.id,
         subjectName: subject.name,
         tab: 0,
-        href: `/subject/${subject.id}?tab=0&highlight=${encodeURIComponent(m.title)}`,
+        href: `${base}/subject/${subject.id}?tab=0&highlight=${encodeURIComponent(m.title)}`,
       });
     }
 
@@ -80,7 +89,7 @@ function buildSearchIndex(): SearchResult[] {
         subjectId: subject.id,
         subjectName: subject.name,
         tab: 2,
-        href: `/subject/${subject.id}?tab=2`,
+        href: `${base}/subject/${subject.id}?tab=2`,
       });
     }
 
@@ -93,15 +102,14 @@ function buildSearchIndex(): SearchResult[] {
         subjectId: subject.id,
         subjectName: subject.name,
         tab: 3,
-        href: `/subject/${subject.id}?tab=3`,
+        href: `${base}/subject/${subject.id}?tab=3`,
       });
     }
 
-    // Rangkuman — deep-index by section
-    const subjectRangkuman = rangkumanContent[subject.id];
+    // Rangkuman
+    const subjectRangkuman = rangkumanMap?.[subject.id];
     if (subjectRangkuman) {
       for (const [moduleTitle, htmlContent] of Object.entries(subjectRangkuman)) {
-        // Module-level entry
         results.push({
           type: "rangkuman",
           title: moduleTitle,
@@ -110,10 +118,9 @@ function buildSearchIndex(): SearchResult[] {
           subjectName: subject.name,
           tab: 1,
           moduleKey: moduleTitle,
-          href: `/subject/${subject.id}?tab=1&module=${encodeURIComponent(moduleTitle)}`,
+          href: `${base}/subject/${subject.id}?tab=1&module=${encodeURIComponent(moduleTitle)}`,
         });
 
-        // Section-level entries for deep search
         const sections = extractRangkumanSections(htmlContent);
         for (const section of sections) {
           if (!section.heading) continue;
@@ -126,21 +133,24 @@ function buildSearchIndex(): SearchResult[] {
             tab: 1,
             moduleKey: moduleTitle,
             matchText: section.text.slice(0, 120),
-            href: `/subject/${subject.id}?tab=1&module=${encodeURIComponent(moduleTitle)}&highlight=${encodeURIComponent(section.heading)}`,
+            href: `${base}/subject/${subject.id}?tab=1&module=${encodeURIComponent(moduleTitle)}&highlight=${encodeURIComponent(section.heading)}`,
           });
         }
       }
     }
   }
 
-  cachedIndex = results;
+  cachedIndexByScope.set(key, results);
   return results;
 }
 
-export function searchContent(query: string): SearchResult[] {
+export async function searchContent(
+  scope: ScopeTuple,
+  query: string
+): Promise<SearchResult[]> {
   if (!query.trim()) return [];
 
-  const index = buildSearchIndex();
+  const index = await buildSearchIndex(scope);
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
 
   const scored = index
@@ -151,14 +161,11 @@ export function searchContent(query: string): SearchResult[] {
       for (const term of terms) {
         if (haystack.includes(term)) {
           score += 1;
-          // Bonus for title match
           if (item.title.toLowerCase().includes(term)) score += 2;
-          // Bonus for matchText (rangkuman body)
           if (item.matchText?.toLowerCase().includes(term)) score += 1;
         }
       }
 
-      // Add type priority
       if (score > 0) {
         score += TYPE_PRIORITY[item.type];
       }
@@ -168,7 +175,7 @@ export function searchContent(query: string): SearchResult[] {
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  // Deduplicate: for rangkuman, prefer the section match over module-level
+  // Deduplicate
   const seen = new Set<string>();
   const deduped: SearchResult[] = [];
   for (const { item } of scored) {

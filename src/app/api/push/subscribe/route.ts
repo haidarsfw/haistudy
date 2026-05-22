@@ -4,6 +4,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,7 @@ interface Body {
 
 export async function POST(req: NextRequest) {
   try {
+    const scope = await requireScope(req);
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("hs-session");
     const licenseKey = sessionCookie?.value;
@@ -67,6 +69,7 @@ export async function POST(req: NextRequest) {
         device_id: body.deviceId ?? null,
         last_used_at: new Date().toISOString(),
         revoked_at: null,
+        ...scopeColumns(scope),
       },
       { onConflict: "license_key,endpoint" }
     );
@@ -78,6 +81,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
+    if (e instanceof ScopeError) {
+      return NextResponse.json({ error: e.message }, { status: e.status });
+    }
     console.error("[push.subscribe] exception", e);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }

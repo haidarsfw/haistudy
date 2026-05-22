@@ -114,7 +114,7 @@ export function OnlineUsersMini() {
                 const masked = isMasked(user);
                 return (
                   <div
-                    key={user.id}
+                    key={`${user.id}-${i}`}
                     className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`}
                     title={masked ? "Hidden User" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`}
                   >
@@ -208,7 +208,14 @@ export function OnlineUsersMini() {
                 {visibleUsers.map((user, i) => {
                   const masked = isMasked(user);
                   return (
-                    <UserRow key={user.id} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} />
+                    <UserRow
+                      key={`${user.id}:${user.licenseKey || "anon"}:${i}`}
+                      user={user}
+                      index={i}
+                      isAdmin={isAdmin}
+                      masked={masked}
+                      displayName={getDisplayName(user)}
+                    />
                   );
                 })}
               </div>

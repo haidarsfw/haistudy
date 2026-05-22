@@ -7,10 +7,10 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <div className="mx-auto max-w-2xl px-4 py-12 lg:py-16 lg:px-6">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:rounded"
       >
         <ArrowLeft className="h-4 w-4" />
         Kembali
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         Terakhir diperbarui: 7 April 2026
       </p>
 
-      <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-sm text-foreground/80">
+      <div className="prose prose-sm dark:prose-invert max-w-none space-y-8 prose-headings:font-heading prose-headings:tracking-tight prose-li:my-0.5 text-sm text-foreground/80">
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
             1. Data yang Kami Kumpulkan

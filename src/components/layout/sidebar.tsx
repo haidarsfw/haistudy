@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getDeviceId } from "@/lib/auth/device";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -28,7 +28,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UserProfilePopover } from "@/components/user/user-profile-popover";
+import { AdminScopeSwitcher } from "@/components/admin/admin-scope-switcher";
 import { sounds } from "@/lib/sounds";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 interface SidebarProps {
   onSettingsOpen: () => void;
@@ -36,15 +38,18 @@ interface SidebarProps {
   supportUnread?: number;
 }
 
-const navItems = [
-  { labelKey: "nav.dashboard", icon: Home, href: "/dashboard" },
-  { labelKey: "nav.subjects", icon: BookOpen, href: "/subjects" },
-  { labelKey: "nav.schedule", icon: Calendar, href: "/jadwal-uts" },
-  { labelKey: "nav.analytics", icon: BarChart3, href: "/analytics" },
-  { labelKey: "nav.bookmarks", icon: Bookmark, href: "/bookmarks" },
-  { labelKey: "nav.notes", icon: StickyNote, href: "/notes" },
-  { labelKey: "nav.feedback", icon: MessageSquarePlus, href: "/feedback" },
-];
+function buildNavItems(scopePath: string) {
+  const base = `/${scopePath}`;
+  return [
+    { labelKey: "nav.dashboard", icon: Home, href: `${base}/dashboard` },
+    { labelKey: "nav.subjects", icon: BookOpen, href: `${base}/subjects` },
+    { labelKey: "nav.schedule", icon: Calendar, href: `${base}/jadwal` },
+    { labelKey: "nav.analytics", icon: BarChart3, href: `${base}/analytics` },
+    { labelKey: "nav.bookmarks", icon: Bookmark, href: `${base}/bookmarks` },
+    { labelKey: "nav.notes", icon: StickyNote, href: `${base}/notes` },
+    { labelKey: "nav.feedback", icon: MessageSquarePlus, href: `${base}/feedback` },
+  ];
+}
 
 const STORAGE_KEY = "hs-sidebar-collapsed";
 
@@ -55,6 +60,11 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
   const { t } = useTranslation();
   const { notifications } = useNotifications();
   const { totalUnread: forumUnread } = useForumUnread(notifications);
+  const scopeCtx = useOptionalScope();
+  const scopePath = scopeCtx?.scopePath ?? "s2/uts/bm";
+  const navItems = useMemo(() => buildNavItems(scopePath), [scopePath]);
+  const dashboardHref = `/${scopePath}/dashboard`;
+  const subjectsHref = `/${scopePath}/subjects`;
   const [collapsed, setCollapsed] = useState(false);
   const [feedbackCount, setFeedbackCount] = useState(0);
 
@@ -162,7 +172,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
       >
         {!collapsed && (
           <button
-            onClick={() => { sounds.click(); router.push("/dashboard"); }}
+            onClick={() => { sounds.click(); router.push(dashboardHref); }}
             className="font-heading text-xl font-extrabold tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
           >
             <span className="text-primary">hai</span>
@@ -185,10 +195,10 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
       <nav className={`flex-1 py-4 space-y-1 ${collapsed ? "px-2" : "px-3"}`}>
         {navItems.map((item) => {
           const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : item.href === "/subjects"
-                ? pathname.startsWith("/subject")
+            item.href === dashboardHref
+              ? pathname === dashboardHref
+              : item.href === subjectsHref
+                ? pathname.startsWith(`/${scopePath}/subject`)
                 : item.href.startsWith("/")
                   ? pathname.startsWith(item.href.replace("#", ""))
                   : false;
@@ -247,6 +257,11 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
               </span>
             )}
           </div>
+        )}
+
+        {/* Admin scope switcher (below Admin) */}
+        {session?.isAdmin && (
+          <AdminScopeSwitcher collapsed={collapsed} />
         )}
       </nav>
 

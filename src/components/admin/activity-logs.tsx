@@ -11,6 +11,13 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ActivityLog } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+
+type ScopedActivityLog = ActivityLog & {
+  semester?: number;
+  examPeriod?: "uts" | "uas";
+  jurusan?: string;
+};
 
 const ACTION_COLORS: Record<string, string> = {
   login: "bg-green-500/10 text-green-600 dark:text-green-400",
@@ -19,11 +26,11 @@ const ACTION_COLORS: Record<string, string> = {
   system: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
 };
 
-interface GroupedLog extends ActivityLog {
+interface GroupedLog extends ScopedActivityLog {
   stackCount: number;
 }
 
-function groupConsecutiveLogs(logs: ActivityLog[]): GroupedLog[] {
+function groupConsecutiveLogs(logs: ScopedActivityLog[]): GroupedLog[] {
   if (logs.length === 0) return [];
 
   const grouped: GroupedLog[] = [];
@@ -53,20 +60,25 @@ function DeviceIcon({ deviceType }: { deviceType: string | null }) {
 }
 
 export function ActivityLogs() {
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
+  const [logs, setLogs] = useState<ScopedActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchLogs = useCallback(() => {
-    fetch("/api/admin/logs?type=activity&limit=100")
+    if (!hydrated) return;
+    const q = scopeQuery();
+    const sep = q ? "&" : "?";
+    fetch(`/api/admin/logs${q}${sep}type=activity&limit=100`)
       .then((r) => r.json())
       .then((data) => setLogs(data.logs || []))
       .catch(() => toast.error("Gagal memuat activity logs"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [hydrated, scopeQuery]);
 
   useEffect(() => {
+    setLoading(true);
     fetchLogs();
-  }, [fetchLogs]);
+  }, [fetchLogs, adminScopeKey]);
 
   const groupedLogs = useMemo(() => groupConsecutiveLogs(logs), [logs]);
 
@@ -150,6 +162,11 @@ export function ActivityLogs() {
                           className="text-[10px]"
                         >
                           x{log.stackCount}
+                        </Badge>
+                      )}
+                      {isAllPeriods && log.semester !== undefined && (
+                        <Badge variant="outline" className="text-[10px] font-mono">
+                          s{log.semester}-{log.examPeriod}-{log.jurusan}
                         </Badge>
                       )}
                     </div>

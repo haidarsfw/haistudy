@@ -32,6 +32,15 @@ import {
 import type { Announcement } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { scopeCompact } from "@/components/admin/scope-dropdown-content";
+import { Lock } from "lucide-react";
+
+type ScopedAnnouncement = Announcement & {
+  semester?: number;
+  examPeriod?: "uts" | "uas";
+  jurusan?: string;
+};
 
 const TYPE_CONFIG = {
   info: { icon: Info, color: "text-blue-500", label: "Info" },
@@ -41,7 +50,8 @@ const TYPE_CONFIG = {
 
 export function AdminAnnouncements() {
   const { t } = useTranslation();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const { adminScope, adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
+  const [announcements, setAnnouncements] = useState<ScopedAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [newType, setNewType] = useState<"info" | "warning" | "maintenance">(
@@ -50,27 +60,35 @@ export function AdminAnnouncements() {
   const [creating, setCreating] = useState(false);
   const [notifyOnly, setNotifyOnly] = useState(false);
 
+  const lockedAllPeriods = hydrated && (isAllPeriods || adminScope === "all");
+
   const fetchAnnouncements = useCallback(async () => {
+    if (!hydrated) return;
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/announcements");
+      const res = await fetch(`/api/admin/announcements${scopeQuery()}`);
       const data = await res.json();
       setAnnouncements(data.announcements || []);
     } catch {
       toast.error("Gagal memuat announcements");
     }
     setLoading(false);
-  }, []);
+  }, [hydrated, scopeQuery]);
 
   useEffect(() => {
     fetchAnnouncements();
-  }, [fetchAnnouncements]);
+  }, [fetchAnnouncements, adminScopeKey]);
 
   const handleCreate = useCallback(async () => {
     if (!newMessage.trim()) return;
+    if (lockedAllPeriods) {
+      toast.error("Pilih scope spesifik dulu untuk create announcement.");
+      return;
+    }
     setCreating(true);
 
     try {
-      const res = await fetch("/api/admin/announcements", {
+      const res = await fetch(`/api/admin/announcements${scopeQuery()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: newMessage.trim(), type: newType, notifyOnly }),
@@ -81,16 +99,16 @@ export function AdminAnnouncements() {
         setAnnouncements((prev) => [data.announcement, ...prev]);
       }
       setNewMessage("");
-      toast.success(notifyOnly ? "Notifikasi terkirim ke semua user" : "Announcement dibuat");
+      toast.success(notifyOnly ? "Notifikasi terkirim ke users di scope ini" : "Announcement dibuat");
     } catch {
       toast.error(notifyOnly ? "Gagal mengirim notifikasi" : "Gagal membuat announcement");
     }
     setCreating(false);
-  }, [newMessage, newType, notifyOnly]);
+  }, [newMessage, newType, notifyOnly, lockedAllPeriods, scopeQuery]);
 
   const handleToggle = useCallback(async (id: string, active: boolean) => {
     try {
-      await fetch("/api/admin/announcements", {
+      await fetch(`/api/admin/announcements${scopeQuery()}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, active: !active }),
@@ -101,11 +119,11 @@ export function AdminAnnouncements() {
     } catch {
       toast.error("Gagal mengupdate");
     }
-  }, []);
+  }, [scopeQuery]);
 
   const handleDelete = useCallback(async (id: string) => {
     try {
-      await fetch("/api/admin/announcements", {
+      await fetch(`/api/admin/announcements${scopeQuery()}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -115,7 +133,7 @@ export function AdminAnnouncements() {
     } catch {
       toast.error("Gagal menghapus");
     }
-  }, []);
+  }, [scopeQuery]);
 
   return (
     <Card>
@@ -137,24 +155,24 @@ export function AdminAnnouncements() {
               description={`Hapus semua ${announcements.length} announcement dan bersihkan dari notifikasi semua user? Aksi ini tidak bisa dibatalkan.`}
               onConfirm={async () => {
                 try {
-                  // Delete all announcements
+                  // Delete all announcements (scoped to current adminScope)
                   await Promise.all(
                     announcements.map((a) =>
-                      fetch("/api/admin/announcements", {
+                      fetch(`/api/admin/announcements${scopeQuery()}`, {
                         method: "DELETE",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ id: a.id }),
                       })
                     )
                   );
-                  // Also clear announcement notifications for all users
-                  await fetch("/api/notifications", {
+                  // Also clear announcement notifications for users in same scope
+                  await fetch(`/api/notifications${scopeQuery()}`, {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "clearAnnouncements" }),
                   }).catch(() => {}); // non-critical
                   setAnnouncements([]);
-                  toast.success("Semua announcement dan notifikasi user dihapus");
+                  toast.success("Semua announcement & notifikasi user dihapus");
                 } catch {
                   toast.error("Gagal menghapus announcement");
                 }
@@ -164,6 +182,24 @@ export function AdminAnnouncements() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {lockedAllPeriods && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+            <div>
+              <p className="font-semibold text-amber-700 dark:text-amber-400">
+                Mode &quot;All periods&quot; aktif
+              </p>
+              <p className="text-amber-700/80 dark:text-amber-400/80">
+                Announcement creation terbind ke 1 scope. Switch scope di admin header dulu.
+              </p>
+            </div>
+          </div>
+        )}
+        {!lockedAllPeriods && adminScope !== "all" && hydrated && (
+          <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-1.5 text-xs">
+            Target scope: <span className="font-semibold">{scopeCompact(adminScope)}</span>
+          </div>
+        )}
         {/* Create new */}
         <div className="space-y-2">
           <div className="flex gap-2">
@@ -189,7 +225,7 @@ export function AdminAnnouncements() {
                 onChange={(e) => setNewMessage(e.target.value)}
                 className="flex-1 resize-none min-h-20"
               />
-              <Button onClick={handleCreate} disabled={creating || !newMessage.trim()} className="self-end">
+              <Button onClick={handleCreate} disabled={creating || !newMessage.trim() || lockedAllPeriods} className="self-end">
                 {creating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : notifyOnly ? (
@@ -247,6 +283,11 @@ export function AdminAnnouncements() {
                           locale: idLocale,
                         })}
                       </span>
+                      {isAllPeriods && ann.semester !== undefined && (
+                        <Badge variant="outline" className="text-[10px] font-mono">
+                          s{ann.semester}-{ann.examPeriod}-{ann.jurusan}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">

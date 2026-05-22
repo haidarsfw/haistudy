@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { supportTypingChannel } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import {
   SUPPORT_TYPING_CLEAR_MS,
   SUPPORT_TYPING_DEBOUNCE_MS,
@@ -28,6 +31,8 @@ export function useSupportTyping(
   myLicenseKey: string | null
 ): UseSupportTypingResult {
   const [typing, setTyping] = useState<SupportTypingState | null>(null);
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const channelRef = useRef<RealtimeChannel | null>(null);
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastNotifyRef = useRef(0);
@@ -39,7 +44,7 @@ export function useSupportTyping(
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`support:typing:${licenseKey}`)
+      .channel(supportTypingChannel(scope, licenseKey))
       .on("broadcast", { event: "typing" }, (payload) => {
         const data = payload.payload as {
           kind?: SupportReaderKind;

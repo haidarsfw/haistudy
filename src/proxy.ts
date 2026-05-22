@@ -2,15 +2,33 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Route protection proxy (Next.js 16).
- * - Public routes: landing, login, preview, API, static assets
- * - Protected routes: /dashboard, /subject/*, /voice, /settings, /admin
- *
- * Since we use license-key auth (not Supabase Auth), we check for the
- * presence of a session cookie/header. Actual validation happens server-side.
+ * Route protection proxy (Next.js 16 renamed middleware → proxy).
+ * Responsibilities:
+ *  1. Public paths pass through
+ *  2. Unauthenticated → /login
+ *  3. /admin requires hs-admin=1 cookie
+ *  4. Legacy unscoped app paths (/dashboard, /subject, …) → 308 redirect
+ *     into the user's scoped tree (/s{N}/{uts|uas}/{jurusan}/…) using
+ *     the hs-scope cookie. Default fallback s2-uts-bm.
+ *  5. Already-scoped paths pass through untouched.
  */
 
-const publicPaths = ["/", "/login", "/preview", "/api", "/privacy", "/terms"];
+const publicPaths = ["/", "/login", "/preview", "/api", "/privacy", "/terms", "/auth/callback"];
+
+const LEGACY_APP_ROUTES = new Set([
+  "dashboard",
+  "subjects",
+  "subject",
+  "bookmarks",
+  "notes",
+  "analytics",
+  "feedback",
+  "jadwal-uts",
+  "voice",
+  "settings",
+]);
+
+const DEFAULT_SCOPE_COOKIE = "s2-uts-bm";
 
 function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) return true;
@@ -21,32 +39,53 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+function parseScopeCookie(raw: string | undefined): { sem: string; exam: string; jur: string } {
+  const value = raw && /^s\d+-(uts|uas)-[a-z0-9-]{1,16}$/.test(raw) ? raw : DEFAULT_SCOPE_COOKIE;
+  const [semWithS, exam, jur] = value.split("-");
+  return { sem: semWithS.replace(/^s/, ""), exam, jur };
+}
 
-  // Allow public paths
+export function proxy(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  const pathname = url.pathname;
+  const segs = pathname.split("/").filter(Boolean);
+
+  // 1. Public paths
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  // For protected routes, check for session in cookie
-  // The session is stored client-side in localStorage, but we also
-  // set a lightweight cookie flag for middleware-level checks
+  // 2. Require session cookie
   const sessionFlag = request.cookies.get("hs-session");
-
   if (!sessionFlag) {
-    // Redirect to login
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Admin route protection - check admin flag cookie
+  // 3. Admin guard
   if (pathname.startsWith("/admin")) {
     const adminFlag = request.cookies.get("hs-admin");
     if (!adminFlag || adminFlag.value !== "1") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      const { sem, exam, jur } = parseScopeCookie(request.cookies.get("hs-scope")?.value);
+      url.pathname = `/s${sem}/${exam}/${jur}/dashboard`;
+      return NextResponse.redirect(url);
     }
+    return NextResponse.next();
+  }
+
+  // 4. Already in scoped tree?
+  if (/^s\d+$/.test(segs[0] ?? "")) {
+    return NextResponse.next();
+  }
+
+  // 5. Legacy unscoped path → 308 into user's scoped tree
+  if (LEGACY_APP_ROUTES.has(segs[0] ?? "")) {
+    const { sem, exam, jur } = parseScopeCookie(request.cookies.get("hs-scope")?.value);
+    // jadwal-uts → jadwal (renamed in the scoped tree)
+    const tail = segs[0] === "jadwal-uts" ? ["jadwal", ...segs.slice(1)] : segs;
+    url.pathname = `/s${sem}/${exam}/${jur}/${tail.join("/")}`;
+    return NextResponse.redirect(url, 308);
   }
 
   return NextResponse.next();

@@ -20,18 +20,23 @@ import {
   MessageCircle,
   Pencil,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { scopeKey } from "@/lib/scope";
+import { scopeCompact } from "@/components/admin/scope-dropdown-content";
 
 const PACKAGE_OPTIONS = [
-  { id: "share", label: "Share (Rp20.000)", tier: "share" as const },
-  { id: "normal", label: "Normal (Rp25.000)", tier: "normal" as const },
-  { id: "vip", label: "VIP (Rp30.000)", tier: "vip" as const },
+  { id: "share", label: "Share (Rp25.000)", tier: "share" as const },
+  { id: "normal", label: "Normal (Rp30.000)", tier: "normal" as const },
+  { id: "vip", label: "VIP (Rp35.000)", tier: "vip" as const },
   { id: "diamond", label: "Diamond (Rp50.000+)", tier: "diamond" as const },
   { id: "free", label: "Free", tier: "normal" as const },
 ] as const;
 
 export function QuickLicense() {
+  const { adminScope, isAllPeriods, hydrated } = useAdminScope();
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [pkg, setPkg] = useState<string>("share");
@@ -71,6 +76,10 @@ export function QuickLicense() {
       toast.error("Nama harus diisi");
       return;
     }
+    if (isAllPeriods || adminScope === "all") {
+      toast.error("Pilih scope spesifik dulu di admin header sebelum create license.");
+      return;
+    }
     setSaving(true);
 
     const prefix = "B29";
@@ -94,8 +103,9 @@ export function QuickLicense() {
     const currentInvoice = invoiceNumber ?? 1;
 
     try {
+      const scopeKeyStr = scopeKey(adminScope);
       // Create license key via API
-      const res = await fetch("/api/admin/licenses", {
+      const res = await fetch(`/api/admin/licenses?scope=${scopeKeyStr}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -105,6 +115,7 @@ export function QuickLicense() {
           isTester: false,
           maxDevices: devices,
           packageTier: derivedTier,
+          scope: scopeKeyStr,
         }),
       });
 
@@ -159,7 +170,7 @@ Selamat belajar! 🚀`;
     }
 
     setSaving(false);
-  }, [name, pkg, devices, freeReason, invoiceNumber]);
+  }, [name, pkg, devices, freeReason, invoiceNumber, adminScope, isAllPeriods]);
 
   const handleSaveInvoice = useCallback(async () => {
     const value = parseInt(tempInvoice) || 1;
@@ -193,6 +204,8 @@ Selamat belajar! 🚀`;
     window.open(url, "_blank");
   }, [whatsapp, generatedMessage]);
 
+  const lockedAllPeriods = hydrated && (isAllPeriods || adminScope === "all");
+
   return (
     <div className="space-y-4">
       <Card>
@@ -200,9 +213,27 @@ Selamat belajar! 🚀`;
           <CardTitle className="flex items-center gap-2 text-lg">
             <Zap className="h-5 w-5 text-primary" />
             Quick License Generator
+            {hydrated && !lockedAllPeriods && adminScope !== "all" && (
+              <Badge variant="secondary" className="ml-auto text-[10px] font-mono">
+                → {scopeCompact(adminScope)}
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {lockedAllPeriods && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+              <div>
+                <p className="font-semibold text-amber-700 dark:text-amber-400">
+                  Mode &quot;All periods&quot; aktif
+                </p>
+                <p className="text-amber-700/80 dark:text-amber-400/80">
+                  License creation harus terbind ke 1 scope spesifik. Switch scope di admin header dulu.
+                </p>
+              </div>
+            </div>
+          )}
           {/* Invoice number */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Invoice #</span>
@@ -301,7 +332,7 @@ Selamat belajar! 🚀`;
 
           <Button
             onClick={handleGenerate}
-            disabled={saving || !name.trim() || invoiceNumber === null}
+            disabled={saving || !name.trim() || invoiceNumber === null || lockedAllPeriods}
             className="w-full"
           >
             {saving ? (
@@ -310,6 +341,11 @@ Selamat belajar! 🚀`;
               <Zap className="mr-2 h-4 w-4" />
             )}
             Generate License Key
+            {!lockedAllPeriods && adminScope !== "all" && hydrated && (
+              <span className="ml-2 text-[11px] opacity-70">
+                → {scopeCompact(adminScope)}
+              </span>
+            )}
           </Button>
         </CardContent>
       </Card>

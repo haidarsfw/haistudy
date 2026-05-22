@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import type { Subject } from "@/types";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { springSmooth, hoverLift, tapScale } from "@/lib/motion";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 interface SubjectCardProps {
   subject: Subject;
@@ -13,6 +14,8 @@ interface SubjectCardProps {
 }
 
 export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCardProps) {
+  const scopeCtx = useOptionalScope();
+  const base = scopeCtx ? `/${scopeCtx.scopePath}` : "";
 
   return (
     <motion.div
@@ -21,7 +24,7 @@ export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCa
       transition={springSmooth}
     >
       <Link
-        href={`/subject/${subject.id}`}
+        href={`${base}/subject/${subject.id}`}
         className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-colors duration-200 hover:border-primary/30 hover:shadow-warm-lg"
       >
         {hasForumUnread && (

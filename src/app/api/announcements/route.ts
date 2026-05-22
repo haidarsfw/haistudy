@@ -3,11 +3,14 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 import type { Announcement } from "@/types";
 
-// ─── GET /api/announcements - public, active only ───
-export async function GET() {
+// ─── GET /api/announcements - active announcements for current scope ───
+export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
+
     if (!isSupabaseServerConfigured) {
       // Return mock active announcements
       return NextResponse.json({
@@ -25,12 +28,14 @@ export async function GET() {
     }
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("active", true)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    const { data, error } = await scopeEq(scope)(
+      supabase
+        .from("announcements")
+        .select("*")
+        .eq("active", true)
+        .order("created_at", { ascending: false })
+        .limit(5)
+    );
 
     if (error) throw error;
 
@@ -46,6 +51,10 @@ export async function GET() {
 
     return NextResponse.json({ announcements });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Announcements GET error:", error);
     return NextResponse.json({ announcements: [] });
   }

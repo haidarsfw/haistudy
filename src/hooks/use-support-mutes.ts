@@ -3,9 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { supportMutesChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 
 export function useSupportMutes() {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [muted, setMuted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -35,14 +40,14 @@ export function useSupportMutes() {
     const supabase = createClient();
     if (!supabase) return;
     const channel = supabase
-      .channel(`support-mutes:${session.licenseKey}`)
+      .channel(supportMutesChannel(scope, session.licenseKey))
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "support_mutes",
-          filter: `recipient_lk=eq.${session.licenseKey}`,
+          filter: scopeRealtimeFilter(scope),
         },
         () => {
           refresh();

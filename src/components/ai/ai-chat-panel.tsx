@@ -20,6 +20,7 @@ import { AiMessageBubble } from "./ai-message";
 import { AiInput } from "./ai-input";
 import { AiSuggestions } from "./ai-suggestions";
 import { AI_ENABLED, AI_DISABLED_MESSAGE } from "@/lib/feature-flags";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 interface AiChatPanelProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ interface AiChatPanelProps {
 export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
   const { session } = useSession();
   const { t } = useTranslation();
+  const scopeCtx = useOptionalScope();
+  const examLabel = scopeCtx?.scope.examPeriod === "uas" ? "UAS" : "UTS";
   const {
     messages,
     isStreaming,
@@ -182,7 +185,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
               <div className="flex-1 min-w-0">
                 <h2 className="text-sm font-semibold">haistudy AI</h2>
                 <p className="text-[10px] text-muted-foreground">
-                  {t("ai.assistant_subtitle")}
+                  Asisten belajar {examLabel}
                 </p>
               </div>
               <div className="flex items-center gap-1">
@@ -286,7 +289,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
                       <p className="mt-1 text-xs text-muted-foreground">
                         Aku haistudy AI, siap bantu kamu belajar.
                         <br />
-                        Tanya apa saja tentang materi UTS!
+                        Tanya apa saja tentang materi {examLabel}!
                       </p>
                     </div>
                     <AiSuggestions

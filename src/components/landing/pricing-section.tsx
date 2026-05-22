@@ -25,7 +25,7 @@ export function PricingSection() {
     {
       id: "share",
       name: t("pricing.share_name"),
-      price: "Rp 20.000",
+      price: "Rp 25.000",
       duration: t("pricing.per_duration"),
       badge: t("pricing.share_badge"),
       icon: Share2,
@@ -44,7 +44,7 @@ export function PricingSection() {
     {
       id: "normal",
       name: t("pricing.normal_name"),
-      price: "Rp 25.000",
+      price: "Rp 30.000",
       duration: t("pricing.per_duration"),
       badge: t("pricing.normal_badge"),
       icon: GraduationCap,
@@ -63,7 +63,7 @@ export function PricingSection() {
     {
       id: "vip",
       name: t("pricing.vip_name"),
-      price: "Rp 30.000",
+      price: "Rp 35.000",
       duration: t("pricing.per_duration"),
       badge: t("pricing.vip_badge"),
       icon: Crown,
@@ -81,7 +81,7 @@ export function PricingSection() {
   ];
 
   return (
-    <section className="relative px-4 py-16 sm:py-20">
+    <section className="relative px-4 py-20 sm:py-24">
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-primary/15 opacity-60" />
         <div className="absolute top-20 right-1/4 h-60 w-60 rounded-full bg-primary/10 opacity-50" />
@@ -90,7 +90,7 @@ export function PricingSection() {
         <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
           {t("pricing.title")}
         </h2>
-        <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
+        <p className="mx-auto mt-2 max-w-lg text-center text-[15px] text-muted-foreground">
           {t("pricing.subtitle")}
         </p>
 
@@ -102,15 +102,16 @@ export function PricingSection() {
               <div
                 key={pkg.id}
                 onClick={() => setSelectedPkg(pkg.id)}
-                className={`relative cursor-pointer rounded-2xl border p-4 sm:p-6 h-full flex flex-col transition-all duration-200 ${
+                className={`relative cursor-pointer rounded-2xl border p-4 sm:p-6 flex flex-col transition-all duration-200 ${
                   isSelected
                     ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 scale-[1.02] -translate-y-1"
                     : "border-border bg-card hover:border-primary/20 hover:scale-[1.01] hover:-translate-y-0.5"
                 }`}
               >
-                {/* Selection ring */}
-                {isSelected && (
-                  <div className="absolute inset-0 rounded-2xl ring-2 ring-primary/30 pointer-events-none" />
+                {pkg.id === "normal" && (
+                  <span className="absolute -top-2.5 right-4 z-10 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm">
+                    Popular
+                  </span>
                 )}
 
                 <div className="flex items-center gap-2 mb-3">
@@ -197,7 +198,7 @@ export function PricingSection() {
                   </a>
                 ) : (
                   <button
-                    className="mt-5 inline-flex w-full items-center justify-center rounded-lg h-11 text-sm font-medium transition-colors border border-border bg-background hover:bg-muted cursor-pointer"
+                    className="mt-5 inline-flex w-full items-center justify-center rounded-lg h-11 text-sm font-medium transition-colors border-0 bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedPkg(pkg.id);

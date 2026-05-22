@@ -5,6 +5,7 @@
  */
 
 import type { Session } from "@/types";
+import { DEFAULT_SCOPE, scopeKey, validateScopeTuple } from "@/lib/scope";
 
 const SESSION_KEY = "hs-session-data";
 
@@ -18,6 +19,14 @@ export function getStoredSession(): Session | null {
     // Backfill packageTier for sessions stored before this field existed
     if (!session.packageTier) {
       session.packageTier = "normal";
+    }
+
+    // Backfill scope for pre-multi-scope sessions
+    if (!session.scope || !validateScopeTuple(session.scope)) {
+      session.scope = DEFAULT_SCOPE;
+    }
+    if (!session.scopeKey) {
+      session.scopeKey = scopeKey(session.scope);
     }
 
     // Check expiry
@@ -42,4 +51,5 @@ export function clearStoredSession(): void {
   // Also clear cookies to prevent proxy.ts from redirecting to /login
   document.cookie = "hs-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
   document.cookie = "hs-admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+  document.cookie = "hs-scope=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
 }

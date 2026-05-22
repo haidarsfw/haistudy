@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 // Shared mock store references - import approach not possible across route files,
 // so vote mock logic is self-contained here
@@ -19,6 +20,7 @@ export { mockVotes };
 // ─── POST /api/forum/polls/vote ───
 export async function POST(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { pollId, voterId, optionIndex } = body;
 
@@ -58,6 +60,18 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
 
+    // Validate the poll belongs to the caller's scope before recording vote.
+    const { data: pollScope } = await scopeEq(scope)(
+      supabase
+        .from("forum_polls")
+        .select("id")
+        .eq("id", pollId)
+        .single()
+    );
+    if (!pollScope) {
+      return NextResponse.json({ error: "Poll tidak ditemukan dalam scope ini" }, { status: 404 });
+    }
+
     // Insert vote (unique constraint handles duplicate prevention)
     const { error: voteError } = await supabase
       .from("poll_votes")
@@ -65,6 +79,7 @@ export async function POST(request: Request) {
         poll_id: pollId,
         voter_id: voterId,
         option_index: optionIndex,
+        ...scopeColumns(scope),
       });
 
     if (voteError) {
@@ -117,6 +132,7 @@ export async function POST(request: Request) {
             thread_id: null,
             subject_id: poll.subject_id || null,
             thread_title: null,
+            ...scopeColumns(scope),
           });
         } catch (notifError) {
           console.error("Failed to create poll_vote notification:", notifError);
@@ -126,6 +142,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Poll vote POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

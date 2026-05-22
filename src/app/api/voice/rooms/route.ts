@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import type { VoiceRoom, VoiceParticipant } from "@/types";
 import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 // ─── Pre-created rooms (seed data) ───
 // UUIDs must match migration 010_fix_presence_voice.sql
@@ -119,8 +120,10 @@ async function ensureSeedRooms() {
 }
 
 // ─── GET /api/voice/rooms - List all rooms with participants ───
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
+
     if (!isSupabaseServerConfigured) {
       const rooms: VoiceRoom[] = getAllRoomDefs().map((r) => ({
         ...r,
@@ -136,15 +139,17 @@ export async function GET() {
     const STALE_MINUTES = 10;
     const staleThreshold = new Date(Date.now() - STALE_MINUTES * 60 * 1000).toISOString();
     try {
-      // Get participants who joined more than 10min ago
-      const { data: staleParticipants } = await supabase
-        .from("voice_participants")
-        .select("id, license_key, joined_at")
-        .lt("joined_at", staleThreshold);
+      // Get participants who joined more than 10min ago (scoped)
+      const { data: staleParticipants } = await scopeEq(scope)(
+        supabase
+          .from("voice_participants")
+          .select("id, license_key, joined_at")
+          .lt("joined_at", staleThreshold)
+      );
 
       if (staleParticipants && staleParticipants.length > 0) {
         // Check which of these are still online in presence table
-        const licenseKeys = staleParticipants.map((p) => p.license_key).filter(Boolean);
+        const licenseKeys = (staleParticipants as Record<string, unknown>[]).map((p: Record<string, unknown>) => p.license_key as string).filter(Boolean);
         const { data: onlinePresence } = await supabase
           .from("presence")
           .select("license_key, last_seen")
@@ -159,23 +164,25 @@ export async function GET() {
         );
 
         // Delete stale participants who are NOT online
-        const toDelete = staleParticipants.filter((p) => !onlineKeys.has(p.license_key));
+        const toDelete = (staleParticipants as Record<string, unknown>[]).filter((p: Record<string, unknown>) => !onlineKeys.has(p.license_key as string));
         if (toDelete.length > 0) {
           await supabase
             .from("voice_participants")
             .delete()
-            .in("id", toDelete.map((p) => p.id));
+            .in("id", toDelete.map((p: Record<string, unknown>) => p.id as string));
         }
       }
     } catch (cleanupErr) {
       console.error("Voice stale cleanup error:", cleanupErr);
     }
 
-    // Fetch participants grouped by room
-    const { data: participants, error } = await supabase
-      .from("voice_participants")
-      .select("*")
-      .order("joined_at", { ascending: true });
+    // Fetch participants grouped by room (scoped)
+    const { data: participants, error } = await scopeEq(scope)(
+      supabase
+        .from("voice_participants")
+        .select("*")
+        .order("joined_at", { ascending: true })
+    );
 
     if (error) throw error;
 
@@ -183,7 +190,7 @@ export async function GET() {
     const participantKeys = Array.from(
       new Set(
         (participants || [])
-          .map((p) => p.license_key as string)
+          .map((p: Record<string, unknown>) => p.license_key as string)
           .filter(Boolean)
       )
     );
@@ -221,6 +228,9 @@ export async function GET() {
 
     return NextResponse.json({ rooms });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Voice rooms GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -235,6 +245,9 @@ export async function POST(request: Request) {
         { status: 503 }
       );
     }
+
+    // Scope enforcement for POST
+    const scope = await requireScope(request);
 
     const body = await request.json();
     const { action } = body;
@@ -287,6 +300,7 @@ export async function POST(request: Request) {
 
       // Persist to DB so FK constraint works for voice_participants
       if (isSupabaseServerConfigured) {
+        const scope = await requireScope(request);
         const supabase = createServerClient()!;
         await supabase.from("voice_rooms").insert({
           id,
@@ -296,6 +310,7 @@ export async function POST(request: Request) {
           creator_id: creatorId,
           creator_name: creatorName,
           is_custom: true,
+          ...scopeColumns(scope),
         });
       }
 
@@ -458,6 +473,7 @@ export async function POST(request: Request) {
           room_id: roomId,
           user_name: userName,
           license_key: licenseKey,
+          ...scopeColumns(scope),
         })
         .select()
         .single();
@@ -527,6 +543,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Voice rooms POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

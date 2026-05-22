@@ -3,9 +3,10 @@
 import { useState, useMemo } from "react";
 import { HelpCircle, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { subjects } from "@/data/subjects";
-import { content } from "@/data/content";
 import { sounds } from "@/lib/sounds";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import type { Subject, SubjectContent } from "@/types";
 
 interface FlatQuestion {
   question: string;
@@ -15,7 +16,7 @@ interface FlatQuestion {
   subjectName: string;
 }
 
-function getDailyQuestion(): FlatQuestion | null {
+function getDailyQuestion(subjects: Subject[], content: Record<string, SubjectContent>): FlatQuestion | null {
   const all: FlatQuestion[] = [];
   for (const s of subjects) {
     const c = content[s.id];
@@ -36,7 +37,10 @@ function getDailyQuestion(): FlatQuestion | null {
 }
 
 export function DailyQuizCard() {
-  const question = useMemo(getDailyQuestion, []);
+  const { subjects, content } = useScopedData();
+  const scopeCtx = useOptionalScope();
+  const base = scopeCtx ? `/${scopeCtx.scopePath}` : "";
+  const question = useMemo(() => getDailyQuestion(subjects, content), [subjects, content]);
   const [selected, setSelected] = useState<number | null>(null);
 
   if (!question) return null;
@@ -107,7 +111,7 @@ export function DailyQuizCard() {
             {correct ? "Benar!" : "Kurang tepat, coba lagi besok."}
           </p>
           <Link
-            href={`/subject/${question.subjectId}?tab=4`}
+            href={`${base}/subject/${question.subjectId}?tab=4`}
             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
           >
             Quiz lengkap <ArrowRight className="h-3 w-3" />

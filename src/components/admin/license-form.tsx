@@ -28,6 +28,8 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
   const [isAdmin, setIsAdmin] = useState(license?.isAdmin || false);
   const [isTester, setIsTester] = useState(license?.isTester || false);
   const [packageTier, setPackageTier] = useState<"share" | "normal" | "vip" | "diamond">(license?.packageTier || "normal");
+  const [linkedEmail, setLinkedEmail] = useState(license?.linkedEmail || "");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = useCallback(
@@ -42,6 +44,12 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
         toast.error("Nama harus diisi");
         return;
       }
+      const emailTrim = linkedEmail.trim();
+      if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+        setEmailError("Format email tidak valid");
+        return;
+      }
+      setEmailError(null);
 
       setSaving(true);
 
@@ -58,9 +66,13 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
               isAdmin,
               isTester,
               packageTier,
+              linkedEmail: emailTrim ? emailTrim : null,
             }),
           });
-          if (!res.ok) throw new Error();
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || "Failed");
+          }
           toast.success("License key diperbarui");
         } else {
           const res = await fetch("/api/admin/licenses", {
@@ -74,6 +86,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
               isAdmin,
               isTester,
               packageTier,
+              ...(emailTrim ? { linkedEmail: emailTrim } : {}),
             }),
           });
           if (!res.ok) {
@@ -91,7 +104,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
 
       setSaving(false);
     },
-    [isEdit, key, name, maxDevices, unlimitedDevices, isAdmin, isTester, packageTier, license, onSave]
+    [isEdit, key, name, maxDevices, unlimitedDevices, isAdmin, isTester, packageTier, linkedEmail, license, onSave]
   );
 
   return (
@@ -171,6 +184,32 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
             <SelectItem value="diamond">Diamond</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="lf-linked-email">Email user (Gmail, opsional)</Label>
+        <Input
+          id="lf-linked-email"
+          type="email"
+          value={linkedEmail}
+          onChange={(e) => {
+            setLinkedEmail(e.target.value);
+            if (emailError) setEmailError(null);
+          }}
+          onBlur={() => {
+            const trim = linkedEmail.trim();
+            if (trim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trim)) {
+              setEmailError("Format email tidak valid");
+            }
+          }}
+          placeholder="user@gmail.com"
+        />
+        {emailError && (
+          <p className="text-xs text-destructive">{emailError}</p>
+        )}
+        <p className="text-[11px] text-muted-foreground/85">
+          Jika diisi, user bisa login via tombol &ldquo;Lanjut dengan Google&rdquo;.
+        </p>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">

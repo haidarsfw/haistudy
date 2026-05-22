@@ -21,6 +21,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
 
 interface UserStat {
   licenseKey: string;
@@ -30,32 +31,48 @@ interface UserStat {
   totalOnlineMinutes: number;
   isAdmin: boolean;
   isTester: boolean;
+  semester?: number;
+  examPeriod?: "uts" | "uas";
+  jurusan?: string;
 }
 
 export function Statistics() {
+  const { adminScope, adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
   const [users, setUsers] = useState<UserStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAllQuiz, setShowAllQuiz] = useState(false);
   const [showAllActive, setShowAllActive] = useState(false);
 
   useEffect(() => {
+    if (!hydrated) return;
     const fetchUsers = () => {
-      fetch("/api/admin/users")
+      fetch(`/api/admin/users${scopeQuery()}`)
         .then((r) => r.json())
         .then((data) => setUsers(data.users || []))
         .catch(console.error)
         .finally(() => setLoading(false));
     };
 
+    setLoading(true);
     fetchUsers();
 
-    // Supabase Realtime for license_keys changes (quiz scores, online minutes)
+    // Supabase Realtime — scope-aware channel name keyed by adminScopeKey so a
+    // switch tears down the prior subscription before starting a new one.
     if (isSupabaseConfigured) {
       const supabase = createClient();
       if (supabase) {
+        const channelName = isAllPeriods
+          ? "admin-stats:all"
+          : `admin-stats:${adminScopeKey}`;
+
+        const buildFilter = (): { filter?: string } => {
+          if (isAllPeriods || adminScope === "all") return {};
+          return { filter: `semester=eq.${adminScope.semester}` };
+        };
+
         const channel = supabase
-          .channel("admin-stats")
-          .on("postgres_changes", { event: "*", schema: "public", table: "license_keys" }, () => fetchUsers())
+          .channel(channelName)
+          .on("postgres_changes", { event: "*", schema: "public", table: "license_keys", ...buildFilter() }, () => fetchUsers())
           .on("postgres_changes", { event: "*", schema: "public", table: "activations" }, () => fetchUsers())
           .subscribe();
 
@@ -71,7 +88,7 @@ export function Statistics() {
     // Fallback: poll every 30s
     const interval = setInterval(fetchUsers, 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [hydrated, adminScopeKey, adminScope, isAllPeriods, scopeQuery]);
 
   const regularUsers = users.filter((u) => !u.isAdmin && !u.isTester);
   const totalKeys = users.length;
@@ -207,6 +224,11 @@ export function Statistics() {
                       <p className="truncate text-sm font-medium">
                         {user.userName}
                       </p>
+                      {isAllPeriods && user.semester !== undefined && (
+                        <p className="text-[10px] text-muted-foreground font-mono">
+                          s{user.semester}-{user.examPeriod}-{user.jurusan}
+                        </p>
+                      )}
                     </div>
                     <Badge variant="secondary" className="font-mono text-xs">
                       {user.totalQuizScore}
@@ -317,6 +339,11 @@ export function Statistics() {
                     <p className="truncate text-sm font-medium">
                       {user.userName}
                     </p>
+                    {isAllPeriods && user.semester !== undefined && (
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        s{user.semester}-{user.examPeriod}-{user.jurusan}
+                      </p>
+                    )}
                   </div>
                   <Badge variant="secondary" className="font-mono text-xs">
                     {user.totalQuizScore}
@@ -357,6 +384,11 @@ export function Statistics() {
                       <p className="truncate text-sm font-medium">
                         {user.userName}
                       </p>
+                      {isAllPeriods && user.semester !== undefined && (
+                        <p className="text-[10px] text-muted-foreground font-mono">
+                          s{user.semester}-{user.examPeriod}-{user.jurusan}
+                        </p>
+                      )}
                     </div>
                     <Badge variant="secondary" className="font-mono text-xs">
                       {hours > 0 ? `${hours}h ${mins}m` : `${mins}m`}

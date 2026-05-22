@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Clock, AlertTriangle, Timer } from "lucide-react";
 import { motion } from "framer-motion";
-import { getNextExam } from "@/data/schedules";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";
 import { staggerItem } from "@/lib/motion";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
+import type { Schedule } from "@/types";
+
+function pickNextExam(exams: Schedule[]): Schedule | null {
+  const now = new Date();
+  const upcoming = exams
+    .filter((e) => e.examDate && new Date(e.examDate) > now)
+    .sort((a, b) => new Date(a.examDate!).getTime() - new Date(b.examDate!).getTime());
+  return upcoming[0] ?? null;
+}
 
 export function ExamCountdownMini() {
   const { t } = useTranslation();
@@ -50,18 +59,22 @@ export function ExamCountdownMini() {
     }
   }, []);
 
+  const { examSchedule } = useScopedData();
+  const exam = useMemo(() => pickNextExam(examSchedule), [examSchedule]);
+
   useEffect(() => {
-    const exam = getNextExam();
-    if (!exam?.examDate) return;
+    if (!exam?.examDate) {
+      setSubject(null);
+      setCountdown(null);
+      return;
+    }
     setSubject(exam.subject);
 
     // Both modes update every minute
     update(exam.examDate!, isDetailed);
     const interval = setInterval(() => update(exam.examDate!, isDetailed), 60000);
     return () => clearInterval(interval);
-  }, [isDetailed, update]);
-
-  const exam = getNextExam();
+  }, [isDetailed, update, exam]);
 
   return (
     <motion.div

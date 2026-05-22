@@ -10,6 +10,8 @@ import { VoiceMiniBar } from "@/components/voice/voice-mini-bar";
 import { toast } from "sonner";
 import { sounds } from "@/lib/sounds";
 import { ActiveSupportProvider } from "@/components/providers/active-support-provider";
+import { AdminScopeProvider } from "@/components/providers/admin-scope-provider";
+import { AdminScopeHeader } from "@/components/admin/admin-scope-header";
 import { SWRegister } from "@/components/notifications/sw-register";
 import { EnableNotificationsBanner } from "@/components/notifications/enable-notifications-banner";
 import { useSupportNotifier } from "@/hooks/use-support-notifier";
@@ -68,7 +70,10 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <SWRegister />
       <EnableNotificationsBanner />
-      {children}
+      <AdminScopeProvider>
+        <AdminScopeHeader />
+        {children}
+      </AdminScopeProvider>
 
       {/* Keep voice connection alive when admin is in a voice room */}
       {voice.activeRoom && (

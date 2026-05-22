@@ -28,13 +28,63 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session from localStorage on mount
+  // Restore session from localStorage on mount. If empty, hydrate from the
+  // server via /api/auth/me — the hs-session cookie is httpOnly so JS can't
+  // detect it directly; let the endpoint decide. Returns 401 if no cookie.
   useEffect(() => {
+    let cancelled = false;
     const stored = getStoredSession();
     if (stored) {
       setSession(stored);
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+        if (!res.ok) {
+          if (!cancelled) setIsLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (cancelled) return;
+        if (data.session) {
+          // Apply embedded settings if present (mirror license-key login)
+          if (data.settings) {
+            try {
+              if (data.settings.darkMode !== undefined) {
+                localStorage.setItem("dark", JSON.stringify(data.settings.darkMode));
+              }
+              if (data.settings.theme) {
+                localStorage.setItem("theme", JSON.stringify(data.settings.theme));
+              }
+              if (data.settings.font) {
+                localStorage.setItem("font", JSON.stringify(data.settings.font));
+              }
+              if (data.settings.darkModeSchedule) {
+                localStorage.setItem(
+                  "darkModeSchedule",
+                  JSON.stringify(data.settings.darkModeSchedule)
+                );
+              }
+            } catch {
+              /* localStorage unavailable */
+            }
+          }
+          setSession(data.session);
+          storeSession(data.session);
+        }
+      } catch {
+        /* network error — leave session null, AppShell will redirect to / */
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback((newSession: Session) => {

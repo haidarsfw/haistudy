@@ -6,6 +6,8 @@ import {
   Shield,
   Calculator,
   Bot,
+  Scale,
+  Settings2,
   BookOpen,
   type LucideProps,
 } from "lucide-react";
@@ -16,6 +18,8 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   Shield,
   Calculator,
   Bot,
+  Scale,
+  Settings2,
   BookOpen,
 };
 

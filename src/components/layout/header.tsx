@@ -47,7 +47,9 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const isHome = pathname === "/dashboard";
+  // Home check: works for both legacy /dashboard (transitional) and the
+  // scoped path /s{N}/{exam}/{jur}/dashboard.
+  const isHome = pathname === "/dashboard" || /^\/s\d+\/(uts|uas)\/[a-z0-9-]+\/dashboard$/.test(pathname);
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md">
@@ -66,7 +68,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         </Button>
       )}
 
-      {/* Search (desktop: inline expand, mobile: icon trigger) */}
+      {/* Search (desktop/tablet: inline expand) */}
       <div data-onboarding="search" className="hidden sm:block relative">
         {searchOpen ? (
           <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
@@ -83,6 +85,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
           </button>
         )}
       </div>
+      {/* Search trigger (mobile only) */}
       <Button
         data-onboarding="search-mobile"
         variant="ghost"

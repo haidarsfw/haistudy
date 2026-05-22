@@ -19,11 +19,13 @@ import { toast } from "sonner";
 import type { PurchaseRequest } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { scopeKey } from "@/lib/scope";
 
 const PACKAGE_LABELS: Record<string, string> = {
-  share: "Share (Rp20.000)",
-  normal: "Normal (Rp25.000)",
-  vip: "VIP (Rp30.000)",
+  share: "Share (Rp25.000)",
+  normal: "Normal (Rp30.000)",
+  vip: "VIP (Rp35.000)",
   discount: "Diskon (Rp35.000)",
   free: "Free",
 };
@@ -36,24 +38,27 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function PurchaseQueue() {
   const { t } = useTranslation();
+  const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
   const [purchases, setPurchases] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const fetchPurchases = useCallback(async () => {
+    if (!hydrated) return;
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/purchase");
+      const res = await fetch(`/api/admin/purchase${scopeQuery()}`);
       const data = await res.json();
       setPurchases(data.purchases || []);
     } catch {
       toast.error("Gagal memuat purchase requests");
     }
     setLoading(false);
-  }, []);
+  }, [hydrated, scopeQuery]);
 
   useEffect(() => {
     fetchPurchases();
-  }, [fetchPurchases]);
+  }, [fetchPurchases, adminScopeKey]);
 
   const handleApprove = useCallback(async (purchase: PurchaseRequest) => {
     setProcessingId(purchase.id);
@@ -62,21 +67,29 @@ export function PurchaseQueue() {
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     const newKey = `B29-${random}`;
 
+    // License inherits the PURCHASE row's scope (not admin selection).
+    const purchaseScopeKey = scopeKey({
+      semester: purchase.semester,
+      examPeriod: purchase.examPeriod,
+      jurusan: purchase.jurusan,
+    });
+
     try {
-      // Create the license key
-      const createRes = await fetch("/api/admin/licenses", {
+      // Create the license key in the purchase's scope
+      const createRes = await fetch(`/api/admin/licenses?scope=${purchaseScopeKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           key: newKey,
           name: purchase.name,
           maxDevices: 2,
+          scope: purchaseScopeKey,
         }),
       });
       if (!createRes.ok) throw new Error("Failed to create key");
 
       // Update purchase status
-      const patchRes = await fetch("/api/admin/purchase", {
+      const patchRes = await fetch(`/api/admin/purchase${scopeQuery()}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -106,13 +119,13 @@ export function PurchaseQueue() {
       toast.error(e instanceof Error ? e.message : "Gagal approve");
     }
     setProcessingId(null);
-  }, []);
+  }, [scopeQuery]);
 
   const handleReject = useCallback(async (id: string) => {
     setProcessingId(id);
 
     try {
-      const res = await fetch("/api/admin/purchase", {
+      const res = await fetch(`/api/admin/purchase${scopeQuery()}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: "rejected" }),
@@ -126,7 +139,7 @@ export function PurchaseQueue() {
       toast.error("Gagal menolak");
     }
     setProcessingId(null);
-  }, []);
+  }, [scopeQuery]);
 
   const pendingCount = purchases.filter((p) => p.status === "pending").length;
 
@@ -194,6 +207,11 @@ export function PurchaseQueue() {
                             locale: idLocale,
                           })}
                         </span>
+                        {isAllPeriods && (
+                          <Badge variant="outline" className="text-[10px] font-mono">
+                            s{purchase.semester}-{purchase.examPeriod}-{purchase.jurusan}
+                          </Badge>
+                        )}
                       </div>
                       {purchase.licenseKey && (
                         <p className="mt-1 text-xs">

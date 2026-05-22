@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Check, X, Circle, Copy, Filter } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, X, Circle, Copy, Filter, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { content } from "@/data/content";
-import { subjects } from "@/data/subjects";
-import type { MateriItem } from "@/types";
+import { loadCourses, loadContent } from "@/data";
+import type { MateriItem, Subject, SubjectContent } from "@/types";
 import { toast } from "sonner";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { scopeKey } from "@/lib/scope";
 
 type AuditStatus = "unchecked" | "correct" | "mismatch";
 
@@ -27,21 +28,26 @@ interface AuditEntry {
   note?: string;
 }
 
-const STORAGE_KEY = "hs-materi-audit-v1";
+// Per-scope localStorage key so audit state doesn't bleed across scopes.
+const STORAGE_KEY_PREFIX = "hs-materi-audit-v1";
 
-function readStore(): Record<string, AuditEntry> {
+function storageKeyFor(scopeKeyStr: string): string {
+  return `${STORAGE_KEY_PREFIX}:${scopeKeyStr}`;
+}
+
+function readStore(scopeKeyStr: string): Record<string, AuditEntry> {
   if (typeof window === "undefined") return {};
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKeyFor(scopeKeyStr));
     return raw ? (JSON.parse(raw) as Record<string, AuditEntry>) : {};
   } catch {
     return {};
   }
 }
 
-function writeStore(next: Record<string, AuditEntry>) {
+function writeStore(scopeKeyStr: string, next: Record<string, AuditEntry>) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(storageKeyFor(scopeKeyStr), JSON.stringify(next));
   } catch {}
 }
 
@@ -62,7 +68,10 @@ function drivePreviewUrl(type: MateriItem["type"], driveId: string): string {
   }
 }
 
-function buildAllRows(): AuditRow[] {
+function buildAllRows(
+  subjects: Subject[],
+  content: Record<string, SubjectContent>
+): AuditRow[] {
   const rows: AuditRow[] = [];
   for (const subject of subjects) {
     const block = content[subject.id];
@@ -84,10 +93,44 @@ function buildAllRows(): AuditRow[] {
 }
 
 export default function MateriAuditPage() {
-  const allRows = useMemo(() => buildAllRows(), []);
-  const [store, setStore] = useState<Record<string, AuditEntry>>(() => readStore());
+  const { adminScope, isAllPeriods, hydrated } = useAdminScope();
+  const lockedAllPeriods = hydrated && (isAllPeriods || adminScope === "all");
+  const currentScopeKey =
+    adminScope === "all" ? "all" : scopeKey(adminScope);
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [content, setContent] = useState<Record<string, SubjectContent>>({});
+  const [store, setStore] = useState<Record<string, AuditEntry>>({});
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [onlyMismatch, setOnlyMismatch] = useState<boolean>(false);
+
+  // Re-load scope content + audit store when adminScope changes.
+  useEffect(() => {
+    if (lockedAllPeriods || adminScope === "all") {
+      setSubjects([]);
+      setContent({});
+      setStore({});
+      return;
+    }
+    let cancelled = false;
+    Promise.all([
+      loadCourses(adminScope),
+      loadContent(adminScope) as Promise<Record<string, SubjectContent>>,
+    ]).then(([s, c]) => {
+      if (cancelled) return;
+      setSubjects(s);
+      setContent(c);
+      setStore(readStore(scopeKey(adminScope)));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminScope, lockedAllPeriods]);
+
+  const allRows = useMemo(
+    () => buildAllRows(subjects, content),
+    [subjects, content]
+  );
 
   const filteredRows = useMemo(() => {
     return allRows.filter((r) => {
@@ -116,10 +159,10 @@ export default function MateriAuditPage() {
       const k = rowKey(r);
       const existing = next[k] ?? { status: "unchecked" };
       next[k] = { ...existing, status };
-      writeStore(next);
+      writeStore(currentScopeKey, next);
       return next;
     });
-  }, []);
+  }, [currentScopeKey]);
 
   const setNote = useCallback((r: AuditRow, note: string) => {
     setStore((prev) => {
@@ -127,10 +170,10 @@ export default function MateriAuditPage() {
       const k = rowKey(r);
       const existing = next[k] ?? { status: "unchecked" };
       next[k] = { ...existing, note };
-      writeStore(next);
+      writeStore(currentScopeKey, next);
       return next;
     });
-  }, []);
+  }, [currentScopeKey]);
 
   const exportMismatches = useCallback(() => {
     const out = allRows
@@ -149,8 +192,8 @@ export default function MateriAuditPage() {
   const resetAll = useCallback(() => {
     if (!confirm("Reset semua tanda audit? Aksi ini tidak bisa dibatalkan.")) return;
     setStore({});
-    writeStore({});
-  }, []);
+    writeStore(currentScopeKey, {});
+  }, [currentScopeKey]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
@@ -168,6 +211,20 @@ export default function MateriAuditPage() {
           </p>
         </div>
       </div>
+
+      {lockedAllPeriods && (
+        <div className="mb-6 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+          <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+          <div>
+            <p className="font-semibold text-amber-700 dark:text-amber-400">
+              Mode &quot;All periods&quot; aktif
+            </p>
+            <p className="text-amber-700/80 dark:text-amber-400/80">
+              Materi audit terbind ke 1 scope spesifik. Switch scope di admin header dulu untuk mulai audit.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mb-4 grid grid-cols-4 gap-2 rounded-2xl border border-border bg-card p-3 text-center">
         <Stat label="Total" value={counts.total} tone="muted" />

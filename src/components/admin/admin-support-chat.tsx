@@ -12,9 +12,17 @@ import { useSupportMutes } from "@/hooks/use-support-mutes";
 import { SupportConversationList } from "@/components/support/support-conversation-list";
 import { SupportChatThread } from "@/components/support/support-chat-thread";
 import { SupportPresenceBadge } from "@/components/support/support-presence-badge";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
 
 export function AdminSupportChat() {
-  const { conversations, loading, resolveConversation } = useSupportConversations();
+  const { adminScope, isAllPeriods } = useAdminScope();
+  // Thread admin's scope context into support conversations hook:
+  // - "all" mode → cross-scope inbox
+  // - scoped → only conversations from that scope
+  const { conversations, loading, resolveConversation } = useSupportConversations({
+    allPeriods: isAllPeriods || adminScope === "all",
+    scopeOverride: adminScope === "all" ? undefined : adminScope,
+  });
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const searchParams = useSearchParams();
   // Track presence of the selected user — admin always sees a "user" presence

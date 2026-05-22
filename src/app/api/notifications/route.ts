@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import type { Notification } from "@/types";
 
 // ─── Mock store ───
@@ -32,6 +33,7 @@ function mapRowToNotification(row: Record<string, unknown>): Notification {
 // ─── GET /api/notifications?licenseKey=xxx ───
 export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
     const { searchParams } = new URL(request.url);
     const licenseKey = searchParams.get("licenseKey");
 
@@ -51,17 +53,23 @@ export async function GET(request: Request) {
     }
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("license_key", licenseKey)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    const { data, error } = await scopeEq(scope)(
+      supabase
+        .from("notifications")
+        .select("*")
+        .eq("license_key", licenseKey)
+        .order("created_at", { ascending: false })
+        .limit(50)
+    );
 
     if (error) throw error;
     const notifications = (data || []).map(mapRowToNotification);
     return NextResponse.json({ notifications });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Notifications GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -70,6 +78,7 @@ export async function GET(request: Request) {
 // ─── POST /api/notifications - Create notification(s) ───
 export async function POST(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { notifications } = body as {
       notifications: Array<{
@@ -124,12 +133,17 @@ export async function POST(request: Request) {
       subject_id: n.subjectId || null,
       thread_title: n.threadTitle || null,
       message_id: n.messageId || null,
+      ...scopeColumns(scope),
     }));
 
     const { error } = await supabase.from("notifications").insert(rows);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Notifications POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -138,6 +152,7 @@ export async function POST(request: Request) {
 // ─── PATCH /api/notifications - Mark as read ───
 export async function PATCH(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { notificationIds, licenseKey, markAll } = body;
 
@@ -164,22 +179,30 @@ export async function PATCH(request: Request) {
     const supabase = createServerClient()!;
 
     if (markAll) {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("license_key", licenseKey)
-        .eq("read", false);
+      const { error } = await scopeEq(scope)(
+        supabase
+          .from("notifications")
+          .update({ read: true })
+          .eq("license_key", licenseKey)
+          .eq("read", false)
+      );
       if (error) throw error;
     } else if (notificationIds?.length) {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .in("id", notificationIds);
+      const { error } = await scopeEq(scope)(
+        supabase
+          .from("notifications")
+          .update({ read: true })
+          .in("id", notificationIds)
+      );
       if (error) throw error;
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Notifications PATCH error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

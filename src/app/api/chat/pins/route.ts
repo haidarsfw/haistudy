@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import type { ChatMessage } from "@/types";
 import { MAX_PINNED_MESSAGES } from "@/lib/constants";
 
@@ -11,24 +12,31 @@ import { MAX_PINNED_MESSAGES } from "@/lib/constants";
 const mockPinnedIds: string[] = [];
 
 // ─── GET /api/chat/pins ───
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
+
     if (!isSupabaseServerConfigured) {
       return NextResponse.json({ pinnedIds: [...mockPinnedIds] });
     }
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("pinned_messages")
-      .select("message_id")
-      .order("pinned_at", { ascending: false });
+    const { data, error } = await scopeEq(scope)(
+      supabase
+        .from("pinned_messages")
+        .select("message_id")
+        .order("pinned_at", { ascending: false })
+    );
 
     if (error) throw error;
     const pinnedIds = (data || []).map(
-      (row: { message_id: string }) => row.message_id
+      (row: Record<string, unknown>) => row.message_id as string
     );
     return NextResponse.json({ pinnedIds });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Chat pins GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -66,12 +74,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
+    const scope = await requireScope(request);
     const supabase = createServerClient()!;
 
-    // Check pin count
-    const { count } = await supabase
-      .from("pinned_messages")
-      .select("*", { count: "exact", head: true });
+    // Check pin count (scoped)
+    const { count } = await scopeEq(scope)(
+      supabase
+        .from("pinned_messages")
+        .select("*", { count: "exact", head: true })
+    );
 
     if ((count || 0) >= MAX_PINNED_MESSAGES) {
       return NextResponse.json(
@@ -82,7 +93,7 @@ export async function POST(request: Request) {
 
     const { error } = await supabase
       .from("pinned_messages")
-      .insert({ message_id: messageId, pinned_by: pinnedBy });
+      .insert({ message_id: messageId, pinned_by: pinnedBy, ...scopeColumns(scope) });
 
     if (error) {
       if (error.code === "23505") {
@@ -93,6 +104,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Chat pins POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -122,15 +136,21 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: true });
     }
 
+    const scope = await requireScope(request);
     const supabase = createServerClient()!;
-    const { error } = await supabase
-      .from("pinned_messages")
-      .delete()
-      .eq("message_id", messageId);
+    const { error } = await scopeEq(scope)(
+      supabase
+        .from("pinned_messages")
+        .delete()
+        .eq("message_id", messageId)
+    );
 
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Chat pins DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

@@ -4,7 +4,17 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { validateAdmin } from "@/lib/auth/admin-guard";
+import { resolveAdminScope } from "@/lib/auth/admin-scope";
+import { ScopeError } from "@/lib/auth/scope-check";
 import type { PurchaseRequest } from "@/types";
+
+function scopeErrorResponse(error: unknown) {
+  if (error instanceof ScopeError) {
+    return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  if (error instanceof Response) return error;
+  return null;
+}
 
 // ─── Mock store ───
 const mockPurchases = new Map<string, PurchaseRequest>();
@@ -23,6 +33,9 @@ if (mockPurchases.size === 0) {
     licenseKey: null,
     approvedAt: null,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
+    semester: 2,
+    examPeriod: "uts",
+    jurusan: "bm",
   });
   mockPurchases.set(id2, {
     id: id2,
@@ -34,6 +47,9 @@ if (mockPurchases.size === 0) {
     licenseKey: null,
     approvedAt: null,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
+    semester: 2,
+    examPeriod: "uts",
+    jurusan: "bm",
   });
 }
 
@@ -48,20 +64,33 @@ function mapRow(row: Record<string, unknown>): PurchaseRequest {
     licenseKey: (row.license_key as string) || null,
     approvedAt: (row.approved_at as string) || null,
     createdAt: row.created_at as string,
+    semester: (row.semester as number) ?? 2,
+    examPeriod: (row.exam_period as "uts" | "uas") ?? "uts",
+    jurusan: (row.jurusan as string) ?? "bm",
   };
 }
 
-// ─── GET /api/admin/purchase?status=pending ───
+// ─── GET /api/admin/purchase?status=pending&scope=...|allPeriods=1 ───
 export async function GET(request: Request) {
   try {
     const { authorized } = await validateAdmin();
     if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
+    const resolved = await resolveAdminScope(request);
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
 
     if (!isSupabaseServerConfigured) {
       let purchases = Array.from(mockPurchases.values());
+      if (resolved.mode === "scoped") {
+        purchases = purchases.filter(
+          (p) =>
+            p.semester === resolved.scope.semester &&
+            p.examPeriod === resolved.scope.examPeriod &&
+            p.jurusan === resolved.scope.jurusan
+        );
+      }
       if (status) {
         purchases = purchases.filter((p) => p.status === status);
       }
@@ -78,6 +107,13 @@ export async function GET(request: Request) {
       .select("*")
       .order("created_at", { ascending: false });
 
+    if (resolved.mode === "scoped") {
+      query = query
+        .eq("semester", resolved.scope.semester)
+        .eq("exam_period", resolved.scope.examPeriod)
+        .eq("jurusan", resolved.scope.jurusan);
+    }
+
     if (status) {
       query = query.eq("status", status);
     }
@@ -89,6 +125,8 @@ export async function GET(request: Request) {
       purchases: (data || []).map(mapRow),
     });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Admin purchase GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -99,6 +137,8 @@ export async function PATCH(request: Request) {
   try {
     const { authorized } = await validateAdmin();
     if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
+    const resolved = await resolveAdminScope(request);
 
     const body = await request.json();
     const { id, status, licenseKey } = body;
@@ -124,6 +164,14 @@ export async function PATCH(request: Request) {
       if (!purchase) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
+      if (
+        resolved.mode === "scoped" &&
+        (purchase.semester !== resolved.scope.semester ||
+          purchase.examPeriod !== resolved.scope.examPeriod ||
+          purchase.jurusan !== resolved.scope.jurusan)
+      ) {
+        return NextResponse.json({ error: "Purchase tidak ada di scope ini" }, { status: 404 });
+      }
       purchase.status = status;
       if (status === "approved") {
         purchase.licenseKey = licenseKey || null;
@@ -139,16 +187,23 @@ export async function PATCH(request: Request) {
       updates.approved_at = now;
     }
 
-    const { data, error } = await supabase
+    let q = supabase
       .from("purchase_requests")
       .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
+      .eq("id", id);
+    if (resolved.mode === "scoped") {
+      q = q
+        .eq("semester", resolved.scope.semester)
+        .eq("exam_period", resolved.scope.examPeriod)
+        .eq("jurusan", resolved.scope.jurusan);
+    }
+    const { data, error } = await q.select().single();
 
     if (error) throw error;
     return NextResponse.json({ purchase: mapRow(data) });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Admin purchase PATCH error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

@@ -49,36 +49,36 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL || "https://haistudy.site"
   ),
   title: {
-    default: "haistudy | Platform Belajar UTS BINUS B29",
+    default: "haistudy | Platform belajar all-in-one untuk mahasiswa Binus",
     template: "%s | haistudy",
   },
   description:
-    "Platform belajar pintar untuk mahasiswa BINUS. Materi lengkap, quiz interaktif, AI assistant, flashcards, dan fitur belajar bersama.",
+    "Platform belajar pintar untuk mahasiswa Binus. Materi lengkap, quiz interaktif, AI assistant, flashcards, voice room, dan komunitas belajar.",
   keywords: [
     "haistudy",
     "binus",
-    "B29",
-    "UTS",
     "study",
-    "business management",
+    "belajar",
+    "ujian",
+    "mahasiswa",
   ],
   icons: {
     icon: "/icon",
     apple: "/apple-icon",
   },
   openGraph: {
-    title: "haistudy — Platform Belajar Pintar Mahasiswa BINUS",
+    title: "haistudy — Platform Belajar All-in-One untuk Mahasiswa Binus",
     description:
-      "Materi lengkap, quiz interaktif, AI assistant, dan fitur belajar bersama untuk mahasiswa BINUS.",
+      "Materi lengkap, quiz interaktif, AI assistant, voice room, dan komunitas belajar untuk mahasiswa Binus.",
     siteName: "haistudy",
     type: "website",
     locale: "id_ID",
   },
   twitter: {
     card: "summary_large_image",
-    title: "haistudy — Platform Belajar Pintar Mahasiswa BINUS",
+    title: "haistudy — Platform Belajar All-in-One untuk Mahasiswa Binus",
     description:
-      "Materi lengkap, quiz interaktif, AI assistant, dan fitur belajar bersama untuk mahasiswa BINUS.",
+      "Materi lengkap, quiz interaktif, AI assistant, voice room, dan komunitas belajar untuk mahasiswa Binus.",
   },
 };
 

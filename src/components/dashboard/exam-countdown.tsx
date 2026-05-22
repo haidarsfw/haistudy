@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, AlertTriangle, CalendarClock } from "lucide-react";
-import { getNextExam } from "@/data/schedules";
 import { fadeIn } from "@/lib/motion";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import type { Schedule } from "@/types";
 
 interface TimeLeft {
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
+}
+
+function pickNextExam(exams: Schedule[]): Schedule | null {
+  const now = new Date();
+  const upcoming = exams
+    .filter((e) => e.examDate && new Date(e.examDate) > now)
+    .sort((a, b) => new Date(a.examDate!).getTime() - new Date(b.examDate!).getTime());
+  return upcoming[0] ?? null;
 }
 
 function calcTimeLeft(target: Date): TimeLeft | null {
@@ -31,24 +41,25 @@ function pad(n: number): string {
 export function ExamCountdown() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [examSubject, setExamSubject] = useState<string | null>(null);
+  const { examSchedule } = useScopedData();
+  const scopeCtx = useOptionalScope();
+  const periodLabel = scopeCtx?.scope.examPeriod === "uas" ? "UAS" : "UTS";
+
+  const exam = useMemo(() => pickNextExam(examSchedule), [examSchedule]);
 
   useEffect(() => {
-    const exam = getNextExam();
-    if (!exam?.examDate) return;
-
+    if (!exam?.examDate) {
+      setExamSubject(null);
+      setTimeLeft(null);
+      return;
+    }
     setExamSubject(exam.subject);
-
-    const update = () => {
-      const tl = calcTimeLeft(new Date(exam.examDate!));
-      setTimeLeft(tl);
-    };
-
+    const update = () => setTimeLeft(calcTimeLeft(new Date(exam.examDate!)));
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [exam]);
 
-  const exam = getNextExam();
   const isUrgent = timeLeft && timeLeft.days <= 3;
 
   // No exam dates set yet
@@ -57,10 +68,10 @@ export function ExamCountdown() {
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <CalendarClock className="h-4 w-4" />
-          <span className="font-heading font-semibold">UTS Countdown</span>
+          <span className="font-heading font-semibold">{periodLabel} Countdown</span>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Jadwal UTS belum diumumkan. Countdown akan muncul otomatis saat
+          Jadwal {periodLabel} belum diumumkan. Countdown akan muncul otomatis saat
           tanggal sudah diatur.
         </p>
       </div>
@@ -73,7 +84,7 @@ export function ExamCountdown() {
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span className="font-heading font-semibold">UTS Countdown</span>
+          <span className="font-heading font-semibold">{periodLabel} Countdown</span>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           Semua ujian sudah berlalu. Semoga hasilnya bagus!
@@ -100,7 +111,7 @@ export function ExamCountdown() {
         ) : (
           <Clock className="h-4 w-4 text-muted-foreground" />
         )}
-        <span className="font-heading font-semibold">UTS Countdown</span>
+        <span className="font-heading font-semibold">{periodLabel} Countdown</span>
       </div>
 
       <p className="mt-1 text-xs text-muted-foreground truncate">

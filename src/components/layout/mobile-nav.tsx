@@ -25,6 +25,9 @@ import { useTranslation } from "@/components/providers/language-provider";
 import { useNotifications } from "@/hooks/use-notifications";
 import { getDeviceId } from "@/lib/auth/device";
 import { sounds } from "@/lib/sounds";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { MobileScopeSwitcher } from "@/components/admin/admin-scope-switcher";
+import { jurusanLabel } from "@/lib/scope";
 
 interface MobileNavProps {
   onChatToggle?: () => void;
@@ -50,22 +53,26 @@ export function MobileNav({
   const { session, logout } = useSession();
   const { t } = useTranslation();
   const { unreadCount } = useNotifications();
+  const scopeCtx = useOptionalScope();
+  const scopePath = scopeCtx?.scopePath ?? "s2/uts/bm";
+  const base = `/${scopePath}`;
+  const dashboardHref = `${base}/dashboard`;
   const [moreOpen, setMoreOpen] = useState(false);
 
   const mainItems = [
-    { labelKey: "mobile_nav.home", icon: Home, href: "/dashboard" },
-    { labelKey: "mobile_nav.subjects", icon: BookOpen, href: "/subjects" },
+    { labelKey: "mobile_nav.home", icon: Home, href: dashboardHref },
+    { labelKey: "mobile_nav.subjects", icon: BookOpen, href: `${base}/subjects` },
     { labelKey: "mobile_nav.ai", icon: Sparkles, href: "#ai" },
     { labelKey: "mobile_nav.chat", icon: MessageCircle, href: "#chat" },
     { labelKey: "mobile_nav.more", icon: MoreHorizontal, href: "#more" },
   ];
 
   const moreItems = [
-    { labelKey: "nav.schedule", icon: Calendar, href: "/jadwal-uts" },
-    { labelKey: "nav.analytics", icon: BarChart3, href: "/analytics" },
-    { labelKey: "mobile_nav.bookmark", icon: Bookmark, href: "/bookmarks" },
-    { labelKey: "nav.notes", icon: StickyNote, href: "/notes" },
-    { labelKey: "nav.feedback", icon: MessageSquarePlus, href: "/feedback" },
+    { labelKey: "nav.schedule", icon: Calendar, href: `${base}/jadwal` },
+    { labelKey: "nav.analytics", icon: BarChart3, href: `${base}/analytics` },
+    { labelKey: "mobile_nav.bookmark", icon: Bookmark, href: `${base}/bookmarks` },
+    { labelKey: "nav.notes", icon: StickyNote, href: `${base}/notes` },
+    { labelKey: "nav.feedback", icon: MessageSquarePlus, href: `${base}/feedback` },
     { labelKey: "nav.support", icon: HeadphonesIcon, href: "#support" },
     { labelKey: "nav.settings", icon: Settings, href: "#settings" },
     ...(session?.isAdmin
@@ -123,7 +130,7 @@ export function MobileNav({
   const isActive = (href: string) => {
     if (href === "#chat") return isChatOpen;
     if (href === "#more") return moreOpen;
-    if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === dashboardHref) return pathname === dashboardHref;
     return pathname.startsWith(href);
   };
 
@@ -147,7 +154,21 @@ export function MobileNav({
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed bottom-0 inset-x-0 z-50 rounded-t-2xl border-t border-border bg-background pb-[calc(3.5rem+env(safe-area-inset-bottom))] max-h-[60vh] overflow-y-auto sm:hidden"
             >
-              <div className="flex items-center justify-between px-4 pt-4 pb-2">
+              {/* Scope info header */}
+              {scopeCtx && (
+                <div className="mx-4 mt-4 mb-2 rounded-lg bg-primary/5 border border-primary/10 px-3 py-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">Scope Aktif</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Semester {scopeCtx.scope.semester} · {scopeCtx.scope.examPeriod.toUpperCase()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{jurusanLabel(scopeCtx.scope)}</p>
+                </div>
+              )}
+
+              {/* Admin scope switcher */}
+              <MobileScopeSwitcher />
+
+              <div className="flex items-center justify-between px-4 pt-2 pb-2">
                 <h3 className="text-sm font-semibold">{t("mobile_nav.more_title")}</h3>
                 <button
                   onClick={() => setMoreOpen(false)}
@@ -194,6 +215,7 @@ export function MobileNav({
           </>
         )}
       </AnimatePresence>
+
 
       {/* Bottom nav bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] sm:hidden">

@@ -7,6 +7,7 @@ import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { parseMentions, hasMentions } from "@/lib/mentions";
 import type { ChatMessage } from "@/types";
 import { CHAT_MAX_MESSAGES } from "@/lib/constants";
+import { requireScope, scopeColumns, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 
 // ─── Mock store for development without Supabase ───
 const mockMessages: ChatMessage[] = [];
@@ -90,6 +91,7 @@ function mapRowToMessage(row: Record<string, unknown>): ChatMessage {
 // ─── GET /api/chat/messages?before=cursor ───
 export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
     const { searchParams } = new URL(request.url);
     const before = searchParams.get("before"); // cursor: created_at timestamp
 
@@ -115,6 +117,8 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false })
       .limit(CHAT_MAX_MESSAGES);
 
+    query = scopeEq(scope)(query);
+
     if (before) {
       // Use created_at for reliable chronological pagination
       query = query.lt("created_at", before);
@@ -126,6 +130,10 @@ export async function GET(request: Request) {
     const messages = (data || []).map(mapRowToMessage).reverse();
     return NextResponse.json({ messages });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Chat messages GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -134,6 +142,7 @@ export async function GET(request: Request) {
 // ─── POST /api/chat/messages - Send message ───
 export async function POST(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const {
       content,
@@ -212,6 +221,7 @@ export async function POST(request: Request) {
         reply_to_id: replyToId || null,
         reply_to_name: replyToName || null,
         reply_to_content: replyToContent || null,
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -288,7 +298,8 @@ export async function POST(request: Request) {
               }
 
               if (notifRows.length > 0) {
-                const { error: insertError } = await supabase.from("notifications").insert(notifRows);
+                const scopedRows = notifRows.map((r) => ({ ...r, ...scopeColumns(scope) }));
+                const { error: insertError } = await supabase.from("notifications").insert(scopedRows);
                 if (insertError) {
                   console.error("Mention: Failed to insert notifications:", insertError.message);
                 }
@@ -303,6 +314,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: createdMessage });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Chat messages POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -311,10 +326,11 @@ export async function POST(request: Request) {
 // ─── DELETE /api/chat/messages - Soft delete message or clear all (admin) ───
 export async function DELETE(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const isAdmin = await isAdminFromCookies();
 
-    // Admin: clear all messages
+    // Admin: clear all messages within this scope
     if (body.clearAll) {
       if (!isAdmin) {
         return NextResponse.json({ error: "Admin only" }, { status: 403 });
@@ -324,10 +340,12 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ success: true, cleared: true });
       }
       const supabase = createServerClient()!;
-      const { error } = await supabase
-        .from("chat_messages")
-        .update({ deleted: true, content: "", media_url: null })
-        .neq("deleted", true);
+      const { error } = await scopeEq(scope)(
+        supabase
+          .from("chat_messages")
+          .update({ deleted: true, content: "", media_url: null })
+          .neq("deleted", true)
+      );
       if (error) throw error;
       return NextResponse.json({ success: true, cleared: true });
     }
@@ -380,14 +398,20 @@ export async function DELETE(request: Request) {
       }
     }
 
-    const { error } = await supabase
-      .from("chat_messages")
-      .update({ deleted: true, content: "", media_url: null })
-      .eq("id", messageId);
+    const { error } = await scopeEq(scope)(
+      supabase
+        .from("chat_messages")
+        .update({ deleted: true, content: "", media_url: null })
+        .eq("id", messageId)
+    );
 
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Chat messages DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

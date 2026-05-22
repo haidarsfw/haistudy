@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 import { fadeInUp } from "@/lib/motion";
-import { subjects } from "@/data/subjects";
-import { content } from "@/data/content";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getAllProgress, calcSubjectPercent } from "@/lib/progress";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
 
 export function StudyProgressCard() {
   const { t } = useTranslation();
+  const { subjects, content } = useScopedData();
   const [progressData, setProgressData] = useState<
     { id: string; name: string; icon: string; color: string; percent: number }[]
   >([]);
@@ -53,7 +53,7 @@ export function StudyProgressCard() {
       window.removeEventListener("hs-progress-updated", recalculate);
       window.removeEventListener("storage", recalculate);
     };
-  }, []);
+  }, [subjects, content]);
 
   return (
     <motion.div

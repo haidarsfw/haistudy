@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { supportUnreadChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "hs-support-last-read";
@@ -16,6 +19,8 @@ const STORAGE_KEY = "hs-support-last-read";
  */
 export function useSupportUnread() {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [unreadCount, setUnreadCount] = useState(0);
   const isPanelOpenRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -105,14 +110,14 @@ export function useSupportUnread() {
       : `license_key=eq.${session.licenseKey}`;
 
     const channel = supabase
-      .channel("support-unread-counter")
+      .channel(supportUnreadChannel(scope, session.licenseKey))
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "support_messages",
-          ...(filter ? { filter } : {}),
+          ...(filter ? { filter } : { filter: scopeRealtimeFilter(scope) }),
         },
         () => debouncedFetch()
       )

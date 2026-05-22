@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { searchContent, type SearchResult } from "@/lib/search";
 import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 
 const typeIcons: Record<SearchResult["type"], typeof BookOpen> = {
   materi: BookOpen,
@@ -37,6 +39,8 @@ interface SearchDialogProps {
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selected, setSelected] = useState(0);
@@ -92,15 +96,21 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, onOpenChange]);
 
-  const handleSearch = useCallback((value: string) => {
-    setQuery(value);
-    setSelected(0);
-    if (value.trim().length >= 2) {
-      setResults(searchContent(value));
-    } else {
-      setResults([]);
-    }
-  }, []);
+  const handleSearch = useCallback(
+    (value: string) => {
+      setQuery(value);
+      setSelected(0);
+      if (value.trim().length >= 2) {
+        // Scope-locked: only return results from the current scope's content.
+        searchContent(scope, value)
+          .then((r) => setResults(r))
+          .catch(() => setResults([]));
+      } else {
+        setResults([]);
+      }
+    },
+    [scope]
+  );
 
   const navigate = useCallback(
     (result: SearchResult) => {

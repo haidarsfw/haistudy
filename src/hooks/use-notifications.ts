@@ -3,11 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { notificationsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import { sounds } from "@/lib/sounds";
 import type { Notification } from "@/types";
 
 export function useNotifications() {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,14 +46,14 @@ export function useNotifications() {
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`notifications-${session.licenseKey}`)
+      .channel(notificationsChannel(scope, session.licenseKey))
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `license_key=eq.${session.licenseKey}`,
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           const row = payload.new;
@@ -75,7 +80,7 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session]);
+  }, [session, scope]);
 
   // Polling fallback disabled — Realtime subscription provides instant delivery
   // Previous: setInterval every 120s was redundant and contributed to invocation limit

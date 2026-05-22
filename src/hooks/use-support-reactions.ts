@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { supportReactionsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import type { SupportReaction } from "@/types";
 
 export interface UseSupportReactionsResult {
@@ -39,6 +42,8 @@ export function useSupportReactions(
   myKey: string | null
 ): UseSupportReactionsResult {
   const [byMsg, setByMsg] = useState<Map<string, SupportReaction[]>>(new Map());
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const inflightRef = useRef<Set<string>>(new Set());
   const channelRef = useRef<RealtimeChannel | null>(null);
   const [, setTick] = useState(0); // forces re-render when inflight set changes
@@ -79,14 +84,14 @@ export function useSupportReactions(
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`support:rxn:${licenseKey}`)
+      .channel(supportReactionsChannel(scope, licenseKey))
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "support_reactions",
-          filter: `license_key=eq.${licenseKey}`,
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           const r = rawToCamel(payload.new as Record<string, unknown>);

@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { Mic, ArrowRight } from "lucide-react";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 export function VoiceRoomsWidget() {
+  const scopeCtx = useOptionalScope();
+  const href = scopeCtx ? `/${scopeCtx.scopePath}/voice` : "/voice";
+
   return (
     <Link
-      href="/voice"
+      href={href}
       className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30 group"
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">

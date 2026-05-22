@@ -7,6 +7,7 @@ import {
   rowToSupportMessage,
 } from "@/lib/support/server";
 import { notifyOnSupportMessage } from "@/lib/notifications/fan-out";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import type { SupportConversationSummary, SupportMessage } from "@/types";
 
 /* ─────────────────────────── Legacy in-memory fallback ──────────────── */
@@ -39,8 +40,12 @@ const resolvedKeys = new Set<string>();
 /* ─────────────────────────── GET ─────────────────────────────────── */
 
 export async function GET(req: NextRequest) {
-  const licenseKey = req.nextUrl.searchParams.get("licenseKey");
-  const fetchAll = req.nextUrl.searchParams.get("all") === "true";
+  try {
+    const scope = await requireScope(req);
+    const licenseKey = req.nextUrl.searchParams.get("licenseKey");
+    const fetchAll = req.nextUrl.searchParams.get("all") === "true";
+    // Admin can opt into cross-scope view via ?allPeriods=1
+    const allPeriods = req.nextUrl.searchParams.get("allPeriods") === "1";
 
   // ── Admin: list all conversations ──
   if (fetchAll) {
@@ -54,10 +59,14 @@ export async function GET(req: NextRequest) {
     }
 
     const supabase = createServerClient()!;
-    const { data: allMessages, error } = await supabase
+    let allQ = supabase
       .from("support_messages")
       .select("*")
       .order("created_at", { ascending: true });
+    if (!allPeriods) {
+      allQ = scopeEq(scope)(allQ);
+    }
+    const { data: allMessages, error } = await allQ;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -129,10 +138,12 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createServerClient()!;
-  let query = supabase
-    .from("support_messages")
-    .select("*")
-    .eq("license_key", licenseKey);
+  let query = scopeEq(scope)(
+    supabase
+      .from("support_messages")
+      .select("*")
+      .eq("license_key", licenseKey)
+  );
   if (!requesterIsAdmin) {
     query = query.eq("is_internal", false);
   }
@@ -144,12 +155,21 @@ export async function GET(req: NextRequest) {
 
   const messages = (data || []).map(rowToSupportMessage);
   return NextResponse.json({ messages });
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
+    console.error("Support GET error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }
 
 /* ─────────────────────────── POST: send ─────────────────────────── */
 
 export async function POST(req: NextRequest) {
   try {
+    const scope = await requireScope(req);
     const body = await req.json();
     const {
       licenseKey,
@@ -291,6 +311,7 @@ export async function POST(req: NextRequest) {
         reply_to_content: replyToContent ?? null,
         is_internal: isInternal,
         client_nonce: clientNonce ?? null,
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -333,7 +354,11 @@ export async function POST(req: NextRequest) {
       success: true,
       message,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
@@ -342,6 +367,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const scope = await requireScope(req);
     if (!(await isAdminFromCookies())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
@@ -399,6 +425,7 @@ export async function PATCH(req: NextRequest) {
         is_admin: true,
         sender_name: "System",
         is_system: true,
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -411,7 +438,11 @@ export async function PATCH(req: NextRequest) {
       success: true,
       message: rowToSupportMessage(data),
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

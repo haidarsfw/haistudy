@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { supportMsgsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import type {
   SupportMessage,
   SupportSendStatus,
@@ -52,6 +55,8 @@ export function useSupportMessages(
   licenseKey: string | null,
   viewerIsAdmin: boolean
 ): UseSupportMessagesResult {
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -86,14 +91,14 @@ export function useSupportMessages(
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`support:msgs:${licenseKey}`)
+      .channel(supportMsgsChannel(scope, licenseKey))
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "support_messages",
-          filter: `license_key=eq.${licenseKey}`,
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => applyInsert(payload.new as Record<string, unknown>)
       )

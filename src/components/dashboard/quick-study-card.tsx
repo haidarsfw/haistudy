@@ -4,14 +4,18 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Play, ArrowRight } from "lucide-react";
 import { fadeInUp } from "@/lib/motion";
-import { subjects } from "@/data/subjects";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 export function QuickStudyCard() {
   const { t } = useTranslation();
   const { settings } = useSettings();
+  const { subjects } = useScopedData();
+  const scopeCtx = useOptionalScope();
+  const base = scopeCtx ? `/${scopeCtx.scopePath}` : "";
 
   // Show last 3 visited subjects, padded with defaults to always show 3
   const recentIds = settings.recentSubjects ?? [];
@@ -21,6 +25,8 @@ export function QuickStudyCard() {
   // Pad with subjects not already in recent list
   const remaining = subjects.filter((s) => !recentIds.includes(s.id));
   const quickSubjects = [...recentSubjects, ...remaining].slice(0, 3);
+
+  if (quickSubjects.length === 0) return null;
 
   return (
     <motion.div data-onboarding="subjects" className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/20 light-card-shadow" variants={fadeInUp} initial="hidden" animate="visible">
@@ -33,7 +39,7 @@ export function QuickStudyCard() {
         {quickSubjects.map((subject) => (
           <Link
             key={subject.id}
-            href={`/subject/${subject.id}`}
+            href={`${base}/subject/${subject.id}`}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent group"
           >
             <SubjectIcon
@@ -52,7 +58,7 @@ export function QuickStudyCard() {
       </div>
 
       <Link
-        href="/subjects"
+        href={`${base}/subjects`}
         className="mt-3 flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
       >
         {t("dashboard.view_all")}

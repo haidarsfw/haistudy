@@ -5,7 +5,7 @@ import { Users, Monitor, Smartphone, Tablet, Lock } from "lucide-react";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
-import { getSubjectById } from "@/data/subjects";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
@@ -39,6 +39,8 @@ export function OnlineUsers() {
   // Check if the current user has hide status enabled (from their own presence entry)
   const myHideStatus = users.find((u) => u.licenseKey === myLicenseKey)?.hideStatus ?? false;
   const visibleUsers = users;
+  const { subjects } = useScopedData();
+  const subjectMap = new Map(subjects.map((s) => [s.id, s] as const));
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -67,10 +69,10 @@ export function OnlineUsers() {
           initial="hidden"
           animate="visible"
         >
-          {visibleUsers.slice(0, 12).map((user) => {
+          {visibleUsers.slice(0, 12).map((user, idx) => {
             const devices = user.deviceTypes || [user.deviceType];
             const subject = user.currentSubject
-              ? getSubjectById(user.currentSubject)
+              ? subjectMap.get(user.currentSubject) ?? null
               : null;
             // Subjects: visible to all (preserves existing UX).
             // Page labels (dashboard, forum, etc.): admin-only — others don't
@@ -102,7 +104,7 @@ export function OnlineUsers() {
 
             return (
               <motion.div
-                key={user.id}
+                key={`${user.id}:${user.licenseKey || "anon"}:${idx}`}
                 className="flex items-center gap-2 text-xs"
                 variants={staggerItem}
               >

@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { voiceParticipantsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import type { VoiceRoom } from "@/types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -28,6 +31,8 @@ interface UseVoiceRoomReturn {
 
 export function useVoiceRoom(): UseVoiceRoomReturn {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [rooms, setRooms] = useState<VoiceRoom[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,13 +65,14 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
     if (!supabase) return;
 
     const channel = supabase
-      .channel("voice-participants")
+      .channel(voiceParticipantsChannel(scope))
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "voice_participants",
+          filter: scopeRealtimeFilter(scope),
         },
         () => {
           // Refetch rooms on any participant change
@@ -80,7 +86,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
     return () => {
       channel.unsubscribe();
     };
-  }, [fetchRooms]);
+  }, [fetchRooms, scope]);
 
   // Auto-leave on page unload
   useEffect(() => {

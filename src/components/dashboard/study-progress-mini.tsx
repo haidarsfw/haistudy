@@ -3,15 +3,10 @@
 import { useState, useEffect } from "react";
 import { TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
-import { subjects } from "@/data/subjects";
-import { content } from "@/data/content";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerItem } from "@/lib/motion";
 import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progress";
-
-function calcOverallProgress(): number {
-  return calcOverall(getAllProgress(), subjects, content);
-}
+import { useScopedData } from "@/components/providers/scoped-data-provider";
 
 function ProgressRing({ percent }: { percent: number }) {
   const r = 22;
@@ -52,13 +47,13 @@ function ProgressRing({ percent }: { percent: number }) {
 
 export function StudyProgressMini() {
   const { t } = useTranslation();
+  const { subjects, content } = useScopedData();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    setProgress(calcOverallProgress());
-
-    // Re-calc when progress synced from server or updated locally
-    const handleSync = () => setProgress(calcOverallProgress());
+    const calc = () => calcOverall(getAllProgress(), subjects, content);
+    setProgress(calc());
+    const handleSync = () => setProgress(calc());
     window.addEventListener("hs-progress-synced", handleSync);
     window.addEventListener("hs-progress-updated", handleSync);
     window.addEventListener("storage", handleSync);
@@ -67,7 +62,7 @@ export function StudyProgressMini() {
       window.removeEventListener("hs-progress-updated", handleSync);
       window.removeEventListener("storage", handleSync);
     };
-  }, []);
+  }, [subjects, content]);
 
   return (
     <motion.div

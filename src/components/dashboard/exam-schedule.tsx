@@ -1,9 +1,25 @@
 "use client";
 
 import { Calendar } from "lucide-react";
-import { weeklySchedule } from "@/data/schedules";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
 
 export function ExamSchedule() {
+  const { weeklySchedule } = useScopedData();
+
+  if (weeklySchedule.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2 text-sm mb-3">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="font-heading font-semibold">Jadwal Kuliah</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Jadwal kuliah belum diatur untuk periode ini.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-sm mb-3">

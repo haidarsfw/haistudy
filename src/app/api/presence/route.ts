@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 /**
  * POST /api/presence
@@ -44,6 +45,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
     }
 
+    // Scope enforcement — presence is scoped per (user_id, scope)
+    const scope = await requireScope(request);
+
     if (!isSupabaseServerConfigured) {
       return NextResponse.json({ success: true });
     }
@@ -56,15 +60,17 @@ export async function POST(request: Request) {
     // OFFLINE — lightweight beacon handler
     // ═══════════════════════════════════════════
     if (action === "offline") {
-      // Single UPDATE — no read needed
-      await supabase
-        .from("presence")
-        .update({
-          online: false,
-          last_seen: nowISO,
-          online_seconds_accumulator: 0,
-        })
-        .eq("user_id", userId);
+      // Single UPDATE — scoped
+      await scopeEq(scope)(
+        supabase
+          .from("presence")
+          .update({
+            online: false,
+            last_seen: nowISO,
+            online_seconds_accumulator: 0,
+          })
+          .eq("user_id", userId)
+      );
 
       return NextResponse.json({ success: true });
     }
@@ -76,11 +82,13 @@ export async function POST(request: Request) {
 
     // Use RPC if available (single round-trip), fallback to 2-query path
     try {
-      const { data: existing } = await supabase
-        .from("presence")
-        .select("last_seen, online_seconds_accumulator")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const { data: existing } = await scopeEq(scope)(
+        supabase
+          .from("presence")
+          .select("last_seen, online_seconds_accumulator")
+          .eq("user_id", userId)
+          .maybeSingle()
+      );
 
       let newAccumulator = existing?.online_seconds_accumulator ?? 0;
       let minutesToFlush = 0;
@@ -97,7 +105,7 @@ export async function POST(request: Request) {
       minutesToFlush = Math.floor(newAccumulator / 60);
       newAccumulator = newAccumulator % 60;
 
-      // Single UPSERT
+      // Single UPSERT — PK is now (user_id, semester, exam_period, jurusan)
       await supabase.from("presence").upsert(
         {
           user_id: userId,
@@ -109,8 +117,9 @@ export async function POST(request: Request) {
           online: true,
           last_seen: nowISO,
           online_seconds_accumulator: newAccumulator,
+          ...scopeColumns(scope),
         },
-        { onConflict: "user_id" }
+        { onConflict: "user_id,semester,exam_period,jurusan" }
       );
 
       // Flush minutes — fire-and-forget (don't await, don't block response)
@@ -133,6 +142,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Presence API error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

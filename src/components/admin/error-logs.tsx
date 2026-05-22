@@ -17,27 +17,39 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ErrorLog } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+
+type ScopedErrorLog = ErrorLog & {
+  semester?: number;
+  examPeriod?: "uts" | "uas";
+  jurusan?: string;
+};
 
 export function ErrorLogs() {
-  const [logs, setLogs] = useState<ErrorLog[]>([]);
+  const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
+  const [logs, setLogs] = useState<ScopedErrorLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchLogs = useCallback(() => {
-    fetch("/api/admin/logs?type=error&limit=100")
+    if (!hydrated) return;
+    const q = scopeQuery();
+    const sep = q ? "&" : "?";
+    fetch(`/api/admin/logs${q}${sep}type=error&limit=100`)
       .then((r) => r.json())
       .then((data) => setLogs(data.logs || []))
       .catch(() => toast.error("Gagal memuat error logs"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [hydrated, scopeQuery]);
 
   useEffect(() => {
+    setLoading(true);
     fetchLogs();
-  }, [fetchLogs]);
+  }, [fetchLogs, adminScopeKey]);
 
   const handleResolve = useCallback(async (id: string) => {
     try {
-      await fetch("/api/admin/logs", {
+      await fetch(`/api/admin/logs${scopeQuery()}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, resolved: true }),
@@ -49,7 +61,7 @@ export function ErrorLogs() {
     } catch {
       toast.error("Gagal mengupdate");
     }
-  }, []);
+  }, [scopeQuery]);
 
   const unresolvedCount = logs.filter((l) => !l.resolved).length;
 
@@ -146,6 +158,11 @@ export function ErrorLogs() {
                           >
                             <CheckCircle className="h-2.5 w-2.5" />
                             Resolved
+                          </Badge>
+                        )}
+                        {isAllPeriods && log.semester !== undefined && (
+                          <Badge variant="outline" className="text-[10px] font-mono">
+                            s{log.semester}-{log.examPeriod}-{log.jurusan}
                           </Badge>
                         )}
                       </div>

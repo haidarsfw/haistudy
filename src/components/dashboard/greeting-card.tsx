@@ -6,12 +6,13 @@ import { Lightbulb, Sparkles, Shield, FlaskConical, Crown, Gem } from "lucide-re
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
-import { subjects } from "@/data/subjects";
-import { content } from "@/data/content";
 import { fadeInUp } from "@/lib/motion";
 import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progress";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { scopeFullLabel } from "@/lib/scope";
 
-const TIPS = [
+const TIPS_UTS = [
   "Gunakan teknik Pomodoro: belajar 25 menit, istirahat 5 menit. Ulangi 4x lalu istirahat panjang.",
   "Flashcards paling efektif jika diulang secara berkala (spaced repetition). Coba review setiap hari!",
   "Sebelum membaca materi baru, coba tulis apa yang kamu sudah tahu tentang topik tersebut.",
@@ -49,7 +50,45 @@ const TIPS = [
   "Reward diri sendiri setelah menyelesaikan target belajar - ini membangun kebiasaan positif.",
 ];
 
-const FUN_FACTS = [
+const TIPS_UAS = [
+  "Buat peta konsep antar-bab untuk melihat hubungan materi secara keseluruhan — UAS menguji pemahaman kumulatif.",
+  "Prioritaskan materi yang paling sering muncul di kisi-kisi UAS dan latihan soal semester ini.",
+  "Gunakan teknik elaborative interrogation: tanya 'mengapa' dan 'bagaimana' untuk setiap konsep kunci.",
+  "Latih menjawab soal essay dengan timer — kemampuan menulis cepat dan terstruktur sangat penting di UAS.",
+  "Buat cheat sheet satu halaman per mata kuliah — proses pembuatannya sendiri meningkatkan pemahaman.",
+  "Review kesalahan UTS-mu sebagai bahan belajar — pola kesalahan cenderung berulang di UAS.",
+  "Coba retrieval practice: tutup semua catatan dan tulis semua yang kamu ingat tentang satu topik.",
+  "Gunakan dual coding: gabungkan teks dan diagram visual untuk setiap konsep yang kompleks.",
+  "Simulasikan kondisi ujian sesungguhnya — duduk di meja, atur timer, tanpa gangguan.",
+  "Fokus pada pemahaman 'big picture' sebelum mendalami detail — UAS sering menguji koneksi antar materi.",
+  "Gunakan self-explanation: jelaskan setiap langkah penyelesaian soal dengan kata-katamu sendiri.",
+  "Buat daftar istilah kunci beserta definisi untuk setiap mata kuliah — ini memperkuat pondasi pemahaman.",
+  "Manfaatkan waktu jeda antar ujian untuk review singkat mata kuliah berikutnya.",
+  "Hindari belajar materi baru di malam sebelum ujian — fokus pada review dan penguatan memori.",
+  "Coba 'brain dump': di awal sesi belajar, tulis semua yang kamu ingat lalu temukan gap-nya.",
+  "Gabungkan sumber belajar: rangkuman, flashcards, dan latihan soal untuk variasi yang lebih efektif.",
+  "Perhatikan pola soal dari UTS dan latihan — dosen sering menggunakan format yang konsisten.",
+  "Buat jadwal review bertingkat: H-7 overview, H-3 deep dive, H-1 quick recap.",
+  "Istirahat aktif (stretching, jalan kaki) lebih menyegarkan otak dibanding scrolling media sosial.",
+  "Kelompokkan materi berdasarkan tingkat kesulitan — selesaikan yang sulit saat energi masih tinggi.",
+  "Rekam dirimu menjelaskan materi, lalu dengarkan ulang — ini variasi efektif dari teknik teach-back.",
+  "Hubungkan materi kuliah dengan situasi dunia nyata — ini memperdalam pemahaman dan mempermudah recall.",
+  "Siapkan alat tulis dan keperluan ujian dari malam sebelumnya untuk mengurangi stres pagi hari.",
+  "Makan makanan bergizi tinggi protein dan lemak sehat sebelum ujian — hindari makanan berat yang bikin ngantuk.",
+  "Identifikasi 20% materi yang mencakup 80% soal ujian (Prinsip Pareto) dan kuasai itu terlebih dahulu.",
+  "Buat soal ujian prediksi sendiri berdasarkan materi — ini melatih cara berpikir seperti pembuat soal.",
+  "Atur HP ke mode fokus selama sesi belajar — setiap distraksi membutuhkan waktu pemulihan konsentrasi.",
+  "Tidur minimal 7 jam di malam sebelum UAS — kurang tidur secara signifikan menurunkan kemampuan berpikir.",
+  "Baca seluruh soal ujian dulu sebelum mulai menjawab — ini membantu mengatur strategi dan alokasi waktu.",
+  "Untuk soal hitungan, selalu cek ulang satuan dan unit di setiap langkah perhitungan.",
+  "Jawab soal yang paling kamu kuasai terlebih dahulu untuk membangun momentum dan kepercayaan diri.",
+  "Saat soal pilihan ganda, eliminasi opsi yang jelas salah dulu untuk meningkatkan probabilitas benar.",
+  "Lakukan breathing exercise 4-7-8 sebelum ujian: hirup 4 detik, tahan 7, buang 8 — menurunkan kecemasan.",
+  "Tulis ringkasan singkat di akhir setiap sesi belajar — ini menutup loop memori dengan efektif.",
+  "Percaya pada persiapanmu — overthinking di menit-menit terakhir justru mengganggu kemampuan recall.",
+];
+
+const FUN_FACTS_UTS = [
   "Otak manusia bisa menyimpan sekitar 2.5 petabyte data - setara 3 juta jam video!",
   "Belajar sebelum tidur meningkatkan retensi memori hingga 20-40%.",
   "Menulis tangan lebih efektif untuk mengingat dibanding mengetik.",
@@ -87,6 +126,44 @@ const FUN_FACTS = [
   "Aroma tertentu (rosemary, peppermint) terbukti bisa meningkatkan konsentrasi dan memori.",
 ];
 
+const FUN_FACTS_UAS = [
+  "Suhu ruangan sekitar 22°C menghasilkan performa kognitif optimal menurut riset Helsinki University of Technology.",
+  "Otak melakukan 'synaptic pruning' saat tidur — koneksi yang jarang terpakai dipangkas untuk efisiensi.",
+  "Riset Dominican University menunjukkan orang yang menulis tujuan belajar spesifik 42% lebih mungkin mencapainya.",
+  "Fenomena 'tip of the tongue' terjadi karena otak sudah menemukan memori tapi jalur retrieval-nya terblokir sementara.",
+  "Otak memproses informasi negatif lebih cepat dibanding positif — ini disebut negativity bias (Baumeister et al.).",
+  "Riset University of Michigan: berjalan di alam selama 20 menit meningkatkan memori kerja hingga 20%.",
+  "Otak menghasilkan gelombang theta saat dalam state 'flow' — kondisi optimal untuk deep focus learning.",
+  "Tidur siang 20 menit setelah sesi belajar terbukti meningkatkan konsolidasi memori secara signifikan.",
+  "Generation effect: informasi yang kamu hasilkan sendiri (bukan sekadar dibaca) jauh lebih mudah diingat.",
+  "Glukosa adalah bahan bakar utama otak — kadar gula darah rendah langsung menurunkan konsentrasi belajar.",
+  "Setiap kali kamu mengingat sebuah memori, otak merekonstruksinya ulang — proses ini disebut reconsolidation.",
+  "Otak bisa membentuk memori baru bahkan saat tidur nyenyak non-REM stage 3 menurut riset di jurnal Nature.",
+  "Rata-rata orang mengecek ponsel sekitar 96 kali per hari menurut studi Asurion — tiap cek butuh waktu refokus.",
+  "Serial position effect: kita cenderung paling mengingat informasi di awal (primacy) dan akhir (recency) daftar.",
+  "Context-dependent memory: belajar di tempat yang mirip ruang ujian bisa meningkatkan recall saat ujian berlangsung.",
+  "Otak bisa lebih kreatif saat sedikit lelah karena kontrol inhibisi menurun — ini disebut inspiration paradox.",
+  "Musik dengan tempo 60-70 BPM dapat membantu menyinkronkan gelombang otak alpha untuk konsentrasi optimal.",
+  "Neuron bermyelin bisa mentransmisikan sinyal dengan kecepatan hingga 120 meter per detik.",
+  "Default mode network otak aktif saat melamun — dan ternyata berperan penting dalam konsolidasi memori.",
+  "Riset Erickson et al. di PNAS: latihan aerobik rutin selama setahun bisa meningkatkan volume hippocampus hingga 2%.",
+  "Testing effect ternyata lebih kuat ketika kuis dilakukan setelah jeda waktu, bukan langsung setelah baca.",
+  "Penelitian menunjukkan aroma kopi saja (tanpa diminum) sudah bisa meningkatkan performa di tes analitis.",
+  "Riset UC Davis: rasa penasaran (curiosity) mengaktifkan sirkuit reward dopamin yang sama dengan makanan enak.",
+  "Cahaya biru dari layar menekan produksi melatonin secara signifikan, mengganggu kualitas tidur pasca belajar malam.",
+  "Mimpi selama fase REM mungkin merupakan 'rehearsal' — otak memproses dan mengorganisir memori saat bermimpi.",
+  "Belajar dengan interval (spaced practice) bisa meningkatkan retensi jangka panjang drastis dibanding belajar marathon.",
+  "Prefrontal cortex — bagian otak untuk perencanaan dan pengambilan keputusan — paling aktif di pagi hari.",
+  "Fenomena 'eureka moment' ditandai oleh lonjakan gelombang gamma di otak, terutama di lobus temporal kanan.",
+  "Otak menghasilkan sekitar 12-25 watt listrik saat terjaga — cukup untuk menyalakan lampu LED kecil.",
+  "Riset Roediger & Karpicke: mahasiswa yang mengerjakan practice test mengingat hampir 2x lipat dibanding yang hanya membaca ulang.",
+  "Protein BDNF yang dihasilkan saat olahraga berperan penting dalam pembentukan dan penguatan memori baru.",
+  "Amygdala (pusat emosi) bisa 'membajak' prefrontal cortex saat stres tinggi — ini penyebab mind-blank saat ujian.",
+  "Riset Johns Hopkins: variasi kecil dalam metode latihan meningkatkan kecepatan penguasaan keterampilan baru.",
+  "Otak manusia bisa mendeteksi perbedaan waktu sekecil 5 milidetik antara dua suara yang berbeda.",
+  "Mahasiswa dengan growth mindset (percaya kecerdasan bisa berkembang) cenderung mendapat hasil belajar yang lebih baik.",
+];
+
 function getGreetingKey(): string {
   const hour = new Date().getHours();
   if (hour < 11) return "greeting.morning";
@@ -118,9 +195,6 @@ function getFormattedDate(): string {
   });
 }
 
-function calcOverallProgress(): number {
-  return calcOverall(getAllProgress(), subjects, content);
-}
 
 function ProgressRing({ percent }: { percent: number }) {
   const r = 36;
@@ -162,12 +236,15 @@ function ProgressRing({ percent }: { percent: number }) {
 export function GreetingCard() {
   const { session } = useSession();
   const { t } = useTranslation();
+  const { subjects, content } = useScopedData();
+  const scopeCtx = useOptionalScope();
   const [overallProgress, setOverallProgress] = useState(0);
 
   useEffect(() => {
-    setOverallProgress(calcOverallProgress());
+    const calc = () => calcOverall(getAllProgress(), subjects, content);
+    setOverallProgress(calc());
 
-    const handleSync = () => setOverallProgress(calcOverallProgress());
+    const handleSync = () => setOverallProgress(calc());
     window.addEventListener("hs-progress-synced", handleSync);
     window.addEventListener("hs-progress-updated", handleSync);
     window.addEventListener("storage", handleSync);
@@ -176,7 +253,7 @@ export function GreetingCard() {
       window.removeEventListener("hs-progress-updated", handleSync);
       window.removeEventListener("storage", handleSync);
     };
-  }, []);
+  }, [subjects, content]);
 
   const greetingKey = useMemo(() => getGreetingKey(), []);
   const motivation = useMemo(
@@ -185,10 +262,15 @@ export function GreetingCard() {
   );
   const dateStr = useMemo(() => getFormattedDate(), []);
 
+  // Scope-aware tips & fun facts
+  const isUas = scopeCtx?.scope.examPeriod === "uas";
+  const tips = isUas ? TIPS_UAS : TIPS_UTS;
+  const funFacts = isUas ? FUN_FACTS_UAS : FUN_FACTS_UTS;
+
   // 6-hour rotation for tips & fun facts
   const rotationIndex = Math.floor(Date.now() / (6 * 3600 * 1000));
-  const tip = TIPS[rotationIndex % TIPS.length];
-  const funFact = FUN_FACTS[rotationIndex % FUN_FACTS.length];
+  const tip = tips[rotationIndex % tips.length];
+  const funFact = funFacts[rotationIndex % funFacts.length];
 
   return (
     <motion.div
@@ -241,8 +323,15 @@ export function GreetingCard() {
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="my-5 border-t border-border" />
+      {/* Divider with scope context */}
+      <div className="my-5 flex items-center gap-3">
+        <div className="flex-1 border-t border-border" />
+        {scopeCtx && (
+          <span className="text-[10px] text-muted-foreground/30 whitespace-nowrap">
+            {scopeFullLabel(scopeCtx.scope)}
+          </span>
+        )}
+      </div>
 
       {/* Study tip + fun fact */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

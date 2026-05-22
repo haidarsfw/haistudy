@@ -3,11 +3,15 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { scopeColumns } from "@/lib/auth/scope-check";
+import { DEFAULT_SCOPE, isAvailableScope, parseScopeKey } from "@/lib/scope";
 
 // ─── POST /api/webhooks/purchase - Google Form webhook ───
 // Expected payload from Google Apps Script:
-// { name, whatsapp, email?, package }
+// { name, whatsapp, email?, package, scope? }
+// `scope` (optional): "s2-uas-bm" etc. Defaults to DEFAULT_SCOPE if absent.
 // Caller must send header `X-Webhook-Secret: $PURCHASE_WEBHOOK_SECRET`.
+// TODO(google-script): forward the scope picked by the user from the order form.
 const ALLOWED_PACKAGES = new Set(["share", "normal", "vip", "diamond"]);
 
 export async function POST(request: Request) {
@@ -24,6 +28,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, whatsapp, email } = body;
     const pkg = body.package || "normal";
+
+    // Resolve scope from body; fallback to DEFAULT_SCOPE for legacy callers.
+    let scope = DEFAULT_SCOPE;
+    if (typeof body.scope === "string" && body.scope.length > 0) {
+      const parsed = parseScopeKey(body.scope);
+      if (!parsed || !isAvailableScope(parsed)) {
+        return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
+      }
+      scope = parsed;
+    }
 
     if (!name || !whatsapp) {
       return NextResponse.json(
@@ -66,6 +80,7 @@ export async function POST(request: Request) {
         email: email?.trim() || null,
         package: pkg,
         status: "pending",
+        ...scopeColumns(scope),
       })
       .select("id")
       .single();

@@ -35,16 +35,19 @@ export async function GET(req: Request) {
   const offlineSince = new Date(now - 5 * 60 * 1000).toISOString();
   const dedupSince = new Date(now - 30 * 60 * 1000).toISOString();
 
-  // 1) Candidate notifications
+  // 1) Candidate notifications, scoped to recipients whose license is still
+  // active. JOIN activations + filter by expiry to skip licenses that have
+  // already expired (they can't log in anyway, so email is wasted).
   const { data: candidates, error: cErr } = await supabase
     .from("notifications")
     .select(
-      "id, license_key, sender_name, preview, thread_id, message_id, created_at"
+      "id, license_key, sender_name, preview, thread_id, message_id, created_at, semester, exam_period, jurusan, activations!inner(expiry)"
     )
     .eq("type", "support_message")
     .eq("read", false)
     .lte("created_at", olderThan)
     .gte("created_at", newerThan)
+    .gt("activations.expiry", new Date(now).toISOString())
     .order("created_at", { ascending: true })
     .limit(200);
   if (cErr) {

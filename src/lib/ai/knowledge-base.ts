@@ -1,6 +1,6 @@
-import { subjects } from "@/data/subjects";
-import { content } from "@/data/content";
-import { rangkumanContent } from "@/data/rangkuman";
+import { loadCourses, loadContent, loadRangkuman } from "@/data";
+import type { ScopeTuple } from "@/types/scope";
+import type { SubjectContent } from "@/types";
 
 /**
  * Strip custom HTML-like tags from rangkuman content into plain text.
@@ -20,11 +20,21 @@ function stripTags(html: string): string {
 }
 
 /**
- * Build knowledge context for a specific subject.
+ * Build knowledge context for a specific subject inside the given scope.
+ * Scope-locked: a UAS request never sees UTS materi (and vice versa).
  */
-export function getSubjectKnowledge(subjectId: string): string {
-  const subject = subjects.find((s) => s.id === subjectId);
-  const subjectContent = content[subjectId];
+export async function getSubjectKnowledge(
+  scope: ScopeTuple,
+  subjectId: string
+): Promise<string> {
+  const [subjectsList, contentMap, rangkumanMap] = await Promise.all([
+    loadCourses(scope),
+    loadContent(scope) as Promise<Record<string, SubjectContent>>,
+    loadRangkuman(scope) as Promise<Record<string, Record<string, string>>>,
+  ]);
+
+  const subject = subjectsList.find((s) => s.id === subjectId);
+  const subjectContent = contentMap[subjectId];
 
   if (!subject || !subjectContent) return "";
 
@@ -33,7 +43,6 @@ export function getSubjectKnowledge(subjectId: string): string {
   parts.push(`## Mata Kuliah: ${subject.name}`);
   parts.push(`${subject.description}\n`);
 
-  // Flashcard terms
   if (subjectContent.flashcards.length > 0) {
     parts.push("### Istilah Penting (Flashcards)");
     for (const fc of subjectContent.flashcards) {
@@ -42,7 +51,6 @@ export function getSubjectKnowledge(subjectId: string): string {
     parts.push("");
   }
 
-  // Kisi-kisi topics
   if (subjectContent.kisiKisi.length > 0) {
     parts.push("### Kisi-Kisi Ujian");
     for (const kk of subjectContent.kisiKisi) {
@@ -54,7 +62,6 @@ export function getSubjectKnowledge(subjectId: string): string {
     parts.push("");
   }
 
-  // Quiz Q&A
   if (subjectContent.quiz.length > 0) {
     parts.push("### Contoh Soal Quiz");
     for (const q of subjectContent.quiz) {
@@ -64,8 +71,7 @@ export function getSubjectKnowledge(subjectId: string): string {
     parts.push("");
   }
 
-  // Rangkuman text
-  const rangkuman = rangkumanContent[subjectId];
+  const rangkuman = rangkumanMap?.[subjectId];
   if (rangkuman) {
     parts.push("### Rangkuman Materi");
     for (const [title, html] of Object.entries(rangkuman)) {
@@ -78,16 +84,21 @@ export function getSubjectKnowledge(subjectId: string): string {
 }
 
 /**
- * Build knowledge context for all subjects (overview).
- * Includes kisi-kisi topics and condensed rangkuman so AI has broad knowledge
- * even without a specific subjectId.
+ * Build knowledge context for all subjects in the scope (overview).
+ * Scope-locked.
  */
-export function getAllSubjectsOverview(): string {
+export async function getAllSubjectsOverview(scope: ScopeTuple): Promise<string> {
+  const [subjectsList, contentMap, rangkumanMap] = await Promise.all([
+    loadCourses(scope),
+    loadContent(scope) as Promise<Record<string, SubjectContent>>,
+    loadRangkuman(scope) as Promise<Record<string, Record<string, string>>>,
+  ]);
+
   const parts: string[] = [];
 
   parts.push("## Daftar Mata Kuliah\n");
-  for (const subject of subjects) {
-    const subjectContent = content[subject.id];
+  for (const subject of subjectsList) {
+    const subjectContent = contentMap[subject.id];
     parts.push(`**${subject.name}**: ${subject.description}`);
     if (subjectContent) {
       parts.push(
@@ -96,10 +107,9 @@ export function getAllSubjectsOverview(): string {
     }
   }
 
-  // Add all flashcard terms as a quick reference
   parts.push("\n## Semua Istilah Penting\n");
-  for (const subject of subjects) {
-    const subjectContent = content[subject.id];
+  for (const subject of subjectsList) {
+    const subjectContent = contentMap[subject.id];
     if (!subjectContent) continue;
 
     parts.push(`### ${subject.name}`);
@@ -109,10 +119,9 @@ export function getAllSubjectsOverview(): string {
     parts.push("");
   }
 
-  // Kisi-kisi topics per subject
   parts.push("\n## Kisi-Kisi Ujian Per Mata Kuliah\n");
-  for (const subject of subjects) {
-    const subjectContent = content[subject.id];
+  for (const subject of subjectsList) {
+    const subjectContent = contentMap[subject.id];
     if (!subjectContent || subjectContent.kisiKisi.length === 0) continue;
 
     parts.push(`### ${subject.name}`);
@@ -122,10 +131,9 @@ export function getAllSubjectsOverview(): string {
     parts.push("");
   }
 
-  // Full rangkuman content for all subjects
   parts.push("\n## Rangkuman Lengkap Per Mata Kuliah\n");
-  for (const subject of subjects) {
-    const rangkuman = rangkumanContent[subject.id];
+  for (const subject of subjectsList) {
+    const rangkuman = rangkumanMap?.[subject.id];
     if (!rangkuman) continue;
 
     parts.push(`### ${subject.name}`);

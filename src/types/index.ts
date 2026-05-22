@@ -2,6 +2,8 @@
 // haistudy - Core Type Definitions
 // ============================================
 
+import type { ScopeTuple, ScopeKey, ExamPeriod } from "@/types/scope";
+
 export interface Session {
   licenseKey: string;
   name: string;
@@ -11,6 +13,10 @@ export interface Session {
   selectedClass: string;
   isPreview?: boolean;
   packageTier: "share" | "normal" | "vip" | "diamond";
+  // Bound at activation, immutable per session. Backfilled to (2,uts,bm)
+  // for sessions stored before this field existed.
+  scope: ScopeTuple;
+  scopeKey: ScopeKey;
 }
 
 export interface Subject {
@@ -225,6 +231,9 @@ export interface PurchaseRequest {
   licenseKey: string | null;
   approvedAt: string | null;
   createdAt: string;
+  semester: number;
+  examPeriod: ExamPeriod;
+  jurusan: string;
 }
 
 // ============================================
@@ -315,6 +324,7 @@ export interface LicenseKey {
   totalOnlineMinutes: number;
   createdAt: string;
   updatedAt: string;
+  linkedEmail?: string | null;
 }
 
 export interface Activation {

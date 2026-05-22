@@ -13,6 +13,8 @@ import {
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { toast } from "sonner";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { Badge } from "@/components/ui/badge";
 
 interface FeedbackItem {
   id: string;
@@ -23,6 +25,9 @@ interface FeedbackItem {
   imageUrls: string[];
   status: "unread" | "read" | "resolved";
   createdAt: string;
+  semester?: number;
+  examPeriod?: "uts" | "uas";
+  jurusan?: string;
 }
 
 const categoryLabel: Record<string, string> = {
@@ -44,30 +49,32 @@ const statusIcon: Record<string, typeof Clock> = {
 };
 
 export function FeedbackList() {
+  const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<FeedbackItem | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const fetchFeedback = async () => {
-    try {
-      const res = await fetch("/api/feedback");
-      const data = await res.json();
-      setItems(data);
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    if (!hydrated) return;
+    const fetchFeedback = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/feedback${scopeQuery()}`);
+        const data = await res.json();
+        setItems(Array.isArray(data) ? data : []);
+      } catch {
+        // silent
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchFeedback();
-  }, []);
+  }, [hydrated, scopeQuery, adminScopeKey]);
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      await fetch("/api/feedback", {
+      await fetch(`/api/feedback${scopeQuery()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "updateStatus", feedbackId: id, status }),
@@ -115,7 +122,7 @@ export function FeedbackList() {
             description={`Hapus semua ${items.length} feedback? Aksi ini tidak bisa dibatalkan.`}
             onConfirm={async () => {
               try {
-                await fetch("/api/feedback", {
+                await fetch(`/api/feedback${scopeQuery()}`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ action: "clearAll" }),
@@ -155,6 +162,11 @@ export function FeedbackList() {
                 <span className="text-[10px] text-muted-foreground capitalize">
                   {item.status}
                 </span>
+                {isAllPeriods && item.semester !== undefined && (
+                  <Badge variant="outline" className="text-[10px] font-mono ml-1">
+                    s{item.semester}-{item.examPeriod}-{item.jurusan}
+                  </Badge>
+                )}
               </div>
             </div>
             <p className="text-sm text-foreground leading-relaxed line-clamp-3">{item.message}</p>

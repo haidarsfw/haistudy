@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import type { ForumComment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
@@ -13,9 +14,18 @@ function getMockComments(threadId: string): ForumComment[] {
   return mockComments.get(threadId) || [];
 }
 
+function scopeErrorResponse(error: unknown) {
+  if (error instanceof ScopeError) {
+    return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  if (error instanceof Response) return error;
+  return null;
+}
+
 // ─── GET /api/forum/comments?threadId=xxx ───
 export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
     const { searchParams } = new URL(request.url);
     const threadId = searchParams.get("threadId");
 
@@ -31,32 +41,36 @@ export async function GET(request: Request) {
     }
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("forum_comments")
-      .select("*")
-      .eq("thread_id", threadId)
-      .order("created_at", { ascending: true })
-      .limit(500);
+    const { data, error } = await scopeEq(scope)(
+      supabase
+        .from("forum_comments")
+        .select("*")
+        .eq("thread_id", threadId)
+        .order("created_at", { ascending: true })
+        .limit(500)
+    );
 
     if (error) throw error;
 
-    const comments: ForumComment[] = (data || []).map((row) => ({
-      id: row.id,
-      threadId: row.thread_id,
-      content: row.content,
-      imageUrl: row.image_url || null,
-      authorId: row.author_id,
-      authorName: row.author_name,
-      authorClass: row.author_class,
-      isAdmin: row.is_admin,
-      isTester: row.is_tester ?? false,
-      packageTier: row.package_tier ?? "normal",
-      parentCommentId: row.parent_comment_id,
-      createdAt: row.created_at,
+    const comments: ForumComment[] = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+      id: row.id as string,
+      threadId: row.thread_id as string,
+      content: row.content as string,
+      imageUrl: (row.image_url as string) || null,
+      authorId: row.author_id as string,
+      authorName: row.author_name as string,
+      authorClass: (row.author_class as string) || "",
+      isAdmin: row.is_admin as boolean,
+      isTester: (row.is_tester as boolean) ?? false,
+      packageTier: (row.package_tier as ForumComment["packageTier"]) ?? "normal",
+      parentCommentId: (row.parent_comment_id as string) || null,
+      createdAt: row.created_at as string,
     }));
 
     return NextResponse.json({ comments });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Forum comments GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -65,6 +79,7 @@ export async function GET(request: Request) {
 // ─── POST /api/forum/comments - Add comment or reply ───
 export async function POST(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const {
       threadId,
@@ -135,6 +150,7 @@ export async function POST(request: Request) {
         author_class: authorClass || "",
         is_admin: isAdmin || false,
         parent_comment_id: parentCommentId || null,
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -167,14 +183,18 @@ export async function POST(request: Request) {
         thread_id: string;
         subject_id: string | null;
         thread_title: string | null;
+        semester: number;
+        exam_period: string;
+        jurusan: string;
       }> = [];
 
-      // Get thread info to notify thread author
-      const { data: threadData } = await supabase
-        .from("forum_threads")
-        .select("author_id, title, subject_id")
-        .eq("id", threadId)
-        .single();
+      const { data: threadData } = await scopeEq(scope)(
+        supabase
+          .from("forum_threads")
+          .select("author_id, title, subject_id")
+          .eq("id", threadId)
+          .single()
+      );
 
       const previewText = (content || "").trim().slice(0, 200);
 
@@ -188,21 +208,23 @@ export async function POST(request: Request) {
           thread_id: threadId,
           subject_id: threadData.subject_id || null,
           thread_title: threadData.title || null,
+          ...scopeColumns(scope),
         });
       }
 
-      // If replying to a specific comment, also notify parent comment author
       if (parentCommentId) {
-        const { data: parentComment } = await supabase
-          .from("forum_comments")
-          .select("author_id")
-          .eq("id", parentCommentId)
-          .single();
+        const { data: parentComment } = await scopeEq(scope)(
+          supabase
+            .from("forum_comments")
+            .select("author_id")
+            .eq("id", parentCommentId)
+            .single()
+        );
 
         if (
           parentComment &&
           parentComment.author_id !== authorId &&
-          parentComment.author_id !== threadData?.author_id // avoid duplicate
+          parentComment.author_id !== threadData?.author_id
         ) {
           notificationsToInsert.push({
             license_key: parentComment.author_id,
@@ -213,6 +235,7 @@ export async function POST(request: Request) {
             thread_id: threadId,
             subject_id: threadData?.subject_id || null,
             thread_title: threadData?.title || null,
+            ...scopeColumns(scope),
           });
         }
       }
@@ -226,6 +249,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ comment });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Forum comments POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -234,6 +259,7 @@ export async function POST(request: Request) {
 // ─── DELETE /api/forum/comments - Delete comment ───
 export async function DELETE(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { commentId, requesterId } = body;
     const isAdmin = await isAdminFromCookies();
@@ -252,7 +278,6 @@ export async function DELETE(request: Request) {
           if (comment.authorId !== requesterId && !isAdmin) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
           }
-          // Remove comment and its replies
           mockComments.set(
             threadId,
             comments.filter(
@@ -268,25 +293,31 @@ export async function DELETE(request: Request) {
     const supabase = createServerClient()!;
 
     if (!isAdmin) {
-      const { data: comment } = await supabase
-        .from("forum_comments")
-        .select("author_id")
-        .eq("id", commentId)
-        .single();
+      const { data: comment } = await scopeEq(scope)(
+        supabase
+          .from("forum_comments")
+          .select("author_id")
+          .eq("id", commentId)
+          .single()
+      );
 
       if (!comment || comment.author_id !== requesterId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
     }
 
-    const { error } = await supabase
-      .from("forum_comments")
-      .delete()
-      .eq("id", commentId);
+    const { error } = await scopeEq(scope)(
+      supabase
+        .from("forum_comments")
+        .delete()
+        .eq("id", commentId)
+    );
 
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Forum comments DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

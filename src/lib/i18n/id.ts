@@ -2,7 +2,7 @@ const id: Record<string, string> = {
   // Sidebar
   "nav.dashboard": "Dashboard",
   "nav.subjects": "Mata Kuliah",
-  "nav.schedule": "Jadwal UTS",
+  "nav.schedule": "Jadwal Ujian",
   "nav.analytics": "Statistik Belajar",
   "nav.bookmarks": "Bookmark",
   "nav.notes": "Catatan",
@@ -80,8 +80,8 @@ const id: Record<string, string> = {
   "common.buy_access": "Beli Akses",
 
   // Schedule
-  "schedule.title": "Jadwal UTS",
-  "schedule.subtitle": "Countdown dan jadwal ujian tengah semester",
+  "schedule.title": "Jadwal Ujian",
+  "schedule.subtitle": "Countdown dan jadwal ujian periode aktif",
   "schedule.exam_title": "Jadwal Ujian",
   "schedule.note": "Jadwal dapat berubah sewaktu-waktu. Pastikan selalu cek pengumuman resmi dari Binus untuk informasi terbaru.",
   "schedule.not_announced": "Belum diumumkan",
@@ -110,7 +110,7 @@ const id: Record<string, string> = {
   "dashboard.quick_note_placeholder": "Tulis catatan cepat...",
   "dashboard.exam_countdown": "Ujian Terdekat",
   "dashboard.all_exams_passed": "Semua ujian sudah berlalu",
-  "dashboard.exam_not_announced": "Jadwal UTS belum diumumkan",
+  "dashboard.exam_not_announced": "Jadwal ujian belum diumumkan",
 
   // Settings subcomponents
   "settings.theme_color": "Tema Warna",
@@ -228,7 +228,7 @@ const id: Record<string, string> = {
 
   // Pricing section
   "pricing.title": "Paket Akses",
-  "pricing.subtitle": "Satu kali bayar, akses penuh selama periode UTS",
+  "pricing.subtitle": "Satu kali bayar, akses penuh selama satu periode ujian",
   "pricing.buy": "Beli Akses",
   "pricing.select": "Pilih Paket",
   "pricing.more_info": "Selengkapnya",
@@ -242,8 +242,8 @@ const id: Record<string, string> = {
   "pricing.normal_desc": "Akses penuh tanpa syarat apapun.",
   "pricing.vip_desc": "Semua fitur Normal + prioritas AI & badge eksklusif.",
   "pricing.per_duration": "30 hari",
-  "pricing.share_callout": "Syarat: share link ke 1 teman (LE86: share ke 2 teman di luar kelas → hanya Rp 15.000!)",
-  "pricing.share_details": "Khusus kelas LE86: harga Rp 15.000 jika share ke 2 orang di luar kelas. Konten identik dengan paket Normal. Hubungi admin jika butuh device lebih.",
+  "pricing.share_callout": "Syarat: pilih salah satu — (1) share link web ini via broadcast WA ke teman, atau (2) repost story di akun Instagram utama (first) kamu. Khusus LE86: tetap share ke 2 teman di luar kelas → Rp 20.000.",
+  "pricing.share_details": "Khusus kelas LE86: harga Rp 20.000 jika share ke 2 orang di luar kelas. Konten identik dengan paket Normal. Hubungi admin jika butuh device lebih.",
   "pricing.normal_details": "Langsung akses semua fitur. Tidak perlu share. Hubungi admin jika butuh device lebih.",
   "pricing.vip_details": "AI prioritas, VIP badge, support cepat. Max 2 device. Hubungi admin jika butuh lebih.",
   "pricing.feat_all_subjects": "Akses semua mata kuliah",
@@ -323,7 +323,7 @@ const id: Record<string, string> = {
   "onboarding.skip": "Lewati Tutorial",
   "onboarding.finish": "Mulai Belajar!",
   "onboarding.welcome_title": "Selamat Datang di haistudy!",
-  "onboarding.welcome_desc": "Yuk, kenalan dulu dengan fitur-fitur yang akan membantu kamu belajar lebih efektif untuk UTS.",
+  "onboarding.welcome_desc": "Yuk, kenalan dulu dengan fitur-fitur yang akan membantu kamu belajar lebih efektif untuk ujian.",
   "onboarding.sidebar_title": "Navigasi",
   "onboarding.sidebar_desc": "Gunakan sidebar untuk berpindah antar halaman. Dashboard, Mata Kuliah, Jadwal, dan lainnya ada di sini.",
   "onboarding.subjects_title": "Mata Kuliah",
@@ -345,7 +345,7 @@ const id: Record<string, string> = {
   "onboarding.notifications_title": "Notifikasi",
   "onboarding.notifications_desc": "Dapat notifikasi ketika seseorang menyebut kamu, membalas thread, atau mengirim pesan penting.",
   "onboarding.done_title": "Siap Belajar!",
-  "onboarding.done_desc": "Kamu sudah siap menggunakan haistudy. Selamat belajar dan semoga sukses UTS-nya!",
+  "onboarding.done_desc": "Kamu sudah siap menggunakan haistudy. Selamat belajar dan semoga sukses ujiannya!",
 
   // Post-tutorial
   "onboarding.post_contact_title": "Tetap Terhubung (Opsional)",
@@ -372,7 +372,7 @@ const id: Record<string, string> = {
   "support.quick_links": "Kontak Cepat",
   "support.faq_title": "Pertanyaan Umum",
   "support.faq_1_q": "Bagaimana cara menggunakan AI Assistant?",
-  "support.faq_1_a": "Klik ikon chat AI di pojok kanan bawah layar. Kamu bisa bertanya apa saja tentang materi UTS dan AI akan membantu menjelaskan.",
+  "support.faq_1_a": "Klik ikon chat AI di pojok kanan bawah layar. Kamu bisa bertanya apa saja tentang materi kuliahmu dan AI akan membantu menjelaskan.",
   "support.faq_2_q": "Bagaimana cara join Voice Room?",
   "support.faq_2_a": "Klik ikon mikrofon di header atau sidebar. Pilih room yang tersedia atau buat room baru, lalu klik untuk bergabung.",
   "support.faq_3_q": "Bagaimana cara membuat thread di Forum?",
@@ -487,7 +487,10 @@ const id: Record<string, string> = {
 
   // AI Chat History
   "ai.new_chat": "Chat Baru",
-  "ai.assistant_subtitle": "Asisten belajar UTS",
+  "ai.assistant_subtitle": "Asisten belajar kuliah",
+
+  // Login divider
+  "login.or_divider": "atau",
   "ai.mode_fast": "Cepat",
   "ai.mode_reasoning": "Reasoning",
 

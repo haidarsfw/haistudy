@@ -27,14 +27,16 @@ export function DangerZone() {
   const [step, setStep] = useState(0); // 0=closed, 1=confirm, 2=type, 3=executing
   const [typed, setTyped] = useState("");
 
+  // Danger Zone operates GLOBALLY — affects all scopes. Use the explicit
+  // ?allPeriods=1 query so the server records the intent.
   const actions: DangerAction[] = [
     {
       id: "clear-activity",
-      label: "Clear Activity Logs",
-      description: "Hapus semua activity logs. Data tidak bisa dikembalikan.",
+      label: "Clear Activity Logs (GLOBAL)",
+      description: "Hapus semua activity logs LINTAS scope. Data tidak bisa dikembalikan.",
       confirmText: "CLEAR ACTIVITY",
       action: async () => {
-        const res = await fetch("/api/admin/logs", {
+        const res = await fetch("/api/admin/logs?allPeriods=1", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: "activity" }),
@@ -44,11 +46,11 @@ export function DangerZone() {
     },
     {
       id: "clear-errors",
-      label: "Clear Error Logs",
-      description: "Hapus semua error logs. Data tidak bisa dikembalikan.",
+      label: "Clear Error Logs (GLOBAL)",
+      description: "Hapus semua error logs LINTAS scope. Data tidak bisa dikembalikan.",
       confirmText: "CLEAR ERRORS",
       action: async () => {
-        const res = await fetch("/api/admin/logs", {
+        const res = await fetch("/api/admin/logs?allPeriods=1", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: "error" }),
@@ -100,6 +102,9 @@ export function DangerZone() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400">
+            ⚠️ Semua aksi di sini bersifat <span className="font-bold">GLOBAL</span> — berlaku lintas semua scope (UTS, UAS, semua jurusan, semua semester), abaikan scope filter di admin header.
+          </div>
           {actions.map((action) => (
             <div
               key={action.id}

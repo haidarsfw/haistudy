@@ -45,9 +45,18 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { LicenseForm } from "./license-form";
+import { OauthLinkCell } from "./oauth-link-cell";
 import type { LicenseKey, Activation, Device } from "@/types";
 import { formatDistanceToNow, format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { scopeKey } from "@/lib/scope";
+
+type ScopedLicense = LicenseKey & {
+  semester?: number;
+  examPeriod?: "uts" | "uas";
+  jurusan?: string;
+};
 
 function formatOnlineTime(minutes: number): string {
   if (minutes < 60) return `${minutes}m`;
@@ -76,6 +85,7 @@ function AiConversationsDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { scopeQuery } = useAdminScope();
   const [conversations, setConversations] = useState<AdminAiConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -83,12 +93,14 @@ function AiConversationsDialog({
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    fetch(`/api/admin/ai-conversations?licenseKey=${encodeURIComponent(licenseKey)}`)
+    const q = scopeQuery();
+    const sep = q ? "&" : "?";
+    fetch(`/api/admin/ai-conversations${q}${sep}licenseKey=${encodeURIComponent(licenseKey)}`)
       .then((r) => r.json())
       .then((data) => setConversations(data.conversations || []))
       .catch(() => toast.error("Gagal memuat AI conversations"))
       .finally(() => setLoading(false));
-  }, [open, licenseKey]);
+  }, [open, licenseKey, scopeQuery]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -189,6 +201,8 @@ function UserDetailDialog({
   devices: devs,
   profileEmail,
   profilePhone,
+  linkedEmail,
+  onLinkedEmailChange,
   open,
   onOpenChange,
 }: {
@@ -197,9 +211,12 @@ function UserDetailDialog({
   devices: Device[];
   profileEmail: string | null;
   profilePhone: string | null;
+  linkedEmail: string | null;
+  onLinkedEmailChange: (email: string | null) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { scopeQuery } = useAdminScope();
   const [copied, setCopied] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [resettingDevices, setResettingDevices] = useState(false);
@@ -214,7 +231,7 @@ function UserDetailDialog({
   const handleResetDevices = async () => {
     setResettingDevices(true);
     try {
-      const res = await fetch("/api/admin/licenses", {
+      const res = await fetch(`/api/admin/licenses${scopeQuery()}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: license.key, action: "reset-devices" }),
@@ -299,6 +316,27 @@ function UserDetailDialog({
           ) : (
             <p className="text-sm text-muted-foreground text-center py-2">Belum diaktivasi</p>
           )}
+
+          <Separator />
+
+          {/* Login methods */}
+          <div className="space-y-2">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Login methods</span>
+            <div className="rounded-md border border-border bg-muted/20 p-2 text-xs">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">License key</span>
+                <span className="ml-auto font-mono text-foreground">{license.key}</span>
+              </div>
+            </div>
+            <div className="rounded-md border border-border bg-muted/20 p-2">
+              <OauthLinkCell
+                licenseKey={license.key}
+                currentEmail={linkedEmail}
+                onChange={onLinkedEmailChange}
+              />
+            </div>
+          </div>
 
           <Separator />
 
@@ -408,10 +446,12 @@ function InfoField({ icon, label, value }: { icon: React.ReactNode; label: strin
 }
 
 export function LicenseTable() {
-  const [licenses, setLicenses] = useState<LicenseKey[]>([]);
+  const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
+  const [licenses, setLicenses] = useState<ScopedLicense[]>([]);
   const [activations, setActivations] = useState<Activation[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [profiles, setProfiles] = useState<Record<string, { email: string | null; phone: string | null }>>({});
+  const [oauthLinks, setOauthLinks] = useState<Record<string, { email: string; linkedAt: string; provider: string }>>({});
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -419,41 +459,56 @@ export function LicenseTable() {
   const [selectedLicenseKey, setSelectedLicenseKey] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!hydrated) return;
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/licenses");
+      const res = await fetch(`/api/admin/licenses${scopeQuery()}`);
       const data = await res.json();
-      setLicenses(data.licenses || []);
+      setLicenses(
+        ((data.licenses || []) as LicenseKey[]).map((l) => ({
+          ...l,
+          linkedEmail: data.oauthLinks?.[l.key]?.email ?? null,
+        }))
+      );
       setActivations(data.activations || []);
       setDevices(data.devices || []);
       setProfiles(data.profiles || {});
+      setOauthLinks(data.oauthLinks || {});
     } catch {
       toast.error("Gagal memuat data lisensi");
     }
     setLoading(false);
-  }, []);
+  }, [hydrated, scopeQuery]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, adminScopeKey]);
 
   const { t } = useTranslation();
 
   const handleDelete = useCallback(
     async (key: string) => {
+      if (isAllPeriods) {
+        toast.error("Pilih scope spesifik dulu untuk delete license.");
+        return;
+      }
       try {
-        const res = await fetch("/api/admin/licenses", {
+        const res = await fetch(`/api/admin/licenses${scopeQuery()}`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key }),
         });
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          const err = await res.json().catch(() => null);
+          throw new Error(err?.error || "delete failed");
+        }
         setLicenses((prev) => prev.filter((l) => l.key !== key));
         toast.success("License key dihapus");
-      } catch {
-        toast.error("Gagal menghapus license key");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Gagal menghapus license key");
       }
     },
-    []
+    [isAllPeriods, scopeQuery]
   );
 
   const handleFormSave = useCallback(() => {
@@ -573,6 +628,11 @@ export function LicenseTable() {
                           <p className="mt-0.5 text-sm text-muted-foreground">
                             {license.name}
                           </p>
+                          {isAllPeriods && license.semester !== undefined && (
+                            <Badge variant="outline" className="mt-1 text-[10px] font-mono">
+                              s{license.semester}-{license.examPeriod}-{license.jurusan}
+                            </Badge>
+                          )}
                           {activation && (
                             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                               <span>
@@ -597,6 +657,12 @@ export function LicenseTable() {
                                 </span>
                               )}
                             </div>
+                          )}
+                          {oauthLinks[license.key]?.email && (
+                            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {oauthLinks[license.key].email}
+                            </p>
                           )}
                           <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
                             <span>Quiz: {license.totalQuizScore}</span>
@@ -673,6 +739,25 @@ export function LicenseTable() {
             devices={devs}
             profileEmail={profile.email}
             profilePhone={profile.phone}
+            linkedEmail={oauthLinks[lic.key]?.email ?? null}
+            onLinkedEmailChange={(email) => {
+              setOauthLinks((prev) => {
+                const next = { ...prev };
+                if (email) {
+                  next[lic.key] = {
+                    email,
+                    linkedAt: new Date().toISOString(),
+                    provider: "google",
+                  };
+                } else {
+                  delete next[lic.key];
+                }
+                return next;
+              });
+              setLicenses((prev) =>
+                prev.map((l) => (l.key === lic.key ? { ...l, linkedEmail: email } : l))
+              );
+            }}
             open={!!selectedLicenseKey}
             onOpenChange={(open) => { if (!open) setSelectedLicenseKey(null); }}
           />

@@ -4,7 +4,16 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import type { ForumPoll, PollOption } from "@/types";
+
+function scopeErrorResponse(error: unknown) {
+  if (error instanceof ScopeError) {
+    return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  if (error instanceof Response) return error;
+  return null;
+}
 
 // ─── Mock store ───
 const mockPolls = new Map<string, ForumPoll[]>();
@@ -21,6 +30,7 @@ function getMockPolls(subjectId: string, voterId?: string): ForumPoll[] {
 // ─── GET /api/forum/polls?subjectId=xxx&voterId=xxx ───
 export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
     const { searchParams } = new URL(request.url);
     const subjectId = searchParams.get("subjectId");
     const voterId = searchParams.get("voterId");
@@ -39,19 +49,22 @@ export async function GET(request: Request) {
     }
 
     const supabase = createServerClient()!;
-    const { data: pollsData, error } = await supabase
-      .from("forum_polls")
-      .select("*")
-      .eq("subject_id", subjectId)
-      .eq("active", true)
-      .order("created_at", { ascending: false });
+    const { data: pollsData, error } = await scopeEq(scope)(
+      supabase
+        .from("forum_polls")
+        .select("*")
+        .eq("subject_id", subjectId)
+        .eq("active", true)
+        .order("created_at", { ascending: false })
+    );
 
     if (error) throw error;
 
     // Fetch user's votes if voterId provided
     const userVotes = new Map<string, number>();
-    if (voterId && pollsData && pollsData.length > 0) {
-      const pollIds = pollsData.map((p) => p.id);
+    const pollRows = (pollsData ?? []) as Record<string, unknown>[];
+    if (voterId && pollRows.length > 0) {
+      const pollIds = pollRows.map((p) => p.id as string);
       const { data: votes } = await supabase
         .from("poll_votes")
         .select("poll_id, option_index")
@@ -71,7 +84,7 @@ export async function GET(request: Request) {
       { isAdmin: boolean; isTester: boolean; packageTier: "share" | "normal" | "vip" | "diamond" | null }
     >();
     const authorIds = Array.from(
-      new Set((pollsData || []).map((p) => p.author_id as string).filter(Boolean))
+      new Set(pollRows.map((p) => p.author_id as string).filter(Boolean))
     );
     if (authorIds.length > 0) {
       const { data: licenses } = await supabase
@@ -87,19 +100,19 @@ export async function GET(request: Request) {
       }
     }
 
-    const polls: ForumPoll[] = (pollsData || []).map((row) => {
+    const polls: ForumPoll[] = pollRows.map((row) => {
       const role = roleMap.get(row.author_id as string);
       return {
-        id: row.id,
-        subjectId: row.subject_id,
-        question: row.question,
+        id: row.id as string,
+        subjectId: row.subject_id as string,
+        question: row.question as string,
         options: row.options as PollOption[],
-        totalVotes: row.total_votes,
-        authorId: row.author_id,
-        authorName: row.author_name,
-        active: row.active,
-        createdAt: row.created_at,
-        userVote: userVotes.get(row.id) ?? null,
+        totalVotes: row.total_votes as number,
+        authorId: row.author_id as string,
+        authorName: row.author_name as string,
+        active: row.active as boolean,
+        createdAt: row.created_at as string,
+        userVote: userVotes.get(row.id as string) ?? null,
         isAdmin: role?.isAdmin ?? false,
         isTester: role?.isTester ?? false,
         packageTier: role?.packageTier ?? null,
@@ -108,6 +121,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ polls });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Forum polls GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -116,6 +131,7 @@ export async function GET(request: Request) {
 // ─── POST /api/forum/polls - Create poll ───
 export async function POST(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { subjectId, question, options, authorId, authorName } = body;
 
@@ -183,6 +199,7 @@ export async function POST(request: Request) {
         options: pollOptions,
         author_id: authorId,
         author_name: authorName,
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -204,6 +221,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ poll });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Forum polls POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -212,6 +231,7 @@ export async function POST(request: Request) {
 // ─── DELETE /api/forum/polls - Delete poll ───
 export async function DELETE(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { pollId, requesterId } = body;
     const isAdmin = await isAdminFromCookies();
@@ -244,25 +264,31 @@ export async function DELETE(request: Request) {
     const supabase = createServerClient()!;
 
     if (!isAdmin) {
-      const { data: poll } = await supabase
-        .from("forum_polls")
-        .select("author_id")
-        .eq("id", pollId)
-        .single();
+      const { data: poll } = await scopeEq(scope)(
+        supabase
+          .from("forum_polls")
+          .select("author_id")
+          .eq("id", pollId)
+          .single()
+      );
 
       if (!poll || poll.author_id !== requesterId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
     }
 
-    const { error } = await supabase
-      .from("forum_polls")
-      .delete()
-      .eq("id", pollId);
+    const { error } = await scopeEq(scope)(
+      supabase
+        .from("forum_polls")
+        .delete()
+        .eq("id", pollId)
+    );
 
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
     console.error("Forum polls DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

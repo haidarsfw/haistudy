@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { supportReadReceiptsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import type { SupportReadReceipt, SupportReaderKind } from "@/types";
 
 export interface UseSupportReceiptsResult {
@@ -29,6 +32,8 @@ function rawToCamel(raw: Record<string, unknown>): SupportReadReceipt {
 
 export function useSupportReadReceipts(licenseKey: string | null): UseSupportReceiptsResult {
   const [byMsg, setByMsg] = useState<Map<string, SupportReadReceipt[]>>(new Map());
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastMarkedRef = useRef<string | null>(null);
 
@@ -74,14 +79,14 @@ export function useSupportReadReceipts(licenseKey: string | null): UseSupportRec
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`support:rcp:${licenseKey}`)
+      .channel(supportReadReceiptsChannel(scope, licenseKey))
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "support_read_receipts",
-          filter: `license_key=eq.${licenseKey}`,
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           const r = rawToCamel(payload.new as Record<string, unknown>);

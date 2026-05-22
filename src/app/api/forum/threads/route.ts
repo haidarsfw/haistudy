@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import type { ForumThread, Attachment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
@@ -16,6 +17,7 @@ function getMockThreads(subjectId: string): ForumThread[] {
 // ─── GET /api/forum/threads?subjectId=xxx ───
 export async function GET(request: Request) {
   try {
+    const scope = await requireScope(request);
     const { searchParams } = new URL(request.url);
     const subjectId = searchParams.get("subjectId");
 
@@ -31,23 +33,25 @@ export async function GET(request: Request) {
     }
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("forum_threads")
-      .select("*")
-      .eq("subject_id", subjectId)
-      .order("created_at", { ascending: false })
-      .limit(100);
+    const { data, error } = await scopeEq(scope)(
+      supabase
+        .from("forum_threads")
+        .select("*")
+        .eq("subject_id", subjectId)
+        .order("created_at", { ascending: false })
+        .limit(100)
+    );
 
     if (error) throw error;
 
-    const threads: ForumThread[] = (data || []).map((row) => {
+    const threads: ForumThread[] = ((data ?? []) as Record<string, unknown>[]).map((row) => {
       // Build attachments from new column or fall back to legacy
       let attachments: Attachment[] | undefined;
       if (row.attachments && Array.isArray(row.attachments) && row.attachments.length > 0) {
         attachments = row.attachments as Attachment[];
       } else {
         const legacy: Attachment[] = [];
-        if (row.image_url) legacy.push({ type: "image", url: row.image_url });
+        if (row.image_url) legacy.push({ type: "image", url: row.image_url as string });
         if (row.media_url) {
           // Detect type from URL
           const url = row.media_url as string;
@@ -61,27 +65,31 @@ export async function GET(request: Request) {
       }
 
       return {
-        id: row.id,
-        subjectId: row.subject_id,
-        title: row.title,
-        content: row.content,
-        authorId: row.author_id,
-        authorName: row.author_name,
-        authorClass: row.author_class,
-        isAdmin: row.is_admin,
-        isTester: row.is_tester || false,
-        packageTier: row.package_tier || undefined,
-        imageUrl: row.image_url,
-        mediaUrl: row.media_url,
+        id: row.id as string,
+        subjectId: row.subject_id as string,
+        title: row.title as string,
+        content: row.content as string,
+        authorId: row.author_id as string,
+        authorName: row.author_name as string,
+        authorClass: (row.author_class as string) || "",
+        isAdmin: row.is_admin as boolean,
+        isTester: (row.is_tester as boolean) || false,
+        packageTier: (row.package_tier as ForumThread["packageTier"]) || undefined,
+        imageUrl: (row.image_url as string) || null,
+        mediaUrl: (row.media_url as string) || null,
         attachments,
-        closed: row.closed,
-        commentCount: row.comment_count,
-        createdAt: row.created_at,
+        closed: row.closed as boolean,
+        commentCount: row.comment_count as number,
+        createdAt: row.created_at as string,
       };
     });
 
     return NextResponse.json({ threads });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Forum threads GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -90,6 +98,7 @@ export async function GET(request: Request) {
 // ─── POST /api/forum/threads - Create thread ───
 export async function POST(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const {
       subjectId,
@@ -168,6 +177,7 @@ export async function POST(request: Request) {
         image_url: imageUrl || null,
         media_url: mediaUrl || null,
         ...(validAttachments ? { attachments: validAttachments } : {}),
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -195,18 +205,22 @@ export async function POST(request: Request) {
 
     // Notify users who have participated in this subject's forum before
     try {
-      // Find distinct authors from threads and comments in the same subject
-      const { data: threadAuthors } = await supabase
-        .from("forum_threads")
-        .select("author_id")
-        .eq("subject_id", subjectId)
-        .neq("author_id", authorId);
+      // Find distinct authors from threads and comments in the same subject + scope
+      const { data: threadAuthors } = await scopeEq(scope)(
+        supabase
+          .from("forum_threads")
+          .select("author_id")
+          .eq("subject_id", subjectId)
+          .neq("author_id", authorId)
+      );
 
-      const { data: commentAuthors } = await supabase
-        .from("forum_comments")
-        .select("author_id, forum_threads!inner(subject_id)")
-        .eq("forum_threads.subject_id", subjectId)
-        .neq("author_id", authorId);
+      const { data: commentAuthors } = await scopeEq(scope)(
+        supabase
+          .from("forum_comments")
+          .select("author_id, forum_threads!inner(subject_id)")
+          .eq("forum_threads.subject_id", subjectId)
+          .neq("author_id", authorId)
+      );
 
       const participantIds = new Set<string>();
       if (threadAuthors) {
@@ -226,6 +240,7 @@ export async function POST(request: Request) {
           thread_id: thread.id,
           subject_id: subjectId,
           thread_title: title.trim(),
+          ...scopeColumns(scope),
         }));
 
         await supabase.from("notifications").insert(notificationRows);
@@ -236,6 +251,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ thread });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Forum threads POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -244,6 +263,7 @@ export async function POST(request: Request) {
 // ─── DELETE /api/forum/threads - Delete thread ───
 export async function DELETE(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { threadId, requesterId } = body;
     const isAdmin = await isAdminFromCookies();
@@ -274,27 +294,35 @@ export async function DELETE(request: Request) {
 
     const supabase = createServerClient()!;
 
-    // Verify ownership or admin
+    // Verify ownership or admin (scoped)
     if (!isAdmin) {
-      const { data: thread } = await supabase
-        .from("forum_threads")
-        .select("author_id")
-        .eq("id", threadId)
-        .single();
+      const { data: thread } = await scopeEq(scope)(
+        supabase
+          .from("forum_threads")
+          .select("author_id")
+          .eq("id", threadId)
+          .single()
+      );
 
       if (!thread || thread.author_id !== requesterId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
     }
 
-    const { error } = await supabase
-      .from("forum_threads")
-      .delete()
-      .eq("id", threadId);
+    const { error } = await scopeEq(scope)(
+      supabase
+        .from("forum_threads")
+        .delete()
+        .eq("id", threadId)
+    );
 
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Forum threads DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
@@ -303,6 +331,7 @@ export async function DELETE(request: Request) {
 // ─── PATCH /api/forum/threads - Close/reopen thread (admin only) ───
 export async function PATCH(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { threadId, closed } = body;
     const isAdmin = await isAdminFromCookies();
@@ -333,14 +362,20 @@ export async function PATCH(request: Request) {
     }
 
     const supabase = createServerClient()!;
-    const { error } = await supabase
-      .from("forum_threads")
-      .update({ closed })
-      .eq("id", threadId);
+    const { error } = await scopeEq(scope)(
+      supabase
+        .from("forum_threads")
+        .update({ closed })
+        .eq("id", threadId)
+    );
 
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Response) return error;
     console.error("Forum threads PATCH error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

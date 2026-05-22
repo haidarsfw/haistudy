@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { supportPinsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import type { SupportPinnedMessage } from "@/types";
 
 const MAX_PIN = 3;
@@ -38,6 +41,8 @@ export interface UseSupportPinsResult {
  */
 export function useSupportPins(licenseKey: string | null): UseSupportPinsResult {
   const [pins, setPins] = useState<SupportPinnedMessage[]>([]);
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Reset when conversation changes
@@ -73,14 +78,14 @@ export function useSupportPins(licenseKey: string | null): UseSupportPinsResult 
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`support:pins:${licenseKey}`)
+      .channel(supportPinsChannel(scope, licenseKey))
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "support_pinned_messages",
-          filter: `license_key=eq.${licenseKey}`,
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           const p = rawToCamel(payload.new as Record<string, unknown>);

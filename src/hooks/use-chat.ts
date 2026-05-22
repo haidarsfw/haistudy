@@ -3,13 +3,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 import { RATE_LIMITS } from "@/lib/constants";
 import { getDeviceId } from "@/lib/auth/device";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { chatChannel, chatPinsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import type { ChatMessage } from "@/types";
 
 export function useChat() {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,16 +106,19 @@ export function useChat() {
     if (!supabase) return;
 
     const channel = supabase
-      .channel("chat-messages")
+      .channel(chatChannel(scope))
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           const row = payload.new;
+          // Realtime filter narrows by semester only; cross-check exam_period + jurusan
+          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) return;
           const message: ChatMessage = {
             id: row.id,
             content: row.content,
@@ -141,9 +149,11 @@ export function useChat() {
           event: "UPDATE",
           schema: "public",
           table: "chat_messages",
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           const row = payload.new;
+          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) return;
           setMessages((prev) =>
             prev.map((m) =>
               m.id === row.id
@@ -162,13 +172,14 @@ export function useChat() {
 
     // Pinned messages channel
     const pinsChannel = supabase
-      .channel("pinned-messages")
+      .channel(chatPinsChannel(scope))
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "pinned_messages",
+          filter: scopeRealtimeFilter(scope),
         },
         () => fetchPins()
       )
@@ -178,7 +189,7 @@ export function useChat() {
       supabase.removeChannel(channel);
       supabase.removeChannel(pinsChannel);
     };
-  }, [fetchPins]);
+  }, [fetchPins, scope]);
 
   // Send a text message
   const sendMessage = useCallback(

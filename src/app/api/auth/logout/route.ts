@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 /**
  * POST /api/auth/logout
@@ -69,23 +70,30 @@ export async function POST(request: Request) {
       }
     }
 
+    // Sign out from Supabase Auth too (clears sb-* cookies for OAuth users)
+    try {
+      const authClient = await createServerAuthClient();
+      if (authClient) {
+        await authClient.auth.signOut();
+      }
+    } catch {
+      /* non-critical */
+    }
+
     const response = NextResponse.json({ success: true });
 
+    const clearOpts = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      path: "/",
+      maxAge: 0,
+    };
+
     // Clear session cookies
-    response.cookies.set("hs-session", "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
-    response.cookies.set("hs-admin", "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
+    response.cookies.set("hs-session", "", clearOpts);
+    response.cookies.set("hs-admin", "", clearOpts);
+    response.cookies.set("hs-scope", "", clearOpts);
 
     return response;
   } catch (error) {
@@ -94,6 +102,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({ success: true });
     response.cookies.set("hs-session", "", { path: "/", maxAge: 0 });
     response.cookies.set("hs-admin", "", { path: "/", maxAge: 0 });
+    response.cookies.set("hs-scope", "", { path: "/", maxAge: 0 });
     return response;
   }
 }

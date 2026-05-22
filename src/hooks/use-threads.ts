@@ -3,18 +3,39 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { forumThreadsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import { RATE_LIMITS } from "@/lib/constants";
 import { getDeviceId } from "@/lib/auth/device";
-import { getPinnedThreads } from "@/data/pinned-threads";
+import { loadPinnedThreads } from "@/data";
 import type { ForumThread } from "@/types";
 
 export function useThreads(subjectId: string) {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [dbThreads, setDbThreads] = useState<ForumThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pinnedThreads, setPinnedThreads] = useState<ForumThread[]>([]);
   const lastPostTime = useRef(0);
 
-  const pinnedThreads = useMemo(() => getPinnedThreads(subjectId), [subjectId]);
+  // Pinned threads are scope-locked: a UAS subject never sees pinned threads
+  // authored for UTS, and vice versa.
+  useEffect(() => {
+    let cancelled = false;
+    loadPinnedThreads(scope, subjectId)
+      .then((list) => {
+        if (cancelled) return;
+        setPinnedThreads(Array.isArray(list) ? (list as ForumThread[]) : []);
+      })
+      .catch(() => {
+        if (!cancelled) setPinnedThreads([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [scope, subjectId]);
 
   // Pinned threads are prepended and shadow any DB row with the same id.
   const threads = useMemo<ForumThread[]>(() => {
@@ -50,18 +71,21 @@ export function useThreads(subjectId: string) {
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`forum-threads-${subjectId}`)
+      .channel(forumThreadsChannel(scope, subjectId))
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "forum_threads",
-          filter: `subject_id=eq.${subjectId}`,
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           if (payload.eventType === "INSERT") {
             const row = payload.new;
+            // Cross-check scope + subject (filter only narrows by semester)
+            if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) return;
+            if (row.subject_id !== subjectId) return;
             const thread: ForumThread = {
               id: row.id,
               subjectId: row.subject_id,
@@ -83,6 +107,8 @@ export function useThreads(subjectId: string) {
             setDbThreads((prev) => [thread, ...prev.filter((t) => t.id !== thread.id)]);
           } else if (payload.eventType === "UPDATE") {
             const row = payload.new;
+            if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) return;
+            if (row.subject_id !== subjectId) return;
             setDbThreads((prev) =>
               prev.map((t) =>
                 t.id === row.id
@@ -107,7 +133,7 @@ export function useThreads(subjectId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [subjectId]);
+  }, [subjectId, scope]);
 
   const createThread = useCallback(
     async (data: {

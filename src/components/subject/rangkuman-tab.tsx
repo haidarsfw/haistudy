@@ -15,7 +15,8 @@ import {
   Headphones,
 } from "lucide-react";
 import { parseRangkuman } from "@/lib/content-parser";
-import { getRangkumanBySubjectId } from "@/data/rangkuman";
+import { loadRangkuman } from "@/data";
+import { useScope } from "@/components/providers/scope-provider";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useTTS } from "@/hooks/use-tts";
@@ -52,7 +53,17 @@ export function RangkumanTab({
   const fullscreenContentRef = useRef<HTMLDivElement>(null);
 
   const tts = useTTS();
-  const rangkumanData = getRangkumanBySubjectId(subjectId);
+  const { scope } = useScope();
+  const [rangkumanData, setRangkumanData] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadRangkuman(scope, subjectId).then((data) => {
+      if (!cancelled) setRangkumanData((data as Record<string, string>) ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [scope, subjectId]);
   const modules = rangkumanData ? Object.keys(rangkumanData) : [];
 
   // Follow global theme unless manually overridden

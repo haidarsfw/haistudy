@@ -5,6 +5,8 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
+import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
+import { scopeKey } from "@/lib/scope";
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET;
@@ -38,18 +40,23 @@ export async function POST(request: Request) {
       );
     }
 
+    // Scope enforcement
+    const scope = await requireScope(request);
+
     // Validate license key against DB (prevents random-string JWT issuance)
     if (isSupabaseServerConfigured) {
       const supabase = createServerClient()!;
-      const { data: license } = await supabase
-        .from("license_keys")
-        .select("key, suspended_until")
-        .eq("key", licenseKey)
-        .single();
+      const { data: license } = await scopeEq(scope)(
+        supabase
+          .from("license_keys")
+          .select("key, suspended_until")
+          .eq("key", licenseKey)
+          .single()
+      );
       if (!license) {
         return NextResponse.json({ error: "Invalid license" }, { status: 401 });
       }
-      if (license.suspended_until && new Date(license.suspended_until) > new Date()) {
+      if ((license as Record<string, unknown>).suspended_until && new Date((license as Record<string, unknown>).suspended_until as string) > new Date()) {
         return NextResponse.json({ error: "Account suspended" }, { status: 403 });
       }
     }
@@ -69,8 +76,11 @@ export async function POST(request: Request) {
       name: userName,
     });
 
+    // LiveKit room name prefixed by scope to isolate audio across scopes
+    const scopedRoomId = `${scopeKey(scope)}:${roomId}`;
+
     at.addGrant({
-      room: roomId,
+      room: scopedRoomId,
       roomJoin: true,
       canPublish: true,
       canSubscribe: true,
@@ -94,6 +104,9 @@ export async function POST(request: Request) {
       configured: true,
     });
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Voice token error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

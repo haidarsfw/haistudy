@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
+import { DEFAULT_SCOPE, scopeKey } from "@/lib/scope";
 
 /**
  * Preview mode entry point.
@@ -24,10 +25,13 @@ export default function PreviewPage() {
       selectedClass: "LE86",
       isPreview: true,
       packageTier: "normal",
+      scope: DEFAULT_SCOPE,
+      scopeKey: scopeKey(DEFAULT_SCOPE),
     });
 
     // Set session cookie for proxy
     document.cookie = "hs-session=1; path=/; max-age=3600; SameSite=Lax";
+    document.cookie = `hs-scope=${scopeKey(DEFAULT_SCOPE)}; path=/; max-age=3600; SameSite=Lax`;
 
     router.push("/dashboard");
   }, [login, router]);
@@ -38,6 +42,9 @@ export default function PreviewPage() {
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <p className="text-sm text-muted-foreground">
           Memuat preview...
+        </p>
+        <p className="text-[11px] text-muted-foreground/60">
+          Tanpa login, fitur terbatas.
         </p>
       </div>
     </div>

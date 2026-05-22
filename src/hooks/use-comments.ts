@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
+import { forumCommentsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { DEFAULT_SCOPE } from "@/lib/scope";
 import { RATE_LIMITS } from "@/lib/constants";
 import { getDeviceId } from "@/lib/auth/device";
 import type { ForumComment } from "@/types";
@@ -33,6 +36,8 @@ function nestComments(flat: ForumComment[]): ForumComment[] {
 
 export function useComments(threadId: string | null) {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
   const [flatComments, setFlatComments] = useState<ForumComment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const lastCommentTime = useRef(0);
@@ -72,18 +77,21 @@ export function useComments(threadId: string | null) {
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`forum-comments-${threadId}`)
+      .channel(forumCommentsChannel(scope, threadId))
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "forum_comments",
-          filter: `thread_id=eq.${threadId}`,
+          filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
           if (payload.eventType === "INSERT") {
             const row = payload.new;
+            // Cross-check scope + thread (filter only narrows by semester)
+            if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) return;
+            if (row.thread_id !== threadId) return;
             const comment: ForumComment = {
               id: row.id,
               threadId: row.thread_id,
@@ -114,7 +122,7 @@ export function useComments(threadId: string | null) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [threadId]);
+  }, [threadId, scope]);
 
   const addComment = useCallback(
     async (content: string, parentCommentId?: string, imageUrl?: string) => {
