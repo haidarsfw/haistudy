@@ -4,10 +4,6 @@
     {
       "path": "/api/cron/cleanup-presence",
       "schedule": "0 3 * * 0"
-    },
-    {
-      "path": "/api/cron/notify-email",
-      "schedule": "* * * * *"
     }
   ],
   "functions": {
