@@ -6,7 +6,7 @@ import type { ThemeOption, FontOption } from "@/types";
 
 export const APP_NAME = "haistudy";
 export const APP_VERSION = "2.0.0";
-export const APP_DESCRIPTION = "Platform belajar all-in-one untuk mahasiswa Binus. Materi, quiz, AI, dan komunitas.";
+export const APP_DESCRIPTION = "Platform belajar all-in-one untuk mahasiswa BINUS. Materi, quiz, AI, dan komunitas.";
 
 // Classes (label/tag only - same content for all)
 export const CLASSES = [

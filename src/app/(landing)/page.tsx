@@ -53,7 +53,7 @@ const FEATURES = [
 const FAQ = [
   {
     q: "Apa itu haistudy?",
-    a: "haistudy adalah platform belajar pintar untuk mahasiswa Binus University. Kamu akan dapat materi tiap mata kuliah, quiz interaktif, flashcards, AI assistant, voice room, dan komunitas belajar bareng — semua dalam satu platform per periode ujian.",
+    a: "haistudy adalah platform belajar pintar untuk mahasiswa BINUS University. Kamu akan dapat materi tiap mata kuliah, quiz interaktif, flashcards, AI assistant, voice room, dan komunitas belajar bareng — semua dalam satu platform per periode ujian.",
   },
   {
     q: "Bagaimana cara mendapatkan akses?",
@@ -245,7 +245,7 @@ export default function LandingPage() {
 
           <ScrollReveal delay={0.2}>
             <p className="mt-4 max-w-md text-lg text-muted-foreground mx-auto lg:mx-0">
-              Platform belajar pintar all-in-one buat mahasiswa Binus. Materi,
+              Platform belajar pintar all-in-one buat mahasiswa BINUS. Materi,
               quiz, AI assistant, dan komunitas dalam satu tempat.
             </p>
           </ScrollReveal>
@@ -278,7 +278,7 @@ export default function LandingPage() {
             Semua yang Kamu Butuhkan
           </h2>
           <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-            Fitur lengkap yang dirancang buat mahasiswa Binus
+            Fitur lengkap yang dirancang buat mahasiswa BINUS
           </p>
 
           <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -83,7 +83,7 @@ const en: Record<string, string> = {
   "schedule.title": "Exam Schedule",
   "schedule.subtitle": "Countdown and exam schedule for the active period",
   "schedule.exam_title": "Exam Schedule",
-  "schedule.note": "Schedule may change at any time. Always check official announcements from Binus for the latest information.",
+  "schedule.note": "Schedule may change at any time. Always check official announcements from BINUS for the latest information.",
   "schedule.not_announced": "Not yet announced",
   "schedule.session": "session",
   "schedule.until": "to",

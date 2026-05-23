@@ -83,7 +83,7 @@ const id: Record<string, string> = {
   "schedule.title": "Jadwal Ujian",
   "schedule.subtitle": "Countdown dan jadwal ujian periode aktif",
   "schedule.exam_title": "Jadwal Ujian",
-  "schedule.note": "Jadwal dapat berubah sewaktu-waktu. Pastikan selalu cek pengumuman resmi dari Binus untuk informasi terbaru.",
+  "schedule.note": "Jadwal dapat berubah sewaktu-waktu. Pastikan selalu cek pengumuman resmi dari BINUS untuk informasi terbaru.",
   "schedule.not_announced": "Belum diumumkan",
   "schedule.session": "sesi",
   "schedule.until": "s/d",

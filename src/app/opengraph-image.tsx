@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "haistudy — Platform Belajar Pintar Mahasiswa Binus";
+export const alt = "haistudy — Platform Belajar Pintar Mahasiswa BINUS";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -45,7 +45,7 @@ export default function OgImage() {
             textAlign: "center",
           }}
         >
-          Platform Belajar Pintar Mahasiswa Binus
+          Platform Belajar Pintar Mahasiswa BINUS
         </div>
 
         {/* Features */}
