@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useSession } from "@/components/providers/session-provider";
 import { GreetingCard } from "@/components/dashboard/greeting-card";
 import { ExamCountdownMini } from "@/components/dashboard/exam-countdown-mini";
@@ -8,7 +7,6 @@ import { StudyProgressMini } from "@/components/dashboard/study-progress-mini";
 import { QuickNoteCard } from "@/components/dashboard/quick-note-card";
 import { OnlineUsersMini } from "@/components/dashboard/online-users-mini";
 import { QuickStudyCard } from "@/components/dashboard/quick-study-card";
-import { staggerContainer, staggerItem } from "@/lib/motion";
 
 export default function DashboardPage() {
   const { session } = useSession();
@@ -17,20 +15,15 @@ export default function DashboardPage() {
   if (!session) return null;
 
   return (
-    <motion.div
-      className="mx-auto max-w-5xl px-4 py-6"
-      variants={staggerContainer(0.08)}
-      initial="hidden"
-      animate="visible"
-    >
+    <div className="mx-auto max-w-5xl px-4 py-6 dash-stagger-root">
       <div className="flex flex-col gap-6">
         {/* Row 1: Greeting (full width, includes tips+facts+countdown) */}
-        <motion.div variants={staggerItem}>
+        <div className="dash-stagger-item">
           <GreetingCard />
-        </motion.div>
+        </div>
 
         {/* Row 2: 4 compact stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 dash-stagger-item">
           <ExamCountdownMini />
           <StudyProgressMini />
           <QuickNoteCard />
@@ -38,10 +31,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Row 3: Quick Study (full width) */}
-        <motion.div variants={staggerItem}>
+        <div className="dash-stagger-item">
           <QuickStudyCard />
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
