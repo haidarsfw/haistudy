@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
-import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import type { ForumComment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
@@ -26,6 +26,7 @@ function scopeErrorResponse(error: unknown) {
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const { searchParams } = new URL(request.url);
     const threadId = searchParams.get("threadId");
 
@@ -80,6 +81,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const {
       threadId,
@@ -260,6 +262,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const { commentId, requesterId } = body;
     const isAdmin = await isAdminFromCookies();

@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
-import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import type { ForumPoll, PollOption } from "@/types";
 
 function scopeErrorResponse(error: unknown) {
@@ -31,6 +31,7 @@ function getMockPolls(subjectId: string, voterId?: string): ForumPoll[] {
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const { searchParams } = new URL(request.url);
     const subjectId = searchParams.get("subjectId");
     const voterId = searchParams.get("voterId");
@@ -132,6 +133,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const { subjectId, question, options, authorId, authorName } = body;
 
@@ -232,6 +234,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const { pollId, requesterId } = body;
     const isAdmin = await isAdminFromCookies();

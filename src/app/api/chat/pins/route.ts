@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
-import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import type { ChatMessage } from "@/types";
 import { MAX_PINNED_MESSAGES } from "@/lib/constants";
 
@@ -15,6 +15,7 @@ const mockPinnedIds: string[] = [];
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
 
     if (!isSupabaseServerConfigured) {
       return NextResponse.json({ pinnedIds: [...mockPinnedIds] });
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
     }
 
     const scope = await requireScope(request);
+    await assertNotPreview();
     const supabase = createServerClient()!;
 
     // Check pin count (scoped)
@@ -137,6 +139,7 @@ export async function DELETE(request: Request) {
     }
 
     const scope = await requireScope(request);
+    await assertNotPreview();
     const supabase = createServerClient()!;
     const { error } = await scopeEq(scope)(
       supabase

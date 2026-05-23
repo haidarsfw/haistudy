@@ -294,7 +294,11 @@ export default function SubjectPage() {
               </PreviewLock>
             )}
 
-            {activeTab === 5 && <ForumTab subjectId={subjectId} />}
+            {activeTab === 5 && (
+              <PreviewLock title="Forum">
+                <ForumTab subjectId={subjectId} />
+              </PreviewLock>
+            )}
 
             {activeTab === 6 && session && (
               <div className="py-4">

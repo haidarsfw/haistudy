@@ -3,7 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 
 // Shared mock store references - import approach not possible across route files,
 // so vote mock logic is self-contained here
@@ -21,6 +21,7 @@ export { mockVotes };
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const { pollId, voterId, optionIndex } = body;
 

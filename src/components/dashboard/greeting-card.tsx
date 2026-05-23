@@ -50,10 +50,6 @@ function getFormattedDate(): string {
   });
 }
 
-function pickFromRotation<T>(arr: readonly T[]): T {
-  const i = Math.floor(Date.now() / (6 * 3600 * 1000));
-  return arr[i % arr.length];
-}
 
 
 function ProgressRing({ percent }: { percent: number }) {
@@ -116,13 +112,14 @@ export function GreetingCard() {
   }, [subjects, content]);
 
   // Scope-aware tips & fun facts — static per-period so tip is in first paint
-  // (no LCP delay). Total bundle cost ~10 KiB.
+  // (no LCP delay). Total bundle cost ~10 KiB. Plain consts (no hook) to
+  // keep hook count stable across renders.
   const isUas = scopeCtx?.scope.examPeriod === "uas";
-  const tip = useMemo(() => pickFromRotation(isUas ? TIPS_UAS : TIPS_UTS), [isUas]);
-  const funFact = useMemo(
-    () => pickFromRotation(isUas ? FUN_FACTS_UAS : FUN_FACTS_UTS),
-    [isUas]
-  );
+  const rotationIndex = Math.floor(Date.now() / (6 * 3600 * 1000));
+  const tipsArr = isUas ? TIPS_UAS : TIPS_UTS;
+  const factsArr = isUas ? FUN_FACTS_UAS : FUN_FACTS_UTS;
+  const tip = tipsArr[rotationIndex % tipsArr.length];
+  const funFact = factsArr[rotationIndex % factsArr.length];
 
   const greetingKey = useMemo(() => getGreetingKey(), []);
   const motivation = useMemo(

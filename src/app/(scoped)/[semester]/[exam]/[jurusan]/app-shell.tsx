@@ -58,6 +58,7 @@ import { useVersionCheck } from "@/hooks/use-version-check";
 import { usePresence } from "@/hooks/use-presence";
 import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
+import { toast } from "sonner";
 import { APP_EVENTS } from "@/lib/events";
 import { useSupportUnread } from "@/hooks/use-support-unread";
 import { ActiveSupportProvider } from "@/components/providers/active-support-provider";
@@ -199,8 +200,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleChatToggle = useCallback(() => {
+    if (session?.isPreview) {
+      toast.error("Chat tidak tersedia di mode preview", {
+        description: "Beli akses untuk bergabung dengan chat global cohort.",
+      });
+      return;
+    }
     setIsChatOpen((prev) => !prev);
-  }, []);
+  }, [session?.isPreview]);
 
   const handleChatClose = useCallback(() => {
     setIsChatOpen(false);
@@ -219,8 +226,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleVoiceToggle = useCallback(() => {
+    if (session?.isPreview) {
+      toast.error("Voice room tidak tersedia di mode preview", {
+        description: "Beli akses untuk belajar bareng via voice call.",
+      });
+      return;
+    }
     setIsVoiceOpen((prev) => !prev);
-  }, []);
+  }, [session?.isPreview]);
 
   const handleVoiceClose = useCallback(() => {
     setIsVoiceOpen(false);

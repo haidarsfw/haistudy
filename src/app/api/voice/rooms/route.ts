@@ -5,7 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import type { VoiceRoom, VoiceParticipant } from "@/types";
 import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
-import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 
 // ─── Pre-created rooms (seed data) ───
 // UUIDs must match migration 010_fix_presence_voice.sql
@@ -123,6 +123,7 @@ async function ensureSeedRooms() {
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
 
     if (!isSupabaseServerConfigured) {
       const rooms: VoiceRoom[] = getAllRoomDefs().map((r) => ({
@@ -248,6 +249,7 @@ export async function POST(request: Request) {
 
     // Scope enforcement for POST
     const scope = await requireScope(request);
+    await assertNotPreview();
 
     const body = await request.json();
     const { action } = body;
@@ -301,6 +303,7 @@ export async function POST(request: Request) {
       // Persist to DB so FK constraint works for voice_participants
       if (isSupabaseServerConfigured) {
         const scope = await requireScope(request);
+    await assertNotPreview();
         const supabase = createServerClient()!;
         await supabase.from("voice_rooms").insert({
           id,

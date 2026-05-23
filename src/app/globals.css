@@ -916,7 +916,7 @@ html.tts-bar-open .tts-shift-target {
 
 @keyframes dash-stagger-in {
   from {
-    opacity: 0;
+    opacity: 0.01;
     transform: translateY(8px);
   }
   to {
@@ -936,6 +936,28 @@ html.tts-bar-open .tts-shift-target {
 }
 .dash-stagger-root > .flex > .dash-stagger-item:nth-child(3) {
   animation-delay: 160ms;
+}
+
+/* Preview-mode floating action bar — entrance after LCP via CSS delay
+   (replaces the previous useState+whenIdle gating which introduced
+   hooks-order risk; see Workstream E plan). */
+@keyframes preview-action-bar-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 60px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+.preview-action-bar {
+  animation: preview-action-bar-in 350ms cubic-bezier(0.22, 1, 0.36, 1) 1.5s backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .preview-action-bar {
+    animation: none;
+  }
 }
 
 /* ============================================

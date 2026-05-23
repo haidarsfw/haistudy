@@ -7,7 +7,7 @@ import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { parseMentions, hasMentions } from "@/lib/mentions";
 import type { ChatMessage } from "@/types";
 import { CHAT_MAX_MESSAGES } from "@/lib/constants";
-import { requireScope, scopeColumns, scopeEq, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeColumns, scopeEq, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 
 // ─── Mock store for development without Supabase ───
 const mockMessages: ChatMessage[] = [];
@@ -92,6 +92,7 @@ function mapRowToMessage(row: Record<string, unknown>): ChatMessage {
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const { searchParams } = new URL(request.url);
     const before = searchParams.get("before"); // cursor: created_at timestamp
 
@@ -143,6 +144,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const {
       content,
@@ -327,6 +329,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const isAdmin = await isAdminFromCookies();
 

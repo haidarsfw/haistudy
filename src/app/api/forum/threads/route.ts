@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
-import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import type { ForumThread, Attachment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
@@ -18,6 +18,7 @@ function getMockThreads(subjectId: string): ForumThread[] {
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const { searchParams } = new URL(request.url);
     const subjectId = searchParams.get("subjectId");
 
@@ -99,6 +100,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const {
       subjectId,
@@ -264,6 +266,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const { threadId, requesterId } = body;
     const isAdmin = await isAdminFromCookies();
@@ -332,6 +335,7 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const scope = await requireScope(request);
+    await assertNotPreview();
     const body = await request.json();
     const { threadId, closed } = body;
     const isAdmin = await isAdminFromCookies();

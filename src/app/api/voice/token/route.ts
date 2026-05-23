@@ -5,7 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
-import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, scopeEq, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import { scopeKey } from "@/lib/scope";
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
 
     // Scope enforcement
     const scope = await requireScope(request);
+    await assertNotPreview();
 
     // Validate license key against DB (prevents random-string JWT issuance)
     if (isSupabaseServerConfigured) {

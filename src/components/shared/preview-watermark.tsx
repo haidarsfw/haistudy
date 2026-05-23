@@ -1,13 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { Lock, LogOut, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { Button } from "@/components/ui/button";
 import { PURCHASE_FORM_URL } from "@/lib/constants";
-import { whenIdle } from "@/lib/defer";
 
 const WATERMARK_BG = `url("data:image/svg+xml;utf8,${encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='180' viewBox='0 0 360 180'>` +
@@ -20,17 +17,12 @@ const WATERMARK_BG = `url("data:image/svg+xml;utf8,${encodeURIComponent(
 
 /**
  * Preview mode watermark — CSS background-image (zero DOM elements)
- * plus a deferred floating action bar at bottom with exit/purchase CTAs.
+ * plus a CSS-delayed floating action bar at bottom with exit/purchase CTAs.
+ * No React hooks; pure render based on session.isPreview.
  */
 export function PreviewWatermark() {
   const { session, logout } = useSession();
   const router = useRouter();
-  const [showBar, setShowBar] = useState(false);
-
-  useEffect(() => {
-    if (!session?.isPreview) return;
-    return whenIdle(() => setShowBar(true));
-  }, [session?.isPreview]);
 
   if (!session?.isPreview) return null;
 
@@ -55,50 +47,43 @@ export function PreviewWatermark() {
         }}
       />
 
-      {/* Floating action bar — deferred via whenIdle so it lands after LCP. */}
-      {showBar && (
-        <motion.div
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 24 }}
-          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.75rem)] sm:bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 rounded-full border border-border bg-card/90 backdrop-blur-md px-3 sm:px-5 py-2 shadow-lg"
+      {/* Floating action bar — CSS entrance with 1.5s delay so it lands after LCP. */}
+      <div className="preview-action-bar fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.75rem)] sm:bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 rounded-full border border-border bg-card/90 backdrop-blur-md px-3 sm:px-5 py-2 shadow-lg">
+        <Lock className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
+          Preview Mode
+        </span>
+        <div className="h-4 w-px bg-border" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2.5 text-xs"
+          onClick={handleExit}
         >
-          <Lock className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
-          <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-            Preview Mode
-          </span>
-          <div className="h-4 w-px bg-border" />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2.5 text-xs"
-            onClick={handleExit}
+          <LogOut className="mr-1 h-3 w-3" aria-hidden="true" />
+          Keluar
+        </Button>
+        {isExternal ? (
+          <a
+            href={purchaseHref}
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <LogOut className="mr-1 h-3 w-3" aria-hidden="true" />
-            Keluar
-          </Button>
-          {isExternal ? (
-            <a
-              href={purchaseHref}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button size="sm" className="h-7 px-3 text-xs">
-                <ExternalLink className="mr-1 h-3 w-3" aria-hidden="true" />
-                Beli Akses
-              </Button>
-            </a>
-          ) : (
-            <Button
-              size="sm"
-              className="h-7 px-3 text-xs"
-              onClick={() => router.push("/login")}
-            >
+            <Button size="sm" className="h-7 px-3 text-xs">
+              <ExternalLink className="mr-1 h-3 w-3" aria-hidden="true" />
               Beli Akses
             </Button>
-          )}
-        </motion.div>
-      )}
+          </a>
+        ) : (
+          <Button
+            size="sm"
+            className="h-7 px-3 text-xs"
+            onClick={() => router.push("/login")}
+          >
+            Beli Akses
+          </Button>
+        )}
+      </div>
     </>
   );
 }

@@ -21,6 +21,24 @@ export class ScopeError extends Error {
 }
 
 /**
+ * Throws ScopeError(403) if the request comes from a preview-mode session.
+ * Preview sessions set hs-session to "PREVIEW" (no-login preview entry)
+ * or "PREVIEW01" (test license). Call from any API route that exposes
+ * cohort-shared content (forum, voice, global chat).
+ */
+export async function assertNotPreview(): Promise<void> {
+  const jar = await cookies();
+  const session = jar.get("hs-session")?.value ?? "";
+  if (session === "PREVIEW" || session === "PREVIEW01") {
+    throw new ScopeError(
+      "Preview users cannot access this resource",
+      403,
+      "PREVIEW_BLOCKED"
+    );
+  }
+}
+
+/**
  * Reads the hs-scope cookie. Throws ScopeError if missing/invalid.
  */
 export async function getCookieScope(): Promise<ScopeTuple> {
