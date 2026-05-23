@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { TrendingUp } from "lucide-react";
-import { motion } from "framer-motion";
 import { useTranslation } from "@/components/providers/language-provider";
-import { staggerItem } from "@/lib/motion";
 import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progress";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 
@@ -65,10 +63,7 @@ export function StudyProgressMini() {
   }, [subjects, content]);
 
   return (
-    <motion.div
-      variants={staggerItem}
-      className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col"
-    >
+    <div className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col">
       <div className="flex items-center gap-2 mb-2">
         <TrendingUp className="h-4 w-4 text-primary" />
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
@@ -78,6 +73,6 @@ export function StudyProgressMini() {
       <div className="flex-1 flex items-center justify-center py-1">
         <ProgressRing percent={progress} />
       </div>
-    </motion.div>
+    </div>
   );
 }

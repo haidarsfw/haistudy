@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Play, ArrowRight } from "lucide-react";
-import { fadeInUp } from "@/lib/motion";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";
@@ -29,7 +27,7 @@ export function QuickStudyCard() {
   if (quickSubjects.length === 0) return null;
 
   return (
-    <motion.div data-onboarding="subjects" className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/20 light-card-shadow" variants={fadeInUp} initial="hidden" animate="visible">
+    <div data-onboarding="subjects" className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/20 light-card-shadow">
       <div className="flex items-center gap-2 mb-4">
         <Play className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">{t("dashboard.continue_studying")}</h3>
@@ -64,6 +62,6 @@ export function QuickStudyCard() {
         {t("dashboard.view_all")}
         <ArrowRight className="h-3 w-3" />
       </Link>
-    </motion.div>
+    </div>
   );
 }

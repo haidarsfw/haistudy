@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Clock, AlertTriangle, Timer } from "lucide-react";
-import { motion } from "framer-motion";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";
-import { staggerItem } from "@/lib/motion";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { whenIdle } from "@/lib/defer";
 import type { Schedule } from "@/types";
 
 function pickNextExam(exams: Schedule[]): Schedule | null {
@@ -70,15 +69,22 @@ export function ExamCountdownMini() {
     }
     setSubject(exam.subject);
 
-    // Both modes update every minute
+    // First value renders synchronously so the card has correct content
+    // on first paint. The per-minute interval is deferred to idle so it
+    // doesn't compete with hydration / LCP.
     update(exam.examDate!, isDetailed);
-    const interval = setInterval(() => update(exam.examDate!, isDetailed), 60000);
-    return () => clearInterval(interval);
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const cancelIdle = whenIdle(() => {
+      interval = setInterval(() => update(exam.examDate!, isDetailed), 60000);
+    });
+    return () => {
+      cancelIdle();
+      if (interval) clearInterval(interval);
+    };
   }, [isDetailed, update, exam]);
 
   return (
-    <motion.div
-      variants={staggerItem}
+    <div
       className={`rounded-xl border bg-card p-4 transition-colors light-card-shadow ${
         isUrgent ? "border-destructive/30" : "border-border"
       } flex flex-col`}
@@ -96,11 +102,13 @@ export function ExamCountdownMini() {
         {exam?.examDate && countdown && (
           <button
             onClick={toggleMode}
-            className={`p-1 rounded-md transition-colors cursor-pointer ${
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
               isDetailed
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
+            aria-label={isDetailed ? "Beralih ke mode simpel" : "Beralih ke mode detail"}
+            aria-pressed={isDetailed}
             title={isDetailed ? "Mode simpel (hari & jam)" : "Mode detail (hari, jam, menit, detik)"}
           >
             <Timer className="h-3.5 w-3.5" />
@@ -131,6 +139,6 @@ export function ExamCountdownMini() {
           </p>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

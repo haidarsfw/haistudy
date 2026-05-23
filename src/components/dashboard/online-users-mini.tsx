@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
-import { staggerItem } from "@/lib/motion";
 import type { OnlineUser } from "@/types";
 
 const DOT_COLORS = [
@@ -79,13 +78,12 @@ export function OnlineUsersMini() {
 
   return (
     <>
-      <motion.div
-        variants={staggerItem}
-        className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow"
-      >
+      <div className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow">
         {/* Header + count — clickable to expand */}
         <button
           onClick={() => setExpanded((prev) => !prev)}
+          aria-label={expanded ? "Sembunyikan daftar user online" : "Tampilkan daftar user online"}
+          aria-expanded={expanded}
           className="flex w-full items-center justify-between text-left cursor-pointer"
         >
           <div className="flex items-center gap-2">
@@ -168,7 +166,7 @@ export function OnlineUsersMini() {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
       {/* Full user list modal */}
       <AnimatePresence>
@@ -197,7 +195,8 @@ export function OnlineUsersMini() {
                 </div>
                 <button
                   onClick={() => setShowAll(false)}
-                  className="rounded-lg p-1 hover:bg-muted transition-colors cursor-pointer"
+                  aria-label="Tutup daftar user online"
+                  className="rounded-lg p-2 hover:bg-muted transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
