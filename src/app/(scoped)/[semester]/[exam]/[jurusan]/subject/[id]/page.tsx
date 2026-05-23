@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
@@ -13,16 +14,42 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { useForumUnread } from "@/hooks/use-forum-unread";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { TabNav } from "@/components/subject/tab-nav";
-import { MateriTab } from "@/components/subject/materi-tab";
-import { RangkumanTab } from "@/components/subject/rangkuman-tab";
-import { KisiKisiTab } from "@/components/subject/kisi-kisi-tab";
-import { FlashcardsTab } from "@/components/subject/flashcards-tab";
-import { QuizTab } from "@/components/subject/quiz-tab";
-import { PersonalNotesTab } from "@/components/subject/personal-notes-tab";
-import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
 import { durationFast } from "@/lib/motion";
 import { ChevronRight, Lightbulb, X } from "lucide-react";
+
+// Tabs are lazy-loaded so RangkumanTab (with its useTTS hook chain) only
+// mounts when the user clicks tab 1, not on initial subject-page load.
+// Fixes a production React #310 that surfaced when all tab modules loaded
+// together. ssr:false is legal here because this page is "use client".
+const MateriTab = dynamic(
+  () => import("@/components/subject/materi-tab").then((m) => ({ default: m.MateriTab })),
+  { ssr: false }
+);
+const RangkumanTab = dynamic(
+  () => import("@/components/subject/rangkuman-tab").then((m) => ({ default: m.RangkumanTab })),
+  { ssr: false }
+);
+const KisiKisiTab = dynamic(
+  () => import("@/components/subject/kisi-kisi-tab").then((m) => ({ default: m.KisiKisiTab })),
+  { ssr: false }
+);
+const FlashcardsTab = dynamic(
+  () => import("@/components/subject/flashcards-tab").then((m) => ({ default: m.FlashcardsTab })),
+  { ssr: false }
+);
+const QuizTab = dynamic(
+  () => import("@/components/subject/quiz-tab").then((m) => ({ default: m.QuizTab })),
+  { ssr: false }
+);
+const PersonalNotesTab = dynamic(
+  () => import("@/components/subject/personal-notes-tab").then((m) => ({ default: m.PersonalNotesTab })),
+  { ssr: false }
+);
+const ForumTab = dynamic(
+  () => import("@/components/forum/forum-tab").then((m) => ({ default: m.ForumTab })),
+  { ssr: false }
+);
 
 export default function SubjectPage() {
   const params = useParams();

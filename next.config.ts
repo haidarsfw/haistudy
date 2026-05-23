@@ -72,6 +72,10 @@ const nextConfig: NextConfig = {
               "media-src 'self' blob: https://gvjwxccwuyuhgexypgbn.supabase.co",
               "connect-src 'self' https://gvjwxccwuyuhgexypgbn.supabase.co wss://gvjwxccwuyuhgexypgbn.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://va.vercel-scripts.com https://vitals.vercel-insights.com https://generativelanguage.googleapis.com https://api.openai.com",
               "worker-src 'self' blob:",
+              // frame-src controls who WE can embed (Google Slides/Drive viewers
+              // for MateriTab; YouTube for video lessons). Distinct from
+              // frame-ancestors below which controls who can embed US.
+              "frame-src 'self' https://docs.google.com https://drive.google.com https://www.youtube.com https://www.youtube-nocookie.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
