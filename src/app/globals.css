@@ -905,6 +905,36 @@ html.tts-bar-open .tts-shift-target {
 }
 
 /* ============================================
+   Dashboard stagger — CSS port of the former framer-motion stagger in
+   src/app/(scoped)/.../dashboard/page.tsx. Visual parity, but removes
+   framer-motion variants from the dashboard route chunk.
+   ============================================ */
+
+@keyframes dash-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dash-stagger-root > .flex > .dash-stagger-item {
+  animation: dash-stagger-in 350ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.dash-stagger-root > .flex > .dash-stagger-item:nth-child(1) {
+  animation-delay: 0ms;
+}
+.dash-stagger-root > .flex > .dash-stagger-item:nth-child(2) {
+  animation-delay: 80ms;
+}
+.dash-stagger-root > .flex > .dash-stagger-item:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+/* ============================================
    Accessibility: prefers-reduced-motion
    Neutralizes CSS-based animations/transitions for users who've opted out
    via their OS. Framer Motion respects this separately via MotionProvider.
