@@ -104,6 +104,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="haistudy" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Theme/font init — CSP allows this via sha256 hash in next.config.ts.
+            If you edit this script body you MUST recompute the hash. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var d=JSON.parse(localStorage.getItem("dark"));if(d===false)document.documentElement.classList.remove("dark");else document.documentElement.classList.add("dark");var t=JSON.parse(localStorage.getItem("theme"));if(t)document.documentElement.setAttribute("data-theme",t);var f=JSON.parse(localStorage.getItem("font"));if(f){document.documentElement.setAttribute("data-font",f);var m={jakarta:"var(--font-heading), sans-serif",inter:"var(--font-body), sans-serif",poppins:"var(--font-poppins), sans-serif"};document.documentElement.style.setProperty("--font-sans",m[f]||m.jakarta)}}catch(e){}})()`,

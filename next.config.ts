@@ -59,8 +59,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // 'unsafe-inline' needed for theme/font init script in src/app/layout.tsx:105-109. Removed in Phase 8 via nonce.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live",
+              // Hash covers the inline theme/font init script in layout.tsx.
+              // Edit the script body → recompute the hash via:
+              //   node -e "console.log('sha256-'+require('crypto').createHash('sha256').update(require('fs').readFileSync(0,'utf8')).digest('base64'))" < script.txt
+              "script-src 'self' 'sha256-dL/go5VjbDuJmgIBSyeWP6BLztibVMeZa5RLlDonRAU=' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://gvjwxccwuyuhgexypgbn.supabase.co https://lh3.googleusercontent.com https://*.googleusercontent.com",
