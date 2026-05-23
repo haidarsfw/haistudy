@@ -11,10 +11,16 @@ const nextConfig: NextConfig = {
   // Tree-shake non-default packages that ship large entry points
   // (lucide-react is already optimized by Next 16 out of the box)
   experimental: {
-    optimizePackageImports: ["framer-motion", "@base-ui/react"],
+    optimizePackageImports: [
+      "framer-motion",
+      "@base-ui/react",
+      "sonner",
+      "date-fns",
+      "react-markdown",
+    ],
   },
   images: {
-    qualities: [75],
+    qualities: [60, 75],
     // Supabase-public slide thumbnails are immutable — extend cache TTL
     minimumCacheTTL: 2678400, // 31 days
     remotePatterns: [
