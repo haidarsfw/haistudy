@@ -1,57 +1,28 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/components/providers/session-provider";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { DEFAULT_SCOPE, scopeKey } from "@/lib/scope";
 
 /**
- * Preview mode entry point.
- * Creates a preview session and redirects to dashboard.
- * No login required - uses isPreview flag.
+ * Preview mode entry point — server component.
+ *
+ * Sets httpOnly cookies directly via next/headers and issues an HTTP
+ * redirect to the scoped dashboard. No client JS bootstrap, no client-side
+ * router.push hop — eliminates the multi-second LCP delay the previous
+ * client implementation caused on slow mobile networks.
+ *
+ * SessionProvider on the dashboard side reads the cookie via /api/auth/me
+ * (which now recognizes hs-session="PREVIEW" — see the route file).
  */
-export default function PreviewPage() {
-  const router = useRouter();
-  const { login } = useSession();
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      // Create preview session in localStorage for useSession() hydration
-      login({
-        licenseKey: "PREVIEW",
-        name: "Preview User",
-        isAdmin: false,
-        isTester: false,
-        expiry: null,
-        selectedClass: "LE86",
-        isPreview: true,
-        packageTier: "normal",
-        scope: DEFAULT_SCOPE,
-        scopeKey: scopeKey(DEFAULT_SCOPE),
-      });
-
-      // Set secure HttpOnly cookies via server route (BP audit fix)
-      await fetch("/api/auth/preview-session", { method: "POST" });
-
-      if (!cancelled) router.push("/dashboard");
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [login, router]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-sm text-muted-foreground">
-          Memuat preview...
-        </p>
-        <p className="text-[11px] text-muted-foreground/80">
-          Tanpa login, fitur terbatas.
-        </p>
-      </div>
-    </div>
-  );
+export default async function PreviewPage() {
+  const jar = await cookies();
+  const cookieOpts = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 3600,
+  };
+  jar.set("hs-session", "PREVIEW", cookieOpts);
+  jar.set("hs-scope", scopeKey(DEFAULT_SCOPE), cookieOpts);
+  redirect(`/${scopeKey(DEFAULT_SCOPE).replace(/-/g, "/")}/dashboard`);
 }

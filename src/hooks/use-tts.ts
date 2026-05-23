@@ -67,6 +67,11 @@ export function useTTS(): UseTTSReturn {
   const pausedRef = useRef(false);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const speedRef = useRef(1);
+  // Self-reference ref so the recursive `speakBlock` calls inside utt.onend
+  // and the block-exhausted branch don't capture the const binding directly.
+  // Breaks the closure cycle that the react-compiler/eslint-plugin-react-hooks
+  // immutability rule flags ("speakBlock accessed before it is declared").
+  const speakBlockRef = useRef<((secIdx: number, blkIdx: number) => void) | null>(null);
 
   // Check browser support on mount
   useEffect(() => {
@@ -151,9 +156,9 @@ export function useTTS(): UseTTSReturn {
 
       const section = sections[secIdx];
 
-      // Move to next section if blocks exhausted
+      // Move to next section if blocks exhausted — via ref to break closure cycle
       if (blkIdx >= section.blocks.length) {
-        speakBlock(secIdx + 1, 0);
+        speakBlockRef.current?.(secIdx + 1, 0);
         return;
       }
 
@@ -179,7 +184,7 @@ export function useTTS(): UseTTSReturn {
       utt.onend = () => {
         // CRITICAL: Don't advance if we're paused or stopped
         if (!playingRef.current || pausedRef.current) return;
-        speakBlock(secIdx, blkIdx + 1);
+        speakBlockRef.current?.(secIdx, blkIdx + 1);
       };
 
       utt.onerror = (e) => {
@@ -190,7 +195,7 @@ export function useTTS(): UseTTSReturn {
           return;
         console.error("[TTS] Utterance error:", e.error);
         if (playingRef.current && !pausedRef.current) {
-          speakBlock(secIdx, blkIdx + 1);
+          speakBlockRef.current?.(secIdx, blkIdx + 1);
         }
       };
 
@@ -198,6 +203,12 @@ export function useTTS(): UseTTSReturn {
     },
     [] // no deps — uses refs for all mutable state
   );
+
+  // Keep speakBlockRef pointing at the latest speakBlock so the ref-via-self
+  // recursion inside the callback resolves to the same closure each render.
+  useEffect(() => {
+    speakBlockRef.current = speakBlock;
+  }, [speakBlock]);
 
   // ── Public actions ──
 

@@ -25,6 +25,26 @@ export async function GET() {
     return NextResponse.json({ session: null }, { status: 401 });
   }
 
+  // Preview entry — no-login flow sets hs-session="PREVIEW". Return a
+  // preview-shaped session without hitting the DB. PREVIEW01 (test license)
+  // still flows through the mock/Supabase paths below.
+  if (licenseKey === "PREVIEW") {
+    return NextResponse.json({
+      session: {
+        licenseKey: "PREVIEW",
+        name: "Preview User",
+        isAdmin: false,
+        isTester: false,
+        expiry: null,
+        selectedClass: "LE86",
+        isPreview: true,
+        packageTier: "normal" as const,
+        scope: DEFAULT_SCOPE,
+        scopeKey: toScopeKey(DEFAULT_SCOPE),
+      },
+    });
+  }
+
   // Mock mode — accept ADMIN1 / PREVIEW01 / pattern keys without DB lookup
   if (!isSupabaseServerConfigured) {
     const mockKeys: Record<
