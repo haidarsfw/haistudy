@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { OnlineUser } from "@/types";
 import { fetchOnlineUsers } from "@/lib/presence";
+import { whenIdle } from "@/lib/defer";
 
 // Poll every 120s. Presence is driven by 60s-visible / 5m-hidden heartbeats,
 // so 120s is the natural freshness ceiling — faster polling just wastes DB IO
@@ -28,9 +29,16 @@ export function useOnlineUsers() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    // Initial fetch deferred to idle so it doesn't queue a request on the
+    // main thread during FCP. Polling interval is unaffected.
+    const cancelIdle = whenIdle(() => {
+      refresh();
+    });
     const interval = setInterval(refresh, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    return () => {
+      cancelIdle();
+      clearInterval(interval);
+    };
   }, [refresh]);
 
   return { users, refresh };
