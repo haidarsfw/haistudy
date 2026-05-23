@@ -15,25 +15,30 @@ export default function PreviewPage() {
   const { login } = useSession();
 
   useEffect(() => {
-    // Create preview session
-    login({
-      licenseKey: "PREVIEW",
-      name: "Preview User",
-      isAdmin: false,
-      isTester: false,
-      expiry: null,
-      selectedClass: "LE86",
-      isPreview: true,
-      packageTier: "normal",
-      scope: DEFAULT_SCOPE,
-      scopeKey: scopeKey(DEFAULT_SCOPE),
-    });
+    let cancelled = false;
+    (async () => {
+      // Create preview session in localStorage for useSession() hydration
+      login({
+        licenseKey: "PREVIEW",
+        name: "Preview User",
+        isAdmin: false,
+        isTester: false,
+        expiry: null,
+        selectedClass: "LE86",
+        isPreview: true,
+        packageTier: "normal",
+        scope: DEFAULT_SCOPE,
+        scopeKey: scopeKey(DEFAULT_SCOPE),
+      });
 
-    // Set session cookie for proxy
-    document.cookie = "hs-session=1; path=/; max-age=3600; SameSite=Lax";
-    document.cookie = `hs-scope=${scopeKey(DEFAULT_SCOPE)}; path=/; max-age=3600; SameSite=Lax`;
+      // Set secure HttpOnly cookies via server route (BP audit fix)
+      await fetch("/api/auth/preview-session", { method: "POST" });
 
-    router.push("/dashboard");
+      if (!cancelled) router.push("/dashboard");
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [login, router]);
 
   return (

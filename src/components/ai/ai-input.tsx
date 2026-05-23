@@ -172,7 +172,7 @@ export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, s
       {/* Image preview */}
       {image && (
         <div className="relative mb-2 inline-block">
-          <img src={image} alt="Preview" className="max-h-24 rounded-lg border border-border" />
+          <img src={image} alt="Preview" width={200} height={96} loading="lazy" decoding="async" className="max-h-24 rounded-lg border border-border" />
           <button
             onClick={() => setImage(null)}
             className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm"

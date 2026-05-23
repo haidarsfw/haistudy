@@ -236,7 +236,7 @@ export function MessageInput({
               <div className="flex gap-2 flex-wrap">
                 {imagePreviews.map((preview, i) => (
                   <div key={i} className="relative">
-                    <img src={preview} alt={`Preview ${i + 1}`} className="h-20 w-20 rounded-lg object-cover" />
+                    <img src={preview} alt={`Preview ${i + 1}`} width={80} height={80} loading="lazy" decoding="async" className="h-20 w-20 rounded-lg object-cover" />
                     <button
                       onClick={() => removeImageAt(i)}
                       className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"

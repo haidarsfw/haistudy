@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BUILD_ID: Date.now().toString(),
   },
+  productionBrowserSourceMaps: false,
   turbopack: {
     root: __dirname,
   },
@@ -39,6 +40,31 @@ const nextConfig: NextConfig = {
             // Allow mic (voice rooms) and camera (forum image upload / PWA); deny others
             value:
               "microphone=(self), camera=(self), geolocation=(), interest-cohort=()",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              // 'unsafe-inline' needed for theme/font init script in src/app/layout.tsx:105-109. Removed in Phase 8 via nonce.
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https://gvjwxccwuyuhgexypgbn.supabase.co https://lh3.googleusercontent.com https://*.googleusercontent.com",
+              "media-src 'self' blob: https://gvjwxccwuyuhgexypgbn.supabase.co",
+              "connect-src 'self' https://gvjwxccwuyuhgexypgbn.supabase.co wss://gvjwxccwuyuhgexypgbn.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://va.vercel-scripts.com https://vitals.vercel-insights.com https://generativelanguage.googleapis.com https://api.openai.com",
+              "worker-src 'self' blob:",
+              "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
           },
         ],
       },
