@@ -97,10 +97,7 @@ export default function RootLayout({
       className={`${jakartaSans.variable} ${inter.variable} ${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         <link rel="preconnect" href="https://gvjwxccwuyuhgexypgbn.supabase.co" />
-        <link rel="preconnect" href="wss://gvjwxccwuyuhgexypgbn.supabase.co" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <meta name="theme-color" content="#0f172a" />
