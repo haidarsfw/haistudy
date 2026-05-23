@@ -97,7 +97,7 @@ export function QuickNoteCard() {
           value={note}
           onChange={(e) => handleChange(e.target.value)}
           placeholder={t("dashboard.quick_note_placeholder")}
-          className="w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground/50 focus:outline-none h-[60px]"
+          className="w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground/80 focus:outline-none h-[60px]"
         />
       </div>
     </div>

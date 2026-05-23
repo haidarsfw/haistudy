@@ -77,9 +77,10 @@ export function PomodoroTimer() {
         <button
           data-onboarding="pomodoro"
           onClick={() => setIsOpen(true)}
+          aria-label="Buka Pomodoro timer"
           className="group hidden sm:flex items-center gap-1 rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-[background-color,color] cursor-pointer"
         >
-          <Timer className="h-4 w-4 shrink-0" />
+          <Timer className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-width,opacity] group-hover:max-w-[80px] group-hover:opacity-100">
             Pomodoro
           </span>
@@ -90,8 +91,9 @@ export function PomodoroTimer() {
           size="icon-sm"
           className="sm:hidden"
           onClick={() => setIsOpen(true)}
+          aria-label="Buka Pomodoro timer"
         >
-          <Timer className="h-4 w-4" />
+          <Timer className="h-4 w-4" aria-hidden="true" />
         </Button>
       </>
     );

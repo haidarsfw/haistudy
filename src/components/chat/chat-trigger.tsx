@@ -15,9 +15,10 @@ export function ChatTrigger({ onClick, unreadCount }: ChatTriggerProps) {
       data-onboarding="chat"
       onClick={onClick}
       size="icon"
+      aria-label="Buka Chat"
       className="tts-shift-target fixed bottom-20 right-4 z-40 h-12 w-12 rounded-full shadow-lg sm:bottom-6 sm:right-6"
     >
-      <MessageCircle className="h-5 w-5" />
+      <MessageCircle className="h-5 w-5" aria-hidden="true" />
 
       {/* Unread badge */}
       <AnimatePresence>

@@ -9,6 +9,14 @@ import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progre
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { scopeFullLabel } from "@/lib/scope";
+import {
+  TIPS as TIPS_UTS,
+  FUN_FACTS as FUN_FACTS_UTS,
+} from "@/data/s2/uts/bm/greeting-content";
+import {
+  TIPS as TIPS_UAS,
+  FUN_FACTS as FUN_FACTS_UAS,
+} from "@/data/s2/uas/bm/greeting-content";
 
 
 function getGreetingKey(): string {
@@ -40,6 +48,11 @@ function getFormattedDate(): string {
     month: "long",
     year: "numeric",
   });
+}
+
+function pickFromRotation<T>(arr: readonly T[]): T {
+  const i = Math.floor(Date.now() / (6 * 3600 * 1000));
+  return arr[i % arr.length];
 }
 
 
@@ -86,8 +99,6 @@ export function GreetingCard() {
   const { subjects, content } = useScopedData();
   const scopeCtx = useOptionalScope();
   const [overallProgress, setOverallProgress] = useState(0);
-  const [tip, setTip] = useState<string | null>(null);
-  const [funFact, setFunFact] = useState<string | null>(null);
 
   useEffect(() => {
     const calc = () => calcOverall(getAllProgress(), subjects, content);
@@ -104,23 +115,14 @@ export function GreetingCard() {
     };
   }, [subjects, content]);
 
-  // Scope-aware tips & fun facts — code-split so each scope only ships its own.
+  // Scope-aware tips & fun facts — static per-period so tip is in first paint
+  // (no LCP delay). Total bundle cost ~10 KiB.
   const isUas = scopeCtx?.scope.examPeriod === "uas";
-  useEffect(() => {
-    let cancelled = false;
-    const load = isUas
-      ? import("@/data/s2/uas/bm/greeting-content")
-      : import("@/data/s2/uts/bm/greeting-content");
-    load.then((mod) => {
-      if (cancelled) return;
-      const rotationIndex = Math.floor(Date.now() / (6 * 3600 * 1000));
-      setTip(mod.TIPS[rotationIndex % mod.TIPS.length]);
-      setFunFact(mod.FUN_FACTS[rotationIndex % mod.FUN_FACTS.length]);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [isUas]);
+  const tip = useMemo(() => pickFromRotation(isUas ? TIPS_UAS : TIPS_UTS), [isUas]);
+  const funFact = useMemo(
+    () => pickFromRotation(isUas ? FUN_FACTS_UAS : FUN_FACTS_UTS),
+    [isUas]
+  );
 
   const greetingKey = useMemo(() => getGreetingKey(), []);
   const motivation = useMemo(
@@ -181,7 +183,7 @@ export function GreetingCard() {
       <div className="my-5 flex items-center gap-3">
         <div className="flex-1 border-t border-border" />
         {scopeCtx && (
-          <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap">
+          <span className="text-[10px] text-muted-foreground/80 whitespace-nowrap">
             {scopeFullLabel(scopeCtx.scope)}
           </span>
         )}
@@ -197,8 +199,8 @@ export function GreetingCard() {
             <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
               {t("dashboard.study_tip")}
             </h3>
-            <p className="text-sm text-foreground leading-relaxed break-words min-h-[1.25rem]">
-              {tip ?? " "}
+            <p className="text-sm text-foreground leading-relaxed break-words">
+              {tip}
             </p>
           </div>
         </div>
@@ -210,8 +212,8 @@ export function GreetingCard() {
             <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
               {t("dashboard.fun_fact")}
             </h3>
-            <p className="text-sm text-foreground leading-relaxed break-words min-h-[1.25rem]">
-              {funFact ?? " "}
+            <p className="text-sm text-foreground leading-relaxed break-words">
+              {funFact}
             </p>
           </div>
         </div>

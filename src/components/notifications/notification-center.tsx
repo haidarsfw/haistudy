@@ -204,10 +204,13 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
       {hoverExpand ? (
         <PopoverTrigger
           render={
-            <button className="group relative flex items-center gap-1 rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-[background-color,color] cursor-pointer" />
+            <button
+              aria-label={t("header.notifications")}
+              className="group relative flex items-center gap-1 rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-[background-color,color] cursor-pointer"
+            />
           }
         >
-          <Bell className="h-4 w-4 shrink-0" />
+          <Bell className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-width,opacity] group-hover:max-w-[80px] group-hover:opacity-100">
             {t("notification.title")}
           </span>
@@ -219,9 +222,16 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
         </PopoverTrigger>
       ) : (
         <PopoverTrigger
-          render={<Button variant="ghost" size="icon-sm" className="relative" />}
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="relative"
+              aria-label={t("header.notifications")}
+            />
+          }
         >
-          <Bell className="h-4 w-4" />
+          <Bell className="h-4 w-4" aria-hidden="true" />
           {unreadCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white">
               {unreadCount > 9 ? "9+" : unreadCount}

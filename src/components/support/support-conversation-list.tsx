@@ -105,7 +105,7 @@ export function SupportConversationList({
                     {conv.lastMessage}
                   </p>
                   <div className="mt-0.5 flex items-center gap-1.5">
-                    <Clock className="h-2.5 w-2.5 text-muted-foreground/60" />
+                    <Clock className="h-2.5 w-2.5 text-muted-foreground/60" aria-hidden="true" />
                     <span className="text-[9px] text-muted-foreground/70">
                       {new Date(conv.lastTime).toLocaleString("id-ID", {
                         day: "numeric",

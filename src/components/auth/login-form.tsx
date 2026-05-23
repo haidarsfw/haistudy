@@ -450,7 +450,7 @@ function LicenseKeyLoginForm() {
 
       {/* Dev hint */}
       {process.env.NODE_ENV === "development" && (
-        <p className="text-center text-[10px] text-muted-foreground/50">
+        <p className="text-center text-[10px] text-muted-foreground/80">
           Dev: gunakan ADMIN1 atau PREVIEW01
         </p>
       )}

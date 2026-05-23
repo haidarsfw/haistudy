@@ -16,9 +16,10 @@ export function AiTrigger({ onClick, unreadCount = 0 }: AiTriggerProps) {
       onClick={onClick}
       size="icon"
       variant="outline"
+      aria-label="Buka AI Assistant"
       className="tts-shift-target fixed bottom-20 right-18 z-40 h-12 w-12 rounded-full border-primary/30 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground sm:bottom-20 sm:right-6"
     >
-      <Bot className="h-5 w-5" />
+      <Bot className="h-5 w-5" aria-hidden="true" />
 
       {/* Unread badge */}
       <AnimatePresence>
