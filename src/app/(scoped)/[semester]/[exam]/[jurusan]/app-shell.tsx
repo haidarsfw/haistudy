@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { useScope } from "@/components/providers/scope-provider";
@@ -8,21 +9,48 @@ import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { SessionTimeout } from "@/components/layout/session-timeout";
-import { ChatPanel } from "@/components/chat/chat-panel";
 import { ChatTrigger } from "@/components/chat/chat-trigger";
-import { AiChatPanel } from "@/components/ai/ai-chat-panel";
 import { AiTrigger } from "@/components/ai/ai-trigger";
-import { VoicePanel } from "@/components/voice/voice-panel";
 import { useVoice } from "@/components/providers/voice-provider";
-import { NotificationPopup } from "@/components/notifications/notification-popup";
-import { SettingsModal } from "@/components/settings/settings-modal";
 import { ReminderAlarm } from "@/components/shared/reminder-alarm";
-import { OnboardingOverlay } from "@/components/onboarding/onboarding-overlay";
 import { PreviewWatermark } from "@/components/shared/preview-watermark";
 import { ClassSelector } from "@/components/auth/class-selector";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
-import { AnnouncementModal } from "@/components/shared/announcement-modal";
-import { SupportPanel } from "@/components/support/support-panel";
+
+// Lazy-loaded panels — fetched on first open so they stay off the dashboard
+// critical path. ssr:false is legal here because app-shell.tsx is "use client".
+const ChatPanel = dynamic(
+  () => import("@/components/chat/chat-panel").then((m) => ({ default: m.ChatPanel })),
+  { ssr: false, loading: () => null }
+);
+const AiChatPanel = dynamic(
+  () => import("@/components/ai/ai-chat-panel").then((m) => ({ default: m.AiChatPanel })),
+  { ssr: false, loading: () => null }
+);
+const VoicePanel = dynamic(
+  () => import("@/components/voice/voice-panel").then((m) => ({ default: m.VoicePanel })),
+  { ssr: false, loading: () => null }
+);
+const SettingsModal = dynamic(
+  () => import("@/components/settings/settings-modal").then((m) => ({ default: m.SettingsModal })),
+  { ssr: false, loading: () => null }
+);
+const SupportPanel = dynamic(
+  () => import("@/components/support/support-panel").then((m) => ({ default: m.SupportPanel })),
+  { ssr: false, loading: () => null }
+);
+const OnboardingOverlay = dynamic(
+  () => import("@/components/onboarding/onboarding-overlay").then((m) => ({ default: m.OnboardingOverlay })),
+  { ssr: false, loading: () => null }
+);
+const AnnouncementModal = dynamic(
+  () => import("@/components/shared/announcement-modal").then((m) => ({ default: m.AnnouncementModal })),
+  { ssr: false, loading: () => null }
+);
+const NotificationPopup = dynamic(
+  () => import("@/components/notifications/notification-popup").then((m) => ({ default: m.NotificationPopup })),
+  { ssr: false, loading: () => null }
+);
 import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
 import { useProgressSync } from "@/hooks/use-progress-sync";
@@ -60,6 +88,16 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
+
+  // Lazy mount flags — flip true on first open, never back. Keeps the panel
+  // mounted across close so AnimatePresence exit animations still play, while
+  // deferring the dynamic chunk fetch until the user actually triggers it.
+  const [chatMounted, setChatMounted] = useState(false);
+  const [aiMounted, setAiMounted] = useState(false);
+  const [voiceMounted, setVoiceMounted] = useState(false);
+  const [settingsMounted, setSettingsMounted] = useState(false);
+  const [supportMounted, setSupportMounted] = useState(false);
+
   const { unreadCount: supportUnread, markAsRead: markSupportRead, markPanelClosed: markSupportClosed } = useSupportUnread();
 
   // Detect current subject from URL (e.g. /subject/statistik)
@@ -78,6 +116,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
   // Sync study progress from server into localStorage for dashboard widgets
   useProgressSync();
+
+  // Trip mount flags on first open (one-way: false → true). Subsequent close
+  // keeps the component mounted so framer-motion exit animations complete.
+  useEffect(() => { if (isChatOpen) setChatMounted(true); }, [isChatOpen]);
+  useEffect(() => { if (isAiOpen) setAiMounted(true); }, [isAiOpen]);
+  useEffect(() => { if (isVoiceOpen || voiceRoom.activeRoom) setVoiceMounted(true); }, [isVoiceOpen, voiceRoom.activeRoom]);
+  useEffect(() => { if (isSettingsOpen) setSettingsMounted(true); }, [isSettingsOpen]);
+  useEffect(() => { if (isSupportOpen) setSupportMounted(true); }, [isSupportOpen]);
 
   // Auto-reload when a new deploy is detected
   useVersionCheck();
@@ -261,65 +307,75 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <ChatTrigger onClick={handleChatToggle} unreadCount={chatUnread} />
       </div>
 
-      {/* Chat panel */}
-      <ChatPanel
-        isOpen={isChatOpen}
-        onClose={handleChatClose}
-        onUnreadChange={handleChatUnreadChange}
-      />
+      {/* Chat panel — mount on first open, then stay mounted for exit anim */}
+      {chatMounted && (
+        <ChatPanel
+          isOpen={isChatOpen}
+          onClose={handleChatClose}
+          onUnreadChange={handleChatUnreadChange}
+        />
+      )}
 
       {/* AI chat panel */}
-      <AiChatPanel
-        isOpen={isAiOpen}
-        onClose={handleAiClose}
-        subjectId={currentSubjectId}
-      />
+      {aiMounted && (
+        <AiChatPanel
+          isOpen={isAiOpen}
+          onClose={handleAiClose}
+          subjectId={currentSubjectId}
+        />
+      )}
 
       {/* Voice panel */}
-      <VoicePanel
-        isOpen={isVoiceOpen}
-        onClose={handleVoiceClose}
-        rooms={voiceRoom.rooms}
-        activeRoom={voiceRoom.activeRoom}
-        loading={voiceRoom.loading}
-        joining={voiceRoom.joining}
-        isMuted={voiceRoom.isMuted}
-        isLiveKitConfigured={voiceRoom.isLiveKitConfigured}
-        livekitToken={voiceRoom.livekitToken}
-        livekitUrl={voiceRoom.livekitUrl}
-        joinRoom={voiceRoom.joinRoom}
-        leaveRoom={voiceRoom.leaveRoom}
-        createRoom={voiceRoom.createRoom}
-        toggleMute={voiceRoom.toggleMute}
-        refreshRooms={voiceRoom.refreshRooms}
-      />
+      {voiceMounted && (
+        <VoicePanel
+          isOpen={isVoiceOpen}
+          onClose={handleVoiceClose}
+          rooms={voiceRoom.rooms}
+          activeRoom={voiceRoom.activeRoom}
+          loading={voiceRoom.loading}
+          joining={voiceRoom.joining}
+          isMuted={voiceRoom.isMuted}
+          isLiveKitConfigured={voiceRoom.isLiveKitConfigured}
+          livekitToken={voiceRoom.livekitToken}
+          livekitUrl={voiceRoom.livekitUrl}
+          joinRoom={voiceRoom.joinRoom}
+          leaveRoom={voiceRoom.leaveRoom}
+          createRoom={voiceRoom.createRoom}
+          toggleMute={voiceRoom.toggleMute}
+          refreshRooms={voiceRoom.refreshRooms}
+        />
+      )}
 
       {/* Settings modal */}
-      <SettingsModal
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-      />
+      {settingsMounted && (
+        <SettingsModal
+          open={isSettingsOpen}
+          onOpenChange={setIsSettingsOpen}
+        />
+      )}
 
       {/* Reminder alarm */}
       <ReminderAlarm reminderTime={settings.reminder} />
 
       {/* Support panel */}
-      <SupportPanel isOpen={isSupportOpen} onClose={() => { setIsSupportOpen(false); markSupportClosed(); }} />
+      {supportMounted && (
+        <SupportPanel isOpen={isSupportOpen} onClose={() => { setIsSupportOpen(false); markSupportClosed(); }} />
+      )}
 
-      {/* Onboarding tutorial */}
+      {/* Onboarding tutorial — self-gates on localStorage internally */}
       <OnboardingOverlay />
     </div>
 
-    {/* Notification popup outside clipped flex container */}
-    <NotificationPopup
-      notification={popupNotification}
-      onDismiss={() => {
-        if (popupNotification) {
+    {/* Notification popup outside clipped flex container; only fetches chunk when a notification appears */}
+    {popupNotification && (
+      <NotificationPopup
+        notification={popupNotification}
+        onDismiss={() => {
           dismissNotification(popupNotification.id);
-        }
-        setPopupNotification(null);
-      }}
-    />
+          setPopupNotification(null);
+        }}
+      />
+    )}
 
     {/* One-shot announcement popup (per-user, localStorage-gated) */}
     <AnnouncementModal />

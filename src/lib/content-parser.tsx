@@ -9,6 +9,7 @@
 import React from "react";
 import Image from "next/image";
 import katex from "katex";
+import "katex/dist/katex.min.css";
 
 const SUPABASE_STORAGE_URL =
   "https://gvjwxccwuyuhgexypgbn.supabase.co/storage/v1/object/public/slides";

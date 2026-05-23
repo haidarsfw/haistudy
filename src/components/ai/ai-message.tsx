@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import type { AiMessage } from "@/hooks/use-ai-chat";
 import { springGentle } from "@/lib/motion";
 import katex from "katex";
+import "katex/dist/katex.min.css";
 
 interface AiMessageBubbleProps {
   message: AiMessage;

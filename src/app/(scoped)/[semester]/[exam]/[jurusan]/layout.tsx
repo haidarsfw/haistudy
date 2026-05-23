@@ -4,7 +4,6 @@ import { ScopeProvider } from "@/components/providers/scope-provider";
 import { ScopedDataProvider } from "@/components/providers/scoped-data-provider";
 import { AppShell } from "./app-shell";
 import { parseScopePath, isAvailableScope } from "@/lib/scope";
-import "katex/dist/katex.min.css";
 
 export default async function ScopedAppLayout({
   children,
