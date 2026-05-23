@@ -7,6 +7,7 @@ import { useOptionalScope } from "@/components/providers/scope-provider";
 import { notificationsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
 import { DEFAULT_SCOPE } from "@/lib/scope";
 import { sounds } from "@/lib/sounds";
+import { whenIdle } from "@/lib/defer";
 import type { Notification } from "@/types";
 
 export function useNotifications() {
@@ -39,46 +40,54 @@ export function useNotifications() {
     }
   }, [fetchNotifications, session]);
 
-  // Supabase Realtime subscription
+  // Supabase Realtime subscription — deferred to idle so it doesn't compete
+  // with FCP/LCP. Initial state still comes from the synchronous fetch above.
   useEffect(() => {
     if (!isSupabaseConfigured || !session) return;
-    const supabase = createClient();
-    if (!supabase) return;
+    let cleanup: (() => void) | null = null;
+    const cancelIdle = whenIdle(() => {
+      const supabase = createClient();
+      if (!supabase) return;
 
-    const channel = supabase
-      .channel(notificationsChannel(scope, session.licenseKey))
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: scopeRealtimeFilter(scope),
-        },
-        (payload) => {
-          const row = payload.new;
-          const notif: Notification = {
-            id: row.id,
-            type: row.type,
-            senderName: row.sender_name,
-            preview: row.preview,
-            context: row.context,
-            threadId: row.thread_id,
-            subjectId: row.subject_id,
-            threadTitle: row.thread_title,
-            messageId: row.message_id || null,
-            read: row.read,
-            createdAt: row.created_at,
-          };
-          setNotifications((prev) => [notif, ...prev]);
-          // Play notification sound for mention/announcement
-          sounds.notification();
-        }
-      )
-      .subscribe();
+      const channel = supabase
+        .channel(notificationsChannel(scope, session.licenseKey))
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: scopeRealtimeFilter(scope),
+          },
+          (payload) => {
+            const row = payload.new;
+            const notif: Notification = {
+              id: row.id,
+              type: row.type,
+              senderName: row.sender_name,
+              preview: row.preview,
+              context: row.context,
+              threadId: row.thread_id,
+              subjectId: row.subject_id,
+              threadTitle: row.thread_title,
+              messageId: row.message_id || null,
+              read: row.read,
+              createdAt: row.created_at,
+            };
+            setNotifications((prev) => [notif, ...prev]);
+            // Play notification sound for mention/announcement
+            sounds.notification();
+          }
+        )
+        .subscribe();
 
+      cleanup = () => {
+        supabase.removeChannel(channel);
+      };
+    });
     return () => {
-      supabase.removeChannel(channel);
+      cancelIdle();
+      cleanup?.();
     };
   }, [session, scope]);
 

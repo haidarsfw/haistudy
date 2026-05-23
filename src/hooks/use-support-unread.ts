@@ -6,6 +6,7 @@ import { useOptionalScope } from "@/components/providers/scope-provider";
 import { supportUnreadChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
 import { DEFAULT_SCOPE } from "@/lib/scope";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { whenIdle } from "@/lib/defer";
 
 const STORAGE_KEY = "hs-support-last-read";
 
@@ -99,45 +100,53 @@ export function useSupportUnread() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [fetchUnread]);
 
-  /* ── Realtime: refetch on any message change instead of local mutation ── */
+  /* ── Realtime: refetch on any message change instead of local mutation.
+       Deferred to idle so it doesn't compete with FCP. ── */
   useEffect(() => {
     if (!session?.licenseKey || !isSupabaseConfigured) return;
-    const supabase = createClient();
-    if (!supabase) return;
+    let cleanup: (() => void) | null = null;
+    const cancelIdle = whenIdle(() => {
+      const supabase = createClient();
+      if (!supabase) return;
 
-    const filter = session.isAdmin
-      ? undefined
-      : `license_key=eq.${session.licenseKey}`;
+      const filter = session.isAdmin
+        ? undefined
+        : `license_key=eq.${session.licenseKey}`;
 
-    const channel = supabase
-      .channel(supportUnreadChannel(scope, session.licenseKey))
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "support_messages",
-          ...(filter ? { filter } : { filter: scopeRealtimeFilter(scope) }),
-        },
-        () => debouncedFetch()
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "support_messages",
-          ...(filter ? { filter } : {}),
-        },
-        () => debouncedFetch()
-      )
-      .subscribe();
+      const channel = supabase
+        .channel(supportUnreadChannel(scope, session.licenseKey))
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "support_messages",
+            ...(filter ? { filter } : { filter: scopeRealtimeFilter(scope) }),
+          },
+          () => debouncedFetch()
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "support_messages",
+            ...(filter ? { filter } : {}),
+          },
+          () => debouncedFetch()
+        )
+        .subscribe();
 
+      cleanup = () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        void supabase.removeChannel(channel);
+      };
+    });
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      void supabase.removeChannel(channel);
+      cancelIdle();
+      cleanup?.();
     };
-  }, [session?.licenseKey, session?.isAdmin, debouncedFetch]);
+  }, [session?.licenseKey, session?.isAdmin, debouncedFetch, scope]);
 
   const markAsRead = useCallback(() => {
     if (!session?.licenseKey) return;

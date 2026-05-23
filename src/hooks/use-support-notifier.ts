@@ -10,6 +10,7 @@ import { useSupportMutes } from "@/hooks/use-support-mutes";
 import { useDesktopNotification } from "@/hooks/use-desktop-notification";
 import { sounds } from "@/lib/sounds";
 import { setTitleBadge, getTitleBadge } from "@/lib/title-badge";
+import { whenIdle } from "@/lib/defer";
 
 interface SupportRowPayload {
   id: string;
@@ -184,41 +185,48 @@ export function useSupportNotifier() {
     void source;
   };
 
-  // ────────── Realtime subscription ──────────
+  // ────────── Realtime subscription (deferred to idle for FCP) ──────────
   useEffect(() => {
     if (!isSupabaseConfigured || !session) return;
-    const supabase = createClient();
-    if (!supabase) return;
+    let cleanup: (() => void) | null = null;
+    const cancelIdle = whenIdle(() => {
+      const supabase = createClient();
+      if (!supabase) return;
 
-    const channelName = session.isAdmin
-      ? "support:notif:all"
-      : `support:notif:${session.licenseKey}`;
-    const filter = session.isAdmin
-      ? undefined
-      : `license_key=eq.${session.licenseKey}`;
+      const channelName = session.isAdmin
+        ? "support:notif:all"
+        : `support:notif:${session.licenseKey}`;
+      const filter = session.isAdmin
+        ? undefined
+        : `license_key=eq.${session.licenseKey}`;
 
-    const channel = supabase.channel(channelName).on(
-      "postgres_changes",
-      filter
-        ? {
-            event: "INSERT",
-            schema: "public",
-            table: "support_messages",
-            filter,
-          }
-        : {
-            event: "INSERT",
-            schema: "public",
-            table: "support_messages",
-          },
-      (payload) => {
-        handleIncoming(payload.new as SupportRowPayload, "realtime");
-      }
-    );
-    channel.subscribe();
+      const channel = supabase.channel(channelName).on(
+        "postgres_changes",
+        filter
+          ? {
+              event: "INSERT",
+              schema: "public",
+              table: "support_messages",
+              filter,
+            }
+          : {
+              event: "INSERT",
+              schema: "public",
+              table: "support_messages",
+            },
+        (payload) => {
+          handleIncoming(payload.new as SupportRowPayload, "realtime");
+        }
+      );
+      channel.subscribe();
 
+      cleanup = () => {
+        void supabase.removeChannel(channel);
+      };
+    });
     return () => {
-      void supabase.removeChannel(channel);
+      cancelIdle();
+      cleanup?.();
     };
     // handleIncoming reads everything via refs — safe
     // eslint-disable-next-line react-hooks/exhaustive-deps

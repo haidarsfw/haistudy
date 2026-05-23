@@ -9,6 +9,7 @@ import {
   updateCurrentSubject,
   updateHideStatus,
 } from "@/lib/presence";
+import { whenIdle } from "@/lib/defer";
 
 /**
  * Sets up presence tracking for the current user.
@@ -38,21 +39,24 @@ export function usePresence(currentSubject: string | null = null) {
   useEffect(() => {
     if (!session) return;
 
-    const deviceId = getDeviceId();
-    const deviceType = getDeviceType();
+    const cancelIdle = whenIdle(() => {
+      const deviceId = getDeviceId();
+      const deviceType = getDeviceType();
 
-    setupPresence({
-      userId: deviceId,
-      userName: session.name,
-      licenseKey: session.licenseKey,
-      deviceType,
-      hideStatus: settings?.hideStatus ?? false,
-      currentSubject: currentSubjectRef.current,
-    }).then((cleanup) => {
-      cleanupRef.current = cleanup;
+      setupPresence({
+        userId: deviceId,
+        userName: session.name,
+        licenseKey: session.licenseKey,
+        deviceType,
+        hideStatus: settings?.hideStatus ?? false,
+        currentSubject: currentSubjectRef.current,
+      }).then((cleanup) => {
+        cleanupRef.current = cleanup;
+      });
     });
 
     return () => {
+      cancelIdle();
       cleanupRef.current?.();
       cleanupRef.current = null;
     };
