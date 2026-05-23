@@ -20,6 +20,7 @@ const inter = Inter({
   variable: "--font-body",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const poppins = Poppins({
@@ -35,6 +36,7 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "600"],
 });
 
 export const viewport: Viewport = {
