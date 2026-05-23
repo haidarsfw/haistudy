@@ -172,7 +172,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
               onChange={(e) => handleSearch(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={t("search.placeholder")}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/80"
             />
             {/* Mobile: show explicit close button instead of keyboard shortcut */}
             {isMobile ? (

@@ -130,6 +130,8 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
           if (onClick) onClick();
           else if (href) router.push(href);
         }}
+        aria-label={label}
+        aria-current={isActive ? "page" : undefined}
         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
           collapsed ? "justify-center" : ""
         } ${
@@ -138,7 +140,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
             : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
         }`}
       >
-        <Icon className="h-[18px] w-[18px] shrink-0" />
+        <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
         {!collapsed && <span>{label}</span>}
       </button>
     );
@@ -181,12 +183,14 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
         )}
         <button
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+          aria-label={collapsed ? "Lebarkan sidebar" : "Ciutkan sidebar"}
+          aria-expanded={!collapsed}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
         >
           {collapsed ? (
-            <PanelLeft className="h-4 w-4" />
+            <PanelLeft className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <PanelLeftClose className="h-4 w-4" />
+            <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
           )}
         </button>
       </div>
@@ -290,7 +294,10 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
           </UserProfilePopover>
         ) : (
           <UserProfilePopover>
-            <button className="flex w-full justify-center rounded-lg py-1.5 hover:bg-sidebar-accent/50 transition-colors cursor-pointer">
+            <button
+              aria-label={session?.name ? `Profil ${session.name}` : "Profil pengguna"}
+              className="flex w-full justify-center rounded-lg py-1.5 hover:bg-sidebar-accent/50 transition-colors cursor-pointer"
+            >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
                 {session?.name?.charAt(0)?.toUpperCase() || "?"}
               </div>

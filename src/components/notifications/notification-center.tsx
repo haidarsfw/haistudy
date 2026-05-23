@@ -251,7 +251,7 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
         <div className="max-h-[min(60vh,400px)] overflow-y-auto overscroll-contain">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8">
-              <Bell className="h-8 w-8 text-muted-foreground/30" />
+              <Bell className="h-8 w-8 text-muted-foreground/30" aria-hidden="true" />
               <p className="text-xs text-muted-foreground">
                 {t("notification.empty")}
               </p>

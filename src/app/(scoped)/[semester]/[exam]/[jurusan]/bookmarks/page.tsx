@@ -71,7 +71,7 @@ export default function BookmarksPage() {
         <motion.div variants={staggerItem}>
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <Bookmark className="h-12 w-12 text-muted-foreground/30 mb-3" />
+              <Bookmark className="h-12 w-12 text-muted-foreground/30 mb-3" aria-hidden="true" />
               <p className="text-sm text-muted-foreground">
                 {t("bookmarks.empty")}
               </p>

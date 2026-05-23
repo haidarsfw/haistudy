@@ -19,6 +19,11 @@ const id: Record<string, string> = {
   "header.settings": "Pengaturan",
   "header.notifications": "Notifikasi",
   "header.pomodoro": "Pomodoro",
+  "header.back": "Kembali",
+  "header.search_open": "Buka pencarian",
+  "header.toggle_dark": "Aktifkan mode gelap",
+  "header.toggle_light": "Aktifkan mode terang",
+  "header.voice_active": "Voice room aktif",
 
   // Dashboard
   "dashboard.online": "Online",

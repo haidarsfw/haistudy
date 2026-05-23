@@ -63,6 +63,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
           variant="ghost"
           size="icon-sm"
           onClick={() => router.back()}
+          aria-label={t("header.back")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -75,7 +76,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         ) : (
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex relative items-center pl-9 pr-4 py-1.5 rounded-lg bg-muted/50 text-sm w-64 border border-border text-muted-foreground/60 hover:bg-muted hover:text-muted-foreground transition-colors cursor-pointer"
+            className="flex relative items-center pl-9 pr-4 py-1.5 rounded-lg bg-muted/50 text-sm w-64 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
           >
             <Search className="h-4 w-4 absolute left-3 text-muted-foreground" />
             <span className="flex-1 text-left">{t("header.search")}</span>
@@ -92,6 +93,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         size="icon-sm"
         onClick={(e) => { e.stopPropagation(); setSearchOpen(true); }}
         className="sm:hidden text-muted-foreground hover:text-foreground"
+        aria-label={t("header.search_open")}
       >
         <Search className="h-4 w-4" />
       </Button>
@@ -105,6 +107,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         <button
           data-onboarding="voice"
           onClick={() => onVoiceToggle?.()}
+          aria-label={activeVoiceRoom ? `${t("header.voice_active")}: ${activeVoiceRoom.name}` : t("header.voice")}
           className={`group hidden sm:flex items-center gap-1 rounded-full px-2.5 py-1.5 backdrop-blur-sm border transition-[background-color,border-color,color] cursor-pointer ${
             activeVoiceRoom
               ? "bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400"
@@ -131,6 +134,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
           variant="ghost"
           size="icon-sm"
           onClick={() => onVoiceToggle?.()}
+          aria-label={activeVoiceRoom ? `${t("header.voice_active")}: ${activeVoiceRoom.name}` : t("header.voice")}
           className={`sm:hidden ${activeVoiceRoom ? "text-green-500" : "text-primary"}`}
         >
           <div className="relative">
@@ -150,6 +154,8 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         {/* Dark mode toggle - hover expand (desktop) */}
         <button
           onClick={() => { sounds.toggle(); toggleDark(); }}
+          aria-label={dark ? t("header.toggle_light") : t("header.toggle_dark")}
+          aria-pressed={dark}
           className="group hidden sm:flex items-center gap-1 rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-[background-color,color] cursor-pointer"
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -169,7 +175,14 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
           </span>
         </button>
         {/* Dark mode - mobile */}
-        <Button variant="ghost" size="icon-sm" onClick={() => { sounds.toggle(); toggleDark(); }} className="sm:hidden">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => { sounds.toggle(); toggleDark(); }}
+          aria-label={dark ? t("header.toggle_light") : t("header.toggle_dark")}
+          aria-pressed={dark}
+          className="sm:hidden"
+        >
           {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
 
@@ -187,6 +200,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
           variant="ghost"
           size="icon-sm"
           onClick={onSettingsOpen}
+          aria-label={t("header.settings")}
           className="sm:hidden"
         >
           <Settings className="h-4 w-4" />

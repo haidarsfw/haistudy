@@ -172,9 +172,10 @@ export function MobileNav({
                 <h3 className="text-sm font-semibold">{t("mobile_nav.more_title")}</h3>
                 <button
                   onClick={() => setMoreOpen(false)}
-                  className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                  aria-label="Tutup menu"
+                  className="rounded-full p-2 text-muted-foreground hover:bg-muted"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               <div className="px-2 pb-2">
@@ -228,6 +229,8 @@ export function MobileNav({
               key={item.labelKey}
               data-onboarding={item.href === "#chat" ? "chat-mobile" : undefined}
               onClick={() => handleMainNav(item.href)}
+              aria-label={t(item.labelKey)}
+              aria-current={active ? "page" : undefined}
               className={`relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] transition-colors ${
                 active
                   ? "text-primary"
@@ -235,7 +238,7 @@ export function MobileNav({
               }`}
             >
               <div className="relative">
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5" aria-hidden="true" />
                 {showRedDot && (
                   <span className="absolute -right-1.5 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[8px] font-bold text-white">
                     {badgeCount > 9 ? "9+" : badgeCount}

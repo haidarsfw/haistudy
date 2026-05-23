@@ -19,6 +19,11 @@ const en: Record<string, string> = {
   "header.settings": "Settings",
   "header.notifications": "Notifications",
   "header.pomodoro": "Pomodoro",
+  "header.back": "Back",
+  "header.search_open": "Open search",
+  "header.toggle_dark": "Switch to dark mode",
+  "header.toggle_light": "Switch to light mode",
+  "header.voice_active": "Voice room active",
 
   // Dashboard
   "dashboard.online": "Online",

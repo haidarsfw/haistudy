@@ -171,7 +171,7 @@ export function ScopePicker() {
                 <p className="text-xs text-muted-foreground">
                   Jurusan lain segera hadir
                 </p>
-                <p className="text-[10px] text-muted-foreground/60 mt-1">Coming soon</p>
+                <p className="text-[10px] text-muted-foreground/80 mt-1">Coming soon</p>
               </div>
             ))}
           </div>

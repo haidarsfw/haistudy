@@ -48,7 +48,7 @@ export default function PreviewPage() {
         <p className="text-sm text-muted-foreground">
           Memuat preview...
         </p>
-        <p className="text-[11px] text-muted-foreground/60">
+        <p className="text-[11px] text-muted-foreground/80">
           Tanpa login, fitur terbatas.
         </p>
       </div>

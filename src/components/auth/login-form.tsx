@@ -342,7 +342,7 @@ function LicenseKeyLoginForm() {
             disabled={loading || isLocked}
             autoFocus
             autoComplete="off"
-            className="pl-10 pr-10 uppercase tracking-wider placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/40"
+            className="pl-10 pr-10 uppercase tracking-wider placeholder:text-muted-foreground/80 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/40"
           />
           <button
             type="button"
@@ -396,7 +396,7 @@ function LicenseKeyLoginForm() {
               value={referralCode}
               onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
               disabled={loading}
-              className="text-sm uppercase tracking-wider placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/40"
+              className="text-sm uppercase tracking-wider placeholder:text-muted-foreground/80 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/40"
             />
           </motion.div>
         )}

@@ -16,6 +16,7 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 dash-stagger-root">
+      <h1 className="sr-only">Dashboard</h1>
       <div className="flex flex-col gap-6">
         {/* Row 1: Greeting (full width, includes tips+facts+countdown) */}
         <div className="dash-stagger-item">
