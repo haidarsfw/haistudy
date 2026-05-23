@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -12,14 +12,10 @@ import {
 } from "lucide-react";
 import { PURCHASE_FORM_URL } from "@/lib/constants";
 import { useTranslation } from "@/components/providers/language-provider";
-import { translate } from "@/lib/i18n";
 
 export function PricingSection() {
   const [selectedPkg, setSelectedPkg] = useState("normal");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const { t: rawT } = useTranslation();
-  const t = mounted ? rawT : (key: string) => translate("id", key);
+  const { t } = useTranslation();
 
   const PACKAGES = [
     {

@@ -485,16 +485,26 @@
   100% { --glow-angle: 360deg; }
 }
 
-/* ── Scroll reveal ── */
+/* ── Scroll reveal ──
+ * Pure CSS reveal via the View-Timeline API (Chrome 115+, Safari 17+,
+ * Firefox 134+). No IntersectionObserver, no per-element React hydration.
+ * Older browsers fall through to opacity:1 (no flash). */
 .scroll-reveal {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
 }
 
-.scroll-reveal-visible {
-  opacity: 1;
-  transform: translateY(0);
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-reveal {
+      animation: scroll-reveal-anim linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+    @keyframes scroll-reveal-anim {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  }
 }
 
 .landing-orb-1,
@@ -532,12 +542,6 @@
   .landing-orb-3,
   .landing-glow {
     animation: none;
-  }
-
-  .scroll-reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
   }
 }
 

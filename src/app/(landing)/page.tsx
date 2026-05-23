@@ -199,8 +199,8 @@ export default function LandingPage() {
           <div className="landing-orb-2 absolute -bottom-20 left-10 h-40 w-40 rounded-full bg-primary/15" />
         </div>
 
-        {/* Dot grid pattern */}
-        <div className="landing-dot-grid absolute inset-0 -z-[5] pointer-events-none" />
+        {/* Dot grid pattern — desktop only (mobile GPU cost not worth it) */}
+        <div className="landing-dot-grid absolute inset-0 -z-[5] pointer-events-none hidden sm:block" />
 
         {/* Floating particles — hidden on mobile for performance */}
         <div className="absolute inset-0 -z-[4] overflow-hidden pointer-events-none hidden sm:block">
@@ -342,8 +342,9 @@ export default function LandingPage() {
                         className={`h-3.5 w-3.5 ${
                           i < t.rating
                             ? "fill-primary text-primary"
-                            : "text-muted-foreground/30"
+                            : "text-muted-foreground/50"
                         }`}
+                        aria-hidden="true"
                       />
                     ))}
                   </div>
