@@ -7,6 +7,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { voiceParticipantsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
 import { DEFAULT_SCOPE } from "@/lib/scope";
+import { whenIdle } from "@/lib/defer";
 import type { VoiceRoom } from "@/types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -58,33 +59,42 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
     fetchRooms();
   }, [fetchRooms]);
 
-  // Supabase Realtime subscription for participant changes
+  // Supabase Realtime subscription for participant changes — deferred to idle
+  // so it doesn't compete with FCP. Initial room list still arrives via the
+  // synchronous fetchRooms() above.
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    const supabase = createClient();
-    if (!supabase) return;
+    let cleanup: (() => void) | null = null;
+    const cancelIdle = whenIdle(() => {
+      const supabase = createClient();
+      if (!supabase) return;
 
-    const channel = supabase
-      .channel(voiceParticipantsChannel(scope))
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "voice_participants",
-          filter: scopeRealtimeFilter(scope),
-        },
-        () => {
-          // Refetch rooms on any participant change
-          fetchRooms();
-        }
-      )
-      .subscribe();
+      const channel = supabase
+        .channel(voiceParticipantsChannel(scope))
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "voice_participants",
+            filter: scopeRealtimeFilter(scope),
+          },
+          () => {
+            // Refetch rooms on any participant change
+            fetchRooms();
+          }
+        )
+        .subscribe();
 
-    channelRef.current = channel;
+      channelRef.current = channel;
 
+      cleanup = () => {
+        channel.unsubscribe();
+      };
+    });
     return () => {
-      channel.unsubscribe();
+      cancelIdle();
+      cleanup?.();
     };
   }, [fetchRooms, scope]);
 
