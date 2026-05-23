@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Plus_Jakarta_Sans, Inter, Geist_Mono, Poppins } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
@@ -107,13 +108,18 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="haistudy" />
         <meta name="mobile-web-app-capable" content="yes" />
-        {/* Theme/font init — CSP allows this via sha256 hash in next.config.ts.
-            If you edit this script body you MUST recompute the hash. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=JSON.parse(localStorage.getItem("dark"));if(d===false)document.documentElement.classList.remove("dark");else document.documentElement.classList.add("dark");var t=JSON.parse(localStorage.getItem("theme"));if(t)document.documentElement.setAttribute("data-theme",t);var f=JSON.parse(localStorage.getItem("font"));if(f){document.documentElement.setAttribute("data-font",f);var m={jakarta:"var(--font-heading), sans-serif",inter:"var(--font-body), sans-serif",poppins:"var(--font-poppins), sans-serif"};document.documentElement.style.setProperty("--font-sans",m[f]||m.jakarta)}}catch(e){}})()`,
-          }}
-        />
+        {/* Theme/font init — runs before hydration so the user's saved
+            preferences apply on first paint with zero FOUC. next/script
+            with beforeInteractive is the App Router blessed primitive for
+            this; using a raw <script> tag triggers a React warning
+            ("Scripts inside React components are never executed…") even
+            though the SSR'd version DOES execute. */}
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+        >
+          {`(function(){try{var d=JSON.parse(localStorage.getItem("dark"));if(d===false)document.documentElement.classList.remove("dark");else document.documentElement.classList.add("dark");var t=JSON.parse(localStorage.getItem("theme"));if(t)document.documentElement.setAttribute("data-theme",t);var f=JSON.parse(localStorage.getItem("font"));if(f){document.documentElement.setAttribute("data-font",f);var m={jakarta:"var(--font-heading), sans-serif",inter:"var(--font-body), sans-serif",poppins:"var(--font-poppins), sans-serif"};document.documentElement.style.setProperty("--font-sans",m[f]||m.jakarta)}}catch(e){}})()`}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider>
