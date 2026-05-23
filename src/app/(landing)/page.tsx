@@ -100,7 +100,7 @@ const FAQ = [
 const TESTIMONIALS = [
   {
     name: "Cindy Baby Gracia",
-    jurusan: "Mahasiswa Binus",
+    jurusan: "B29 - Business Management",
     ipk: "3.97",
     rating: 5,
     message:
@@ -108,7 +108,7 @@ const TESTIMONIALS = [
   },
   {
     name: "Erina Amanda Ardiningrum",
-    jurusan: "Mahasiswa Binus",
+    jurusan: "B29 - Business Management",
     ipk: "3.80",
     rating: 5,
     message:
@@ -116,7 +116,7 @@ const TESTIMONIALS = [
   },
   {
     name: "Keiza Alma Larasati",
-    jurusan: "Mahasiswa Binus",
+    jurusan: "B29 - Business Management",
     ipk: "3.73",
     rating: 5,
     message:
@@ -124,7 +124,7 @@ const TESTIMONIALS = [
   },
   {
     name: "Sutan Jafni Indrayana",
-    jurusan: "Mahasiswa Binus",
+    jurusan: "B29 - Business Management",
     ipk: "3.70",
     rating: 5,
     message:
@@ -224,7 +224,7 @@ export default function LandingPage() {
           <ScrollReveal>
             <div className="badge-shimmer inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 backdrop-blur-sm px-4 py-1.5 text-sm text-foreground shadow-sm">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span>Study smarter, not harder</span>
+              <span>Study Smarter, Not Harder</span>
             </div>
           </ScrollReveal>
 
