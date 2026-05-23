@@ -87,6 +87,14 @@ function buildShuffledOrder(count: number): number[] {
 export function MusicProvider({ children }: { children: ReactNode }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const widgetRef = useRef<SCWidget | null>(null);
+  // Armed flag — gates the SoundCloud script + iframe load until the user first
+  // interacts with the music player. Saves ~50 KB external script + iframe
+  // bundle on every scoped page load. Flipped one-way via arm().
+  const [armed, setArmed] = useState(false);
+  const armedRef = useRef(false);
+  // Queued play intent: if the user clicks Play while the widget is still
+  // loading, we replay the intent in the READY handler so a single click works.
+  const pendingPlayRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [trackTitle, setTrackTitle] = useState("");
@@ -107,6 +115,12 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   shuffleEnabledRef.current = shuffleEnabled;
   isPlayingRef.current = isPlaying;
 
+  const arm = useCallback(() => {
+    if (armedRef.current) return;
+    armedRef.current = true;
+    setArmed(true);
+  }, []);
+
   const initWidget = useCallback(() => {
     if (!iframeRef.current || !window.SC) return;
     try {
@@ -122,6 +136,11 @@ export function MusicProvider({ children }: { children: ReactNode }) {
           if (count > 0) {
             shuffledOrderRef.current = buildShuffledOrder(count);
             shuffledPositionRef.current = 0;
+          }
+          // Replay queued intent if user clicked play while widget was loading.
+          if (pendingPlayRef.current) {
+            pendingPlayRef.current = false;
+            widget.play();
           }
         });
       });
@@ -168,6 +187,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!armed) return;
     const existingScript = document.getElementById("sc-widget-api");
     if (existingScript) {
       if (window.SC && iframeRef.current) {
@@ -201,11 +221,19 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     };
 
     document.body.appendChild(script);
-  }, [initWidget]);
+  }, [armed, initWidget]);
 
   const toggle = useCallback(() => {
+    arm();
     const widget = widgetRef.current;
-    if (!widget) return;
+    if (!widget) {
+      // Widget still loading. Optimistically mark playing + queue intent so
+      // the READY handler kicks off playback when the script finishes loading.
+      pendingPlayRef.current = true;
+      isPlayingRef.current = true;
+      setIsPlaying(true);
+      return;
+    }
     if (isPlayingRef.current) {
       isPlayingRef.current = false;
       setIsPlaying(false);
@@ -215,11 +243,15 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       setIsPlaying(true);
       widget.play();
     }
-  }, []);
+  }, [arm]);
 
   const next = useCallback(() => {
+    arm();
     const widget = widgetRef.current;
-    if (!widget) return;
+    if (!widget) {
+      pendingPlayRef.current = true;
+      return;
+    }
 
     isSkippingRef.current = true;
     if (shuffleEnabled && shuffledOrderRef.current.length > 0) {
@@ -232,15 +264,17 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       widget.next();
       setTimeout(() => widget.play(), 300);
     }
-  }, [shuffleEnabled]);
+  }, [arm, shuffleEnabled]);
 
   const handleSetVolume = useCallback((v: number) => {
+    arm();
     const widget = widgetRef.current;
     if (widget) widget.setVolume(v);
     setVolumeState(v);
-  }, []);
+  }, [arm]);
 
   const toggleShuffle = useCallback(() => {
+    arm();
     setShuffleEnabled((prev) => {
       const next = !prev;
       if (next && trackCountRef.current > 0) {
@@ -249,20 +283,23 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
-  }, []);
+  }, [arm]);
 
   const toggleLoop = useCallback(() => {
+    arm();
     setLoopEnabled((prev) => !prev);
-  }, []);
+  }, [arm]);
 
   return (
     <MusicContext.Provider value={{ isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, setVolume: handleSetVolume, toggle, next, toggleShuffle, toggleLoop }}>
-      <iframe
-        ref={iframeRef}
-        style={{ position: 'fixed', bottom: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', overflow: 'hidden', border: 0 }}
-        allow="autoplay"
-        src={SOUNDCLOUD_PLAYLIST_URL}
-      />
+      {armed && (
+        <iframe
+          ref={iframeRef}
+          style={{ position: 'fixed', bottom: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', overflow: 'hidden', border: 0 }}
+          allow="autoplay"
+          src={SOUNDCLOUD_PLAYLIST_URL}
+        />
+      )}
       {children}
     </MusicContext.Provider>
   );
