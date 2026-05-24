@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -79,6 +79,15 @@ export function MobileNav({
       ? [{ labelKey: "nav.admin", icon: ShieldCheck, href: "/admin" }]
       : []),
   ];
+
+  // Prefetch nav routes on mount so taps don't wait for chunk download.
+  // Touch devices have no hover signal, so prefetch eagerly.
+  useEffect(() => {
+    [...mainItems, ...moreItems].forEach((item) => {
+      if (item.href.startsWith("/")) router.prefetch(item.href);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base]);
 
   const handleMainNav = (href: string) => {
     sounds.click();
