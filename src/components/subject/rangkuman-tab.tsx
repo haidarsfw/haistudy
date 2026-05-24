@@ -188,6 +188,15 @@ export function RangkumanTab({
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  // Event delegation: click on any slide image to open lightbox.
+  // MUST be declared BEFORE the conditional early return below — otherwise
+  // hook count changes across renders (none on first render when data is
+  // still loading, then one once data arrives) and React throws #310.
+  const handleContentClick = useCallback((e: React.MouseEvent) => {
+    const img = (e.target as HTMLElement).closest("img");
+    if (img?.src) setLightboxSrc(img.src);
+  }, []);
+
   if (!rangkumanData || modules.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
@@ -206,12 +215,6 @@ export function RangkumanTab({
     setManualOverride(true);
     setMode(newMode);
   };
-
-  // Event delegation: click on any slide image to open lightbox
-  const handleContentClick = useCallback((e: React.MouseEvent) => {
-    const img = (e.target as HTMLElement).closest("img");
-    if (img?.src) setLightboxSrc(img.src);
-  }, []);
 
   return (
     <div className="flex flex-col gap-3 py-4">
