@@ -3,17 +3,14 @@ import { redirect } from "next/navigation";
 import { DEFAULT_SCOPE, scopeKey } from "@/lib/scope";
 
 /**
- * Preview mode entry point — server component.
+ * Preview mode entry point — Route Handler.
  *
- * Sets httpOnly cookies directly via next/headers and issues an HTTP
- * redirect to the scoped dashboard. No client JS bootstrap, no client-side
- * router.push hop — eliminates the multi-second LCP delay the previous
- * client implementation caused on slow mobile networks.
- *
- * SessionProvider on the dashboard side reads the cookie via /api/auth/me
- * (which now recognizes hs-session="PREVIEW" — see the route file).
+ * Next 16 disallows cookies().set() inside Server Components / Pages.
+ * A GET route handler is the canonical place to mutate cookies + redirect,
+ * giving us the same UX (single round-trip, no client JS bootstrap) that
+ * the previous page.tsx tried to do.
  */
-export default async function PreviewPage() {
+export async function GET() {
   const jar = await cookies();
   const cookieOpts = {
     httpOnly: true,
