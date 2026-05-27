@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Clock, AlertTriangle, CalendarClock } from "lucide-react";
-import { fadeIn } from "@/lib/motion";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import type { Schedule } from "@/types";
@@ -94,15 +92,12 @@ export function ExamCountdown() {
   }
 
   return (
-    <motion.div
-      className={`rounded-xl border p-4 ${
+    <div
+      className={`rounded-xl border p-4 fade-in-css ${
         isUrgent
           ? "border-destructive/30 bg-destructive/5 animate-pulse-glow"
           : "border-border bg-card"
       }`}
-      variants={fadeIn}
-      initial="hidden"
-      animate="visible"
     >
       {/* Header */}
       <div className="flex items-center gap-2 text-sm">
@@ -139,7 +134,7 @@ export function ExamCountdown() {
         <span className="text-lg md:text-2xl lg:text-3xl font-light text-muted-foreground">:</span>
         <TimeUnit value={timeLeft.seconds} label="dtk" urgent={isUrgent} />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -155,20 +150,14 @@ function TimeUnit({
   return (
     <div className="flex flex-col items-center">
       <div className="relative overflow-hidden h-9 md:h-11 lg:h-14">
-        <AnimatePresence mode="popLayout">
-          <motion.span
-            key={value}
-            initial={{ y: -36, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 36, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className={`block font-mono text-3xl md:text-4xl lg:text-5xl font-bold tabular-nums ${
-              urgent ? "text-destructive" : "text-foreground"
-            }`}
-          >
-            {pad(value)}
-          </motion.span>
-        </AnimatePresence>
+        <span
+          key={value}
+          className={`block font-mono text-3xl md:text-4xl lg:text-5xl font-bold tabular-nums countdown-digit-anim ${
+            urgent ? "text-destructive" : "text-foreground"
+          }`}
+        >
+          {pad(value)}
+        </span>
       </div>
       <span className="text-[9px] md:text-[10px] lg:text-xs text-muted-foreground uppercase tracking-wider">
         {label}

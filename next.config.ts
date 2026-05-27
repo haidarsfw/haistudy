@@ -8,14 +8,22 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Strip console.log/info/debug in production while keeping console.error
+  // and console.warn for runtime visibility in Vercel function logs.
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? { exclude: ["error", "warn"] }
+        : false,
+  },
   // Tree-shake non-default packages that ship large entry points
-  // (lucide-react is already optimized by Next 16 out of the box)
   experimental: {
     optimizePackageImports: [
       "framer-motion",
       "@base-ui/react",
       "sonner",
       "date-fns",
+      "lucide-react",
       "react-markdown",
     ],
   },
@@ -35,6 +43,17 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        // Content-addressed chunks under /_next/static/* never change — let
+        // browsers cache them forever and skip revalidation entirely.
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [

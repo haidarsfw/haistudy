@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Shuffle,
   RotateCcw,
@@ -14,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import type { FlashcardItem } from "@/types";
 import { parseInline } from "@/lib/content-parser";
-import { springBouncy, staggerContainer, staggerItem, scaleIn } from "@/lib/motion";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { sounds } from "@/lib/sounds";
 
@@ -141,78 +139,53 @@ export function FlashcardsTab({ items, onComplete, subjectId }: FlashcardsTabPro
       </div>
 
       {/* Completion celebration */}
-      <AnimatePresence>
-        {allDone && (
-          <motion.div
-            className="flex flex-col items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-6 w-full max-w-md text-center"
-            variants={scaleIn}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            <motion.div
-              variants={staggerContainer(0.1)}
-              initial="hidden"
-              animate="visible"
-              className="flex items-center gap-2"
-            >
-              <motion.div variants={staggerItem}>
-                <PartyPopper className="h-8 w-8 text-primary" />
-              </motion.div>
-              <motion.p variants={staggerItem} className="font-heading text-lg font-bold">
-                Semua kartu sudah dihafal!
-              </motion.p>
-            </motion.div>
-            <motion.div variants={staggerItem}>
-              <Button variant="outline" size="sm" onClick={reset}>
-                <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                Ulangi
-              </Button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {allDone && (
+        <div className="flashcard-celebrate-anim flex flex-col items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-6 w-full max-w-md text-center">
+          <div className="flex items-center gap-2">
+            <PartyPopper className="h-8 w-8 text-primary" />
+            <p className="font-heading text-lg font-bold">
+              Semua kartu sudah dihafal!
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={reset}>
+            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            Ulangi
+          </Button>
+        </div>
+      )}
 
-      {/* Card - spring-physics 3D flip */}
+      {/* Card - CSS 3D flip (replaces framer-motion rotateY animation) */}
       {!allDone && (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIdx}
-            className="perspective-1200 w-full max-w-md cursor-pointer"
-            onClick={flip}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={springBouncy}
+        <div
+          key={currentIdx}
+          className="flashcard-swap-anim perspective-1200 w-full max-w-md cursor-pointer"
+          onClick={flip}
+        >
+          <div
+            className={`flashcard-flip preserve-3d relative h-52 w-full ${flipped ? "is-flipped" : ""}`}
           >
-            <motion.div
-              className="preserve-3d relative h-52 w-full"
-              animate={{ rotateY: flipped ? 180 : 0 }}
-              transition={springBouncy}
-            >
-              {/* Front */}
-              <div className="backface-hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-6 text-center shadow-warm">
-                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">
-                  Istilah
-                </p>
-                <p className="font-heading text-lg font-semibold">
-                  {current ? parseInline(current.term) : null}
-                </p>
-                <p className="mt-4 text-[10px] text-muted-foreground">
-                  Klik atau tekan Space untuk membalik
-                </p>
-              </div>
+            {/* Front */}
+            <div className="backface-hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-6 text-center shadow-warm">
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">
+                Istilah
+              </p>
+              <p className="font-heading text-lg font-semibold">
+                {current ? parseInline(current.term) : null}
+              </p>
+              <p className="mt-4 text-[10px] text-muted-foreground">
+                Klik atau tekan Space untuk membalik
+              </p>
+            </div>
 
-              {/* Back */}
-              <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center shadow-warm">
-                <p className="text-xs text-primary mb-2 uppercase tracking-wider">
-                  Definisi
-                </p>
-                <p className="text-sm leading-relaxed">{current ? parseInline(current.definition) : null}</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
+            {/* Back */}
+            <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center shadow-warm">
+              <p className="text-xs text-primary mb-2 uppercase tracking-wider">
+                Definisi
+              </p>
+              <p className="text-sm leading-relaxed">{current ? parseInline(current.definition) : null}</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Counter + bookmark */}
