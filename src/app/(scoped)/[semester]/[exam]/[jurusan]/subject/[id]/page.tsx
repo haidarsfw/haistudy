@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { useScope } from "@/components/providers/scope-provider";
-import { loadSubjectById, loadContent } from "@/data";
-import type { Subject, SubjectContent } from "@/types";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useSettings } from "@/hooks/use-settings";
 import { useProgress } from "@/hooks/use-progress";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -21,7 +19,6 @@ import { QuizTab } from "@/components/subject/quiz-tab";
 import { PersonalNotesTab } from "@/components/subject/personal-notes-tab";
 import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
-import { durationFast } from "@/lib/motion";
 import { ChevronRight, Lightbulb, X } from "lucide-react";
 
 export default function SubjectPage() {
@@ -29,7 +26,7 @@ export default function SubjectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session } = useSession();
-  const { scope, scopePath } = useScope();
+  const { scopePath } = useScope();
   const subjectId = params.id as string;
   const dashboardHref = `/${scopePath}/dashboard`;
   const subjectsHref = `/${scopePath}/subjects`;
@@ -37,9 +34,18 @@ export default function SubjectPage() {
   const initialTab = Number(searchParams.get("tab")) || 0;
   const [activeTab, setActiveTab] = useState(initialTab);
   const [showTip, setShowTip] = useState(true);
-  const [subject, setSubject] = useState<Subject | undefined>(undefined);
-  const [content, setContent] = useState<SubjectContent | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  // Track which tabs have been visited. Once a tab mounts it stays mounted
+  // to preserve scroll position, TTS state, and form drafts across switches.
+  const [visited, setVisited] = useState<Set<number>>(() => new Set([initialTab]));
+  const handleTabChange = useCallback((tab: number) => {
+    setActiveTab(tab);
+    setVisited((v) => (v.has(tab) ? v : new Set(v).add(tab)));
+  }, []);
+
+  const { subjects, content: scopedContent, loaded: scopedLoaded } = useScopedData();
+  const subject = useMemo(() => subjects.find((s) => s.id === subjectId), [subjects, subjectId]);
+  const content = scopedContent[subjectId] ?? null;
+  const loaded = scopedLoaded;
 
   const { settings, updateSettings } = useSettings();
 
@@ -51,25 +57,6 @@ export default function SubjectPage() {
     const updated = [subjectId, ...recent.filter((id) => id !== subjectId)].slice(0, 5);
     updateSettings({ recentSubjects: updated });
   }, [subjectId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Async scope-aware load
-  useEffect(() => {
-    let cancelled = false;
-    setLoaded(false);
-    (async () => {
-      const [s, c] = await Promise.all([
-        loadSubjectById(scope, subjectId),
-        loadContent(scope, subjectId) as Promise<SubjectContent | null>,
-      ]);
-      if (cancelled) return;
-      setSubject(s);
-      setContent(c);
-      setLoaded(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [scope, subjectId]);
 
   const { notifications } = useNotifications();
   const forumUnread = useForumUnread(notifications);
@@ -99,6 +86,28 @@ export default function SubjectPage() {
     [setFlashcardsCompleted]
   );
 
+  // Tab counts + dots — memoized BEFORE the early returns so hook order
+  // stays stable across loaded/empty/loaded transitions (avoids React #310).
+  const tabCounts = useMemo<Record<number, number>>(
+    () => ({
+      0: content?.materi.length ?? 0,
+      2: content?.kisiKisi.length ?? 0,
+      3: content?.flashcards.length ?? 0,
+      4: content?.quiz.length ?? 0,
+    }),
+    [
+      content?.materi.length,
+      content?.kisiKisi.length,
+      content?.flashcards.length,
+      content?.quiz.length,
+    ]
+  );
+  const subjectHasForumUnread = forumUnread.hasUnread(subjectId);
+  const tabDots = useMemo<Record<number, boolean> | undefined>(
+    () => (subjectHasForumUnread ? { 5: true } : undefined),
+    [subjectHasForumUnread]
+  );
+
   if (!loaded) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -123,20 +132,11 @@ export default function SubjectPage() {
     );
   }
 
-  // Calculate per-subject progress using the unified weighted formula
   const percent = getCompletionPercent(
     content.materi.length,
     content.flashcards.length > 0,
     content.quiz.length > 0
   );
-
-  // Tab counts
-  const tabCounts: Record<number, number> = {
-    0: content.materi.length,
-    2: content.kisiKisi.length,
-    3: content.flashcards.length,
-    4: content.quiz.length,
-  };
 
   // Progress ring values
   const radius = 18;
@@ -225,91 +225,97 @@ export default function SubjectPage() {
       {/* Tab navigation */}
       <TabNav
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         counts={tabCounts}
-        tabDots={forumUnread.hasUnread(subjectId) ? { 5: true } : undefined}
+        tabDots={tabDots}
       />
 
-      {/* Tab content */}
+      {/* Tab content — all tabs stay mounted after first visit. Hidden panels
+          skip painting + receive no pointer events. CSS keyframe fades in
+          the active panel. Keeps scroll/TTS/draft state across switches. */}
       <div className="px-4">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={durationFast}
-          >
-            {activeTab === 0 && (
-              <PreviewLock title="Materi">
-                <MateriTab
-                  items={content.materi}
-                  completedIds={progress.materi}
-                  onToggleComplete={handleMateriToggle}
-                  subjectId={subjectId}
-                  highlightTitle={searchParams.get("highlight") || undefined}
-                />
-              </PreviewLock>
-            )}
+        <div className="tab-panel" hidden={activeTab !== 0}>
+          {visited.has(0) && (
+            <PreviewLock title="Materi">
+              <MateriTab
+                items={content.materi}
+                completedIds={progress.materi}
+                onToggleComplete={handleMateriToggle}
+                subjectId={subjectId}
+                highlightTitle={searchParams.get("highlight") || undefined}
+              />
+            </PreviewLock>
+          )}
+        </div>
 
-            {activeTab === 1 && (
-              <PreviewLock title="Rangkuman">
-                <RangkumanTab
-                  subjectId={subjectId}
-                  initialModule={searchParams.get("module") || undefined}
-                  highlightText={searchParams.get("highlight") || undefined}
-                />
-              </PreviewLock>
-            )}
+        <div className="tab-panel" hidden={activeTab !== 1}>
+          {visited.has(1) && (
+            <PreviewLock title="Rangkuman">
+              <RangkumanTab
+                subjectId={subjectId}
+                initialModule={searchParams.get("module") || undefined}
+                highlightText={searchParams.get("highlight") || undefined}
+              />
+            </PreviewLock>
+          )}
+        </div>
 
-            {activeTab === 2 && (
-              <PreviewLock title="Kisi-Kisi">
-                <KisiKisiTab
-                  items={content.kisiKisi}
-                  note={content.kisiKisiNote}
-                  info={content.kisiKisiInfo}
-                  attachments={content.kisiKisiAttachments}
-                  subjectId={subjectId}
-                />
-              </PreviewLock>
-            )}
+        <div className="tab-panel" hidden={activeTab !== 2}>
+          {visited.has(2) && (
+            <PreviewLock title="Kisi-Kisi">
+              <KisiKisiTab
+                items={content.kisiKisi}
+                note={content.kisiKisiNote}
+                info={content.kisiKisiInfo}
+                attachments={content.kisiKisiAttachments}
+                subjectId={subjectId}
+              />
+            </PreviewLock>
+          )}
+        </div>
 
-            {activeTab === 3 && (
-              <PreviewLock title="Flashcards">
-                <FlashcardsTab
-                  items={content.flashcards}
-                  onComplete={handleFlashcardsComplete}
-                  subjectId={subjectId}
-                />
-              </PreviewLock>
-            )}
+        <div className="tab-panel" hidden={activeTab !== 3}>
+          {visited.has(3) && (
+            <PreviewLock title="Flashcards">
+              <FlashcardsTab
+                items={content.flashcards}
+                onComplete={handleFlashcardsComplete}
+                subjectId={subjectId}
+              />
+            </PreviewLock>
+          )}
+        </div>
 
-            {activeTab === 4 && (
-              <PreviewLock title="Quiz">
-                <QuizTab
-                  questions={content.quiz}
-                  onScoreSave={(score, total) => saveQuizScore(score, total)}
-                  subjectId={subjectId}
-                />
-              </PreviewLock>
-            )}
+        <div className="tab-panel" hidden={activeTab !== 4}>
+          {visited.has(4) && (
+            <PreviewLock title="Quiz">
+              <QuizTab
+                questions={content.quiz}
+                onScoreSave={(score, total) => saveQuizScore(score, total)}
+                subjectId={subjectId}
+              />
+            </PreviewLock>
+          )}
+        </div>
 
-            {activeTab === 5 && (
-              <PreviewLock title="Forum">
-                <ForumTab subjectId={subjectId} />
-              </PreviewLock>
-            )}
+        <div className="tab-panel" hidden={activeTab !== 5}>
+          {visited.has(5) && (
+            <PreviewLock title="Forum">
+              <ForumTab subjectId={subjectId} />
+            </PreviewLock>
+          )}
+        </div>
 
-            {activeTab === 6 && session && (
-              <div className="py-4">
-                <PersonalNotesTab
-                  subjectId={subjectId}
-                  licenseKey={session.licenseKey}
-                />
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        <div className="tab-panel" hidden={activeTab !== 6}>
+          {visited.has(6) && session && (
+            <div className="py-4">
+              <PersonalNotesTab
+                subjectId={subjectId}
+                licenseKey={session.licenseKey}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

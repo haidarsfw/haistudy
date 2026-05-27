@@ -1,6 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  createElement,
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
@@ -10,7 +19,24 @@ import { sounds } from "@/lib/sounds";
 import { whenIdle } from "@/lib/defer";
 import type { Notification } from "@/types";
 
-export function useNotifications() {
+interface NotificationsContextValue {
+  notifications: Notification[];
+  unreadCount: number;
+  isLoading: boolean;
+  markAsRead: (notificationIds?: string[]) => Promise<void>;
+  dismissNotification: (notificationId: string) => Promise<void>;
+  refetch: () => Promise<void>;
+}
+
+const NotificationsContext = createContext<NotificationsContextValue | null>(null);
+
+/**
+ * Mount once per authenticated app shell. Holds a single Realtime subscription
+ * + a single initial fetch; every `useNotifications()` consumer reads from
+ * the shared context. Previously each consumer call ran its own fetch +
+ * subscription — 6 callsites = 6 WebSockets per page load.
+ */
+export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { session } = useSession();
   const scopeCtx = useOptionalScope();
   const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
@@ -91,10 +117,6 @@ export function useNotifications() {
     };
   }, [session, scope]);
 
-  // Polling fallback disabled — Realtime subscription provides instant delivery
-  // Previous: setInterval every 120s was redundant and contributed to invocation limit
-  // If Realtime fails, user will see stale data but page won't crash
-
   // Mark notifications as read
   const markAsRead = useCallback(
     async (notificationIds?: string[]) => {
@@ -105,9 +127,7 @@ export function useNotifications() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             licenseKey: session.licenseKey,
-            ...(notificationIds
-              ? { notificationIds }
-              : { markAll: true }),
+            ...(notificationIds ? { notificationIds } : { markAll: true }),
           }),
         });
 
@@ -135,12 +155,35 @@ export function useNotifications() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  return {
-    notifications,
-    unreadCount,
-    isLoading,
-    markAsRead,
-    dismissNotification,
-    refetch: fetchNotifications,
-  };
+  const value = useMemo<NotificationsContextValue>(
+    () => ({
+      notifications,
+      unreadCount,
+      isLoading,
+      markAsRead,
+      dismissNotification,
+      refetch: fetchNotifications,
+    }),
+    [notifications, unreadCount, isLoading, markAsRead, dismissNotification, fetchNotifications]
+  );
+
+  return createElement(NotificationsContext.Provider, { value }, children);
+}
+
+/**
+ * Reader hook. When called outside a NotificationsProvider, returns a stable
+ * empty stub — keeps landing/admin pages and tests working without forcing
+ * the provider on every tree.
+ */
+const EMPTY_VALUE: NotificationsContextValue = {
+  notifications: [],
+  unreadCount: 0,
+  isLoading: false,
+  markAsRead: async () => {},
+  dismissNotification: async () => {},
+  refetch: async () => {},
+};
+
+export function useNotifications(): NotificationsContextValue {
+  return useContext(NotificationsContext) ?? EMPTY_VALUE;
 }

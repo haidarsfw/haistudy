@@ -938,6 +938,112 @@ html.tts-bar-open .tts-shift-target {
   animation-delay: 160ms;
 }
 
+/* Flashcards — celebration scale-in. */
+@keyframes flashcard-celebrate-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.flashcard-celebrate-anim {
+  animation: flashcard-celebrate-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Flashcards — card swap slide-in (key change remounts). */
+@keyframes flashcard-swap-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.flashcard-swap-anim {
+  animation: flashcard-swap-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Flashcards — CSS 3D flip toggled by .is-flipped class. */
+.flashcard-flip {
+  transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.flashcard-flip.is-flipped {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashcard-celebrate-anim,
+  .flashcard-swap-anim { animation: none; }
+  .flashcard-flip { transition: none; }
+}
+
+/* Exam countdown digit — slide-in on value change (key change remounts). */
+@keyframes countdown-digit-in {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.countdown-digit-anim {
+  animation: countdown-digit-in 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Generic fade-in on first paint (replaces framer-motion fadeIn variant). */
+@keyframes fade-in-css {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in-css {
+  animation: fade-in-css 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown-digit-anim,
+  .fade-in-css { animation: none; }
+}
+
+/* Header dark-mode toggle icon — rotate-in on swap (key change remounts). */
+@keyframes dark-toggle-icon-in {
+  from { transform: rotate(-90deg); opacity: 0; }
+  to   { transform: rotate(0); opacity: 1; }
+}
+.dark-toggle-icon-anim {
+  animation: dark-toggle-icon-in 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dark-toggle-icon-anim { animation: none; }
+}
+
+/* TabNav active indicator — replaces framer-motion's layoutId animation.
+   Plain CSS scale-in from the click point. */
+@keyframes tab-indicator-in {
+  from { transform: scaleX(0.4); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+.tab-indicator-anim {
+  animation: tab-indicator-in 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-indicator-anim { animation: none; }
+}
+
+/* Subject-page tab panels — pure-CSS fade-in replacing the previous
+   AnimatePresence mode="wait" which forced a 400ms exit-then-enter block on
+   every tab click. All panels stay mounted; only the active one paints. */
+@keyframes tab-panel-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tab-panel[hidden] {
+  display: none;
+}
+.tab-panel:not([hidden]) {
+  animation: tab-panel-fade-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-panel:not([hidden]) {
+    animation: none;
+  }
+}
+
 /* Preview-mode floating action bar — entrance after LCP via CSS delay
    (replaces the previous useState+whenIdle gating which introduced
    hooks-order risk; see Workstream E plan). */

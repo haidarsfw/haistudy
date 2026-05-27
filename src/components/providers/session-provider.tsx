@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import type { Session } from "@/types";
@@ -112,12 +113,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // NOTE: Inactivity timeout is handled exclusively by the SessionTimeout
   // component in the app shell. Do NOT add a duplicate timer here.
 
+  const value = useMemo<SessionContextValue>(
+    () => ({ session, isLoading, login, logout, updateSession }),
+    [session, isLoading, login, logout, updateSession]
+  );
+
   return (
-    <SessionContext.Provider
-      value={{ session, isLoading, login, logout, updateSession }}
-    >
-      {children}
-    </SessionContext.Provider>
+    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
   );
 }
 

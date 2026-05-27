@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import type { ThemeId, FontId } from "@/types";
@@ -143,23 +144,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  return (
-    <ThemeContext.Provider
-      value={{
-        dark,
-        theme,
-        font,
-        setDark,
-        setTheme,
-        setFont,
-        toggleDark,
-        darkModeSchedule,
-        setDarkModeSchedule,
-      }}
-    >
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo<ThemeContextValue>(
+    () => ({
+      dark,
+      theme,
+      font,
+      setDark,
+      setTheme,
+      setFont,
+      toggleDark,
+      darkModeSchedule,
+      setDarkModeSchedule,
+    }),
+    [dark, theme, font, setDark, setTheme, setFont, toggleDark, darkModeSchedule, setDarkModeSchedule]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

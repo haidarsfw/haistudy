@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AppProviders } from "@/components/providers/app-providers";
 import { ScopeProvider } from "@/components/providers/scope-provider";
 import { ScopedDataProvider } from "@/components/providers/scoped-data-provider";
+import { NotificationsProvider } from "@/hooks/use-notifications";
 import { AppShell } from "./app-shell";
 import { parseScopePath, isAvailableScope } from "@/lib/scope";
 
@@ -21,7 +22,9 @@ export default async function ScopedAppLayout({
     <AppProviders>
       <ScopeProvider scope={scope}>
         <ScopedDataProvider>
-          <AppShell>{children}</AppShell>
+          <NotificationsProvider>
+            <AppShell>{children}</AppShell>
+          </NotificationsProvider>
         </ScopedDataProvider>
       </ScopeProvider>
     </AppProviders>

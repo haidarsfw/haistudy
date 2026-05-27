@@ -7,6 +7,7 @@ import {
   useRef,
   useEffect,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import { SOUNDCLOUD_PLAYLIST_URL } from "@/lib/constants";
@@ -290,8 +291,25 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     setLoopEnabled((prev) => !prev);
   }, [arm]);
 
+  const value = useMemo<MusicContextValue>(
+    () => ({
+      isPlaying,
+      isReady,
+      trackTitle,
+      shuffleEnabled,
+      loopEnabled,
+      volume,
+      setVolume: handleSetVolume,
+      toggle,
+      next,
+      toggleShuffle,
+      toggleLoop,
+    }),
+    [isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, handleSetVolume, toggle, next, toggleShuffle, toggleLoop]
+  );
+
   return (
-    <MusicContext.Provider value={{ isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, setVolume: handleSetVolume, toggle, next, toggleShuffle, toggleLoop }}>
+    <MusicContext.Provider value={value}>
       {armed && (
         <iframe
           ref={iframeRef}
