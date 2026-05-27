@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { memo } from "react";
 import {
   FileText,
   BookOpen,
@@ -10,7 +10,6 @@ import {
   MessageSquare,
   StickyNote,
 } from "lucide-react";
-import { springSmooth } from "@/lib/motion";
 import { sounds } from "@/lib/sounds";
 
 export const SUBJECT_TABS = [
@@ -30,7 +29,12 @@ interface TabNavProps {
   tabDots?: Record<number, boolean>;
 }
 
-export function TabNav({ activeTab, onTabChange, counts, tabDots }: TabNavProps) {
+export const TabNav = memo(function TabNav({
+  activeTab,
+  onTabChange,
+  counts,
+  tabDots,
+}: TabNavProps) {
   return (
     <div className="border-b border-border">
       <div className="relative flex flex-wrap">
@@ -61,11 +65,7 @@ export function TabNav({ activeTab, onTabChange, counts, tabDots }: TabNavProps)
                   </span>
                 )}
               {isActive && (
-                <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                  layoutId="tab-indicator"
-                  transition={springSmooth}
-                />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary tab-indicator-anim" />
               )}
             </button>
           );
@@ -73,4 +73,4 @@ export function TabNav({ activeTab, onTabChange, counts, tabDots }: TabNavProps)
       </div>
     </div>
   );
-}
+});

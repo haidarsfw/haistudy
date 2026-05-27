@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -59,35 +59,48 @@ export function MobileNav({
   const dashboardHref = `${base}/dashboard`;
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const mainItems = [
-    { labelKey: "mobile_nav.home", icon: Home, href: dashboardHref },
-    { labelKey: "mobile_nav.subjects", icon: BookOpen, href: `${base}/subjects` },
-    { labelKey: "mobile_nav.ai", icon: Sparkles, href: "#ai" },
-    { labelKey: "mobile_nav.chat", icon: MessageCircle, href: "#chat" },
-    { labelKey: "mobile_nav.more", icon: MoreHorizontal, href: "#more" },
-  ];
+  const mainItems = useMemo(
+    () => [
+      { labelKey: "mobile_nav.home", icon: Home, href: dashboardHref },
+      { labelKey: "mobile_nav.subjects", icon: BookOpen, href: `${base}/subjects` },
+      { labelKey: "mobile_nav.ai", icon: Sparkles, href: "#ai" },
+      { labelKey: "mobile_nav.chat", icon: MessageCircle, href: "#chat" },
+      { labelKey: "mobile_nav.more", icon: MoreHorizontal, href: "#more" },
+    ],
+    [dashboardHref, base]
+  );
 
-  const moreItems = [
-    { labelKey: "nav.schedule", icon: Calendar, href: `${base}/jadwal` },
-    { labelKey: "nav.analytics", icon: BarChart3, href: `${base}/analytics` },
-    { labelKey: "mobile_nav.bookmark", icon: Bookmark, href: `${base}/bookmarks` },
-    { labelKey: "nav.notes", icon: StickyNote, href: `${base}/notes` },
-    { labelKey: "nav.feedback", icon: MessageSquarePlus, href: `${base}/feedback` },
-    { labelKey: "nav.support", icon: HeadphonesIcon, href: "#support" },
-    { labelKey: "nav.settings", icon: Settings, href: "#settings" },
-    ...(session?.isAdmin
-      ? [{ labelKey: "nav.admin", icon: ShieldCheck, href: "/admin" }]
-      : []),
-  ];
+  const moreItems = useMemo(
+    () => [
+      { labelKey: "nav.schedule", icon: Calendar, href: `${base}/jadwal` },
+      { labelKey: "nav.analytics", icon: BarChart3, href: `${base}/analytics` },
+      { labelKey: "mobile_nav.bookmark", icon: Bookmark, href: `${base}/bookmarks` },
+      { labelKey: "nav.notes", icon: StickyNote, href: `${base}/notes` },
+      { labelKey: "nav.feedback", icon: MessageSquarePlus, href: `${base}/feedback` },
+      { labelKey: "nav.support", icon: HeadphonesIcon, href: "#support" },
+      { labelKey: "nav.settings", icon: Settings, href: "#settings" },
+      ...(session?.isAdmin
+        ? [{ labelKey: "nav.admin", icon: ShieldCheck, href: "/admin" }]
+        : []),
+    ],
+    [base, session?.isAdmin]
+  );
 
   // Prefetch nav routes on mount so taps don't wait for chunk download.
   // Touch devices have no hover signal, so prefetch eagerly.
   useEffect(() => {
-    [...mainItems, ...moreItems].forEach((item) => {
-      if (item.href.startsWith("/")) router.prefetch(item.href);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base]);
+    const hrefs = [
+      dashboardHref,
+      `${base}/subjects`,
+      `${base}/jadwal`,
+      `${base}/analytics`,
+      `${base}/bookmarks`,
+      `${base}/notes`,
+      `${base}/feedback`,
+      ...(session?.isAdmin ? ["/admin"] : []),
+    ];
+    hrefs.forEach((href) => router.prefetch(href));
+  }, [base, dashboardHref, session?.isAdmin, router]);
 
   const handleMainNav = (href: string) => {
     sounds.click();

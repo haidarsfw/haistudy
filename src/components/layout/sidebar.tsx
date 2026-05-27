@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { memo, useCallback, useState, useEffect, useMemo } from "react";
 import { getDeviceId } from "@/lib/auth/device";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -53,6 +53,69 @@ function buildNavItems(scopePath: string) {
 
 const STORAGE_KEY = "hs-sidebar-collapsed";
 
+// Module-scope memoized NavButton — identity is stable across Sidebar renders
+// (when inline-defined inside Sidebar, React treats it as a new component
+// type each render and unmount/remounts every button).
+const NavButton = memo(function NavButton({
+  label,
+  icon: Icon,
+  href,
+  isActive,
+  onClick,
+  onHrefClick,
+  onHrefHover,
+  collapsed,
+}: {
+  label: string;
+  icon: typeof Home;
+  href?: string;
+  isActive?: boolean;
+  onClick?: () => void;
+  onHrefClick?: (href: string) => void;
+  onHrefHover?: (href: string) => void;
+  collapsed: boolean;
+}) {
+  const handleClick = () => {
+    if (onClick) onClick();
+    else if (href && onHrefClick) onHrefClick(href);
+  };
+  const handleHover = () => {
+    if (href && onHrefHover) onHrefHover(href);
+  };
+  const btn = (
+    <button
+      onClick={handleClick}
+      onMouseEnter={handleHover}
+      onFocus={handleHover}
+      aria-label={label}
+      aria-current={isActive ? "page" : undefined}
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+        collapsed ? "justify-center" : ""
+      } ${
+        isActive
+          ? "bg-sidebar-accent text-primary"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+      }`}
+    >
+      <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+      {!collapsed && <span>{label}</span>}
+    </button>
+  );
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger render={<span className="w-full" />}>{btn}</TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return btn;
+});
+
 export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -85,16 +148,16 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
       .catch(() => {});
   }, [session?.isAdmin]);
 
-  const toggleCollapsed = () => {
+  const toggleCollapsed = useCallback(() => {
     sounds.toggle();
     setCollapsed((prev) => {
       const next = !prev;
       localStorage.setItem(STORAGE_KEY, String(next));
       return next;
     });
-  };
+  }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     sounds.leave();
     try {
       await fetch("/api/auth/logout", {
@@ -108,58 +171,21 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
     logout();
     // Use full page navigation to ensure clean state (not client-side router)
     window.location.href = "/";
-  };
+  }, [session, logout]);
 
-  const NavButton = ({
-    label,
-    icon: Icon,
-    href,
-    isActive,
-    onClick,
-  }: {
-    label: string;
-    icon: typeof Home;
-    href?: string;
-    isActive?: boolean;
-    onClick?: () => void;
-  }) => {
-    const btn = (
-      <button
-        onClick={() => {
-          sounds.click();
-          if (onClick) onClick();
-          else if (href) router.push(href);
-        }}
-        onMouseEnter={() => { if (href) router.prefetch(href); }}
-        onFocus={() => { if (href) router.prefetch(href); }}
-        aria-label={label}
-        aria-current={isActive ? "page" : undefined}
-        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-          collapsed ? "justify-center" : ""
-        } ${
-          isActive
-            ? "bg-sidebar-accent text-primary"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-        }`}
-      >
-        <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-        {!collapsed && <span>{label}</span>}
-      </button>
-    );
-
-    if (collapsed) {
-      return (
-        <Tooltip>
-          <TooltipTrigger render={<span className="w-full" />}>{btn}</TooltipTrigger>
-          <TooltipContent side="right" sideOffset={8}>
-            {label}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return btn;
-  };
+  const onHrefClick = useCallback(
+    (href: string) => {
+      sounds.click();
+      router.push(href);
+    },
+    [router]
+  );
+  const onHrefHover = useCallback(
+    (href: string) => {
+      router.prefetch(href);
+    },
+    [router]
+  );
 
   return (
     <aside
@@ -217,6 +243,9 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
                 icon={item.icon}
                 href={item.href}
                 isActive={isActive}
+                onHrefClick={onHrefClick}
+                onHrefHover={onHrefHover}
+                collapsed={collapsed}
               />
               {showDot && (
                 <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-destructive pointer-events-none" />
@@ -231,6 +260,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
             label={t("nav.support")}
             icon={LifeBuoy}
             onClick={onSupportOpen}
+            collapsed={collapsed}
           />
           {supportUnread > 0 && (
             <span className="absolute right-2 top-1/2 -translate-y-1/2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white pointer-events-none">
@@ -245,6 +275,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
             label={t("nav.settings")}
             icon={Settings}
             onClick={onSettingsOpen}
+            collapsed={collapsed}
           />
         </div>
 
@@ -256,6 +287,9 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
               icon={ShieldCheck}
               href="/admin"
               isActive={pathname === "/admin" || pathname?.startsWith("/admin")}
+              onHrefClick={onHrefClick}
+              onHrefHover={onHrefHover}
+              collapsed={collapsed}
             />
             {feedbackCount > 0 && (
               <span className="absolute right-2 top-1/2 -translate-y-1/2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white pointer-events-none">
@@ -308,7 +342,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
         )}
 
         {/* Logout */}
-        <NavButton label={t("nav.logout")} icon={LogOut} onClick={handleLogout} />
+        <NavButton label={t("nav.logout")} icon={LogOut} onClick={handleLogout} collapsed={collapsed} />
       </div>
     </aside>
   );

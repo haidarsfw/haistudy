@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Search,
@@ -12,7 +11,6 @@ import {
   Mic,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useTheme } from "@/components/providers/theme-provider";
 import { NotificationCenter } from "@/components/notifications/notification-center";
@@ -30,7 +28,6 @@ interface HeaderProps {
 export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { session } = useSession();
   const { t } = useTranslation();
   const { dark, toggleDark } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -158,18 +155,9 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
           aria-pressed={dark}
           className="group hidden sm:flex items-center gap-1 rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-[background-color,color] cursor-pointer"
         >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={dark ? "sun" : "moon"}
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center"
-            >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </motion.span>
-          </AnimatePresence>
+          <span key={dark ? "sun" : "moon"} className="flex items-center dark-toggle-icon-anim">
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </span>
           <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-width,opacity] group-hover:max-w-[80px] group-hover:opacity-100">
             {dark ? t("header.light") : t("header.dark")}
           </span>
