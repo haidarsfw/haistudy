@@ -189,9 +189,8 @@ export default function LandingPage() {
       </div>
       {/* ── Hero ── */}
       <section className="relative flex flex-col lg:flex-row items-center gap-10 lg:gap-16 px-4 pb-16 pt-20 sm:pt-28 max-w-6xl mx-auto w-full">
-        {/* Animated gradient mesh orbs */}
-        {/* Animated gradient mesh orbs */}
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Animated gradient mesh orbs — desktop only (mobile GPU cost not worth it) */}
+        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden sm:block">
           <div className="landing-orb-1 absolute top-10 left-1/4 h-72 w-72 rounded-full bg-primary/30" />
           <div className="landing-orb-2 absolute bottom-10 right-1/4 h-80 w-80 rounded-full bg-primary/25" />
           <div className="landing-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[700px] w-[700px] rounded-full bg-primary/15" />
@@ -375,7 +374,7 @@ export default function LandingPage() {
 
       {/* ── FAQ ── */}
       <section id="faq" className="relative px-4 py-14 sm:py-18">
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden sm:block">
           <div className="landing-orb-1 absolute top-20 right-1/4 h-64 w-64 rounded-full bg-primary/10" />
         </div>
         <div className="mx-auto max-w-2xl">
