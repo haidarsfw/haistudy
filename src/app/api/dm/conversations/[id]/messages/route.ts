@@ -17,7 +17,15 @@ type MsgRow = {
   id: string;
   conversation_id: string;
   sender_key: string;
+  sender_name: string | null;
   body: string;
+  type: string | null;
+  media_url: string | null;
+  reply_to_id: string | null;
+  reply_to_name: string | null;
+  reply_to_body: string | null;
+  deleted: boolean | null;
+  pinned: boolean | null;
   created_at: string;
 };
 
@@ -26,7 +34,15 @@ function mapMsg(row: MsgRow): DmMessage {
     id: row.id,
     conversationId: row.conversation_id,
     senderKey: row.sender_key,
+    senderName: row.sender_name ?? null,
     body: row.body,
+    type: (row.type as DmMessage["type"]) ?? "text",
+    mediaUrl: row.media_url ?? null,
+    replyToId: row.reply_to_id ?? null,
+    replyToName: row.reply_to_name ?? null,
+    replyToBody: row.reply_to_body ?? null,
+    deleted: row.deleted ?? false,
+    pinned: row.pinned ?? false,
     createdAt: row.created_at,
   };
 }
@@ -104,7 +120,8 @@ export async function GET(
   }
 }
 
-// ─── POST /api/dm/conversations/[id]/messages ─── send { body }.
+// ─── POST /api/dm/conversations/[id]/messages ───
+// Send { body, type?, mediaUrl?, senderName?, replyTo? }.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -121,9 +138,25 @@ export async function POST(
     }
 
     const payload = await request.json().catch(() => ({}));
+    const type = (["text", "image", "audio"].includes(payload?.type)
+      ? payload.type
+      : "text") as DmMessage["type"];
     const body = String(payload?.body ?? "").trim();
-    if (!body) {
+    const mediaUrl =
+      typeof payload?.mediaUrl === "string" ? payload.mediaUrl : null;
+    // sender_name is display-only; sender_key stays server-trusted (cookie).
+    const senderName =
+      typeof payload?.senderName === "string"
+        ? payload.senderName.slice(0, 80)
+        : null;
+
+    // A media message can have an empty body (caption optional); a text message
+    // must carry content.
+    if (type === "text" && !body) {
       return NextResponse.json({ error: "Empty message" }, { status: 400 });
+    }
+    if ((type === "image" || type === "audio") && !mediaUrl) {
+      return NextResponse.json({ error: "Missing media" }, { status: 400 });
     }
     if (body.length > 2000) {
       return NextResponse.json(
@@ -132,13 +165,30 @@ export async function POST(
       );
     }
 
+    const replyTo =
+      payload?.replyTo && typeof payload.replyTo === "object"
+        ? {
+            id: String(payload.replyTo.id ?? ""),
+            name: String(payload.replyTo.name ?? "").slice(0, 80),
+            content: String(payload.replyTo.content ?? "").slice(0, 200),
+          }
+        : null;
+
     if (!isSupabaseServerConfigured) {
       return NextResponse.json({
         message: {
           id: crypto.randomUUID(),
           conversationId: id,
           senderKey: licenseKey,
+          senderName,
           body,
+          type,
+          mediaUrl,
+          replyToId: replyTo?.id || null,
+          replyToName: replyTo?.name || null,
+          replyToBody: replyTo?.content || null,
+          deleted: false,
+          pinned: false,
           createdAt: new Date().toISOString(),
         } satisfies DmMessage,
       });
@@ -155,7 +205,13 @@ export async function POST(
       .insert({
         conversation_id: id,
         sender_key: licenseKey,
+        sender_name: senderName,
         body,
+        type,
+        media_url: mediaUrl,
+        reply_to_id: replyTo?.id || null,
+        reply_to_name: replyTo?.name || null,
+        reply_to_body: replyTo?.content || null,
         ...scopeColumns(scope),
       })
       .select()
@@ -174,6 +230,125 @@ export async function POST(
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("DM messages POST error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+// ─── DELETE /api/dm/conversations/[id]/messages ───
+// Soft-delete one message: body { messageId }. Sender or admin only.
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const scope = await requireScope(request);
+    const { isAdmin, tier, licenseKey } = await resolveSessionTier();
+    if (!canUseVip(isAdmin, tier)) {
+      return NextResponse.json({ error: "vip_only" }, { status: 403 });
+    }
+    if (!licenseKey) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const payload = await request.json().catch(() => ({}));
+    const messageId = String(payload?.messageId ?? "");
+    if (!messageId) {
+      return NextResponse.json({ error: "Missing messageId" }, { status: 400 });
+    }
+
+    if (!isSupabaseServerConfigured) {
+      return NextResponse.json({ success: true });
+    }
+
+    const supabase = createServerClient()!;
+    const conv = await loadOwnedConversation(supabase, scope, id, licenseKey);
+    if (!conv) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Load the target to enforce ownership (only the sender, or an admin, may
+    // delete). Scope + conversation already validated above.
+    const { data: target } = await supabase
+      .from("dm_messages")
+      .select("sender_key")
+      .eq("id", messageId)
+      .eq("conversation_id", id)
+      .maybeSingle();
+    const row = target as { sender_key: string } | null;
+    if (!row) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    if (!isAdmin && row.sender_key.toUpperCase() !== licenseKey) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { error } = await supabase
+      .from("dm_messages")
+      .update({ deleted: true, body: "", media_url: null })
+      .eq("id", messageId);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error("DM messages DELETE error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+// ─── PATCH /api/dm/conversations/[id]/messages ───
+// Toggle pin: body { messageId, pinned }. Either participant may pin.
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const scope = await requireScope(request);
+    const { isAdmin, tier, licenseKey } = await resolveSessionTier();
+    if (!canUseVip(isAdmin, tier)) {
+      return NextResponse.json({ error: "vip_only" }, { status: 403 });
+    }
+    if (!licenseKey) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const payload = await request.json().catch(() => ({}));
+    const messageId = String(payload?.messageId ?? "");
+    const pinned = Boolean(payload?.pinned);
+    if (!messageId) {
+      return NextResponse.json({ error: "Missing messageId" }, { status: 400 });
+    }
+
+    if (!isSupabaseServerConfigured) {
+      return NextResponse.json({ success: true });
+    }
+
+    const supabase = createServerClient()!;
+    const conv = await loadOwnedConversation(supabase, scope, id, licenseKey);
+    if (!conv) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const { error } = await supabase
+      .from("dm_messages")
+      .update({
+        pinned,
+        pinned_at: pinned ? new Date().toISOString() : null,
+      })
+      .eq("id", messageId)
+      .eq("conversation_id", id);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error("DM messages PATCH error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

@@ -131,7 +131,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
-                className="w-full min-w-0 px-6 pb-6 pt-2"
+                className="w-full min-w-0 overflow-x-hidden px-6 pb-6 pt-2"
               >
                 {activeTab === "appearance" && (
                   <motion.div

@@ -207,7 +207,7 @@ export function MobileNav({
                     <button
                       key={item.labelKey}
                       onClick={() => handleMoreNav(item.href)}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                      className={`hs-press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                         active
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-foreground hover:bg-muted"
@@ -227,7 +227,7 @@ export function MobileNav({
                 <div className="mt-1 border-t border-border pt-1">
                   <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                    className="hs-press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <LogOut className="h-4.5 w-4.5 shrink-0" />
                     <span>{t("nav.logout")}</span>
@@ -253,7 +253,7 @@ export function MobileNav({
               onClick={() => handleMainNav(item.href)}
               aria-label={t(item.labelKey)}
               aria-current={active ? "page" : undefined}
-              className={`relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] transition-colors ${
+              className={`hs-press relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] transition-colors ${
                 active
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"

@@ -41,18 +41,27 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // Content-addressed chunks under /_next/static/* never change in a
+    // production build — cache them forever. In dev, Turbopack rewrites chunk
+    // contents on every edit while keeping the same URL, so an immutable header
+    // makes the browser/SW serve a stale chunk ("module factory is not
+    // available"). Only emit the immutable header in production.
+    const staticImmutable =
+      process.env.NODE_ENV === "production"
+        ? [
+            {
+              source: "/_next/static/:path*",
+              headers: [
+                {
+                  key: "Cache-Control",
+                  value: "public, max-age=31536000, immutable",
+                },
+              ],
+            },
+          ]
+        : [];
     return [
-      {
-        // Content-addressed chunks under /_next/static/* never change — let
-        // browsers cache them forever and skip revalidation entirely.
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+      ...staticImmutable,
       {
         source: "/(.*)",
         headers: [
@@ -93,7 +102,7 @@ const nextConfig: NextConfig = {
               // frame-src controls who WE can embed (Google Slides/Drive viewers
               // for MateriTab; YouTube for video lessons). Distinct from
               // frame-ancestors below which controls who can embed US.
-              "frame-src 'self' https://docs.google.com https://drive.google.com https://www.youtube.com https://www.youtube-nocookie.com",
+              "frame-src 'self' https://docs.google.com https://drive.google.com https://accounts.google.com https://content.googleapis.com https://www.youtube.com https://www.youtube-nocookie.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",

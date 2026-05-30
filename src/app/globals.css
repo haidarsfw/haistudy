@@ -1145,3 +1145,37 @@ html.tts-bar-open .tts-shift-target {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================
+   Micro-interactions (CSS-only, zero JS/PageSpeed cost)
+   .hs-press  -> tactile press: subtle scale-down on :active.
+   .hs-lift   -> hover lift: rise + soften shadow on :hover, press on :active.
+   Both are GPU-cheap (transform only) and the global reduced-motion guard
+   above neutralizes them for users who opt out.
+   ============================================ */
+
+.hs-press {
+  transition:
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.hs-press:active {
+  transform: scale(0.97);
+}
+
+.hs-lift {
+  transition:
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  will-change: transform;
+}
+@media (hover: hover) {
+  .hs-lift:hover {
+    transform: translateY(-2px);
+  }
+}
+.hs-lift:active {
+  transform: translateY(0) scale(0.99);
+}

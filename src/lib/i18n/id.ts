@@ -547,6 +547,9 @@ const id: Record<string, string> = {
   "dm.empty_hint": "Pilih anggota VIP untuk mulai mengobrol secara pribadi.",
   "dm.you": "Kamu",
   "dm.vip_only": "DM hanya tersedia untuk anggota VIP.",
+  "dm.send_error": "Gagal mengirim pesan",
+  "dm.image": "Gambar",
+  "dm.voice": "Pesan suara",
 
   // Profile
   "profile.title": "Profil",
@@ -581,6 +584,8 @@ const id: Record<string, string> = {
   "highlight.remove": "Hapus sorotan",
   "highlight.saved": "Sorotan tersimpan",
   "highlight.added_to_library": "Disimpan ke pustaka",
+  "highlight.remove_snippet": "Hapus dari pustaka",
+  "highlight.snippet_removed": "Snippet dihapus dari pustaka",
   "highlight.color_locked": "Warna ini adalah fitur VIP",
   "highlight.clear_all": "Hapus semua sorotan",
   "highlight.cleared_all": "Semua sorotan dihapus",

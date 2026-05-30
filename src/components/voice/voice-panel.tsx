@@ -162,7 +162,7 @@ export function VoicePanel({
         initial={{ x: "100%" }}
         animate={{ x: isOpen ? 0 : "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 250 }}
-        className="fixed right-0 bottom-0 z-50 flex w-full flex-col border-t border-border bg-background shadow-xl max-h-[calc(100dvh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:w-[380px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0"
+        className="fixed right-0 bottom-0 z-50 flex w-full flex-col border-t border-border bg-background shadow-xl max-h-[calc(100dvh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:w-[336px] lg:w-[400px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0"
         style={{ 
           // When not open, make it non-interactive but keep it in DOM
           pointerEvents: isOpen ? "auto" : "none",

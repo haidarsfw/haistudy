@@ -55,6 +55,16 @@ export function UpdateBanner() {
       sessionStorage.setItem(JUST_UPDATED_KEY, "1");
     } catch {}
 
+    // Purge all Cache Storage first so a stale app-shell / chunk can never be
+    // served after the reload. This is the part that previously forced users
+    // to hard-refresh manually.
+    try {
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    } catch {}
+
     if (!("serviceWorker" in navigator)) {
       window.location.reload();
       return;

@@ -63,8 +63,17 @@ export async function uploadToCloudinary(
     const formData = new FormData();
 
     if (resourceType === "image") {
-      const compressed = await compressImage(file);
-      formData.append("file", compressed, file.name);
+      // Compress via <canvas>, but never let a decode failure abort the upload.
+      // iPhone HEIC/HEIF (and the occasional CMYK/odd JPEG) fail to load into an
+      // <img>, which previously rejected and silently dropped the avatar. Fall
+      // back to the original bytes - Cloudinary transcodes server-side.
+      let blob: Blob = file;
+      try {
+        blob = await compressImage(file);
+      } catch {
+        blob = file;
+      }
+      formData.append("file", blob, file.name);
     } else {
       formData.append("file", file, file.name);
     }

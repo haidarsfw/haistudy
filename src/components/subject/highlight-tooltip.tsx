@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, Trash2, Lock, Sparkles } from "lucide-react";
+import { Bookmark, BookmarkX, Trash2, Lock, Sparkles } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { HighlightColor, UserHighlight } from "@/types";
 
@@ -184,6 +184,7 @@ interface HighlightTooltipProps {
   onPickColor: (color: HighlightColor) => void;
   onSaveToLibrary: () => void;
   onRemove: () => void;
+  onRemoveSnippet?: () => void;
   onAskAI?: () => void;
 }
 
@@ -195,6 +196,7 @@ export function HighlightTooltip({
   onPickColor,
   onSaveToLibrary,
   onRemove,
+  onRemoveSnippet,
   onAskAI,
 }: HighlightTooltipProps) {
   const { t } = useTranslation();
@@ -250,14 +252,25 @@ export function HighlightTooltip({
 
       <div className="mx-0.5 h-4 w-px bg-border" />
 
-      <button
-        onClick={onSaveToLibrary}
-        title={t("highlight.save_to_library")}
-        aria-label={t("highlight.save_to_library")}
-        className="flex h-6 w-6 items-center justify-center rounded-full text-primary hover:bg-primary/10"
-      >
-        <Bookmark className="h-3.5 w-3.5" />
-      </button>
+      {onRemoveSnippet ? (
+        <button
+          onClick={onRemoveSnippet}
+          title={t("highlight.remove_snippet")}
+          aria-label={t("highlight.remove_snippet")}
+          className="flex h-6 w-6 items-center justify-center rounded-full text-destructive hover:bg-destructive/10"
+        >
+          <BookmarkX className="h-3.5 w-3.5" />
+        </button>
+      ) : (
+        <button
+          onClick={onSaveToLibrary}
+          title={t("highlight.save_to_library")}
+          aria-label={t("highlight.save_to_library")}
+          className="flex h-6 w-6 items-center justify-center rounded-full text-primary hover:bg-primary/10"
+        >
+          <Bookmark className="h-3.5 w-3.5" />
+        </button>
+      )}
 
       {onAskAI && (
         <button

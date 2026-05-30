@@ -417,6 +417,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       <NotificationPopup
         notification={popupNotification}
         onRead={(id) => markAsRead([id])}
+        // Announcements stay in the bell list (user reads them via the detail
+        // dialog there); in the transient popup, a click just closes the toast.
+        onAnnouncementClick={() => setPopupNotification(null)}
         onDismiss={() => {
           dismissNotification(popupNotification.id);
           setPopupNotification(null);

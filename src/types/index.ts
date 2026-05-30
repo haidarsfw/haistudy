@@ -225,7 +225,15 @@ export interface DmMessage {
   id: string;
   conversationId: string;
   senderKey: string;
+  senderName?: string | null;
   body: string;
+  type: "text" | "image" | "audio";
+  mediaUrl?: string | null;
+  replyToId?: string | null;
+  replyToName?: string | null;
+  replyToBody?: string | null;
+  deleted?: boolean;
+  pinned?: boolean;
   createdAt: string;
   // Client-only ephemeral:
   clientNonce?: string;

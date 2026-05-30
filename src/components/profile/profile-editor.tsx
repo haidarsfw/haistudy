@@ -24,6 +24,10 @@ export function ProfileEditor() {
   const { profile, loading, saving, updateProfile } = useProfile();
   const fileRef = useRef<HTMLInputElement>(null);
   const seeded = useRef(false);
+  // Set the moment the user edits anything. Guards against the async profile
+  // fetch resolving AFTER an upload and clobbering the fresh avatar back to
+  // null (the bug that left every avatar_url null in the DB).
+  const dirty = useRef(false);
 
   const [bio, setBio] = useState(profile.bio ?? "");
   const [status, setStatus] = useState(profile.customStatus ?? "");
@@ -31,10 +35,13 @@ export function ProfileEditor() {
   const [uploading, setUploading] = useState(false);
 
   // Profile loads async; seed the form once when the backend value arrives so
-  // we don't clobber edits the user makes after that.
+  // we don't clobber edits the user makes after that. If the user already
+  // touched the form (e.g. uploaded an avatar while the fetch was in flight),
+  // skip seeding entirely.
   useEffect(() => {
     if (loading || seeded.current) return;
     seeded.current = true;
+    if (dirty.current) return;
     setBio(profile.bio ?? "");
     setStatus(profile.customStatus ?? "");
     setAvatarUrl(profile.avatarUrl ?? null);
@@ -56,6 +63,7 @@ export function ProfileEditor() {
       return;
     }
     setUploading(true);
+    dirty.current = true;
     try {
       const url = await uploadToCloudinary(file, "image");
       if (!url) {
@@ -72,6 +80,7 @@ export function ProfileEditor() {
 
   const handleRemoveAvatar = () => {
     sounds.click();
+    dirty.current = true;
     setAvatarUrl(null);
   };
 
@@ -165,7 +174,10 @@ export function ProfileEditor() {
           value={bio}
           maxLength={BIO_MAX}
           placeholder={t("profile.bio_placeholder")}
-          onChange={(e) => setBio(e.target.value)}
+          onChange={(e) => {
+            dirty.current = true;
+            setBio(e.target.value);
+          }}
           className="min-h-16 text-sm"
         />
       </div>
@@ -185,7 +197,10 @@ export function ProfileEditor() {
           value={status}
           maxLength={STATUS_MAX}
           placeholder={t("profile.status_placeholder")}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => {
+            dirty.current = true;
+            setStatus(e.target.value);
+          }}
           className="h-9 w-full text-sm"
         />
       </div>

@@ -31,7 +31,7 @@ import {
 import { TTSController } from "./tts-controller";
 import { toast } from "@/components/ui/toast";
 import { openAiWithReference } from "@/lib/events";
-import type { HighlightColor } from "@/types";
+import type { HighlightColor, SnippetLibraryItem } from "@/types";
 
 type ReadingMode = "light" | "dark" | "sepia";
 
@@ -78,6 +78,10 @@ export function RangkumanTab({
     endOffset: number;
   } | null>(null);
   const [managedHighlightId, setManagedHighlightId] = useState<string | null>(null);
+  // VIP snippet library: the caller's saved snippets, used to detect when the
+  // current selection is already a snippet (→ show a remove button).
+  const [snippets, setSnippets] = useState<SnippetLibraryItem[]>([]);
+  const [matchedSnippetId, setMatchedSnippetId] = useState<string | null>(null);
 
   // Detect TTS support after mount (SSR-safe).
   useEffect(() => {
@@ -102,6 +106,24 @@ export function RangkumanTab({
     subjectId,
     selectedModule
   );
+
+  // Load the caller's snippets for this subject (VIP only) so we can detect
+  // when a selection is already saved and offer a one-click remove.
+  const fetchSnippets = useCallback(async () => {
+    if (!canVip) return;
+    try {
+      const res = await fetch("/api/snippets");
+      if (!res.ok) return;
+      const data = await res.json();
+      setSnippets(Array.isArray(data.snippets) ? data.snippets : []);
+    } catch {
+      /* non-fatal: remove-snippet affordance just won't show */
+    }
+  }, [canVip]);
+
+  useEffect(() => {
+    fetchSnippets();
+  }, [fetchSnippets]);
 
   // Re-apply stored highlights to the DOM whenever highlights list or
   // selected module changes. Uses requestAnimationFrame so it runs after
@@ -143,8 +165,17 @@ export function RangkumanTab({
       setTooltipPos({ x: anchor.rect.left + anchor.rect.width / 2, y: anchor.rect.top });
       setTooltipMode("create");
       setManagedHighlightId(null);
+      // Is this exact selection already saved as a snippet for this module?
+      const norm = anchor.text.trim();
+      const match = snippets.find(
+        (s) =>
+          s.subjectId === subjectId &&
+          s.sourceModule === selectedModule &&
+          s.snippetText.trim() === norm
+      );
+      setMatchedSnippetId(match?.id ?? null);
     }
-  }, []);
+  }, [snippets, subjectId, selectedModule]);
 
   // Dismiss tooltip on outside click or scroll.
   useEffect(() => {
@@ -153,6 +184,7 @@ export function RangkumanTab({
       setTooltipPos(null);
       setPendingAnchor(null);
       setManagedHighlightId(null);
+      setMatchedSnippetId(null);
     };
     const onScroll = () => dismiss();
     const onClick = (e: MouseEvent) => {
@@ -177,8 +209,10 @@ export function RangkumanTab({
         return;
       }
       if (!pendingAnchor) return;
+      // Highlight persists silently via useHighlights (survives reload). No
+      // toast - the stabilo mark appearing IS the confirmation. (Snippet
+      // save-to-library still toasts; that's a distinct, explicit action.)
       addHighlight({ ...pendingAnchor, color });
-      toast.success(t("highlight.saved"));
       setTooltipPos(null);
       setPendingAnchor(null);
       window.getSelection()?.removeAllRanges();
@@ -211,14 +245,38 @@ export function RangkumanTab({
       });
       if (!res.ok) throw new Error("save failed");
       toast.success(t("highlight.added_to_library"));
+      // Refresh local snippet list so the remove affordance appears next time
+      // this text is selected.
+      fetchSnippets();
     } catch {
       toast.error(t("profile.save_error"));
     }
     setTooltipPos(null);
     setPendingAnchor(null);
     setManagedHighlightId(null);
+    setMatchedSnippetId(null);
     window.getSelection()?.removeAllRanges();
-  }, [pendingAnchor, managedHighlightId, highlights, canVip, subjectId, selectedModule, t]);
+  }, [pendingAnchor, managedHighlightId, highlights, canVip, subjectId, selectedModule, t, fetchSnippets]);
+
+  // Remove the snippet that matches the current selection (issue 12).
+  const handleRemoveSnippet = useCallback(async () => {
+    if (!matchedSnippetId) return;
+    const id = matchedSnippetId;
+    // Optimistic: drop locally first so the UI updates immediately.
+    setSnippets((prev) => prev.filter((s) => s.id !== id));
+    setMatchedSnippetId(null);
+    setTooltipPos(null);
+    setPendingAnchor(null);
+    window.getSelection()?.removeAllRanges();
+    try {
+      const res = await fetch(`/api/snippets/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("delete failed");
+      toast.success(t("highlight.snippet_removed"));
+    } catch {
+      toast.error(t("profile.save_error"));
+      fetchSnippets(); // resync on failure
+    }
+  }, [matchedSnippetId, t, fetchSnippets]);
 
   const handleRemoveHighlight = useCallback(() => {
     if (managedHighlightId) {
@@ -298,7 +356,7 @@ export function RangkumanTab({
 
       const mark = document.createElement("mark");
       // Visible box + glow on the exact quoted text so a snippet jump lands
-      // somewhere obvious. Ring + bg + shadow; faded out after 4s.
+      // somewhere obvious. Ring + bg + shadow; faded out after 2s.
       mark.className =
         "rounded px-0.5 bg-primary/30 ring-2 ring-primary shadow-[0_0_0_4px_rgba(0,0,0,0)] transition-all duration-700";
 
@@ -309,7 +367,7 @@ export function RangkumanTab({
 
       mark.scrollIntoView({ behavior: "smooth", block: "center" });
 
-      // Fade out after 4 seconds, then unwrap the mark.
+      // Fade out after 2 seconds, then unwrap the mark.
       setTimeout(() => {
         mark.className =
           "rounded px-0.5 bg-transparent ring-0 transition-all duration-700";
@@ -323,7 +381,7 @@ export function RangkumanTab({
             parent.normalize();
           }
         }, 800);
-      }, 4000);
+      }, 2000);
 
       break;
     }
@@ -408,6 +466,19 @@ export function RangkumanTab({
     const img = (e.target as HTMLElement).closest("img");
     if (img?.src) setLightboxSrc(img.src);
   }, []);
+
+  // React-level copy/cut guard bound directly to the content containers. Belt
+  // and suspenders alongside the document-level listeners: empties the
+  // clipboard payload so even a native menu "Copy" yields nothing. Admin is
+  // wired to skip this handler entirely (can copy freely).
+  const handleBlockCopy = useCallback(
+    (e: React.ClipboardEvent) => {
+      e.preventDefault();
+      e.clipboardData?.setData("text/plain", "");
+      toast.info(t("rangkuman.copy_blocked"));
+    },
+    [t]
+  );
 
   if (!rangkumanData || modules.length === 0) {
     return (
@@ -516,6 +587,8 @@ export function RangkumanTab({
           ref={contentRef}
           className={`rounded-xl border border-border p-5 ${modeStyles[mode]} [&_img]:cursor-zoom-in`}
           onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}
+          onCopy={isAdmin ? undefined : handleBlockCopy}
+          onCut={isAdmin ? undefined : handleBlockCopy}
           onClick={handleContentClick}
           onMouseUp={handleSelectionEnd}
           onTouchEnd={handleSelectionEnd}
@@ -541,6 +614,11 @@ export function RangkumanTab({
             onPickColor={handlePickColor}
             onSaveToLibrary={handleSaveToLibrary}
             onRemove={handleRemoveHighlight}
+            onRemoveSnippet={
+              tooltipMode === "create" && matchedSnippetId
+                ? handleRemoveSnippet
+                : undefined
+            }
             onAskAI={tooltipMode === "create" ? handleAskAI : undefined}
           />
         </div>
@@ -691,6 +769,8 @@ export function RangkumanTab({
               ref={fullscreenContentRef}
               className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-8 md:px-16 lg:px-32 py-6 [&_img]:cursor-zoom-in"
               onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}
+              onCopy={isAdmin ? undefined : handleBlockCopy}
+              onCut={isAdmin ? undefined : handleBlockCopy}
               onClick={handleContentClick}
             >
               <div

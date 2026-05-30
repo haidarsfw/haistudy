@@ -44,7 +44,7 @@ export const TabNav = memo(function TabNav({
             <button
               key={tab.id}
               onClick={() => { sounds.click(); onTabChange(tab.id); }}
-              className={`relative flex items-center gap-1 px-2.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
+              className={`hs-press relative flex items-center gap-1 px-2.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"

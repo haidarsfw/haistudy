@@ -7,7 +7,29 @@ import { useOptionalScope } from "@/components/providers/scope-provider";
 import { dmMessagesChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
 import { DEFAULT_SCOPE } from "@/lib/scope";
 import { RATE_LIMITS } from "@/lib/constants";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import type { DmConversation, DmDirectoryUser, DmMessage } from "@/types";
+
+type ReplyTo = { id: string; name: string; content: string } | null;
+
+// Map a realtime dm_messages row (snake_case) to the client DmMessage shape.
+function rowToDm(row: Record<string, unknown>): DmMessage {
+  return {
+    id: row.id as string,
+    conversationId: row.conversation_id as string,
+    senderKey: row.sender_key as string,
+    senderName: (row.sender_name as string) ?? null,
+    body: (row.body as string) ?? "",
+    type: ((row.type as string) ?? "text") as DmMessage["type"],
+    mediaUrl: (row.media_url as string) ?? null,
+    replyToId: (row.reply_to_id as string) ?? null,
+    replyToName: (row.reply_to_name as string) ?? null,
+    replyToBody: (row.reply_to_body as string) ?? null,
+    deleted: (row.deleted as boolean) ?? false,
+    pinned: (row.pinned as boolean) ?? false,
+    createdAt: row.created_at as string,
+  };
+}
 
 export function useDmChat() {
   const { session } = useSession();
@@ -115,9 +137,47 @@ export function useDmChat() {
     [session, conversations]
   );
 
-  // ── Send a message in the active conversation ──
+  // ── Low-level POST helper shared by text / image / audio sends ──
+  const postMessage = useCallback(
+    async (payload: {
+      body?: string;
+      type?: "text" | "image" | "audio";
+      mediaUrl?: string | null;
+      replyTo?: ReplyTo;
+    }) => {
+      if (!session || !activeId) return;
+      const res = await fetch(
+        `/api/dm/conversations/${encodeURIComponent(activeId)}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...payload,
+            senderName: session.name,
+          }),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Gagal mengirim pesan");
+      }
+      lastSendTime.current = Date.now();
+      const data = await res.json();
+      const msg = data.message as DmMessage | undefined;
+      if (msg) {
+        setMessages((prev) =>
+          prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+        );
+      }
+      // Refresh conversation ordering / last-body preview.
+      fetchConversations();
+    },
+    [session, activeId, fetchConversations]
+  );
+
+  // ── Send a text message in the active conversation ──
   const sendMessage = useCallback(
-    async (body: string) => {
+    async (body: string, replyTo?: ReplyTo) => {
       if (!session || !activeId || !body.trim()) return;
       const now = Date.now();
       if (now - lastSendTime.current < RATE_LIMITS.CHAT_COOLDOWN_MS) {
@@ -125,33 +185,105 @@ export function useDmChat() {
       }
       setIsSending(true);
       try {
-        const res = await fetch(
-          `/api/dm/conversations/${encodeURIComponent(activeId)}/messages`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ body: body.trim() }),
-          }
-        );
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || "Gagal mengirim pesan");
-        }
-        lastSendTime.current = Date.now();
-        const data = await res.json();
-        const msg = data.message as DmMessage | undefined;
-        if (msg) {
-          setMessages((prev) =>
-            prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
-          );
-        }
-        // Refresh conversation ordering / last-body preview.
-        fetchConversations();
+        await postMessage({ body: body.trim(), type: "text", replyTo });
       } finally {
         setIsSending(false);
       }
     },
-    [session, activeId, fetchConversations]
+    [session, activeId, postMessage]
+  );
+
+  // ── Send an image (Cloudinary upload → image message) ──
+  const sendImage = useCallback(
+    async (file: File, caption?: string, replyTo?: ReplyTo) => {
+      if (!session || !activeId) return;
+      setIsSending(true);
+      try {
+        const url = await uploadToCloudinary(file, "image");
+        if (!url) throw new Error("Gagal mengunggah gambar");
+        await postMessage({
+          body: caption?.trim() || "",
+          type: "image",
+          mediaUrl: url,
+          replyTo,
+        });
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [session, activeId, postMessage]
+  );
+
+  // ── Send a voice note (Cloudinary "video" resource → audio message) ──
+  const sendAudio = useCallback(
+    async (blob: Blob) => {
+      if (!session || !activeId) return;
+      setIsSending(true);
+      try {
+        const file = new File([blob], `voice-${Date.now()}.webm`, {
+          type: blob.type || "audio/webm",
+        });
+        const url = await uploadToCloudinary(file, "video");
+        if (!url) throw new Error("Gagal mengunggah pesan suara");
+        await postMessage({ body: "", type: "audio", mediaUrl: url });
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [session, activeId, postMessage]
+  );
+
+  // ── Soft-delete a message (sender or admin) ──
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!session || !activeId) return;
+      const res = await fetch(
+        `/api/dm/conversations/${encodeURIComponent(activeId)}/messages`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messageId }),
+        }
+      );
+      if (!res.ok) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, deleted: true, body: "", mediaUrl: null }
+            : m
+        )
+      );
+    },
+    [session, activeId]
+  );
+
+  // ── Toggle pin (either participant) ──
+  const setPin = useCallback(
+    async (messageId: string, pinned: boolean) => {
+      if (!session || !activeId) return;
+      const res = await fetch(
+        `/api/dm/conversations/${encodeURIComponent(activeId)}/messages`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messageId, pinned }),
+        }
+      );
+      if (!res.ok) return;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, pinned } : m))
+      );
+    },
+    [session, activeId]
+  );
+
+  const pinMessage = useCallback(
+    (id: string) => setPin(id, true),
+    [setPin]
+  );
+  const unpinMessage = useCallback(
+    (id: string) => setPin(id, false),
+    [setPin]
   );
 
   // ── Realtime: new DM messages in this scope ──
@@ -178,19 +310,35 @@ export function useDmChat() {
           }
           // Only append to the open conversation; bump the list otherwise.
           if (row.conversation_id === activeIdRef.current) {
-            const msg: DmMessage = {
-              id: row.id,
-              conversationId: row.conversation_id,
-              senderKey: row.sender_key,
-              body: row.body,
-              createdAt: row.created_at,
-            };
+            const msg = rowToDm(row);
             setMessages((prev) =>
               prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
             );
           }
           // Keep the conversation list fresh (ordering + previews + unread).
           fetchConversations();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "dm_messages",
+          filter: scopeRealtimeFilter(scope),
+        },
+        (payload) => {
+          const row = payload.new;
+          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) {
+            return;
+          }
+          // Reflect soft-deletes and pin toggles from the other participant.
+          if (row.conversation_id === activeIdRef.current) {
+            const msg = rowToDm(row);
+            setMessages((prev) =>
+              prev.map((m) => (m.id === msg.id ? msg : m))
+            );
+          }
         }
       )
       .subscribe();
@@ -214,5 +362,10 @@ export function useDmChat() {
     fetchConversations,
     openConversationWith,
     sendMessage,
+    sendImage,
+    sendAudio,
+    deleteMessage,
+    pinMessage,
+    unpinMessage,
   };
 }

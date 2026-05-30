@@ -310,7 +310,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
 
   const panelClass = isFullscreen
     ? "fixed top-14 right-0 bottom-0 left-0 z-50 flex flex-col overflow-hidden border-t border-border bg-background shadow-xl"
-    : "fixed right-0 bottom-0 z-50 flex w-full flex-col overflow-hidden border-t border-border bg-background shadow-xl h-[80dvh] max-h-[calc(100dvh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:w-[380px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0";
+    : "fixed right-0 bottom-0 z-50 flex w-full flex-col overflow-hidden border-t border-border bg-background shadow-xl h-[80dvh] max-h-[calc(100dvh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:w-[336px] lg:w-[400px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0";
 
   return (
     <AnimatePresence>

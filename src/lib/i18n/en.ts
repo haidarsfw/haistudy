@@ -547,6 +547,9 @@ const en: Record<string, string> = {
   "dm.empty_hint": "Pick a VIP member to start chatting privately.",
   "dm.you": "You",
   "dm.vip_only": "DMs are available to VIP members only.",
+  "dm.send_error": "Failed to send message",
+  "dm.image": "Image",
+  "dm.voice": "Voice note",
 
   // Profile
   "profile.title": "Profile",
@@ -581,6 +584,8 @@ const en: Record<string, string> = {
   "highlight.remove": "Remove highlight",
   "highlight.saved": "Highlight saved",
   "highlight.added_to_library": "Saved to library",
+  "highlight.remove_snippet": "Remove from library",
+  "highlight.snippet_removed": "Snippet removed from library",
   "highlight.color_locked": "This color is a VIP feature",
   "highlight.clear_all": "Clear all highlights",
   "highlight.cleared_all": "All highlights cleared",

@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
-import { Plus, ArrowLeft, Send, Crown, ShieldCheck } from "lucide-react";
+import { Plus, ArrowLeft, Crown, ShieldCheck, Pin } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useSession } from "@/components/providers/session-provider";
 import { useDmChat } from "@/hooks/use-dm-chat";
+import { useAvatars } from "@/hooks/use-avatars";
 import { generateDefaultAvatar } from "@/lib/avatar";
 import { DmUserPicker } from "./dm-user-picker";
+import { MessageInput } from "./message-input";
+import { MessageBubble } from "./message-bubble";
+import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { sounds } from "@/lib/sounds";
 import { toast } from "@/components/ui/toast";
+import type { ChatMessage, DmConversation, DmMessage } from "@/types";
 
 type View = "list" | "picker" | "thread";
 
@@ -17,8 +23,44 @@ interface DmTabProps {
   onDmKeyConsumed?: () => void;
 }
 
+// Adapt a DmMessage into the ChatMessage shape MessageBubble consumes. DMs are
+// 1:1, so author identity is derived from the conversation: a message is either
+// "mine" (the session user) or "theirs" (the conversation's other participant).
+function dmToChatMessage(
+  m: DmMessage,
+  myKey: string,
+  myName: string,
+  conv: DmConversation | undefined
+): ChatMessage {
+  const mine = m.senderKey.toUpperCase() === myKey;
+  const authorName = mine ? myName : m.senderName ?? conv?.otherName ?? "";
+  const licenseKey = mine ? myKey : conv?.otherKey ?? null;
+  const isAdmin = mine ? false : conv?.otherIsAdmin ?? false;
+  const packageTier = mine ? undefined : conv?.otherTier ?? undefined;
+  return {
+    id: m.id,
+    content: m.body,
+    type: m.type,
+    mediaUrl: m.mediaUrl ?? null,
+    authorId: m.senderKey,
+    authorName,
+    authorClass: "",
+    licenseKey,
+    isAdmin,
+    isTester: false,
+    packageTier: packageTier ?? undefined,
+    deleted: m.deleted ?? false,
+    replyToId: m.replyToId ?? null,
+    replyToName: m.replyToName ?? null,
+    replyToContent: m.replyToBody ?? null,
+    channel: "global",
+    createdAt: m.createdAt,
+  };
+}
+
 export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
   const { t } = useTranslation();
+  const { session } = useSession();
   const {
     myKey,
     directory,
@@ -32,13 +74,39 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
     fetchDirectory,
     openConversationWith,
     sendMessage,
+    sendImage,
+    sendAudio,
+    deleteMessage,
+    pinMessage,
+    unpinMessage,
   } = useDmChat();
 
   const [view, setView] = useState<View>("list");
-  const [draft, setDraft] = useState("");
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   const activeConv = conversations.find((c) => c.id === activeId);
+  const myName = session?.name ?? t("dm.you");
+
+  // Resolve real PFPs for me + every conversation partner (list + open thread).
+  const avatarKeys = useMemo(
+    () =>
+      [myKey, ...conversations.map((c) => c.otherKey)].filter(
+        Boolean
+      ) as string[],
+    [myKey, conversations]
+  );
+  const avatars = useAvatars(avatarKeys);
+
+  const adapted = useMemo(
+    () => messages.map((m) => dmToChatMessage(m, myKey, myName, activeConv)),
+    [messages, myKey, myName, activeConv]
+  );
+  const pinned = useMemo(
+    () => messages.filter((m) => m.pinned && !m.deleted),
+    [messages]
+  );
 
   // Auto-scroll to newest message in the open thread.
   useEffect(() => {
@@ -80,19 +148,49 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
   const openThread = (id: string) => {
     sounds.click();
     setActiveId(id);
+    setReplyTo(null);
     setView("thread");
   };
 
-  const handleSend = async () => {
-    const body = draft.trim();
-    if (!body) return;
-    setDraft("");
+  // Reuse the global composer's send contract.
+  const handleSend = async (
+    content: string,
+    reply?: { id: string; name: string; content: string } | null
+  ) => {
     try {
-      await sendMessage(body);
+      await sendMessage(content, reply ?? null);
+      setReplyTo(null);
     } catch (error) {
-      setDraft(body);
-      toast.error(error instanceof Error ? error.message : "Gagal mengirim pesan");
+      toast.error(error instanceof Error ? error.message : t("dm.send_error"));
+      throw error;
     }
+  };
+
+  const handleSendImage = async (
+    file: File,
+    caption?: string,
+    reply?: { id: string; name: string; content: string }
+  ) => {
+    try {
+      await sendImage(file, caption, reply ?? null);
+      setReplyTo(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("dm.send_error"));
+      throw error;
+    }
+  };
+
+  const handleSendAudio = async (blob: Blob) => {
+    try {
+      await sendAudio(blob);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("dm.send_error"));
+      throw error;
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteMessage(id);
   };
 
   // ── Picker view ──
@@ -115,17 +213,20 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
           <button
             onClick={() => { sounds.click(); setView("list"); }}
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Back"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
           <Image
-            src={generateDefaultAvatar(activeConv.otherName, 64)}
+            src={
+              avatars.get(activeConv.otherKey?.toUpperCase() ?? "") ||
+              generateDefaultAvatar(activeConv.otherName, 64)
+            }
             alt={activeConv.otherName ?? ""}
             width={32}
             height={32}
-            className="h-8 w-8 rounded-full"
+            className="h-8 w-8 rounded-full object-cover"
             unoptimized
           />
           <div className="min-w-0 flex-1">
@@ -145,10 +246,23 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
           </div>
         </div>
 
+        {/* Pinned banner */}
+        {pinned.length > 0 && (
+          <div className="flex items-start gap-1.5 border-b border-border bg-primary/5 px-3 py-1.5">
+            <Pin className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+            <p className="truncate text-[11px] text-muted-foreground">
+              {pinned[pinned.length - 1].body ||
+                (pinned[pinned.length - 1].type === "image"
+                  ? t("dm.image")
+                  : t("dm.voice"))}
+            </p>
+          </div>
+        )}
+
         {/* Messages */}
-        <div className="flex-1 space-y-2 overflow-y-auto p-3">
+        <div className="flex-1 overflow-y-auto py-2">
           {isLoadingMessages ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 px-3">
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
@@ -156,58 +270,46 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
                 />
               ))}
             </div>
-          ) : messages.length === 0 ? (
+          ) : adapted.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
               {t("dm.start_conversation")}
             </p>
           ) : (
-            messages.map((m) => {
-              const mine = m.senderKey.toUpperCase() === myKey;
+            adapted.map((cm, i) => {
+              const dm = messages[i];
+              const mine = cm.authorId.toUpperCase() === myKey;
               return (
-                <div
-                  key={m.id}
-                  className={`flex ${mine ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                      mine
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                  </div>
-                </div>
+                <MessageBubble
+                  key={cm.id}
+                  message={cm}
+                  isOwn={mine}
+                  isAdmin={session?.isAdmin || false}
+                  isPinned={dm?.pinned ?? false}
+                  onReply={setReplyTo}
+                  onDelete={handleDelete}
+                  onPin={pinMessage}
+                  onUnpin={unpinMessage}
+                  onImageClick={setPreviewImage}
+                  avatarUrl={avatars.get(cm.licenseKey?.toUpperCase() ?? "")}
+                />
               );
             })
           )}
           <div ref={endRef} />
         </div>
 
-        {/* Input */}
-        <div className="flex items-end gap-2 border-t border-border p-3">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            rows={1}
-            placeholder={t("dm.placeholder")}
-            className="max-h-28 flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-          <button
-            onClick={handleSend}
-            disabled={isSending || !draft.trim()}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
-            aria-label={t("dm.send")}
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
+        {/* Composer - reused global MessageInput (image + voice + reply) */}
+        <MessageInput
+          onSend={handleSend}
+          onSendImage={handleSendImage}
+          onSendAudio={handleSendAudio}
+          replyTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
+          disabled={isSending}
+          isAdmin={session?.isAdmin || false}
+        />
+
+        <MediaPreviewer src={previewImage} onClose={() => setPreviewImage(null)} />
       </div>
     );
   }
@@ -219,7 +321,7 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
         <span className="text-sm font-semibold">{t("dm.title")}</span>
         <button
           onClick={openPicker}
-          className="flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground"
+          className="flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground transition-transform active:scale-[0.97]"
         >
           <Plus className="h-3 w-3" />
           {t("dm.new")}
@@ -242,11 +344,14 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
                 >
                   <div className="relative shrink-0">
                     <Image
-                      src={generateDefaultAvatar(c.otherName, 72)}
+                      src={
+                        avatars.get(c.otherKey?.toUpperCase() ?? "") ||
+                        generateDefaultAvatar(c.otherName, 72)
+                      }
                       alt={c.otherName ?? ""}
                       width={36}
                       height={36}
-                      className="h-9 w-9 rounded-full"
+                      className="h-9 w-9 rounded-full object-cover"
                       unoptimized
                     />
                     <span

@@ -1,13 +1,26 @@
 /* haistudy service worker - multi-channel notifications */
 
-const SW_VERSION = "v1";
+const SW_VERSION = "v2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  // Defensive: clear any Cache Storage left by a prior SW version so a new
+  // deploy never serves a stale app-shell/chunk. We don't precache today, but
+  // this keeps the update path clean if precaching is ever added.
+  event.waitUntil(
+    (async () => {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      } catch (_e) {
+        /* swallow - cache API may be unavailable */
+      }
+      await self.clients.claim();
+    })()
+  );
 });
 
 /* ───────── push: receive payload, suppress if active+focused, else show ───────── */

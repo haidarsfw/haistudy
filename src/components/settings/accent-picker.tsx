@@ -15,7 +15,7 @@ interface AccentPickerProps {
 }
 
 const DEFAULT_ACCENT: CustomAccent = { h: 200, s: 70, l: 50 };
-const WHEEL_SIZE = 168; // px
+const WHEEL_SIZE = 150; // px - fits the 360px modal width without overflow
 
 function hsl({ h, s, l }: CustomAccent): string {
   return `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}%)`;

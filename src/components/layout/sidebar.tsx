@@ -89,7 +89,7 @@ const NavButton = memo(function NavButton({
       onFocus={handleHover}
       aria-label={label}
       aria-current={isActive ? "page" : undefined}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+      className={`hs-press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
         collapsed ? "justify-center" : ""
       } ${
         isActive
