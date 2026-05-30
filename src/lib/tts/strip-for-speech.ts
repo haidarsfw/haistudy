@@ -64,7 +64,7 @@ export function stripForSpeech(
     const trimmed = lines[i].trim();
     if (!trimmed) continue;
 
-    // Skip slide tags — not speakable
+    // Skip slide tags - not speakable
     if (/^<slide\s/.test(trimmed)) continue;
 
     // ── Headings start new sections ──

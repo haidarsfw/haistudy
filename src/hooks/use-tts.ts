@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * useTTS — SpeechSynthesis controller hook.
+ * useTTS - SpeechSynthesis controller hook.
  *
  * Manages the browser's TTS engine: play, pause, resume, stop,
  * section navigation, speed control, and voice selection.
@@ -93,7 +93,7 @@ export function useTTS(): UseTTSReturn {
     }
   }, []);
 
-  // ── Voice loading — Indonesian voices, prefer local (reliable) ──
+  // ── Voice loading - Indonesian voices, prefer local (reliable) ──
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
@@ -156,7 +156,7 @@ export function useTTS(): UseTTSReturn {
 
       const section = sections[secIdx];
 
-      // Move to next section if blocks exhausted — via ref to break closure cycle
+      // Move to next section if blocks exhausted - via ref to break closure cycle
       if (blkIdx >= section.blocks.length) {
         speakBlockRef.current?.(secIdx + 1, 0);
         return;
@@ -201,7 +201,7 @@ export function useTTS(): UseTTSReturn {
 
       speechSynthesis.speak(utt);
     },
-    [] // no deps — uses refs for all mutable state
+    [] // no deps - uses refs for all mutable state
   );
 
   // Keep speakBlockRef pointing at the latest speakBlock so the ref-via-self
@@ -232,7 +232,7 @@ export function useTTS(): UseTTSReturn {
     pausedRef.current = true;
     speechSynthesis.cancel();
     setIsPaused(true);
-    // playingRef stays true — we're still in a session
+    // playingRef stays true - we're still in a session
     // sectionIdxRef and blockIdxRef retain the current position
   }, []);
 

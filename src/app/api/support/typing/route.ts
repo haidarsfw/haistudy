@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         1
       )
     ) {
-      // Silently swallow rapid repeats — not an error
+      // Silently swallow rapid repeats - not an error
       return NextResponse.json({ success: true, throttled: true });
     }
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ScrollText, RefreshCw, Loader2, Monitor, Smartphone, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ActivityLog } from "@/types";
 import { formatDistanceToNow } from "date-fns";

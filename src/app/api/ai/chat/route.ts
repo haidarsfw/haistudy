@@ -15,16 +15,16 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const isGeminiConfigured = GEMINI_API_KEY.length > 0;
 const isDeepSeekConfigured = DEEPSEEK_API_KEY.length > 0;
-const GEMINI_MODEL = "gemini-2.5-flash";
-const DEEPSEEK_FAST = "deepseek-chat";
-const DEEPSEEK_REASONING = "deepseek-reasoner";
+const GEMINI_MODEL = "gemini-2.5-flash"; // images only - DeepSeek V4 has no vision
+const DEEPSEEK_FLASH = "deepseek-v4-flash"; // FREE tier text
+const DEEPSEEK_PRO = "deepseek-v4-pro"; // VIP/diamond/admin text
 const MAX_HISTORY = 40; // max conversation turns to send
 
 // ─── Mock response for dev without API key ───
 const MOCK_RESPONSES = [
-  "Halo! Ini adalah **mode demo** tanpa koneksi ke Gemini AI. Untuk mengaktifkan AI, tambahkan `GEMINI_API_KEY` di environment variables.\n\nBerikut yang bisa AI bantu:\n- Menjelaskan materi kuliah\n- Menjawab pertanyaan soal\n- Membuat ringkasan\n- Latihan soal",
+  "Halo! Ini adalah **mode demo** tanpa koneksi ke AI. Untuk mengaktifkan AI, tambahkan `DEEPSEEK_API_KEY` (teks) dan `GEMINI_API_KEY` (gambar) di environment variables.\n\nBerikut yang bisa AI bantu:\n- Menjelaskan materi kuliah\n- Menjawab pertanyaan soal\n- Membuat ringkasan\n- Latihan soal",
   "Ini adalah respons demo. Dalam mode penuh, haistudy AI akan menjawab pertanyaan kamu berdasarkan materi kuliah yang tersedia.",
-  "Mode demo aktif. AI study assistant akan tersedia setelah `GEMINI_API_KEY` dikonfigurasi.",
+  "Mode demo aktif. AI study assistant akan tersedia setelah API key dikonfigurasi.",
 ];
 
 function getMockResponse(): string {
@@ -42,8 +42,8 @@ export async function POST(request: Request) {
       licenseKey,
       packageTier = "normal",
       model = "fast",
-      isAdmin = false,
       image = null,
+      referenceText = null,
     } = body as {
       message: string;
       history: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }>;
@@ -51,8 +51,8 @@ export async function POST(request: Request) {
       licenseKey: string;
       packageTier?: "share" | "normal" | "vip" | "diamond";
       model?: "fast" | "reasoning";
-      isAdmin?: boolean;
       image?: string | null; // base64 data URL
+      referenceText?: string | null; // selected materi text to anchor the answer
     };
 
     if (!message || !licenseKey) {
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Cohort shutdown — short-circuit before any paid-API call.
+    // Cohort shutdown - short-circuit before any paid-API call.
     if (!AI_ENABLED) {
       return NextResponse.json({ text: AI_DISABLED_MESSAGE, mock: true });
     }
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Scope context — drives knowledge-base loading + ai_conversations storage.
+    // Scope context - drives knowledge-base loading + ai_conversations storage.
     // License identity is scope-agnostic (admin can switch session scope freely),
     // but the materi fed into the system prompt is locked to this scope: a UAS
     // request never sees UTS content, and vice versa.
@@ -109,9 +109,17 @@ export async function POST(request: Request) {
     // Build system prompt with scope-locked subject context.
     const systemPrompt = await buildSystemPrompt(scope, subjectId);
 
-    // Route: VIP or Admin → DeepSeek, else → Gemini
-    // Images always go to Gemini (DeepSeek doesn't support vision)
-    const useDeepSeek = (packageTier === "vip" || packageTier === "diamond" || validatedAdmin) && isDeepSeekConfigured && !image;
+    // Issue 10: when the user selected materi text ("Tanya AI"), anchor the
+    // answer to that snippet as the primary focus while keeping full-subject
+    // context available. Cap length so a huge selection can't blow the budget.
+    const ref = (referenceText ?? "").trim().slice(0, 1500);
+    const anchoredMessage = ref
+      ? `User menyorot teks berikut dari materi (JAWAB BERDASARKAN teks ini sebagai fokus utama; gunakan materi subjek lain hanya bila perlu konteks):\n«${ref}»\n\nPertanyaan user: ${message}`
+      : message;
+
+    // Route: all TEXT → DeepSeek (tier only picks flash vs pro, see below).
+    // Images always → Gemini (DeepSeek V4 has no vision).
+    const useDeepSeek = isDeepSeekConfigured && !image;
 
     // Mock mode - return non-streaming response
     if (!useDeepSeek && !isGeminiConfigured) {
@@ -119,13 +127,18 @@ export async function POST(request: Request) {
     }
 
     if (useDeepSeek) {
-      // ─── DeepSeek (VIP) via OpenAI-compatible API ───
+      // ─── DeepSeek (all text tiers) via OpenAI-compatible API ───
       const deepseek = new OpenAI({
         baseURL: "https://api.deepseek.com",
         apiKey: DEEPSEEK_API_KEY,
       });
 
-      const deepseekModel = model === "reasoning" ? DEEPSEEK_REASONING : DEEPSEEK_FAST;
+      // Tier picks model: VIP/diamond/admin → pro, everyone else → flash.
+      const isPro = packageTier === "vip" || packageTier === "diamond" || validatedAdmin;
+      const deepseekModel = isPro ? DEEPSEEK_PRO : DEEPSEEK_FLASH;
+      // Thinking toggle is available to ALL tiers via the model param.
+      // Flash defaults thinking OFF, Pro defaults ON, so set it explicitly.
+      const thinkingEnabled = model === "reasoning";
 
       // Convert Gemini history format → OpenAI format
       const openaiHistory = history.slice(-MAX_HISTORY).map((m) => ({
@@ -135,29 +148,53 @@ export async function POST(request: Request) {
 
       // Build user message content (text + optional image)
       const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
-        { type: "text", text: message },
+        { type: "text", text: anchoredMessage },
       ];
       if (image) {
         userContent.push({ type: "image_url", image_url: { url: image } });
       }
 
-      const completion = await deepseek.chat.completions.create({
+      // DeepSeek V4 thinking control. The OpenAI Node SDK serializes the body
+      // as-is, so this top-level field reaches the API even though it's not in
+      // the SDK's TS types (Python's extra_body equivalent). Built as a loose
+      // object + cast because `thinking` isn't in any create() overload.
+      const deepseekBody = {
         model: deepseekModel,
         messages: [
           { role: "system", content: systemPrompt },
           ...openaiHistory,
-          { role: "user", content: image ? userContent : message },
-        ] as Parameters<typeof deepseek.chat.completions.create>[0]["messages"],
+          { role: "user", content: image ? userContent : anchoredMessage },
+        ],
         stream: true,
         max_tokens: 8192,
-      });
+        thinking: { type: thinkingEnabled ? "enabled" : "disabled" },
+      } as unknown as Parameters<typeof deepseek.chat.completions.create>[0];
+
+      // stream:true so the result is an async-iterable Stream of chunks.
+      const completion = (await deepseek.chat.completions.create(
+        deepseekBody
+      )) as AsyncIterable<{
+        choices: Array<{
+          delta?: { content?: string; reasoning_content?: string };
+        }>;
+      }>;
 
       const stream = new ReadableStream({
         async start(controller) {
           const encoder = new TextEncoder();
           try {
             for await (const chunk of completion) {
-              const text = chunk.choices[0]?.delta?.content;
+              const delta = chunk.choices[0]?.delta as
+                | { content?: string; reasoning_content?: string }
+                | undefined;
+              // Reasoning trace streams at the same delta level as content.
+              const reasoning = delta?.reasoning_content;
+              if (reasoning) {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ reasoning })}\n\n`)
+                );
+              }
+              const text = delta?.content;
               if (text) {
                 controller.enqueue(
                   encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
@@ -204,10 +241,10 @@ export async function POST(request: Request) {
 
     // Build message parts (text + optional image)
     const messageParts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
-      { text: message },
+      { text: anchoredMessage },
     ];
     if (image) {
-      // Extract base64 data and mime type from data URL — surface errors rather than silently dropping
+      // Extract base64 data and mime type from data URL - surface errors rather than silently dropping
       const match = image.match(/^data:(image\/(png|jpeg|jpg|webp|gif));base64,(.+)$/);
       if (!match) {
         return NextResponse.json(

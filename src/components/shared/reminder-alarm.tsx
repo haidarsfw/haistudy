@@ -16,7 +16,7 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startAlarm = useCallback(() => {
-    // Re-entry guard — if an AudioContext already exists, we're already ringing.
+    // Re-entry guard - if an AudioContext already exists, we're already ringing.
     // Prevents double-creation when the 30s check window + async setIsRinging race.
     if (audioCtxRef.current) return;
     setIsRinging(true);

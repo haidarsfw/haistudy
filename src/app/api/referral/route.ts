@@ -11,7 +11,7 @@ const mockReferrals = new Map<
 >();
 
 // In-memory per-license cooldown to slow brute-force of referral codes.
-// Resets on deploy — fine for free tier since determined attackers would still hit DB lookups.
+// Resets on deploy - fine for free tier since determined attackers would still hit DB lookups.
 const recentReferralAttempts = new Map<string, number>();
 const REFERRAL_COOLDOWN_MS = 10_000;
 
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Per-license cooldown — blocks rapid-fire brute-force of the 6-char code space
+    // Per-license cooldown - blocks rapid-fire brute-force of the 6-char code space
     const lastAttempt = recentReferralAttempts.get(licenseKey);
     if (lastAttempt && Date.now() - lastAttempt < REFERRAL_COOLDOWN_MS) {
       return NextResponse.json(

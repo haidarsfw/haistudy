@@ -20,7 +20,7 @@ export interface UseSupportTypingResult {
 /**
  * Subscribes to support:typing:<licenseKey> broadcast channel.
  *  - `myKind`: which side I am (admin/user).
- *  - `myLicenseKey`: my own license_key — used as primary self-filter; works
+ *  - `myLicenseKey`: my own license_key - used as primary self-filter; works
  *    even when admin opens user-side panel (kind=admin from server but myKind="user").
  *  - `notifyTyping()`: debounced server-side broadcast (single in-flight request
  *    per debounce window).
@@ -58,7 +58,7 @@ export function useSupportTyping(
         if (data.senderKey) {
           if (myLicenseKey && data.senderKey === myLicenseKey) return;
         } else if (data.kind === myKind) {
-          // Backward compat: old payload (mid-deploy) — fall back to kind filter.
+          // Backward compat: old payload (mid-deploy) - fall back to kind filter.
           return;
         }
         setTyping({
@@ -92,7 +92,7 @@ export function useSupportTyping(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ licenseKey }),
     }).catch(() => {
-      // silent — typing isn't critical
+      // silent - typing isn't critical
     });
   }, [licenseKey]);
 

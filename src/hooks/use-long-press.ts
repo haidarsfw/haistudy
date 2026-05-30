@@ -84,7 +84,7 @@ export function useLongPress(
 
   const onContextMenu = useCallback(
     (e: React.MouseEvent) => {
-      // On touch devices, long-press triggers contextmenu — suppress it if our
+      // On touch devices, long-press triggers contextmenu - suppress it if our
       // long-press handler already fired so we don't get the system menu.
       if (firedRef.current) {
         e.preventDefault();

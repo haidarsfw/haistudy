@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { toast } from "@/components/ui/toast";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
+import { useTranslation } from "@/components/providers/language-provider";
+import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
+import { canUseVipFeatures } from "@/lib/tier";
 import type { AiMessage } from "./use-ai-chat";
 
 const STORAGE_KEY_PREFIX = "hs-ai-chats";
-const MAX_CONVERSATIONS = 5;
+// Hard local storage ceiling = the most any tier can hold. The actual per-tier
+// cap (free 3 / vip 10) is enforced as a block in createConversation.
+const MAX_CONVERSATIONS = VIP_AI_CONVERSATION_LIMIT;
 const SAVE_DEBOUNCE_MS = 1500;
 
 export interface AiConversation {
@@ -53,8 +59,15 @@ function persistLocal(storageKey: string, conversations: AiConversation[]) {
 
 export function useAiChatHistory() {
   const { session } = useSession();
+  const { t } = useTranslation();
   const scopeCtx = useOptionalScope();
   const scopeKey = scopeCtx?.scopeKey ?? "default";
+
+  // Per-tier cap on saved conversations (free 3 / vip 10 / admin 10).
+  const convLimit = aiConversationLimit(
+    session?.isAdmin ?? false,
+    session?.packageTier
+  );
 
   // Storage key scoped to license key + scope so conversations never mix
   const storageKey = session
@@ -73,6 +86,10 @@ export function useAiChatHistory() {
   const [isLoaded, setIsLoaded] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pendingSaveRef = useRef<Map<string, { messages: AiMessage[]; title: string }>>(new Map());
+
+  // Fresh conversation list for synchronous count checks (cap enforcement).
+  const conversationsRef = useRef(conversations);
+  conversationsRef.current = conversations;
 
   // Re-load when storageKey changes (scope or license key switch)
   useEffect(() => {
@@ -144,14 +161,20 @@ export function useAiChatHistory() {
 
   const saveMessages = useCallback(
     (id: string, messages: AiMessage[]) => {
-      const title =
+      const sliceTitle =
         messages.find((m) => m.role === "user")?.content.slice(0, 40) || "";
 
-      // Update local state + localStorage immediately
+      // Update local state + localStorage immediately. Preserve an existing
+      // non-empty title (AI auto-title or manual rename) instead of clobbering
+      // it with the slice fallback on every save.
+      let savedTitle = sliceTitle;
       setConversations((prev) => {
-        const updated = prev.map((c) =>
-          c.id === id ? { ...c, messages, title, updatedAt: Date.now() } : c
-        );
+        const updated = prev.map((c) => {
+          if (c.id !== id) return c;
+          const keepTitle = c.title?.trim() ? c.title : sliceTitle;
+          savedTitle = keepTitle;
+          return { ...c, messages, title: keepTitle, updatedAt: Date.now() };
+        });
         const exists = updated.some((c) => c.id === id);
         const result = exists
           ? updated
@@ -159,7 +182,7 @@ export function useAiChatHistory() {
               ...updated,
               {
                 id,
-                title,
+                title: sliceTitle,
                 messages,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
@@ -172,7 +195,7 @@ export function useAiChatHistory() {
       });
 
       // Debounced server save
-      pendingSaveRef.current.set(id, { messages, title });
+      pendingSaveRef.current.set(id, { messages, title: savedTitle });
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
         for (const [saveId, { messages: m, title: t }] of pendingSaveRef.current) {
@@ -184,7 +207,78 @@ export function useAiChatHistory() {
     [flushSave]
   );
 
+  // Apply a title to a conversation locally + localStorage. Does NOT hit the
+  // server itself - callers pair it with the appropriate persistence:
+  // auto-rename relies on /api/ai/rename having already saved; manual rename
+  // sends a title-only PUT.
+  const applyLocalTitle = useCallback((id: string, title: string) => {
+    setConversations((prev) => {
+      const updated = prev.map((c) => (c.id === id ? { ...c, title } : c));
+      persistLocal(storageKeyRef.current, updated);
+      return updated;
+    });
+  }, []);
+
+  // Auto-title from the first exchange via Gemini Flash-Lite. Server persists
+  // the title; we mirror it into local state on success. Silent on failure.
+  const autoRenameConversation = useCallback(
+    async (id: string, firstUser: string, firstAssistant: string) => {
+      if (!session) return;
+      try {
+        const res = await fetch("/api/ai/rename", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            licenseKey: session.licenseKey,
+            firstUser,
+            firstAssistant,
+          }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.title) applyLocalTitle(id, data.title);
+      } catch (error) {
+        console.error("Failed to auto-rename AI conversation:", error);
+      }
+    },
+    [session, applyLocalTitle]
+  );
+
+  // Manual rename (pencil action). Updates local immediately, persists via PUT.
+  const renameConversation = useCallback(
+    async (id: string, title: string) => {
+      const clean = title.trim().slice(0, 60);
+      if (!clean) return;
+      applyLocalTitle(id, clean);
+      if (!session) return;
+      try {
+        await fetch("/api/ai/conversations", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, title: clean }),
+        });
+      } catch (error) {
+        console.error("Failed to rename AI conversation:", error);
+      }
+    },
+    [session, applyLocalTitle]
+  );
+
   const createConversation = useCallback(async (): Promise<string> => {
+    // Per-tier cap. Only conversations that actually hold messages count -
+    // an empty placeholder shouldn't block. If at the cap, surface a toast and
+    // return the current active id (or first conv) instead of creating a new one.
+    const used = conversationsRef.current.filter((c) => c.messages.length > 0).length;
+    if (used >= convLimit) {
+      const isVip = canUseVipFeatures(session);
+      const key = isVip ? "ai.limit_reached_vip" : "ai.limit_reached_free";
+      toast.error(t(key).replace("{limit}", String(convLimit)));
+      const fallbackId =
+        conversationsRef.current[0]?.id ?? activeId ?? "";
+      return fallbackId;
+    }
+
     if (!session) {
       // Fallback to local-only
       const id = `chat-${Date.now()}`;
@@ -210,6 +304,17 @@ export function useAiChatHistory() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ licenseKey: session.licenseKey }),
       });
+
+      // Server hard-blocks at the tier cap (409). Surface the same toast and
+      // bail to an existing conversation rather than falling through to a
+      // local `chat-` id, which would silently bypass the limit.
+      if (res.status === 409) {
+        const isVip = canUseVipFeatures(session);
+        const key = isVip ? "ai.limit_reached_vip" : "ai.limit_reached_free";
+        toast.error(t(key).replace("{limit}", String(convLimit)));
+        return conversationsRef.current[0]?.id ?? activeId ?? "";
+      }
+
       const data = await res.json();
 
       if (data.conversation) {
@@ -242,7 +347,7 @@ export function useAiChatHistory() {
     });
     setActiveId(id);
     return id;
-  }, [session]);
+  }, [session, convLimit, activeId, t]);
 
   const deleteConversation = useCallback(
     async (id: string) => {
@@ -282,6 +387,8 @@ export function useAiChatHistory() {
     saveMessages,
     createConversation,
     deleteConversation,
+    renameConversation,
+    autoRenameConversation,
     isLoaded,
   };
 }

@@ -7,14 +7,14 @@ import {
 /**
  * GET /api/cron/cleanup-presence
  *
- * Weekly DB hygiene (Vercel Cron — see vercel.json).
+ * Weekly DB hygiene (Vercel Cron - see vercel.json).
  *
  * 1. Flip stale online=true rows to offline (heartbeats are every 60s;
  *    anything > 5 min is definitely not online).
- * 2. Delete rows older than 7 days — users long gone, data unusable.
+ * 2. Delete rows older than 7 days - users long gone, data unusable.
  *
  * Auth: Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically.
- * Any unauthenticated caller gets 401 — safe to leave this endpoint public.
+ * Any unauthenticated caller gets 401 - safe to leave this endpoint public.
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");

@@ -6,7 +6,7 @@ const HIDDEN_CAP = 1000;
 
 /**
  * localStorage-backed Set of "hidden message IDs" per scope key.
- * Used by support chat to support "Hapus untuk saya" — the server still has
+ * Used by support chat to support "Hapus untuk saya" - the server still has
  * the row; this just hides it locally on the user's device.
  *
  * @param scopeKey unique key (typically license_key); null disables.

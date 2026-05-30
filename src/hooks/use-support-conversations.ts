@@ -70,7 +70,7 @@ export function useSupportConversations(
     }
   }, [fetchUrl]);
 
-  // Debounced refresh — coalesces rapid Realtime echoes
+  // Debounced refresh - coalesces rapid Realtime echoes
   const debouncedRefresh = useCallback(() => {
     if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
     refreshDebounceRef.current = setTimeout(refresh, 400);

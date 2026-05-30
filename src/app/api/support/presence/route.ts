@@ -5,10 +5,10 @@ import { resolveSupportSender } from "@/lib/support/server";
 /**
  * GET /api/support/presence?licenseKey=...
  *
- *  - With a non-self licenseKey: ADMIN only — presence of that user.
+ *  - With a non-self licenseKey: ADMIN only - presence of that user.
  *  - Without licenseKey: returns aggregated admin presence.
  *
- * `online` is derived purely from `last_seen` freshness — we ignore the
+ * `online` is derived purely from `last_seen` freshness - we ignore the
  * persisted `presence.online` column because it is flipped to false by the
  * cleanup-presence cron and by client offline-beacons, which produces a
  * confusing flicker on the support panel even when the user is actually
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       .order("last_seen", { ascending: false })
       .limit(5);
 
-    // Respect the user's "hide status" preference — if every fresh row is
+    // Respect the user's "hide status" preference - if every fresh row is
     // hidden, fall back to "no presence info".
     const rows = (data || []).filter((r) => !r.hide_status) as PresenceRow[];
     const { online, lastSeen } = aggregate(rows);

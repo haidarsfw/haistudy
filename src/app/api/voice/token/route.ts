@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Cohort shutdown — short-circuit before LiveKit token issuance.
+    // Cohort shutdown - short-circuit before LiveKit token issuance.
     if (!VOICE_ENABLED) {
       return NextResponse.json(
         { error: VOICE_DISABLED_MESSAGE },

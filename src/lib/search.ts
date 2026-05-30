@@ -46,7 +46,7 @@ const TYPE_PRIORITY: Record<SearchResult["type"], number> = {
   flashcard: 0,
 };
 
-// Cache per scope-key — switching scope rebuilds the index lazily.
+// Cache per scope-key - switching scope rebuilds the index lazily.
 const cachedIndexByScope = new Map<string, SearchResult[]>();
 
 async function buildSearchIndex(scope: ScopeTuple): Promise<SearchResult[]> {

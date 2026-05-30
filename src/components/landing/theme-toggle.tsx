@@ -6,7 +6,7 @@ import { useTheme } from "@/components/providers/theme-provider";
 export function LandingThemeToggle() {
   const { toggleDark } = useTheme();
 
-  // Both icons always in DOM — CSS dark: variant toggles visibility.
+  // Both icons always in DOM - CSS dark: variant toggles visibility.
   // This avoids any hydration mismatch from conditional rendering.
   return (
     <button

@@ -149,7 +149,7 @@ export async function notifyOnSupportMessage(opts: FanOutOpts): Promise<void> {
     if (mutedSet.has(r.lk)) return;
     const settings = settingsMap.get(r.lk);
 
-    // 3a) In-app notification (always — drives bell + toast layer)
+    // 3a) In-app notification (always - drives bell + toast layer)
     await supabase.from("notifications").insert({
       license_key: r.lk,
       type: "support_message",

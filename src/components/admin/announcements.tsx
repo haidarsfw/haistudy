@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useTranslation } from "@/components/providers/language-provider";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,

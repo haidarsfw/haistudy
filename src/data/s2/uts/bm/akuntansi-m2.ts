@@ -9,11 +9,11 @@ Sistem informasi akuntansi bertugas mengumpulkan, memproses, dan menyampaikan da
 <bullet><b>Komponen Ekuitas:</b> Ekuitas pemegang saham bertambah lewat Saham Biasa dan Pendapatan, serta berkurang lewat Beban dan Dividen.</bullet>
 <bullet><b>Sistem Ganda:</b> Setiap transaksi paling sedikit memengaruhi dua akun supaya persamaan tetap seimbang (lihat materi sesi 3, slide "Transaction Analysis").</bullet>
 
-<b>Contoh:</b> Beli peralatan Rp10.000.000 tunai — Kas turun Rp10.000.000, Peralatan naik Rp10.000.000 secara bersamaan.
+<b>Contoh:</b> Beli peralatan Rp10.000.000 tunai - Kas turun Rp10.000.000, Peralatan naik Rp10.000.000 secara bersamaan.
 
 <h2>Akun, Debit, dan Kredit</h2>
 
-Akun (Account) adalah catatan khusus yang melacak naik-turunnya satu item aset, liabilitas, atau ekuitas. Format paling sederhana disebut <b>Akun-T</b> — sisi kiri adalah Debit, sisi kanan adalah Kredit.
+Akun (Account) adalah catatan khusus yang melacak naik-turunnya satu item aset, liabilitas, atau ekuitas. Format paling sederhana disebut <b>Akun-T</b> - sisi kiri adalah Debit, sisi kanan adalah Kredit.
 
 <b>Sistem Double-Entry:</b> Dalam setiap pencatatan, total debit harus selalu sama dengan total kredit.
 

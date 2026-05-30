@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Terms of Service | haistudy",
+  title: "Terms of Service",
+  description: "Syarat dan ketentuan penggunaan platform haistudy.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

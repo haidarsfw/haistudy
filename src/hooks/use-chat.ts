@@ -9,9 +9,9 @@ import { getDeviceId } from "@/lib/auth/device";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { chatChannel, chatPinsChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
 import { DEFAULT_SCOPE } from "@/lib/scope";
-import type { ChatMessage } from "@/types";
+import type { ChatChannel, ChatMessage } from "@/types";
 
-export function useChat() {
+export function useChat(activeChannel: ChatChannel = "global") {
   const { session } = useSession();
   const scopeCtx = useOptionalScope();
   const scope = scopeCtx?.scope ?? DEFAULT_SCOPE;
@@ -39,18 +39,24 @@ export function useChat() {
   // Fetch initial messages (latest batch)
   const fetchMessages = useCallback(async () => {
     try {
-      const res = await fetch("/api/chat/messages");
+      const res = await fetch(
+        `/api/chat/messages?channel=${encodeURIComponent(activeChannel)}`
+      );
       const data = await res.json();
       if (data.messages) {
         setMessages(data.messages);
         setHasMore(data.messages.length >= 100);
+      } else {
+        // 403 vip_lounge_locked or any error - clear stale messages
+        setMessages([]);
+        setHasMore(false);
       }
     } catch (error) {
       console.error("Failed to fetch chat messages:", error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeChannel]);
 
   // Fetch older messages (lazy load on scroll up)
   const oldestCreatedAtRef = useRef<string | null>(null);
@@ -62,7 +68,9 @@ export function useChat() {
     if (isLoadingMore || !hasMore || !oldestCreatedAtRef.current) return;
     setIsLoadingMore(true);
     try {
-      const res = await fetch(`/api/chat/messages?before=${encodeURIComponent(oldestCreatedAtRef.current)}`);
+      const res = await fetch(
+        `/api/chat/messages?channel=${encodeURIComponent(activeChannel)}&before=${encodeURIComponent(oldestCreatedAtRef.current)}`
+      );
       const data = await res.json();
       if (data.messages && data.messages.length > 0) {
         setMessages((prev) => {
@@ -79,7 +87,7 @@ export function useChat() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, hasMore]);
+  }, [isLoadingMore, hasMore, activeChannel]);
 
   // Fetch pinned message IDs
   const fetchPins = useCallback(async () => {
@@ -119,6 +127,8 @@ export function useChat() {
           const row = payload.new;
           // Realtime filter narrows by semester only; cross-check exam_period + jurusan
           if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) return;
+          // Channel filter is also client-side (postgres_changes allows one column filter)
+          if ((row.channel || "global") !== activeChannel) return;
           const message: ChatMessage = {
             id: row.id,
             content: row.content,
@@ -127,6 +137,7 @@ export function useChat() {
             authorId: row.author_id,
             authorName: row.author_name,
             authorClass: row.author_class,
+            licenseKey: row.license_key || null,
             isAdmin: row.is_admin,
             isTester: row.is_tester,
             packageTier: row.package_tier || undefined,
@@ -134,6 +145,7 @@ export function useChat() {
             replyToId: row.reply_to_id,
             replyToName: row.reply_to_name,
             replyToContent: row.reply_to_content,
+            channel: row.channel || "global",
             createdAt: row.created_at,
           };
           setMessages((prev) => {
@@ -189,7 +201,7 @@ export function useChat() {
       supabase.removeChannel(channel);
       supabase.removeChannel(pinsChannel);
     };
-  }, [fetchPins, scope]);
+  }, [fetchPins, scope, activeChannel]);
 
   // Send a text message
   const sendMessage = useCallback(
@@ -220,6 +232,7 @@ export function useChat() {
             isAdmin: session.isAdmin,
             isTester: session.isTester,
             packageTier: session.packageTier,
+            channel: activeChannel,
             replyToId: replyTo?.id || null,
             replyToName: replyTo?.name || null,
             replyToContent: replyTo?.content || null,
@@ -243,7 +256,7 @@ export function useChat() {
         setIsSending(false);
       }
     },
-    [session, fetchMessages]
+    [session, fetchMessages, activeChannel]
   );
 
   // Send an image message (with optional caption and reply)
@@ -270,6 +283,7 @@ export function useChat() {
             isAdmin: session.isAdmin,
             isTester: session.isTester,
             packageTier: session.packageTier,
+            channel: activeChannel,
             replyToId: replyTo?.id || null,
             replyToName: replyTo?.name || null,
             replyToContent: replyTo?.content || null,
@@ -290,7 +304,7 @@ export function useChat() {
         setIsSending(false);
       }
     },
-    [session, fetchMessages]
+    [session, fetchMessages, activeChannel]
   );
 
   // Send an audio (voice note) message
@@ -325,6 +339,7 @@ export function useChat() {
             isAdmin: session.isAdmin,
             isTester: session.isTester,
             packageTier: session.packageTier,
+            channel: activeChannel,
             replyToId: replyTo?.id || null,
             replyToName: replyTo?.name || null,
             replyToContent: replyTo?.content || null,
@@ -345,7 +360,7 @@ export function useChat() {
         setIsSending(false);
       }
     },
-    [session, fetchMessages]
+    [session, fetchMessages, activeChannel]
   );
 
   // Delete (soft) a message

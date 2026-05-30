@@ -1,7 +1,7 @@
 /**
  * Convert LaTeX math expressions to natural language for TTS.
  *
- * Processing order matters — complex patterns must be replaced
+ * Processing order matters - complex patterns must be replaced
  * before simpler ones to avoid partial matches.
  *
  * At runtime, LaTeX in rangkuman strings has single backslashes
@@ -147,7 +147,7 @@ export function latexToSpeech(
   t = t.replace(/\s*=\s*/g, lang === "id" ? " sama dengan " : " equals ");
   t = t.replace(/\s*>\s*/g, lang === "id" ? " lebih besar dari " : " greater than ");
   t = t.replace(/\s*<\s*/g, lang === "id" ? " lebih kecil dari " : " less than ");
-  // Don't replace + and - globally — they're too common in regular text
+  // Don't replace + and - globally - they're too common in regular text
   // Only replace when clearly mathematical (surrounded by spaces)
   t = t.replace(/\s\+\s/g, " plus ");
   t = t.replace(/\s-\s/g, " minus ");

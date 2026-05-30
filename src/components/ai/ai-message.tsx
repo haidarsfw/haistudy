@@ -1,9 +1,10 @@
 "use client";
 
-import { memo, useState, type ReactNode } from "react";
-import { Bot, User, X } from "lucide-react";
+import { memo, useEffect, useRef, useState, type ReactNode } from "react";
+import { Bot, User, X, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import type { AiMessage } from "@/hooks/use-ai-chat";
+import { useTranslation } from "@/components/providers/language-provider";
 import { springGentle } from "@/lib/motion";
 import katex from "katex";
 import "katex/dist/katex.min.css";
@@ -177,7 +178,7 @@ function expandMath(
   return result;
 }
 
-/** Parse **bold**, *italic*, `code`, ~~strike~~ — with math placeholders resolved */
+/** Parse **bold**, *italic*, `code`, ~~strike~~ - with math placeholders resolved */
 function parseMarkdownInline(
   text: string,
   keyPrefix: string,
@@ -271,6 +272,63 @@ function ImagePreview({ src }: { src: string }) {
   );
 }
 
+/**
+ * Reasoning trace UI. While the model is still thinking (streaming, no answer
+ * yet) the trace shows live, inline. Once the answer lands it auto-collapses to
+ * a small square button anchored top-right inside the bubble; clicking it
+ * re-opens the trace as an inline dropdown. No big block ever sits above the
+ * answer unless the user opts in.
+ */
+function ReasoningBlock({
+  text,
+  streaming,
+  hasContent,
+}: {
+  text: string;
+  streaming?: boolean;
+  hasContent: boolean;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const userToggledRef = useRef(false);
+
+  // Live while thinking; or whenever the user explicitly opened it.
+  const streamingReasoning = !!streaming && !hasContent;
+  const showTrace = streamingReasoning || open;
+
+  // When the answer arrives, auto-collapse unless the user opened it themselves.
+  useEffect(() => {
+    if (hasContent && !userToggledRef.current) setOpen(false);
+  }, [hasContent]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          userToggledRef.current = true;
+          setOpen((v) => !v);
+        }}
+        aria-label={t("ai.view_thinking")}
+        title={t("ai.view_thinking")}
+        className={`absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md border border-border/60 bg-background/60 text-muted-foreground transition-colors hover:text-foreground ${
+          open ? "text-foreground" : ""
+        }`}
+      >
+        <Sparkles className="size-3.5" />
+      </button>
+      {showTrace && (
+        <div className="mb-2 mr-7 rounded-xl border border-border/60 bg-background/40 px-2.5 py-2 text-[12px] leading-relaxed text-muted-foreground whitespace-pre-wrap">
+          {text}
+          {streamingReasoning && (
+            <span className="ml-0.5 inline-block h-3 w-1 animate-pulse bg-current align-middle" />
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 export const AiMessageBubble = memo(function AiMessageBubble({
   message,
   isStreaming,
@@ -301,26 +359,37 @@ export const AiMessageBubble = memo(function AiMessageBubble({
 
       {/* Bubble */}
       <div
-        className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+        className={`relative max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
           isUser
             ? "rounded-br-md bg-primary text-primary-foreground"
             : "rounded-bl-md bg-muted text-foreground"
-        }`}
+        } ${!isUser && message.reasoning ? "pr-9" : ""}`}
       >
         {isUser ? (
           <div>
             {message.image && <ImagePreview src={message.image} />}
             <p className="whitespace-pre-wrap">{message.content}</p>
           </div>
-        ) : message.content ? (
-          <div className="space-y-0.5">{renderMarkdown(message.content)}</div>
-        ) : isStreaming ? (
-          <div className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:0ms]" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:150ms]" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:300ms]" />
-          </div>
-        ) : null}
+        ) : (
+          <>
+            {message.reasoning && (
+              <ReasoningBlock
+                text={message.reasoning}
+                streaming={isStreaming}
+                hasContent={!!message.content && message.content.trim().length > 0}
+              />
+            )}
+            {message.content ? (
+              <div className="space-y-0.5">{renderMarkdown(message.content)}</div>
+            ) : isStreaming && !message.reasoning ? (
+              <div className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:0ms]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:150ms]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:300ms]" />
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     </motion.div>
   );

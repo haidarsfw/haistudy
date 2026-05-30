@@ -26,7 +26,7 @@ interface Props {
  * WhatsApp-style read receipt:
  *  - sending → clock
  *  - sent + not read → ✓
- *  - sent + read → ✓✓ (sky) — clickable, shows "Read at HH:MM" popover
+ *  - sent + read → ✓✓ (sky) - clickable, shows "Read at HH:MM" popover
  *  - error → alert
  */
 export function SupportReadReceipt({

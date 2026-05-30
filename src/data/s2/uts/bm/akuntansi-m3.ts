@@ -9,7 +9,7 @@ Asumsi periodisitas membagi umur ekonomi bisnis ke dalam periode waktu buatan, s
 
 <h2>Prinsip Pengakuan Pendapatan dan Beban</h2>
 
-<bullet><b>Prinsip Pengakuan Pendapatan:</b> Pendapatan harus diakui pada periode saat kewajiban pelaksanaan (performance obligation) sudah diselesaikan — biasanya saat barang atau jasa sudah diserahkan ke pelanggan.</bullet>
+<bullet><b>Prinsip Pengakuan Pendapatan:</b> Pendapatan harus diakui pada periode saat kewajiban pelaksanaan (performance obligation) sudah diselesaikan - biasanya saat barang atau jasa sudah diserahkan ke pelanggan.</bullet>
 <bullet><b>Prinsip Pengakuan Beban (Penandingan):</b> Beban harus diakui pada periode yang sama dengan pendapatan yang dihasilkannya.</bullet>
 
 <h2>Jurnal Penyesuaian (Adjusting Entries)</h2>

@@ -281,7 +281,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServerClient()!;
 
-    // Dedup by client_nonce — return existing row if already inserted
+    // Dedup by client_nonce - return existing row if already inserted
     if (clientNonce) {
       const { data: existing } = await supabase
         .from("support_messages")

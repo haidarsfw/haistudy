@@ -4,8 +4,13 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
+import type { PackageTier } from "@/lib/tier";
 
-const MAX_CONVERSATIONS = 5;
+// Hard ceiling for GET/mock paths = the largest any tier can hold. Per-tier
+// caps (free 3 / vip 10) are resolved from the license row in POST.
+const MAX_CONVERSATIONS = VIP_AI_CONVERSATION_LIMIT;
 
 // In-memory mock store for when Supabase is not configured
 const mockStore = new Map<string, Array<{
@@ -88,7 +93,19 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
 
-    // Check count - delete oldest if at max (scoped)
+    // Resolve the per-tier cap from the license row (free 3 / vip 10 / admin 10).
+    const { data: license } = await supabase
+      .from("license_keys")
+      .select("package_tier")
+      .eq("key", licenseKey)
+      .single();
+    const tier = (license as { package_tier?: PackageTier } | null)?.package_tier ?? "normal";
+    const isAdmin = await isAdminFromCookies();
+    const limit = aiConversationLimit(isAdmin, tier);
+
+    // Hard block at the cap (scoped count). Unlike the old eviction behaviour,
+    // we refuse to create so the user explicitly deletes or upgrades. The
+    // client guards this in the UI; this is the server-side safety net.
     const { count } = await scopeEq(scope)(
       supabase
         .from("ai_conversations")
@@ -96,22 +113,11 @@ export async function POST(request: Request) {
         .eq("license_key", licenseKey)
     );
 
-    if (count && count >= MAX_CONVERSATIONS) {
-      const { data: oldest } = await scopeEq(scope)(
-        supabase
-          .from("ai_conversations")
-          .select("id")
-          .eq("license_key", licenseKey)
-          .order("updated_at", { ascending: true })
-          .limit(1)
+    if (count && count >= limit) {
+      return NextResponse.json(
+        { error: "conversation_limit_reached", limit },
+        { status: 409 }
       );
-
-      if (oldest?.[0]) {
-        await supabase
-          .from("ai_conversations")
-          .delete()
-          .eq("id", (oldest[0] as Record<string, unknown>).id as string);
-      }
     }
 
     const { data, error } = await supabase

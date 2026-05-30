@@ -35,9 +35,11 @@ export async function generateUniqueKey(
   throw new Error("Could not generate unique key after retries");
 }
 
-// Validation helpers — used by /api/auth/validate
+// Validation helpers - used by /api/auth/validate
 const NEW_FORMAT_RE = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{5}$/;
 const LEGACY_FORMAT_RE = /^[A-Z0-9-]{6,16}$/; // matches B29-ABC123, HAI-XXXX-XXXX
+// Admin-created custom keys can be any alphanumeric 3-16 chars (no dash required)
+const CUSTOM_KEY_RE = /^[A-Z0-9]{3,16}$/;
 
 export function isNewFormatKey(key: string): boolean {
   return NEW_FORMAT_RE.test(key);
@@ -52,5 +54,5 @@ export function isMockKey(key: string): boolean {
 }
 
 export function isAcceptableKeyFormat(key: string): boolean {
-  return isNewFormatKey(key) || isLegacyFormatKey(key) || isMockKey(key);
+  return isNewFormatKey(key) || isLegacyFormatKey(key) || isMockKey(key) || CUSTOM_KEY_RE.test(key);
 }

@@ -9,10 +9,10 @@ Pengendalian internal dibuat untuk mengamankan aset, meningkatkan keandalan cata
 
 Enam prinsip utama pengendalian internal:
 <bullet><b>Penetapan Tanggung Jawab:</b> Satu tugas spesifik hanya boleh diakses oleh satu orang spesifik.</bullet>
-<bullet><b>Pemisahan Tugas:</b> Tugas-tugas yang saling berkaitan harus dipisahkan — termasuk pemisahan antara pencatatan akuntansi dan penguasaan fisik aset.</bullet>
+<bullet><b>Pemisahan Tugas:</b> Tugas-tugas yang saling berkaitan harus dipisahkan - termasuk pemisahan antara pencatatan akuntansi dan penguasaan fisik aset.</bullet>
 <bullet><b>Prosedur Dokumentasi:</b> Pakai dokumen bernomor urut yang sudah dicetak (prenumbered), dan dokumen sumber harus segera diserahkan ke bagian akuntansi.</bullet>
 <bullet><b>Pengendalian Fisik:</b> Pakai brankas, alarm, pemindai sidik jari, dan kamera CCTV untuk menjaga keamanan aset (lihat materi sesi 9, slide "Physical Controls").</bullet>
-<bullet><b>Verifikasi Internal Independen:</b> Data ditinjau dan direkonsiliasi berkala oleh pihak yang independen — bukan orang yang melakukan pencatatan.</bullet>
+<bullet><b>Verifikasi Internal Independen:</b> Data ditinjau dan direkonsiliasi berkala oleh pihak yang independen - bukan orang yang melakukan pencatatan.</bullet>
 <bullet><b>Pengendalian Sumber Daya Manusia:</b> Terapkan rotasi tugas, wajib cuti, cek latar belakang, dan asuransi (bonding) bagi karyawan yang menangani kas.</bullet>
 
 <b>Contoh:</b> Kasir yang terima uang tunai dari pelanggan tidak boleh punya akses untuk mencatat jurnal penerimaan kas.

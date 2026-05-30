@@ -38,7 +38,7 @@ export function ScopeProvider({
 
   // Detect URL-vs-session scope mismatch. If a NON-admin user opens a scoped
   // URL whose tuple doesn't match their license's bound scope, redirect after 3s.
-  // Admin users are exempt — they can freely switch between any available scope.
+  // Admin users are exempt - they can freely switch between any available scope.
   useEffect(() => {
     if (!session) return;
     if (!session.scope) return;

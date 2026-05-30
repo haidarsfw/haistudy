@@ -16,7 +16,7 @@ const WATERMARK_BG = `url("data:image/svg+xml;utf8,${encodeURIComponent(
 )}")`;
 
 /**
- * Preview mode watermark — CSS background-image (zero DOM elements)
+ * Preview mode watermark - CSS background-image (zero DOM elements)
  * plus a CSS-delayed floating action bar at bottom with exit/purchase CTAs.
  * No React hooks; pure render based on session.isPreview.
  */
@@ -36,7 +36,7 @@ export function PreviewWatermark() {
 
   return (
     <>
-      {/* Diagonal repeating watermark — single decorative div, SVG background.
+      {/* Diagonal repeating watermark - single decorative div, SVG background.
           Zero DOM text nodes so axe-core skips contrast audit; no LCP candidate. */}
       <div
         className="pointer-events-none fixed inset-0 z-40 opacity-[0.05] text-foreground"
@@ -47,7 +47,7 @@ export function PreviewWatermark() {
         }}
       />
 
-      {/* Floating action bar — CSS entrance with 1.5s delay so it lands after LCP. */}
+      {/* Floating action bar - CSS entrance with 1.5s delay so it lands after LCP. */}
       <div className="preview-action-bar fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.75rem)] sm:bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 rounded-full border border-border bg-card/90 backdrop-blur-md px-3 sm:px-5 py-2 shadow-lg">
         <Lock className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
         <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">

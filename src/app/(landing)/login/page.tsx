@@ -5,6 +5,8 @@ import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
   title: "Login",
+  description: "Masuk ke haistudy dengan license key untuk akses materi, quiz, dan komunitas belajar.",
+  alternates: { canonical: "/login" },
 };
 
 export default async function LoginPage({

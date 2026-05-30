@@ -25,7 +25,7 @@ export function PersonalNotesTab({
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const initialLoadDone = useRef(false);
 
-  // Load notes — try server first, then localStorage fallback
+  // Load notes - try server first, then localStorage fallback
   useEffect(() => {
     if (initialLoadDone.current) return;
     initialLoadDone.current = true;
@@ -47,19 +47,19 @@ export function PersonalNotesTab({
         const serverContent = serverNotes[subjectId] || "";
 
         if (serverContent && serverContent.length >= localContent.length) {
-          // Server version is same or longer — use it
+          // Server version is same or longer - use it
           setContent(serverContent);
           localStorage.setItem(localKey, serverContent);
           setSynced(true);
         } else if (localContent && !serverContent) {
-          // Local exists but server doesn't — push local to server
+          // Local exists but server doesn't - push local to server
           syncToServer(localContent, data.settings?.notes || {});
           setSynced(true);
         } else {
           setSynced(true);
         }
       } catch {
-        // Offline — use local
+        // Offline - use local
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

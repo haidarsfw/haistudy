@@ -180,7 +180,7 @@ export function ThreadForm({ onSubmit, onCancel }: ThreadFormProps) {
       }
     }
 
-    // Handle rich text paste — extract text with preserved line breaks
+    // Handle rich text paste - extract text with preserved line breaks
     const html = e.clipboardData.getData("text/html");
     if (html) {
       e.preventDefault();

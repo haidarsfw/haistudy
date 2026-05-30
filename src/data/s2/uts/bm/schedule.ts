@@ -44,7 +44,7 @@ export const weeklySchedule: Schedule[] = [
   },
 ];
 
-// UTS exam schedule — Jadwal resmi BINUSMAYA (Business Management B29)
+// UTS exam schedule - Jadwal resmi BINUSMAYA (Business Management B29)
 export const examSchedule: Schedule[] = [
   {
     subject: "Foundations of AI",

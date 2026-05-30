@@ -284,7 +284,7 @@ export function useSupportMessages(
     []
   );
 
-  /* ─────────────── Unsend (admin only — server enforces) ─────────────── */
+  /* ─────────────── Unsend (admin only - server enforces) ─────────────── */
   const unsendMessage = useCallback(
     async (id: string): Promise<{ ok: boolean; error?: string }> => {
       try {
@@ -299,7 +299,7 @@ export function useSupportMessages(
         const data = await res.json();
         const updated = data.message as SupportMessage | undefined;
         if (updated) {
-          // Optimistic local update — realtime UPDATE event will reconcile
+          // Optimistic local update - realtime UPDATE event will reconcile
           setMessages((prev) =>
             prev.map((m) => (m.id === updated.id ? updated : m))
           );

@@ -108,7 +108,7 @@ export function CommentInput({
       }
     }
 
-    // Handle rich text paste — preserve line breaks from HTML
+    // Handle rich text paste - preserve line breaks from HTML
     const html = e.clipboardData.getData("text/html");
     if (html) {
       e.preventDefault();

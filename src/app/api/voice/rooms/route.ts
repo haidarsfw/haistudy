@@ -11,6 +11,16 @@ import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } fro
 // UUIDs must match migration 010_fix_presence_voice.sql
 const SEED_ROOMS: Omit<VoiceRoom, "participants">[] = [
   {
+    id: "00000000-0000-4000-8000-000000000000",
+    name: "VIP Lounge",
+    description: "Private voice room for VIP members",
+    maxParticipants: 12,
+    creatorId: null,
+    creatorName: null,
+    isLocked: false,
+    isCustom: false,
+  },
+  {
     id: "00000000-0000-4000-8000-000000000001",
     name: "Study Bareng",
     description: "Belajar bareng, diskusi materi",
@@ -496,7 +506,7 @@ export async function POST(request: Request) {
         .eq("room_id", roomId);
 
       if (newCount !== null && newCount > room.maxParticipants) {
-        // We caused overflow — remove ourselves
+        // We caused overflow - remove ourselves
         await supabase
           .from("voice_participants")
           .delete()

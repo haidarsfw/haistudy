@@ -1,12 +1,14 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useMemo } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Mic, MicOff, Shield, Crown, Gem } from "lucide-react";
 import type { VoiceParticipant } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
+import { useAvatars } from "@/hooks/use-avatars";
 
 interface ParticipantListProps {
   participants: VoiceParticipant[];
@@ -19,6 +21,12 @@ export function ParticipantList({
   currentLicenseKey,
   isMuted,
 }: ParticipantListProps) {
+  const avatarKeys = useMemo(
+    () => participants.map((p) => p.licenseKey).filter(Boolean) as string[],
+    [participants]
+  );
+  const avatarMap = useAvatars(avatarKeys);
+
   if (participants.length === 0) {
     return (
       <p className="py-4 text-center text-sm text-muted-foreground">
@@ -31,6 +39,9 @@ export function ParticipantList({
     <div className="space-y-1">
       {participants.map((p) => {
         const isMe = p.licenseKey === currentLicenseKey;
+        const avatarUrl = p.licenseKey
+          ? avatarMap.get(p.licenseKey.toUpperCase()) ?? null
+          : null;
         return (
           <div
             key={p.id}
@@ -40,6 +51,7 @@ export function ParticipantList({
           >
             <div className="relative">
               <Avatar className="h-8 w-8">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={p.userName} />}
                 <AvatarFallback className="text-xs">
                   {p.userName.charAt(0).toUpperCase()}
                 </AvatarFallback>

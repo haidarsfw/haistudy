@@ -20,7 +20,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { useWebPush } from "@/hooks/use-web-push";
 import { useSession } from "@/components/providers/session-provider";
 import { sounds, getSoundMuted, setSoundMuted } from "@/lib/sounds";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 function PermissionBadge({ state }: { state: string }) {
   if (state === "granted") {

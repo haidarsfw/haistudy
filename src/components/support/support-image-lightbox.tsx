@@ -117,7 +117,7 @@ export function SupportImageLightbox({ images, index, onClose, onIndexChange }: 
             </button>
           )}
 
-          {/* Image — drag for swipe (when zoomed=1) or pan (when zoomed>1) */}
+          {/* Image - drag for swipe (when zoomed=1) or pan (when zoomed>1) */}
           <motion.img
             key={images[index!]}
             src={images[index!]}

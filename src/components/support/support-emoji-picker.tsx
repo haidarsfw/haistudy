@@ -18,7 +18,7 @@ interface Props {
 
 /**
  * Lightweight emoji grid with category tabs + recently-used + search.
- * No external library — keeps bundle slim.
+ * No external library - keeps bundle slim.
  */
 export function SupportEmojiPicker({ onSelect, compact = false }: Props) {
   const { t } = useTranslation();
@@ -39,7 +39,7 @@ export function SupportEmojiPicker({ onSelect, compact = false }: Props) {
   const filtered = useMemo(() => {
     if (!search.trim()) return null;
     const q = search.trim().toLowerCase();
-    // No emoji name DB — fall back to substring match on the emoji char itself
+    // No emoji name DB - fall back to substring match on the emoji char itself
     // (works for direct emoji paste). For text search we surface ALL_EMOJIS as
     // a graceful fallback.
     return ALL_EMOJIS.filter((e) => e.includes(q) || q === "" );

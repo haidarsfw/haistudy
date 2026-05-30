@@ -15,6 +15,7 @@ import {
   Gem,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AudioPlayer } from "./audio-player";
 import { springSmooth } from "@/lib/motion";
 import {
@@ -24,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { PublicProfilePopover } from "@/components/user/public-profile-popover";
 import type { ChatMessage } from "@/types";
 import {
   ROLE_COLORS,
@@ -42,6 +44,7 @@ interface MessageBubbleProps {
   onUnpin: (messageId: string) => void;
   onImageClick?: (src: string) => void;
   userRoleMap?: Map<string, UserRole>;
+  avatarUrl?: string | null;
 }
 
 export function MessageBubble({
@@ -55,6 +58,7 @@ export function MessageBubble({
   onUnpin,
   onImageClick,
   userRoleMap,
+  avatarUrl,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -115,28 +119,64 @@ export function MessageBubble({
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Avatar placeholder */}
-      <div
-        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
-          message.isAdmin
-            ? "bg-primary/15 text-primary"
-            : "bg-secondary text-secondary-foreground"
-        }`}
-      >
-        {message.authorName.charAt(0).toUpperCase()}
-      </div>
+      {/* Avatar - real PFP when set, initial fallback otherwise */}
+      {isOwn ? (
+        <Avatar className="mt-0.5 size-8">
+          {avatarUrl && <AvatarImage src={avatarUrl} alt={message.authorName} />}
+          <AvatarFallback className="bg-secondary text-xs font-medium text-secondary-foreground">
+            {message.authorName.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      ) : (
+        <PublicProfilePopover
+          licenseKey={message.licenseKey}
+          fallbackName={message.authorName}
+          fallbackTier={message.packageTier}
+          fallbackIsAdmin={message.isAdmin}
+        >
+          <button
+            type="button"
+            className="mt-0.5 shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+          >
+            <Avatar className="size-8">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={message.authorName} />}
+              <AvatarFallback
+                className={`text-xs font-medium ${
+                  message.isAdmin
+                    ? "bg-primary/15 text-primary"
+                    : "bg-secondary text-secondary-foreground"
+                }`}
+              >
+                {message.authorName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </PublicProfilePopover>
+      )}
 
       {/* Content */}
       <div className="min-w-0 flex-1">
         {/* Header */}
         <div className="flex items-center gap-2">
-          <span
-            className={`text-sm font-semibold ${
-              isOwn ? "text-primary" : ROLE_COLORS[authorRole].text
-            }`}
-          >
-            {message.authorName}
-          </span>
+          {isOwn ? (
+            <span className="text-sm font-semibold text-primary">
+              {message.authorName}
+            </span>
+          ) : (
+            <PublicProfilePopover
+              licenseKey={message.licenseKey}
+              fallbackName={message.authorName}
+              fallbackTier={message.packageTier}
+              fallbackIsAdmin={message.isAdmin}
+            >
+              <button
+                type="button"
+                className={`cursor-pointer text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${ROLE_COLORS[authorRole].text}`}
+              >
+                {message.authorName}
+              </button>
+            </PublicProfilePopover>
+          )}
           {message.isAdmin && (
             <Badge
               variant="admin-outline"

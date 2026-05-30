@@ -16,7 +16,7 @@ import type { ScopeTuple, ExamPeriod } from "@/types/scope";
  * GET /api/auth/me
  * Returns the client-shaped session payload from the hs-session cookie.
  * Used by SessionProvider to hydrate localStorage after an OAuth callback
- * (callback only sets httpOnly cookies — client state was empty).
+ * (callback only sets httpOnly cookies - client state was empty).
  */
 export async function GET() {
   const cookieStore = await cookies();
@@ -25,7 +25,7 @@ export async function GET() {
     return NextResponse.json({ session: null }, { status: 401 });
   }
 
-  // Preview entry — no-login flow sets hs-session="PREVIEW". Return a
+  // Preview entry - no-login flow sets hs-session="PREVIEW". Return a
   // preview-shaped session without hitting the DB. PREVIEW01 (test license)
   // still flows through the mock/Supabase paths below.
   if (licenseKey === "PREVIEW") {
@@ -45,7 +45,7 @@ export async function GET() {
     });
   }
 
-  // Mock mode — accept ADMIN1 / PREVIEW01 / pattern keys without DB lookup
+  // Mock mode - accept ADMIN1 / PREVIEW01 / pattern keys without DB lookup
   if (!isSupabaseServerConfigured) {
     const mockKeys: Record<
       string,

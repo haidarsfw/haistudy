@@ -98,7 +98,7 @@ export function ExamCountdownMini() {
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex-1">
           {t("dashboard.exam_countdown")}
         </span>
-        {/* Toggle button — synced to Supabase */}
+        {/* Toggle button - synced to Supabase */}
         {exam?.examDate && countdown && (
           <button
             onClick={toggleMode}

@@ -15,7 +15,7 @@ function scopeCompact(s: ScopeTuple): string {
 }
 
 /**
- * Admin-only scope switcher — shows a dropdown of available scopes.
+ * Admin-only scope switcher - shows a dropdown of available scopes.
  * Hitting "switch" calls /api/auth/switch-scope to update the cookie,
  * then navigates to the new scope's dashboard.
  */
@@ -69,7 +69,7 @@ export function AdminScopeSwitcher({ collapsed }: { collapsed: boolean }) {
 
   if (!session?.isAdmin) return null;
 
-  // Collapsed sidebar — just show icon
+  // Collapsed sidebar - just show icon
   if (collapsed) {
     return (
       <div className="relative">
@@ -164,7 +164,7 @@ export function ScopeDropdownContent({
 }
 
 /**
- * Mobile scope switcher — inline in the "More" sheet.
+ * Mobile scope switcher - inline in the "More" sheet.
  * Uses the same switch logic but different layout.
  */
 export function MobileScopeSwitcher() {

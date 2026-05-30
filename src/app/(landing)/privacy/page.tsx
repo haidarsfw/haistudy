@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy | haistudy",
+  title: "Privacy Policy",
+  description: "Kebijakan privasi haistudy -- bagaimana data Anda dikelola.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

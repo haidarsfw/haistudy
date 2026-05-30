@@ -67,7 +67,7 @@ export async function POST() {
       if (error) throw error;
 
       if (!data) {
-        // Race condition — refetch and retry once
+        // Race condition - refetch and retry once
         const retry = await getRow(supabase);
         const retryValue = (retry?.value ?? 0) + 1;
         const { error: retryError } = await supabase
@@ -80,7 +80,7 @@ export async function POST() {
 
       return NextResponse.json({ value: newValue });
     } else {
-      // No row yet — insert
+      // No row yet - insert
       const { error } = await supabase
         .from("invoice_counter")
         .insert({ value: newValue, updated_at: new Date().toISOString() });

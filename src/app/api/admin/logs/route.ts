@@ -241,7 +241,7 @@ export async function PATCH(request: Request) {
 }
 
 // ─── DELETE /api/admin/logs - Clear logs by type ───
-// "All periods" allowed here — bulk cross-scope log clear is intentional.
+// "All periods" allowed here - bulk cross-scope log clear is intentional.
 export async function DELETE(request: Request) {
   try {
     const { authorized } = await validateAdmin();

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/cron/notify-email
- * Vercel cron — every 1 minute. Sends Resend digest to recipients who:
+ * Vercel cron - every 1 minute. Sends Resend digest to recipients who:
  *  - have an unread `support_message` notification older than 2 min
  *  - have NOT been online in last 5 min
  *  - have not received an email for that (recipient, conv) in last 30 min
@@ -136,7 +136,7 @@ export async function GET(req: Request) {
     });
   }
 
-  // 3) De-duplicate per (recipient, conversation) — only the LATEST notification
+  // 3) De-duplicate per (recipient, conversation) - only the LATEST notification
   const byPair = new Map<
     string,
     {

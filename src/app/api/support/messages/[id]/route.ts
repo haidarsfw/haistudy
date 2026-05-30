@@ -102,7 +102,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/support/messages/[id]
- * Unsend a message — admin-only privilege. Soft-deletes by setting:
+ * Unsend a message - admin-only privilege. Soft-deletes by setting:
  *   - deleted = true
  *   - unsent_by = admin license key
  *   - unsent_at = now()

@@ -3,11 +3,40 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { parseMentions, hasMentions } from "@/lib/mentions";
-import type { ChatMessage } from "@/types";
+import type { ChatChannel, ChatMessage } from "@/types";
 import { CHAT_MAX_MESSAGES } from "@/lib/constants";
 import { requireScope, scopeColumns, scopeEq, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { canUseVip, type PackageTier } from "@/lib/tier";
+
+function normalizeChannel(raw: unknown): ChatChannel {
+  return raw === "vip-lounge" ? "vip-lounge" : "global";
+}
+
+// Resolve the requester's tier from cookies. hs-session holds the license key
+// (same lookup admin-guard uses); hs-admin gates admin. Used to gate vip-lounge.
+async function resolveSessionTier(
+  bodyTier?: PackageTier | null
+): Promise<{ isAdmin: boolean; tier: PackageTier }> {
+  const isAdmin = await isAdminFromCookies();
+  if (!isSupabaseServerConfigured) {
+    return { isAdmin, tier: (bodyTier ?? "normal") as PackageTier };
+  }
+  const jar = await cookies();
+  const lk = jar.get("hs-session")?.value ?? "";
+  if (!lk) return { isAdmin, tier: "normal" };
+  const supabase = createServerClient()!;
+  const { data } = await supabase
+    .from("license_keys")
+    .select("package_tier")
+    .eq("key", lk)
+    .single();
+  const tier = ((data as { package_tier?: PackageTier } | null)?.package_tier ??
+    "normal") as PackageTier;
+  return { isAdmin, tier };
+}
 
 // ─── Mock store for development without Supabase ───
 const mockMessages: ChatMessage[] = [];
@@ -30,6 +59,7 @@ function seedMockMessages() {
       replyToId: null,
       replyToName: null,
       replyToContent: null,
+      channel: "global",
       createdAt: new Date(now - 3600_000).toISOString(),
     },
     {
@@ -46,6 +76,7 @@ function seedMockMessages() {
       replyToId: null,
       replyToName: null,
       replyToContent: null,
+      channel: "global",
       createdAt: new Date(now - 3000_000).toISOString(),
     },
     {
@@ -62,6 +93,7 @@ function seedMockMessages() {
       replyToId: "mock-msg-2",
       replyToName: "Budi",
       replyToContent: "Saya mau tanya soal regresi linear 🙋",
+      channel: "global",
       createdAt: new Date(now - 2400_000).toISOString(),
     },
   ];
@@ -77,6 +109,7 @@ function mapRowToMessage(row: Record<string, unknown>): ChatMessage {
     authorId: row.author_id as string,
     authorName: row.author_name as string,
     authorClass: (row.author_class as string) || "",
+    licenseKey: (row.license_key as string) || null,
     isAdmin: row.is_admin as boolean,
     isTester: (row.is_tester as boolean) || false,
     packageTier: (row.package_tier as ChatMessage["packageTier"]) || undefined,
@@ -84,6 +117,7 @@ function mapRowToMessage(row: Record<string, unknown>): ChatMessage {
     replyToId: (row.reply_to_id as string) || null,
     replyToName: (row.reply_to_name as string) || null,
     replyToContent: (row.reply_to_content as string) || null,
+    channel: ((row.channel as ChatMessage["channel"]) || "global"),
     createdAt: row.created_at as string,
   };
 }
@@ -95,13 +129,24 @@ export async function GET(request: Request) {
     await assertNotPreview();
     const { searchParams } = new URL(request.url);
     const before = searchParams.get("before"); // cursor: created_at timestamp
+    const channel = normalizeChannel(searchParams.get("channel"));
+
+    // VIP Lounge is read-gated: only VIP/admin may fetch its messages.
+    if (channel === "vip-lounge") {
+      const { isAdmin, tier } = await resolveSessionTier();
+      if (!canUseVip(isAdmin, tier)) {
+        return NextResponse.json({ error: "vip_lounge_locked" }, { status: 403 });
+      }
+    }
 
     if (!isSupabaseServerConfigured) {
       seedMockMessages();
-      let msgs = [...mockMessages].sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+      let msgs = [...mockMessages]
+        .filter((m) => m.channel === channel)
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       if (before) {
         msgs = msgs.filter((m) => m.createdAt < before);
         msgs = msgs.slice(-CHAT_MAX_MESSAGES);
@@ -115,6 +160,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from("chat_messages")
       .select("*")
+      .eq("channel", channel)
       .order("created_at", { ascending: false })
       .limit(CHAT_MAX_MESSAGES);
 
@@ -159,9 +205,22 @@ export async function POST(request: Request) {
       replyToName,
       replyToContent,
     } = body;
+    const channel = normalizeChannel(body.channel);
 
-    // Trust cookies, not client-provided flags
-    const isAdmin = await isAdminFromCookies();
+    // Trust cookies, not client-provided flags. Resolve real tier for the
+    // vip-lounge write gate (don't trust the body's packageTier).
+    const { isAdmin, tier } = await resolveSessionTier(packageTier);
+
+    // Denormalize the author's license key from the session cookie (server-
+    // trusted; same value resolveSessionTier reads) so the profile popover can
+    // resolve PublicProfile. Falls back to null → popover degrades to name/tier.
+    const authorLicenseKey =
+      (await cookies()).get("hs-session")?.value?.toUpperCase() || null;
+
+    // VIP Lounge is write-gated: only VIP/admin may post there.
+    if (channel === "vip-lounge" && !canUseVip(isAdmin, tier)) {
+      return NextResponse.json({ error: "vip_lounge_locked" }, { status: 403 });
+    }
 
     if (!authorId || !authorName) {
       return NextResponse.json(
@@ -194,6 +253,7 @@ export async function POST(request: Request) {
         authorId,
         authorName,
         authorClass: authorClass || "",
+        licenseKey: authorLicenseKey,
         isAdmin: isAdmin || false,
         isTester: isTester || false,
         packageTier: packageTier || undefined,
@@ -201,6 +261,7 @@ export async function POST(request: Request) {
         replyToId: replyToId || null,
         replyToName: replyToName || null,
         replyToContent: replyToContent || null,
+        channel,
         createdAt: new Date().toISOString(),
       };
       mockMessages.push(message);
@@ -217,12 +278,14 @@ export async function POST(request: Request) {
         author_id: authorId,
         author_name: authorName,
         author_class: authorClass || "",
+        license_key: authorLicenseKey,
         is_admin: isAdmin || false,
         is_tester: isTester || false,
         package_tier: packageTier || null,
         reply_to_id: replyToId || null,
         reply_to_name: replyToName || null,
         reply_to_content: replyToContent || null,
+        channel,
         ...scopeColumns(scope),
       })
       .select()
@@ -266,7 +329,7 @@ export async function POST(request: Request) {
               }> = [];
 
               if (hasAll) {
-                // @all — notify everyone except sender
+                // @all - notify everyone except sender
                 for (const user of allUsers) {
                   const uName = (user.user_name || "").toLowerCase();
                   if (uName === authorName?.toLowerCase()) continue;

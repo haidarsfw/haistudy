@@ -10,9 +10,23 @@ import {
   Maximize2,
   Minimize2,
   ChevronDown,
+  Pencil,
+  Download,
+  FileText,
+  FileCode,
+  FileType,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useAiChat } from "@/hooks/use-ai-chat";
@@ -26,9 +40,12 @@ interface AiChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
   subjectId?: string | null;
+  // Issue 10: pre-seeded reference (selected materi text) the user wants to ask about.
+  reference?: { text: string; subjectId: string | null } | null;
+  onReferenceConsumed?: () => void;
 }
 
-export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
+export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReferenceConsumed }: AiChatPanelProps) {
   const { session } = useSession();
   const { t } = useTranslation();
   const scopeCtx = useOptionalScope();
@@ -45,13 +62,31 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
     switchConversation,
     deleteConversation,
     createNewConversation,
+    renameConversation,
   } = useAiChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [aiModel, setAiModel] = useState<"fast" | "reasoning">("fast");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [exportOpen, setExportOpen] = useState(false);
+  // Issue 10: active reference banner — set from the incoming reference prop,
+  // attached to the next send, then cleared. Bump focusSignal to refocus input.
+  const [activeReference, setActiveReference] = useState<{ text: string; subjectId: string | null } | null>(null);
+  const [focusSignal, setFocusSignal] = useState(0);
 
-  // Reset fullscreen whenever panel closes — cleaner UX, fresh each open
+  // Capture a new incoming reference (from "Tanya AI"), then tell the parent it
+  // was consumed so re-opens with the same selection still work.
+  useEffect(() => {
+    if (reference?.text) {
+      setActiveReference(reference);
+      setFocusSignal((n) => n + 1);
+      onReferenceConsumed?.();
+    }
+  }, [reference, onReferenceConsumed]);
+
+  // Reset fullscreen whenever panel closes - cleaner UX, fresh each open
   useEffect(() => {
     if (!isOpen) setIsFullscreen(false);
   }, [isOpen]);
@@ -66,7 +101,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
     };
   }, [isOpen]);
 
-  // Detect if user is "near the bottom" (< 80px) — only then we auto-follow streams
+  // Detect if user is "near the bottom" (< 80px) - only then we auto-follow streams
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -103,16 +138,22 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
   const handleSend = useCallback(
     (text: string, image?: string | null) => {
       if (!session) return;
+      // Anchor this turn to the active reference (if any), then clear it so it
+      // only grounds the immediate question. Reference's own subjectId wins so
+      // grounding stays correct even if the user navigated away from the page.
+      const ref = activeReference;
       sendMessage(
         text,
         session.licenseKey,
-        subjectId,
+        ref?.subjectId ?? subjectId,
         session.packageTier,
         aiModel,
         session.isAdmin,
-        image
+        image,
+        ref?.text ?? null
       );
-      // User just sent — pin to bottom regardless of prior scroll state
+      if (ref) setActiveReference(null);
+      // User just sent - pin to bottom regardless of prior scroll state
       setIsNearBottom(true);
       requestAnimationFrame(() => {
         if (scrollRef.current) {
@@ -120,7 +161,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
         }
       });
     },
-    [session, sendMessage, subjectId, aiModel]
+    [session, sendMessage, subjectId, aiModel, activeReference]
   );
 
   const retryLastMessage = useCallback(() => {
@@ -135,6 +176,128 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
       deleteConversation(activeConversationId);
     }
   }, [activeConversationId, deleteConversation]);
+
+  const activeConv = conversations.find((c) => c.id === activeConversationId);
+
+  const openRename = useCallback(() => {
+    if (!activeConversationId) return;
+    setRenameValue(activeConv?.title ?? "");
+    setRenameOpen(true);
+  }, [activeConversationId, activeConv?.title]);
+
+  const submitRename = useCallback(() => {
+    if (!activeConversationId) return;
+    const clean = renameValue.trim();
+    const current = activeConv?.title ?? "";
+    if (!clean || clean === current) {
+      setRenameOpen(false);
+      return;
+    }
+    renameConversation(activeConversationId, clean);
+    setRenameOpen(false);
+    toast.success(t("ai.renamed"));
+  }, [activeConversationId, renameValue, activeConv?.title, renameConversation, t]);
+
+  const filenameBase = useCallback((): string => {
+    return (
+      (activeConv?.title || "percakapan")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40) || "percakapan"
+    );
+  }, [activeConv?.title]);
+
+  const fmtWhen = (ts?: number): string => {
+    try {
+      return ts
+        ? new Date(ts).toLocaleString("id-ID", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : "";
+    } catch {
+      return "";
+    }
+  };
+
+  const downloadBlob = (data: Blob | string, ext: string, mime: string) => {
+    const blob = typeof data === "string" ? new Blob([data], { type: mime }) : data;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `haistudy-ai-${filenameBase()}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  // Export entirely from in-memory messages so local `chat-` ids and persisted
+  // UUID conversations take the same path. No server round-trip needed.
+  const exportAs = useCallback(
+    async (format: "txt" | "md" | "pdf") => {
+      if (!activeConv) return;
+      setExportOpen(false);
+      const title = activeConv.title || "Percakapan haistudy AI";
+      try {
+        if (format === "md") {
+          const lines: string[] = [`# ${title}`, ""];
+          for (const m of activeConv.messages) {
+            const who = m.role === "user" ? "Kamu" : "haistudy AI";
+            const when = fmtWhen(m.timestamp);
+            lines.push(`## ${who}${when ? ` (${when})` : ""}`, "", m.content || "", "");
+          }
+          downloadBlob(lines.join("\n"), "md", "text/markdown;charset=utf-8");
+        } else if (format === "txt") {
+          const lines: string[] = [title, "=".repeat(title.length), ""];
+          for (const m of activeConv.messages) {
+            const who = m.role === "user" ? "Kamu" : "haistudy AI";
+            const when = fmtWhen(m.timestamp);
+            lines.push(`${who}${when ? ` (${when})` : ""}:`, m.content || "", "");
+          }
+          downloadBlob(lines.join("\n"), "txt", "text/plain;charset=utf-8");
+        } else {
+          // Lazy-load jsPDF only inside the handler so it never hits the bundle.
+          const { jsPDF } = await import("jspdf");
+          const doc = new jsPDF({ unit: "pt", format: "a4" });
+          const margin = 40;
+          const pageW = doc.internal.pageSize.getWidth();
+          const pageH = doc.internal.pageSize.getHeight();
+          const maxW = pageW - margin * 2;
+          let y = margin;
+          const writeBlock = (text: string, size: number, bold: boolean) => {
+            doc.setFont("helvetica", bold ? "bold" : "normal");
+            doc.setFontSize(size);
+            const wrapped = doc.splitTextToSize(text, maxW) as string[];
+            for (const ln of wrapped) {
+              if (y > pageH - margin) {
+                doc.addPage();
+                y = margin;
+              }
+              doc.text(ln, margin, y);
+              y += size * 1.4;
+            }
+          };
+          writeBlock(title, 16, true);
+          y += 6;
+          for (const m of activeConv.messages) {
+            const who = m.role === "user" ? "Kamu" : "haistudy AI";
+            const when = fmtWhen(m.timestamp);
+            writeBlock(`${who}${when ? ` (${when})` : ""}`, 11, true);
+            writeBlock(m.content || "", 10, false);
+            y += 8;
+          }
+          downloadBlob(doc.output("blob"), "pdf", "application/pdf");
+        }
+        toast.success(t("ai.exported"));
+      } catch {
+        toast.error(t("ai.export_error"));
+      }
+    },
+    [activeConv, filenameBase, t]
+  );
 
   const jumpToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -199,15 +362,35 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
                   <Plus className="h-4 w-4" />
                 </Button>
                 {messages.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleDeleteCurrent}
-                    title="Hapus chat ini"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={openRename}
+                      title={t("ai.rename")}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setExportOpen(true)}
+                      title={t("ai.export")}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={handleDeleteCurrent}
+                      title="Hapus chat ini"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
                 )}
                 <Button
                   variant="ghost"
@@ -329,7 +512,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
               </div>
             </div>
 
-            {/* Jump-to-bottom pill — appears only when user scrolled up during streaming */}
+            {/* Jump-to-bottom pill - appears only when user scrolled up during streaming */}
             {!isNearBottom && isStreaming && (
               <button
                 onClick={jumpToBottom}
@@ -342,20 +525,95 @@ export function AiChatPanel({ isOpen, onClose, subjectId }: AiChatPanelProps) {
 
             {/* Input */}
             <div className={isFullscreen ? "mx-auto w-full max-w-3xl" : ""}>
+              {/* Issue 10: reference banner — shows the selected materi text the
+                  answer will be grounded in. Dismissable; clears on send too. */}
+              {activeReference && (
+                <div className="mx-3 mt-2 flex items-start gap-2 rounded-md border-l-2 border-primary bg-muted/50 px-3 py-2 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium">{t("ai.asking_about")}:</span>
+                    <p className="mt-0.5 line-clamp-3 text-muted-foreground">
+                      «{activeReference.text}»
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveReference(null)}
+                    className="shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+                    aria-label={t("ai.rename_cancel")}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
               <AiInput
                 onSend={handleSend}
                 isStreaming={isStreaming}
                 onStop={stopStreaming}
                 aiModel={aiModel}
                 onModelChange={setAiModel}
-                showModelToggle={
-                  session.packageTier === "vip" ||
-                  session.packageTier === "diamond" ||
-                  session.isAdmin
-                }
+                focusSignal={focusSignal}
               />
             </div>
           </motion.div>
+
+          {/* Rename dialog (in-app, replaces window.prompt) */}
+          <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+            <DialogContent className="z-[60] sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle>{t("ai.rename_title")}</DialogTitle>
+              </DialogHeader>
+              <Input
+                autoFocus
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitRename();
+                  }
+                }}
+                placeholder={t("ai.rename_placeholder")}
+                maxLength={80}
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setRenameOpen(false)}>
+                  {t("ai.rename_cancel")}
+                </Button>
+                <Button onClick={submitRename}>{t("ai.rename_save")}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Export format picker (in-app) */}
+          <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+            <DialogContent className="z-[60] sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle>{t("ai.export_title")}</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => exportAs("txt")}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-card p-3 text-xs font-medium hover:bg-muted transition-colors"
+                >
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  TXT
+                </button>
+                <button
+                  onClick={() => exportAs("md")}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-card p-3 text-xs font-medium hover:bg-muted transition-colors"
+                >
+                  <FileCode className="h-5 w-5 text-muted-foreground" />
+                  MD
+                </button>
+                <button
+                  onClick={() => exportAs("pdf")}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-card p-3 text-xs font-medium hover:bg-muted transition-colors"
+                >
+                  <FileType className="h-5 w-5 text-muted-foreground" />
+                  PDF
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </AnimatePresence>

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { Badge } from "@/components/ui/badge";
 

@@ -2,7 +2,7 @@
 
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 export function usePreviewGuard() {
   const { session } = useSession();

@@ -12,7 +12,7 @@ import {
   Loader2,
   Trash2,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ErrorLog } from "@/types";
 import { formatDistanceToNow } from "date-fns";

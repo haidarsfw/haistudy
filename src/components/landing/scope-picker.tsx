@@ -6,7 +6,7 @@ import { ChevronRight, GraduationCap, BookOpen, Building2 } from "lucide-react";
 import { AVAILABLE_SCOPES } from "@/lib/scope";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 
-// Generic "Coming soon" placeholder slots — no specific jurusan names committed.
+// Generic "Coming soon" placeholder slots - no specific jurusan names committed.
 // Locked-in decision: only `bm` listed; surface 2 abstract placeholders.
 const COMING_SOON_SLOTS = 3;
 

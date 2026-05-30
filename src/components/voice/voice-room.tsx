@@ -42,8 +42,8 @@ async function tryPlayAudio(el: HTMLAudioElement, retries = 3): Promise<void> {
       await new Promise((r) => setTimeout(r, (i + 1) * 200));
     }
   }
-  // All retries failed — audio is likely blocked by browser policy
-  console.warn("Audio play blocked after retries — user interaction required");
+  // All retries failed - audio is likely blocked by browser policy
+  console.warn("Audio play blocked after retries - user interaction required");
 }
 
 /**
@@ -81,7 +81,7 @@ export function VoiceRoom({
   const [isScreenExpanded, setIsScreenExpanded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
-  // Always start as blocked — user MUST tap "Enable Audio" button
+  // Always start as blocked - user MUST tap "Enable Audio" button
   // This guarantees startAudio() is called from a genuine user gesture
   const [audioBlocked, setAudioBlocked] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -92,7 +92,7 @@ export function VoiceRoom({
   const canScreenShare = typeof navigator !== "undefined" &&
     typeof navigator.mediaDevices?.getDisplayMedia === "function";
 
-  // ═══ Idle disconnect — auto-leave after 10 min of inactivity ═══
+  // ═══ Idle disconnect - auto-leave after 10 min of inactivity ═══
   const IDLE_WARN_MS = 8 * 60 * 1000;   // 8 min
   const IDLE_KICK_MS = 10 * 60 * 1000;  // 10 min
   const lastActivityRef = useRef(Date.now());
@@ -151,7 +151,7 @@ export function VoiceRoom({
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [resetIdleTimer]);
 
-  // LiveKit connection — complete rewrite for reliable two-way audio
+  // LiveKit connection - complete rewrite for reliable two-way audio
   useEffect(() => {
     if (!isLiveKitConfigured || !livekitToken || !livekitUrl) return;
 
@@ -197,27 +197,27 @@ export function VoiceRoom({
         roomInstance.on(RoomEvent.AudioPlaybackStatusChanged, () => {
           if (!mounted || !roomInstance) return;
           const canPlay = roomInstance.canPlaybackAudio;
-          console.log("[Voice] AudioPlaybackStatusChanged — canPlaybackAudio:", canPlay);
+          console.log("[Voice] AudioPlaybackStatusChanged - canPlaybackAudio:", canPlay);
           if (canPlay) {
             setAudioBlocked(false);
           }
         });
 
-        // Handle remote tracks — AUDIO is the critical part
+        // Handle remote tracks - AUDIO is the critical part
         roomInstance.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (!mounted) return;
 
           if (track.kind === Track.Kind.Audio) {
             console.log("[Voice] TrackSubscribed audio from:", participant.identity);
 
-            // Create audio element via LiveKit's attach() — it sets up the MediaStream
+            // Create audio element via LiveKit's attach() - it sets up the MediaStream
             const element = track.attach();
 
             // Tag it so we can find it later
             element.setAttribute("data-lk-audio", "true");
             element.id = `audio-${track.sid}`;
 
-            // Critical: do NOT use display:none — some browsers deprioritize hidden media
+            // Critical: do NOT use display:none - some browsers deprioritize hidden media
             // Instead use position absolute + opacity 0 so it's "rendered" but invisible
             element.style.position = "absolute";
             element.style.width = "1px";
@@ -235,8 +235,8 @@ export function VoiceRoom({
             // Append to body (not inside a React-managed tree to avoid cleanup issues)
             document.body.appendChild(element);
 
-            // Explicitly try to play — this might fail due to autoplay policy
-            // but that's OK — the "Enable Audio" button handles that
+            // Explicitly try to play - this might fail due to autoplay policy
+            // but that's OK - the "Enable Audio" button handles that
             tryPlayAudio(element).catch(() => {
               console.log("[Voice] Auto-play blocked for track", track.sid);
             });
@@ -385,6 +385,9 @@ export function VoiceRoom({
         });
 
       } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        // Benign: fired on unmount/leave race when we tear down mid-connect.
+        if (msg.includes("Client initiated disconnect")) return;
         console.error("[Voice] LiveKit connection error:", error);
       }
     };
@@ -410,7 +413,7 @@ export function VoiceRoom({
     });
   }, [isMuted]);
 
-  // Handle "Enable Audio" button click — MUST be from user gesture
+  // Handle "Enable Audio" button click - MUST be from user gesture
   const handleEnableAudio = useCallback(async () => {
     const room = lkRoomRef.current;
     if (!room) return;
@@ -425,13 +428,13 @@ export function VoiceRoom({
       console.warn("[Voice] startAudio() failed:", e);
     }
 
-    // Also manually resume all audio elements — belt and suspenders
+    // Also manually resume all audio elements - belt and suspenders
     resumeAllAudio();
 
     // Also try to resume AudioContext if it exists
     try {
       // Access the internal AudioContext and resume it
-      // @ts-expect-error — accessing internal property
+      // @ts-expect-error - accessing internal property
       const ctx = room.audioContext || (window as unknown as Record<string, unknown>).AudioContext;
       if (ctx && typeof ctx === "object" && "resume" in ctx) {
         await (ctx as AudioContext).resume();
@@ -588,7 +591,7 @@ export function VoiceRoom({
           </div>
         )}
 
-        {/* ═══ "TAP TO ENABLE AUDIO" — Always shown until user taps ═══ */}
+        {/* ═══ "TAP TO ENABLE AUDIO" - Always shown until user taps ═══ */}
         {/* This MUST be presented as a button so startAudio() runs from genuine user gesture */}
         {audioBlocked && isConnected && (
           <button
@@ -642,7 +645,7 @@ export function VoiceRoom({
           </div>
         )}
 
-        {/* Remote screen share display — always in DOM so ref is never null */}
+        {/* Remote screen share display - always in DOM so ref is never null */}
         <div className={screenShareName && !isScreenSharing
           ? (isScreenExpanded
             ? "fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4"
@@ -698,7 +701,7 @@ export function VoiceRoom({
       </CardContent>
     </Card>
 
-    {/* ═══ Idle warning — centered screen popup via portal ═══ */}
+    {/* ═══ Idle warning - centered screen popup via portal ═══ */}
     {idleWarning && isConnected && typeof document !== "undefined" && createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="mx-4 flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-yellow-500/30 bg-background p-6 shadow-2xl">

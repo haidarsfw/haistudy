@@ -22,7 +22,7 @@ import {
   Loader2,
   Lock,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeKey } from "@/lib/scope";
 import { scopeCompact } from "@/components/admin/scope-dropdown-content";

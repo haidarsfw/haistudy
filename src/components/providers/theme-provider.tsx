@@ -8,16 +8,20 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { ThemeId, FontId } from "@/types";
+import type { ThemeId, FontId, CustomAccent } from "@/types";
 import { DEFAULT_SETTINGS, THEMES, FONTS } from "@/lib/constants";
+import { ensureFontLoaded, fontFamilyStack } from "@/lib/lazy-fonts";
+import { accentToCss } from "@/lib/theme-init";
 
 interface ThemeContextValue {
   dark: boolean;
   theme: ThemeId;
   font: FontId;
+  customAccent: CustomAccent | null;
   setDark: (dark: boolean) => void;
   setTheme: (theme: ThemeId) => void;
   setFont: (font: FontId) => void;
+  setCustomAccent: (accent: CustomAccent | null) => void;
   toggleDark: () => void;
   darkModeSchedule: {
     enabled: boolean;
@@ -65,6 +69,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [dark, setDarkState] = useState(DEFAULT_SETTINGS.darkMode);
   const [theme, setThemeState] = useState<ThemeId>(DEFAULT_SETTINGS.theme);
   const [font, setFontState] = useState<FontId>(DEFAULT_SETTINGS.font);
+  const [customAccent, setCustomAccentState] = useState<CustomAccent | null>(null);
   const [darkModeSchedule, setDarkModeScheduleState] = useState(DEFAULT_SETTINGS.darkModeSchedule);
 
   // Hydrate React state from localStorage after mount
@@ -72,6 +77,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setDarkState(getStoredValue("dark", DEFAULT_SETTINGS.darkMode));
     setThemeState(getStoredValue("theme", DEFAULT_SETTINGS.theme));
     setFontState(getStoredValue("font", DEFAULT_SETTINGS.font));
+    setCustomAccentState(getStoredValue<CustomAccent | null>("customAccent", null));
     setDarkModeScheduleState(getStoredValue("darkModeSchedule", DEFAULT_SETTINGS.darkModeSchedule));
   }, []);
 
@@ -85,16 +91,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  // Apply custom VIP accent. Inline --primary beats the [data-theme] preset;
+  // clearing removes the inline props so the preset primary resumes.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (customAccent) {
+      const { primary, foreground } = accentToCss(customAccent);
+      root.style.setProperty("--primary", primary);
+      root.style.setProperty("--primary-foreground", foreground);
+    } else {
+      root.style.removeProperty("--primary");
+      root.style.removeProperty("--primary-foreground");
+    }
+  }, [customAccent]);
+
   // Apply font
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute("data-font", font);
-    const fontMap: Record<FontId, string> = {
-      jakarta: "var(--font-heading), sans-serif",
-      inter: "var(--font-body), sans-serif",
-      poppins: "var(--font-poppins), sans-serif",
-    };
-    root.style.setProperty("--font-sans", fontMap[font] || fontMap.jakarta);
+    ensureFontLoaded(font);
+    root.style.setProperty("--font-sans", fontFamilyStack(font));
   }, [font]);
 
   // Dark mode schedule check
@@ -132,6 +148,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("font", JSON.stringify(value));
   }, []);
 
+  const setCustomAccent = useCallback((accent: CustomAccent | null) => {
+    setCustomAccentState(accent);
+    if (accent) {
+      localStorage.setItem("customAccent", JSON.stringify(accent));
+    } else {
+      localStorage.removeItem("customAccent");
+    }
+  }, []);
+
   const toggleDark = useCallback(() => {
     setDark(!dark);
   }, [dark, setDark]);
@@ -149,14 +174,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       dark,
       theme,
       font,
+      customAccent,
       setDark,
       setTheme,
       setFont,
+      setCustomAccent,
       toggleDark,
       darkModeSchedule,
       setDarkModeSchedule,
     }),
-    [dark, theme, font, setDark, setTheme, setFont, toggleDark, darkModeSchedule, setDarkModeSchedule]
+    [dark, theme, font, customAccent, setDark, setTheme, setFont, setCustomAccent, toggleDark, darkModeSchedule, setDarkModeSchedule]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

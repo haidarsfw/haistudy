@@ -1,7 +1,7 @@
 {
   "name": "haistudy",
   "short_name": "haistudy",
-  "description": "Platform belajar pintar mahasiswa BINUS — materi, quiz, AI, support chat.",
+  "description": "Platform belajar pintar mahasiswa BINUS - materi, quiz, AI, support chat.",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",

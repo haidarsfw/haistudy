@@ -53,7 +53,7 @@ const FEATURES = [
 const FAQ = [
   {
     q: "Apa itu haistudy?",
-    a: "haistudy adalah platform belajar pintar untuk mahasiswa BINUS University. Kamu akan dapat materi tiap mata kuliah, quiz interaktif, flashcards, AI assistant, voice room, dan komunitas belajar bareng — semua dalam satu platform per periode ujian.",
+    a: "haistudy adalah platform belajar pintar untuk mahasiswa BINUS University. Kamu akan dapat materi tiap mata kuliah, quiz interaktif, flashcards, AI assistant, voice room, dan komunitas belajar bareng - semua dalam satu platform per periode ujian.",
   },
   {
     q: "Bagaimana cara mendapatkan akses?",
@@ -189,7 +189,7 @@ export default function LandingPage() {
       </div>
       {/* ── Hero ── */}
       <section className="relative flex flex-col lg:flex-row items-center gap-10 lg:gap-16 px-4 pb-16 pt-20 sm:pt-28 max-w-6xl mx-auto w-full">
-        {/* Animated gradient mesh orbs — desktop only (mobile GPU cost not worth it) */}
+        {/* Animated gradient mesh orbs - desktop only (mobile GPU cost not worth it) */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden sm:block">
           <div className="landing-orb-1 absolute top-10 left-1/4 h-72 w-72 rounded-full bg-primary/30" />
           <div className="landing-orb-2 absolute bottom-10 right-1/4 h-80 w-80 rounded-full bg-primary/25" />
@@ -198,10 +198,10 @@ export default function LandingPage() {
           <div className="landing-orb-2 absolute -bottom-20 left-10 h-40 w-40 rounded-full bg-primary/15" />
         </div>
 
-        {/* Dot grid pattern — desktop only (mobile GPU cost not worth it) */}
+        {/* Dot grid pattern - desktop only (mobile GPU cost not worth it) */}
         <div className="landing-dot-grid absolute inset-0 -z-[5] pointer-events-none hidden sm:block" />
 
-        {/* Floating particles — hidden on mobile for performance */}
+        {/* Floating particles - hidden on mobile for performance */}
         <div className="absolute inset-0 -z-[4] overflow-hidden pointer-events-none hidden sm:block">
           <div className="landing-particle" style={{ left: '10%', bottom: '0', '--dur': '16s', '--del': '0s' } as React.CSSProperties} />
           <div className="landing-particle" style={{ left: '25%', bottom: '0', '--dur': '20s', '--del': '3s' } as React.CSSProperties} />

@@ -55,7 +55,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Reset state + focus on open — use ref callback for immediate focus
+  // Reset state + focus on open - use ref callback for immediate focus
   useEffect(() => {
     if (open) {
       setQuery("");
@@ -64,7 +64,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     }
   }, [open]);
 
-  // Ref callback — fires immediately when the element mounts
+  // Ref callback - fires immediately when the element mounts
   // This preserves the user gesture context chain better than useEffect + setTimeout
   const inputRefCallback = useCallback(
     (el: HTMLInputElement | null) => {

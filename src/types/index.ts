@@ -122,6 +122,43 @@ export interface UserSettings {
   notifBrowserEnabled?: boolean;
   notifPushEnabled?: boolean;
   notifEmailEnabled?: boolean;
+  // VIP custom accent (HSL) - null = use preset theme primary
+  customAccent?: CustomAccent | null;
+  // Rangkuman highlights, keyed by `${scopeKey}:${subjectId}:${moduleKey}` -> UserHighlight[]
+  highlights?: Record<string, UserHighlight[]>;
+}
+
+// ============================================
+// Highlights (rangkuman) + custom accent
+// ============================================
+
+export type HighlightColor = "yellow" | "blue" | "green" | "pink" | "red";
+
+export interface UserHighlight {
+  id: string;
+  text: string;
+  color: HighlightColor;
+  ttsLine: number; // index of the data-tts-line element the highlight starts in
+  startOffset: number; // char offset within that line's text content
+  endOffset: number;
+  createdAt: string;
+}
+
+// VIP custom accent stored as HSL components (h 0-360, s/l 0-100).
+export interface CustomAccent {
+  h: number;
+  s: number;
+  l: number;
+}
+
+// A snippet saved to the VIP library - matches migration 028 schema.
+export interface SnippetLibraryItem {
+  id: string;
+  snippetText: string;
+  subjectId: string | null;
+  sourceModule: string | null;
+  color: HighlightColor | null;
+  createdAt: string;
 }
 
 export interface OnlineUser {
@@ -139,14 +176,18 @@ export interface OnlineUser {
   packageTier?: "share" | "normal" | "vip" | "diamond" | null;
 }
 
+// Chat rooms within a scope. 'global' = everyone; 'vip-lounge' = VIP/admin only.
+export type ChatChannel = "global" | "vip-lounge";
+
 export interface ChatMessage {
   id: string;
   content: string;
-  type: "text" | "image" | "audio" | "sticker";
+  type: "text" | "image" | "audio";
   mediaUrl: string | null;
   authorId: string;
   authorName: string;
   authorClass: string;
+  licenseKey?: string | null; // denormalized for profile popover; null on legacy rows
   isAdmin: boolean;
   isTester: boolean;
   packageTier?: "share" | "normal" | "vip" | "diamond";
@@ -154,7 +195,50 @@ export interface ChatMessage {
   replyToId: string | null;
   replyToName: string | null;
   replyToContent: string | null;
+  channel: ChatChannel;
   createdAt: string;
+}
+
+// ============================================
+// Direct messages (VIP 1:1) - matches migration 030 schema
+// ============================================
+
+export interface DmConversation {
+  id: string;
+  participants: [string, string]; // sorted: participants[0] < participants[1]
+  semester: number;
+  examPeriod: ExamPeriod;
+  jurusan: string;
+  lastMessageAt: string;
+  createdAt: string;
+  // Client-derived (not columns):
+  otherKey?: string;
+  otherName?: string;
+  otherTier?: "share" | "normal" | "vip" | "diamond" | null;
+  otherIsAdmin?: boolean;
+  otherOnline?: boolean;
+  lastBody?: string | null;
+  unreadCount?: number;
+}
+
+export interface DmMessage {
+  id: string;
+  conversationId: string;
+  senderKey: string;
+  body: string;
+  createdAt: string;
+  // Client-only ephemeral:
+  clientNonce?: string;
+  status?: "sending" | "sent" | "error";
+}
+
+// A VIP/admin user surfaced in the DM directory (online or offline).
+export interface DmDirectoryUser {
+  licenseKey: string;
+  name: string;
+  packageTier: "share" | "normal" | "vip" | "diamond" | null;
+  isAdmin: boolean;
+  online: boolean;
 }
 
 export interface Notification {
@@ -391,11 +475,29 @@ export interface InvoiceCounter {
 export interface UserProfile {
   email: string | null;
   phone: string | null;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  customStatus?: string | null;
+  customStatusEmoji?: string | null;
+}
+
+// Public-facing profile (returned by /api/profile/public, no email/phone).
+export interface PublicProfile {
+  licenseKey: string;
+  name: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  customStatus: string | null;
+  customStatusEmoji: string | null;
+  selectedClass: string | null;
+  packageTier: "share" | "normal" | "vip" | "diamond" | null;
+  isAdmin: boolean;
 }
 
 // Theme & font type unions
-export type ThemeId = "ocean" | "scholarly" | "espresso" | "forest" | "midnight" | "rosewood" | "stone";
-export type FontId = "jakarta" | "inter" | "poppins";
+export type ThemeId = "ocean" | "scholarly" | "espresso" | "forest" | "midnight" | "rosewood" | "stone" | "rose";
+// VIP fonts (lora/jetbrains/quicksand/merriweather) lazy-loaded on selection.
+export type FontId = "jakarta" | "inter" | "poppins" | "lora" | "jetbrains" | "quicksand" | "merriweather";
 
 export interface ThemeOption {
   id: ThemeId;
@@ -406,10 +508,14 @@ export interface ThemeOption {
 export interface FontOption {
   id: FontId;
   name: string;
+  vip?: boolean; // requires VIP/admin tier
+  // Google Fonts family + CSS var for lazy injection (VIP fonts only)
+  googleFamily?: string;
+  cssVar?: string;
 }
 
 // ============================================
-// Support chat (v2) — admin↔user 1:1 thread
+// Support chat (v2) - admin↔user 1:1 thread
 // ============================================
 
 export type SupportMessageType = "text" | "image" | "audio" | "system";

@@ -15,7 +15,7 @@ import { useHiddenMessages } from "@/hooks/use-hidden-messages";
 import { useDesktopNotification } from "@/hooks/use-desktop-notification";
 import { useActiveSupport } from "@/components/providers/active-support-provider";
 import { setTitleBadge } from "@/lib/title-badge";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import type { SupportConversationSummary, SupportMessage } from "@/types";
 import { SupportMessageList } from "./support-message-list";
 import { SupportMessageInput } from "./support-message-input";
@@ -28,7 +28,7 @@ interface Props {
   mode: SupportThreadMode;
   /** Conversation owner. For user mode, equals session.licenseKey. */
   licenseKey: string | null;
-  /** When admin selects from sidebar — passes summary for header info. */
+  /** When admin selects from sidebar - passes summary for header info. */
   ownerSummary?: SupportConversationSummary | null;
   /** Whether this thread is currently visible (for unread/title badge). */
   visible?: boolean;

@@ -3,9 +3,31 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import type { UserProfile } from "@/types";
 
 // ─── Mock store ───
-const mockProfiles = new Map<string, { email: string | null; phone: string | null; selectedClass?: string }>();
+type MockProfile = UserProfile & { selectedClass?: string };
+const mockProfiles = new Map<string, MockProfile>();
+
+const EMPTY: UserProfile = {
+  email: null,
+  phone: null,
+  avatarUrl: null,
+  bio: null,
+  customStatus: null,
+  customStatusEmoji: null,
+};
+
+function mapRow(data: Record<string, unknown>): UserProfile {
+  return {
+    email: (data.email as string) ?? null,
+    phone: (data.phone as string) ?? null,
+    avatarUrl: (data.avatar_url as string) ?? null,
+    bio: (data.bio as string) ?? null,
+    customStatus: (data.custom_status as string) ?? null,
+    customStatusEmoji: (data.custom_status_emoji as string) ?? null,
+  };
+}
 
 // ─── GET /api/profile?licenseKey=xxx ───
 export async function GET(request: Request) {
@@ -22,38 +44,47 @@ export async function GET(request: Request) {
 
     if (!isSupabaseServerConfigured) {
       const stored = mockProfiles.get(licenseKey);
-      return NextResponse.json({
-        profile: stored || { email: null, phone: null },
-      });
+      return NextResponse.json({ profile: stored ?? EMPTY });
     }
 
     const supabase = createServerClient()!;
     const { data, error } = await supabase
       .from("user_profiles")
-      .select("email, phone")
+      .select("email, phone, avatar_url, bio, custom_status, custom_status_emoji")
       .eq("license_key", licenseKey)
       .single();
 
     if (error && error.code !== "PGRST116") throw error;
 
-    return NextResponse.json({
-      profile: data || { email: null, phone: null },
-    });
+    return NextResponse.json({ profile: data ? mapRow(data) : EMPTY });
   } catch (error) {
     console.error("Profile GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
-// ─── PUT /api/profile - Save profile ───
+// ─── PUT /api/profile - Save profile (partial upsert) ───
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { licenseKey, email, phone, selectedClass } = body as {
+    const {
+      licenseKey,
+      email,
+      phone,
+      selectedClass,
+      avatarUrl,
+      bio,
+      customStatus,
+      customStatusEmoji,
+    } = body as {
       licenseKey: string;
       email?: string | null;
       phone?: string | null;
       selectedClass?: string;
+      avatarUrl?: string | null;
+      bio?: string | null;
+      customStatus?: string | null;
+      customStatusEmoji?: string | null;
     };
 
     if (!licenseKey) {
@@ -63,7 +94,8 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Shape validation — accept null/empty (clears the field) but reject garbage
+    // Shape validation - accept null/empty (clears the field) but reject garbage.
+    // Length limits mirror the DB CHECK constraints (bio<=200, status<=80, emoji<=8).
     if (email !== undefined && email !== null && email !== "") {
       if (
         typeof email !== "string" ||
@@ -78,13 +110,42 @@ export async function PUT(request: Request) {
         return NextResponse.json({ error: "Invalid phone" }, { status: 400 });
       }
     }
+    if (avatarUrl !== undefined && avatarUrl !== null && avatarUrl !== "") {
+      if (
+        typeof avatarUrl !== "string" ||
+        avatarUrl.length > 600 ||
+        !/^https:\/\//.test(avatarUrl)
+      ) {
+        return NextResponse.json({ error: "Invalid avatar URL" }, { status: 400 });
+      }
+    }
+    if (bio !== undefined && bio !== null) {
+      if (typeof bio !== "string" || bio.length > 200) {
+        return NextResponse.json({ error: "Bio too long" }, { status: 400 });
+      }
+    }
+    if (customStatus !== undefined && customStatus !== null) {
+      if (typeof customStatus !== "string" || customStatus.length > 80) {
+        return NextResponse.json({ error: "Status too long" }, { status: 400 });
+      }
+    }
+    if (customStatusEmoji !== undefined && customStatusEmoji !== null) {
+      if (typeof customStatusEmoji !== "string" || customStatusEmoji.length > 8) {
+        return NextResponse.json({ error: "Emoji too long" }, { status: 400 });
+      }
+    }
 
     if (!isSupabaseServerConfigured) {
-      const existing = mockProfiles.get(licenseKey) || { email: null, phone: null };
+      const existing = mockProfiles.get(licenseKey) ?? { ...EMPTY };
       mockProfiles.set(licenseKey, {
-        email: email ?? existing.email,
-        phone: phone ?? existing.phone,
-        selectedClass: selectedClass ?? existing.selectedClass,
+        ...existing,
+        ...(email !== undefined && { email }),
+        ...(phone !== undefined && { phone }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
+        ...(bio !== undefined && { bio }),
+        ...(customStatus !== undefined && { customStatus }),
+        ...(customStatusEmoji !== undefined && { customStatusEmoji }),
+        ...(selectedClass !== undefined && { selectedClass }),
       });
       return NextResponse.json({ success: true });
     }
@@ -98,6 +159,11 @@ export async function PUT(request: Request) {
     if (email !== undefined) upsertData.email = email;
     if (phone !== undefined) upsertData.phone = phone;
     if (selectedClass !== undefined) upsertData.selected_class = selectedClass;
+    if (avatarUrl !== undefined) upsertData.avatar_url = avatarUrl || null;
+    if (bio !== undefined) upsertData.bio = bio || null;
+    if (customStatus !== undefined) upsertData.custom_status = customStatus || null;
+    if (customStatusEmoji !== undefined)
+      upsertData.custom_status_emoji = customStatusEmoji || null;
 
     const { error } = await supabase
       .from("user_profiles")

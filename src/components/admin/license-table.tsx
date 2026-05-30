@@ -43,7 +43,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { LicenseForm } from "./license-form";
 import { OauthLinkCell } from "./oauth-link-cell";
 import type { LicenseKey, Activation, Device } from "@/types";
@@ -292,9 +292,9 @@ function UserDetailDialog({
               <div className="grid grid-cols-2 gap-3">
                 <InfoField icon={<User className="h-3.5 w-3.5" />} label="Username" value={activation.userName} />
                 <InfoField icon={<KeyRound className="h-3.5 w-3.5" />} label="Nama" value={license.name} />
-                <InfoField icon={<Mail className="h-3.5 w-3.5" />} label="Email" value={profileEmail || activation.email || "—"} />
-                <InfoField icon={<Phone className="h-3.5 w-3.5" />} label="Phone" value={profilePhone || "—"} />
-                <InfoField icon={<Globe className="h-3.5 w-3.5" />} label="Referral Code" value={activation.referralCode || "—"} />
+                <InfoField icon={<Mail className="h-3.5 w-3.5" />} label="Email" value={profileEmail || activation.email || "-"} />
+                <InfoField icon={<Phone className="h-3.5 w-3.5" />} label="Phone" value={profilePhone || "-"} />
+                <InfoField icon={<Globe className="h-3.5 w-3.5" />} label="Referral Code" value={activation.referralCode || "-"} />
                 <InfoField
                   icon={<Calendar className="h-3.5 w-3.5" />}
                   label="Aktivasi"

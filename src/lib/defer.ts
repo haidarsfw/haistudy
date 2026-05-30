@@ -3,7 +3,7 @@
  *
  * Used to push non-critical realtime/SW subscriptions off the FCP/LCP path so
  * PageSpeed scores TBT and INP against an empty main thread. Real users see
- * the subscribe ~1.5s after first paint — within network roundtrip noise.
+ * the subscribe ~1.5s after first paint - within network roundtrip noise.
  *
  * Returns a cancel function so callers can abort if the host effect unmounts
  * before idle fires (Strict Mode double-invoke, route navigation, etc.).

@@ -25,7 +25,7 @@ export function AdminSupportChat() {
   });
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  // Track presence of the selected user — admin always sees a "user" presence
+  // Track presence of the selected user - admin always sees a "user" presence
   const { presence } = useSupportPresence(selectedKey, "user");
   const { isMuted, toggle: toggleMute } = useSupportMutes();
   const muted = selectedKey ? isMuted(selectedKey) : false;
@@ -62,7 +62,7 @@ export function AdminSupportChat() {
       style={{ height: "min(75vh, 700px)" }}
     >
       <div className="flex h-full">
-        {/* Left: list — full width on mobile when no selection, fixed sidebar on desktop */}
+        {/* Left: list - full width on mobile when no selection, fixed sidebar on desktop */}
         <div
           className={`${
             selectedKey ? "hidden sm:flex" : "flex"
@@ -76,7 +76,7 @@ export function AdminSupportChat() {
           />
         </div>
 
-        {/* Right: thread — full width on mobile when selected, flex-1 on desktop */}
+        {/* Right: thread - full width on mobile when selected, flex-1 on desktop */}
         <div
           className={`${
             selectedKey ? "flex" : "hidden sm:flex"

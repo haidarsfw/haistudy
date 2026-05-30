@@ -15,7 +15,7 @@ import { akuntansiQuiz } from "./akuntansi-quiz";
 export const content: Record<string, SubjectContent> = {
   statistik: {
     materi: [
-      // Verified 2026-04-15 — audit hasil swap-pair (driveIds sebelumnya terbalik urutannya)
+      // Verified 2026-04-15 - audit hasil swap-pair (driveIds sebelumnya terbalik urutannya)
       { id: 1, title: "Introduction to Statistics", driveId: "1BfkJrC8Yqx0FKUFrBm90jHPO8YlnK-tcWWKs1XD_fNw", type: "drive-gslides", session: "1", xp: 10 },
       { id: 2, title: "Describing Data: Frequency Tables, Frequency Distributions, and Graphic Presentation", driveId: "1EGIHIxNhIMnPDM1EpfZIBEzhLv9WrLrHYvBLbSnx8Ys", type: "drive-gslides", session: "2", xp: 10 },
       { id: 3, title: "Describing Data: Numerical Measures", driveId: "1fptNciNWzhXfEyQyAISVl_VQSgCIWdK_oaIBX3zr0cw", type: "drive-gslides", session: "3", xp: 10 },
@@ -23,7 +23,7 @@ export const content: Record<string, SubjectContent> = {
       { id: 5, title: "Continuous Probability Distributions", driveId: "10VWWLcEqE9m98dsb0k-J9xhwSBRzcCv6YlqHBs2a5vE", type: "drive-gslides", session: "5-6", xp: 10 },
       { id: 6, title: "Discrete Probability Distributions", driveId: "1iJW_GQiv9fSMQZAZTJVRWIiGxBqxnZ4jsqsYP-dIh98", type: "drive-gslides", session: "7", xp: 10 },
       // Materi tambahan dari dosen LE86
-      { id: 101, title: "Frequency Distribution", driveId: "1sJJxdAHSZGckdG0eTTb4XUaeSOUOCIy54s4sJF1ETMU", type: "drive-gslides", xp: 5, sectionLabel: "Materi Tambahan — LE86", sectionNote: "Rangkuman yang lebih mudah dipahami dari Prof. Dr. PURWANTO, A.Md., S.T., M.M." },
+      { id: 101, title: "Frequency Distribution", driveId: "1sJJxdAHSZGckdG0eTTb4XUaeSOUOCIy54s4sJF1ETMU", type: "drive-gslides", xp: 5, sectionLabel: "Materi Tambahan - LE86", sectionNote: "Rangkuman yang lebih mudah dipahami dari Prof. Dr. PURWANTO, A.Md., S.T., M.M." },
       { id: 102, title: "Tabel Z", driveId: "1nPcVv2ot0fqrwsi5xhfwAUfSnV7xRHQw", type: "drive-pdf", xp: 5 },
       { id: 103, title: "Describing Data: Revisi Quartil", driveId: "14FQuP-GzgBGILDueC_9lbIW1ZztT4Pld7kfYbv9ximE", type: "drive-gslides", xp: 5 },
       { id: 104, title: "Gabungan Continuous Probability", driveId: "14lsM5j08NdetKlCp4zlVKZFA_ukXlnR-", type: "drive-pdf", xp: 5 },
@@ -205,16 +205,16 @@ export const content: Record<string, SubjectContent> = {
     ],
     kisiKisi: [
       { topic: "Bagian 1: Teori (Bobot 50%)", items: [
-        "Pengantar Laporan Keuangan (Sesi 1) — Memahami berbagai macam laporan keuangan dasar (Financial Statements). Komponen utama: Laporan Laba Rugi, Laporan Perubahan Ekuitas, Neraca, dan Laporan Arus Kas.",
-        "Fraud, Internal Control, & Cash (Sesi 5 - Bab 7) — Fraud: Definisi dan faktor penyebab. Internal Control: Ciri pengendalian yang bagus, terutama adanya pengawasan ketat terhadap aset perusahaan. Cash: Petty Cash (pengelolaan kas kecil) dan Bank Reconciliation (rekonsiliasi antara catatan bank dan catatan perusahaan).",
-        "Statement of Cash Flows (Sesi 5 - Bab 12) — Kegunaan: Mengapa laporan arus kas penting bagi pengguna informasi keuangan. Klasifikasi Arus Kas: Aktivitas Operasi, Investasi, dan Pendanaan. Metode Penyajian: Perbedaan antara Metode Langsung (Direct) dan Metode Tidak Langsung (Indirect). Format: Memahami struktur pelaporan untuk kedua metode tersebut.",
-        "Further Financial Statement (Bab 2) — Pendalaman struktur laporan keuangan yang lebih kompleks.",
+        "Pengantar Laporan Keuangan (Sesi 1) - Memahami berbagai macam laporan keuangan dasar (Financial Statements). Komponen utama: Laporan Laba Rugi, Laporan Perubahan Ekuitas, Neraca, dan Laporan Arus Kas.",
+        "Fraud, Internal Control, & Cash (Sesi 5 - Bab 7) - Fraud: Definisi dan faktor penyebab. Internal Control: Ciri pengendalian yang bagus, terutama adanya pengawasan ketat terhadap aset perusahaan. Cash: Petty Cash (pengelolaan kas kecil) dan Bank Reconciliation (rekonsiliasi antara catatan bank dan catatan perusahaan).",
+        "Statement of Cash Flows (Sesi 5 - Bab 12) - Kegunaan: Mengapa laporan arus kas penting bagi pengguna informasi keuangan. Klasifikasi Arus Kas: Aktivitas Operasi, Investasi, dan Pendanaan. Metode Penyajian: Perbedaan antara Metode Langsung (Direct) dan Metode Tidak Langsung (Indirect). Format: Memahami struktur pelaporan untuk kedua metode tersebut.",
+        "Further Financial Statement (Bab 2) - Pendalaman struktur laporan keuangan yang lebih kompleks.",
       ] },
       { topic: "Bagian 2: Cases / Praktika (Bobot 50%)", items: [
-        "Siklus Akuntansi Perusahaan Jasa (Bab 2) — Fokus pada penjurnalan transaksi umum, contohnya: Pembayaran Hutang: (D) Accounts Payable, (K) Cash. Pendapatan Jasa (Kredit): (D) Accounts Receivable, (K) Service Revenue. Pembelian Perlengkapan (Tunai): (D) Supplies, (K) Cash.",
-        "Jurnal Penyesuaian / Adjusting Entries (Bab 3) — 5 kategori akun utama: Prepaid Expense (beban dibayar dimuka), Unearned Revenue (pendapatan diterima dimuka), Accrued Revenue (pendapatan yang masih harus diterima), Accrued Expense (beban yang masih harus dibayar), Depreciation (penyusutan aset tetap).",
-        "Laporan Laba Rugi / Income Statement (Bab 4) — Penyusunan laporan laba rugi dalam format Multiple-Step. Memisahkan antara pendapatan/beban operasional dan non-operasional untuk mendapatkan Laba Kotor (Gross Profit) dan Laba Bersih (Net Income).",
-        "Analisis Rasio Keuangan (Bab 13) — Menghitung rasio keuangan berdasarkan data laporan yang disediakan. Kategori rasio: Rasio Likuiditas, Profitabilitas, dan Solvabilitas.",
+        "Siklus Akuntansi Perusahaan Jasa (Bab 2) - Fokus pada penjurnalan transaksi umum, contohnya: Pembayaran Hutang: (D) Accounts Payable, (K) Cash. Pendapatan Jasa (Kredit): (D) Accounts Receivable, (K) Service Revenue. Pembelian Perlengkapan (Tunai): (D) Supplies, (K) Cash.",
+        "Jurnal Penyesuaian / Adjusting Entries (Bab 3) - 5 kategori akun utama: Prepaid Expense (beban dibayar dimuka), Unearned Revenue (pendapatan diterima dimuka), Accrued Revenue (pendapatan yang masih harus diterima), Accrued Expense (beban yang masih harus dibayar), Depreciation (penyusutan aset tetap).",
+        "Laporan Laba Rugi / Income Statement (Bab 4) - Penyusunan laporan laba rugi dalam format Multiple-Step. Memisahkan antara pendapatan/beban operasional dan non-operasional untuk mendapatkan Laba Kotor (Gross Profit) dan Laba Bersih (Net Income).",
+        "Analisis Rasio Keuangan (Bab 13) - Menghitung rasio keuangan berdasarkan data laporan yang disediakan. Kategori rasio: Rasio Likuiditas, Profitabilitas, dan Solvabilitas.",
       ] },
     ],
     kisiKisiNote: "",

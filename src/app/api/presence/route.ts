@@ -8,7 +8,7 @@ import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scop
 /**
  * POST /api/presence
  *
- * v4 — Optimized: single UPSERT per heartbeat (no SELECT first).
+ * v4 - Optimized: single UPSERT per heartbeat (no SELECT first).
  * Time tracking is handled purely client-side: the heartbeat interval
  * is 60s visible / 5m hidden. Server just upserts the row and does the
  * minutes flush in one pass using the returned `last_seen` from the DB
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
     }
 
-    // Scope enforcement — presence is scoped per (user_id, scope)
+    // Scope enforcement - presence is scoped per (user_id, scope)
     const scope = await requireScope(request);
 
     if (!isSupabaseServerConfigured) {
@@ -57,10 +57,10 @@ export async function POST(request: Request) {
     const nowISO = now.toISOString();
 
     // ═══════════════════════════════════════════
-    // OFFLINE — lightweight beacon handler
+    // OFFLINE - lightweight beacon handler
     // ═══════════════════════════════════════════
     if (action === "offline") {
-      // Single UPDATE — scoped
+      // Single UPDATE - scoped
       await scopeEq(scope)(
         supabase
           .from("presence")
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     // ═══════════════════════════════════════════
-    // HEARTBEAT — single SELECT+UPSERT merged
+    // HEARTBEAT - single SELECT+UPSERT merged
     // Read + compute + write in one round-trip using a DB function
     // ═══════════════════════════════════════════
 
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       minutesToFlush = Math.floor(newAccumulator / 60);
       newAccumulator = newAccumulator % 60;
 
-      // Single UPSERT — PK is now (user_id, semester, exam_period, jurusan)
+      // Single UPSERT - PK is now (user_id, semester, exam_period, jurusan)
       await supabase.from("presence").upsert(
         {
           user_id: userId,
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
         { onConflict: "user_id,semester,exam_period,jurusan" }
       );
 
-      // Flush minutes — fire-and-forget (don't await, don't block response)
+      // Flush minutes - fire-and-forget (don't await, don't block response)
       if (minutesToFlush > 0 && licenseKey) {
         void supabase
           .rpc("increment_license_field", {
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       }
     } catch {
       // Graceful degradation: if presence table errors, just return success
-      // Don't throw — presence failure shouldn't break the app
+      // Don't throw - presence failure shouldn't break the app
     }
 
     return NextResponse.json({ success: true });

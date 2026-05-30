@@ -13,9 +13,9 @@ const STORAGE_KEY = "hs-support-last-read";
 /**
  * Tracks unread support messages.
  *  - For users: counts admin messages since last time they opened the support panel
- *    (kept simple — single conversation, localStorage-tracked).
+ *    (kept simple - single conversation, localStorage-tracked).
  *  - For admins: total unread USER messages across ALL conversations.
- *    Always derived from server (`/api/support?all=true`) to avoid drift —
+ *    Always derived from server (`/api/support?all=true`) to avoid drift -
  *    refetch on relevant realtime events + visibility change.
  */
 export function useSupportUnread() {
@@ -39,7 +39,7 @@ export function useSupportUnread() {
     if (!session?.licenseKey) return;
     try {
       if (session.isAdmin) {
-        // Always derive from server-truth — sum unread across conversations
+        // Always derive from server-truth - sum unread across conversations
         const res = await fetch("/api/support?all=true", { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
@@ -79,7 +79,7 @@ export function useSupportUnread() {
     }
   }, [session?.licenseKey, session?.isAdmin, getLastRead]);
 
-  // Debounced fetch — coalesce burst of realtime events
+  // Debounced fetch - coalesce burst of realtime events
   const debouncedFetch = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(fetchUnread, 350);

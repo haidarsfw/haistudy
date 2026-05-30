@@ -10,6 +10,7 @@ export interface AiMessage {
   content: string;
   timestamp: number;
   image?: string; // base64 data URL for user-uploaded images
+  reasoning?: string; // DeepSeek thinking trace (reasoning_content stream)
 }
 
 interface UseAiChatReturn {
@@ -23,7 +24,8 @@ interface UseAiChatReturn {
     packageTier?: "share" | "normal" | "vip" | "diamond",
     model?: "fast" | "reasoning",
     isAdmin?: boolean,
-    image?: string | null
+    image?: string | null,
+    referenceText?: string | null
   ) => Promise<void>;
   stopStreaming: () => void;
   clearHistory: () => void;
@@ -32,6 +34,7 @@ interface UseAiChatReturn {
   switchConversation: (id: string) => void;
   deleteConversation: (id: string) => void;
   createNewConversation: () => void;
+  renameConversation: (id: string, title: string) => void;
 }
 
 // Convert internal messages to Gemini history format
@@ -61,16 +64,29 @@ export function useAiChat(): UseAiChatReturn {
     saveMessages,
     createConversation,
     deleteConversation: deleteConv,
+    renameConversation,
+    autoRenameConversation,
   } = useAiChatHistory();
 
   // Keep a ref of conversations to avoid stale reads
   const conversationsRef = useRef(conversations);
   conversationsRef.current = conversations;
 
+  // When sendMessage creates a conversation on the fly, it sets activeId to a
+  // brand-new empty conv. The [activeId] load-effect below would then fire and
+  // overwrite the just-added user message with that empty conv's messages.
+  // This ref lets sendMessage tell the effect to skip exactly one load for the
+  // id it just created (first-click / template-seed bug).
+  const skipLoadIdRef = useRef<string | null>(null);
+
   // Load messages when activeId changes
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
+      return;
+    }
+    if (skipLoadIdRef.current === activeId) {
+      skipLoadIdRef.current = null;
       return;
     }
     const conv = conversationsRef.current.find((c) => c.id === activeId);
@@ -85,7 +101,8 @@ export function useAiChat(): UseAiChatReturn {
       packageTier?: "share" | "normal" | "vip" | "diamond",
       model?: "fast" | "reasoning",
       isAdmin?: boolean,
-      image?: string | null
+      image?: string | null,
+      referenceText?: string | null
     ) => {
       if (!text.trim() || isStreaming) return;
 
@@ -93,6 +110,9 @@ export function useAiChat(): UseAiChatReturn {
       let convId = activeId;
       if (!convId) {
         convId = await createConversation();
+        // createConversation sets activeId to this new empty conv. Suppress the
+        // load-effect's one-time reset so it doesn't wipe the message we add next.
+        skipLoadIdRef.current = convId;
       }
 
       setError(null);
@@ -140,6 +160,7 @@ export function useAiChat(): UseAiChatReturn {
             model: model || "fast",
             isAdmin: isAdmin || false,
             ...(image ? { image } : {}),
+            ...(referenceText ? { referenceText } : {}),
           }),
           signal: controller.signal,
         });
@@ -195,6 +216,15 @@ export function useAiChat(): UseAiChatReturn {
               if (parsed.error) {
                 throw new Error(parsed.error);
               }
+              if (parsed.reasoning) {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId
+                      ? { ...m, reasoning: (m.reasoning || "") + parsed.reasoning }
+                      : m
+                  )
+                );
+              }
               if (parsed.text) {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -234,11 +264,36 @@ export function useAiChat(): UseAiChatReturn {
           const currentMessages = messagesRef.current;
           if (convId && currentMessages.length > 0) {
             saveMessages(convId, currentMessages);
+
+            // Auto-title on the first completed exchange: exactly one user msg
+            // and one non-empty assistant reply, and no title set yet. The
+            // rename endpoint persists the title server-side; the hook mirrors
+            // it locally. Fire-and-forget - never blocks the UI.
+            const conv = conversationsRef.current.find((c) => c.id === convId);
+            const firstUser = currentMessages.find((m) => m.role === "user");
+            const firstAssistant = currentMessages.find(
+              (m) => m.role === "assistant" && m.content.trim().length > 0
+            );
+            const exchangeCount = currentMessages.filter(
+              (m) => m.role === "user"
+            ).length;
+            if (
+              !conv?.title?.trim() &&
+              exchangeCount === 1 &&
+              firstUser &&
+              firstAssistant
+            ) {
+              autoRenameConversation(
+                convId,
+                firstUser.content,
+                firstAssistant.content
+              );
+            }
           }
         }, 0);
       }
     },
-    [isStreaming, activeId, createConversation, saveMessages]
+    [isStreaming, activeId, createConversation, saveMessages, autoRenameConversation]
   );
 
   const stopStreaming = useCallback(() => {
@@ -269,6 +324,8 @@ export function useAiChat(): UseAiChatReturn {
     if (abortRef.current) {
       abortRef.current.abort();
     }
+    // Explicit switch must always load - never honor a stale send-time skip.
+    skipLoadIdRef.current = null;
     // Save current conversation before switching
     if (activeId && messagesRef.current.length > 0) {
       saveMessages(activeId, messagesRef.current);
@@ -314,5 +371,6 @@ export function useAiChat(): UseAiChatReturn {
     switchConversation,
     deleteConversation,
     createNewConversation,
+    renameConversation,
   };
 }

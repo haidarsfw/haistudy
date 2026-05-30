@@ -11,7 +11,7 @@ const POLL_INTERVAL_MS = 15_000;
  * - Admin panel: pass licenseKey=<conversation owner> → polls per-conversation
  *
  * Server is the single source of truth for `online` (derived from last_seen
- * freshness). No client-side decay timer — that caused flicker against the
+ * freshness). No client-side decay timer - that caused flicker against the
  * server's authoritative response.
  */
 export function useSupportPresence(

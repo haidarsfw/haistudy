@@ -75,7 +75,7 @@ export function OnlineUsers() {
               ? subjectMap.get(user.currentSubject) ?? null
               : null;
             // Subjects: visible to all (preserves existing UX).
-            // Page labels (dashboard, forum, etc.): admin-only — others don't
+            // Page labels (dashboard, forum, etc.): admin-only - others don't
             // need to know what non-subject page a user is viewing.
             const locationText =
               subject?.name ||
@@ -138,7 +138,7 @@ export function OnlineUsers() {
                   <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
                 )}
 
-                {/* Location badge — subject name or page label */}
+                {/* Location badge - subject name or page label */}
                 {locationText && !masked && (
                   <span className="text-[10px] text-muted-foreground truncate max-w-[90px]">
                     {locationText}

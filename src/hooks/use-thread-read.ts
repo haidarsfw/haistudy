@@ -20,7 +20,7 @@ function saveReadSet(set: Set<string>) {
 
 /**
  * Tracks which forum threads the user has already seen.
- * Purely localStorage-based — zero API calls.
+ * Purely localStorage-based - zero API calls.
  */
 export function useThreadRead() {
   const [readIds, setReadIds] = useState<Set<string>>(new Set());

@@ -4,7 +4,7 @@ import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBookmarks, type BookmarkItem } from "@/hooks/use-bookmarks";
 import { useTranslation } from "@/components/providers/language-provider";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { sounds } from "@/lib/sounds";
 
 interface BookmarkButtonProps {

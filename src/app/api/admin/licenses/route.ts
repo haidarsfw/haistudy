@@ -255,7 +255,7 @@ export async function GET(request: Request) {
       };
     }
 
-    // OAuth links — map license_key → { email, linkedAt, provider }
+    // OAuth links - map license_key → { email, linkedAt, provider }
     const oauthLinks: Record<
       string,
       { email: string; linkedAt: string; provider: string }
@@ -293,7 +293,10 @@ export async function POST(request: Request) {
 
     const resolved = await resolveAdminScope(request);
     const body = await request.json();
-    const { key, name, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier, linkedEmail } = body;
+    const { key: rawKey, name, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier, linkedEmail } = body;
+    // Keys are looked up uppercased at login (validate route uppercases input);
+    // store them uppercased so custom admin-typed keys match on login.
+    const key = typeof rawKey === "string" ? rawKey.trim().toUpperCase() : rawKey;
 
     // Allow body.scope override (e.g. "All periods" mode admin explicitly picks a scope in form).
     let scope = resolved.mode === "scoped" ? resolved.scope : null;
@@ -556,7 +559,7 @@ export async function PUT(request: Request) {
         }
       }
     } else {
-      // No change requested — fetch current link to surface in response.
+      // No change requested - fetch current link to surface in response.
       const { data: existing } = await supabase
         .from("oauth_links")
         .select("email")

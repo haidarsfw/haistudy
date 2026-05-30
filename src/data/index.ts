@@ -1,5 +1,5 @@
 // ============================================
-// Data manifest — scope-aware content loaders
+// Data manifest - scope-aware content loaders
 // ============================================
 // Per-scope loaders use a static key map so Turbopack/webpack can tree-shake
 // per-scope chunks at build time (template-string dynamic imports often
@@ -15,7 +15,7 @@ import type { ScopeTuple, ScopeKey } from "@/types/scope";
 import type { Subject, SubjectContent, Schedule, ForumThread } from "@/types";
 import { scopeKey } from "@/lib/scope";
 
-// Authoritative — must match AVAILABLE_SCOPES in src/lib/scope.ts.
+// Authoritative - must match AVAILABLE_SCOPES in src/lib/scope.ts.
 export const AVAILABLE_SCOPES: ScopeTuple[] = [
   { semester: 2, examPeriod: "uts", jurusan: "bm" },
   { semester: 2, examPeriod: "uas", jurusan: "bm" },

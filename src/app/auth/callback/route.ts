@@ -32,7 +32,7 @@ function redirectToLoginError(
 
 /**
  * GET /auth/callback?code=…
- * OAuth callback — exchanges the Supabase Auth code, looks up the linked
+ * OAuth callback - exchanges the Supabase Auth code, looks up the linked
  * license via oauth_links, runs the shared activateLicense pipeline, and
  * lands the user on the scoped dashboard.
  */

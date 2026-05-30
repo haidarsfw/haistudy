@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useWebPush } from "@/hooks/use-web-push";
 import { useSession } from "@/components/providers/session-provider";
 import { sounds } from "@/lib/sounds";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 const DISMISSED_AT_KEY = "hs-notif-banner-dismissed-at";
 const REPROMPT_AFTER_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -53,7 +53,7 @@ export function EnableNotificationsBanner() {
   if (!supported && !iosNeedsInstall) return null;
   if (permission === "denied") return null; // can't re-prompt programmatically
   if (supported && permission === "granted" && !subscribed) {
-    // permission granted but no subscription — show "Enable" so user can subscribe
+    // permission granted but no subscription - show "Enable" so user can subscribe
   }
 
   const handleDismiss = () => {

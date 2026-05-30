@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RATE_LIMITS } from "@/lib/constants";
 import { useTranslation } from "@/components/providers/language-provider";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface ReminderInputProps {
   value: string | null;

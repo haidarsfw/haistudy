@@ -13,13 +13,25 @@ import {
   Plus,
   RotateCcw,
   Headphones,
+  Eraser,
 } from "lucide-react";
 import { parseRangkuman } from "@/lib/content-parser";
 import { loadRangkuman } from "@/data";
 import { useScope } from "@/components/providers/scope-provider";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useSession } from "@/components/providers/session-provider";
+import { useHighlights } from "@/hooks/use-highlights";
+import { canUseVipFeatures } from "@/lib/tier";
+import {
+  HighlightTooltip,
+  computeSelectionAnchor,
+  applyHighlightsToDOM,
+} from "./highlight-tooltip";
 import { TTSController } from "./tts-controller";
+import { toast } from "@/components/ui/toast";
+import { openAiWithReference } from "@/lib/events";
+import type { HighlightColor } from "@/types";
 
 type ReadingMode = "light" | "dark" | "sepia";
 
@@ -51,12 +63,28 @@ export function RangkumanTab({
   const contentRef = useRef<HTMLDivElement>(null);
   const fullscreenContentRef = useRef<HTMLDivElement>(null);
 
+  // Session + VIP gate for highlight colors / anti-copy bypass
+  const { session } = useSession();
+  const canVip = canUseVipFeatures(session);
+  const isAdmin = session?.isAdmin ?? false;
+
+  // Highlight state
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipMode, setTooltipMode] = useState<"create" | "manage">("create");
+  const [pendingAnchor, setPendingAnchor] = useState<{
+    text: string;
+    ttsLine: number;
+    startOffset: number;
+    endOffset: number;
+  } | null>(null);
+  const [managedHighlightId, setManagedHighlightId] = useState<string | null>(null);
+
   // Detect TTS support after mount (SSR-safe).
   useEffect(() => {
     setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
   }, []);
 
-  const { scope } = useScope();
+  const { scope, scopeKey } = useScope();
   const [rangkumanData, setRangkumanData] = useState<Record<string, string> | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +96,155 @@ export function RangkumanTab({
     };
   }, [scope, subjectId]);
   const modules = rangkumanData ? Object.keys(rangkumanData) : [];
+
+  const { highlights, addHighlight, removeHighlight, clearAll } = useHighlights(
+    scopeKey,
+    subjectId,
+    selectedModule
+  );
+
+  // Re-apply stored highlights to the DOM whenever highlights list or
+  // selected module changes. Uses requestAnimationFrame so it runs after
+  // React has painted the new content.
+  const onClickHighlight = useCallback((id: string) => {
+    // Find the highlight's mark element to position the tooltip.
+    const mark = contentRef.current?.querySelector<HTMLElement>(
+      `mark[data-hl-id="${id}"]`
+    );
+    if (mark) {
+      const rect = mark.getBoundingClientRect();
+      setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
+      setTooltipMode("manage");
+      setManagedHighlightId(id);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!contentRef.current || !selectedModule) return;
+    const frame = requestAnimationFrame(() => {
+      if (contentRef.current) {
+        applyHighlightsToDOM(contentRef.current, highlights, onClickHighlight);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [highlights, selectedModule, onClickHighlight]);
+
+  // Show tooltip on mouseup/touchend when there's a text selection.
+  const handleSelectionEnd = useCallback(() => {
+    if (!contentRef.current) return;
+    const anchor = computeSelectionAnchor(contentRef.current);
+    if (anchor) {
+      setPendingAnchor({
+        text: anchor.text,
+        ttsLine: anchor.ttsLine,
+        startOffset: anchor.startOffset,
+        endOffset: anchor.endOffset,
+      });
+      setTooltipPos({ x: anchor.rect.left + anchor.rect.width / 2, y: anchor.rect.top });
+      setTooltipMode("create");
+      setManagedHighlightId(null);
+    }
+  }, []);
+
+  // Dismiss tooltip on outside click or scroll.
+  useEffect(() => {
+    if (!tooltipPos) return;
+    const dismiss = () => {
+      setTooltipPos(null);
+      setPendingAnchor(null);
+      setManagedHighlightId(null);
+    };
+    const onScroll = () => dismiss();
+    const onClick = (e: MouseEvent) => {
+      // Don't dismiss if clicking inside the tooltip itself.
+      const el = e.target as HTMLElement;
+      if (el.closest?.("[data-hl-tooltip]")) return;
+      dismiss();
+    };
+    document.addEventListener("scroll", onScroll, true);
+    document.addEventListener("mousedown", onClick, true);
+    return () => {
+      document.removeEventListener("scroll", onScroll, true);
+      document.removeEventListener("mousedown", onClick, true);
+    };
+  }, [tooltipPos]);
+
+  // Save highlight + optional save-to-library.
+  const handlePickColor = useCallback(
+    (color: HighlightColor) => {
+      if (!canVip && color !== "yellow") {
+        toast.info(t("highlight.color_locked"));
+        return;
+      }
+      if (!pendingAnchor) return;
+      addHighlight({ ...pendingAnchor, color });
+      toast.success(t("highlight.saved"));
+      setTooltipPos(null);
+      setPendingAnchor(null);
+      window.getSelection()?.removeAllRanges();
+    },
+    [canVip, pendingAnchor, addHighlight, t]
+  );
+
+  const handleSaveToLibrary = useCallback(async () => {
+    const text = pendingAnchor?.text
+      ?? (managedHighlightId
+        ? highlights.find((h) => h.id === managedHighlightId)?.text
+        : null);
+    if (!text) return;
+    if (!canVip) {
+      toast.info(t("library.vip_only"));
+      return;
+    }
+    try {
+      const res = await fetch("/api/snippets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          snippetText: text,
+          subjectId,
+          sourceModule: selectedModule,
+          color: managedHighlightId
+            ? highlights.find((h) => h.id === managedHighlightId)?.color
+            : "yellow",
+        }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      toast.success(t("highlight.added_to_library"));
+    } catch {
+      toast.error(t("profile.save_error"));
+    }
+    setTooltipPos(null);
+    setPendingAnchor(null);
+    setManagedHighlightId(null);
+    window.getSelection()?.removeAllRanges();
+  }, [pendingAnchor, managedHighlightId, highlights, canVip, subjectId, selectedModule, t]);
+
+  const handleRemoveHighlight = useCallback(() => {
+    if (managedHighlightId) {
+      removeHighlight(managedHighlightId);
+    }
+    setTooltipPos(null);
+    setManagedHighlightId(null);
+  }, [managedHighlightId, removeHighlight]);
+
+  const handleClearHighlights = useCallback(() => {
+    clearAll();
+    setTooltipPos(null);
+    setManagedHighlightId(null);
+    toast.success(t("highlight.cleared_all"));
+  }, [clearAll, t]);
+
+  // Issue 10: "Tanya AI" — open the AI panel grounded in the selected text.
+  const handleAskAI = useCallback(() => {
+    const text =
+      pendingAnchor?.text || window.getSelection()?.toString().trim() || "";
+    if (!text) return;
+    openAiWithReference({ text, subjectId });
+    setTooltipPos(null);
+    setPendingAnchor(null);
+    window.getSelection()?.removeAllRanges();
+  }, [pendingAnchor, subjectId]);
 
   // Follow global theme unless manually overridden
   useEffect(() => {
@@ -92,7 +269,7 @@ export function RangkumanTab({
   const handleStartTTS = useCallback(() => {
     if (!selectedModule || !rangkumanData?.[selectedModule]) return;
     if (!ttsSupported) {
-      alert("Browser Anda tidak mendukung Text-to-Speech.");
+      toast.error("Browser Anda tidak mendukung Text-to-Speech.");
       return;
     }
     setTtsActive(true);
@@ -120,8 +297,10 @@ export function RangkumanTab({
       if (idx === -1) continue;
 
       const mark = document.createElement("mark");
+      // Visible box + glow on the exact quoted text so a snippet jump lands
+      // somewhere obvious. Ring + bg + shadow; faded out after 4s.
       mark.className =
-        "bg-primary/30 rounded px-0.5 transition-colors duration-700";
+        "rounded px-0.5 bg-primary/30 ring-2 ring-primary shadow-[0_0_0_4px_rgba(0,0,0,0)] transition-all duration-700";
 
       const range = document.createRange();
       range.setStart(node, idx);
@@ -130,10 +309,10 @@ export function RangkumanTab({
 
       mark.scrollIntoView({ behavior: "smooth", block: "center" });
 
-      // Fade out after 4 seconds
+      // Fade out after 4 seconds, then unwrap the mark.
       setTimeout(() => {
         mark.className =
-          "bg-transparent rounded px-0.5 transition-colors duration-700";
+          "rounded px-0.5 bg-transparent ring-0 transition-all duration-700";
         setTimeout(() => {
           const parent = mark.parentNode;
           if (parent) {
@@ -174,22 +353,55 @@ export function RangkumanTab({
     };
   }, [fullscreen, lightboxSrc]);
 
-  // Block copy/paste on rangkuman content
+  // Anti-copy: block copy/cut/contextmenu/keyboard shortcuts for non-admin.
+  // Admin bypass: admins can copy freely.
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    if (isAdmin) return; // admin bypass
+
+    const blockKeys = (e: KeyboardEvent) => {
       if (
         (e.ctrlKey || e.metaKey) &&
-        ["c", "u", "p", "s"].includes(e.key.toLowerCase())
+        ["c", "x", "u", "p", "s"].includes(e.key.toLowerCase())
       ) {
         e.preventDefault();
+        toast.info(t("rangkuman.copy_blocked"));
       }
     };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
+    const blockCopyCut = (e: ClipboardEvent) => {
+      e.preventDefault();
+      // Clear the payload so even a native context-menu "Copy" (which still
+      // fires the copy event) yields an empty clipboard, not the selection.
+      e.clipboardData?.setData("text/plain", "");
+      toast.info(t("rangkuman.copy_blocked"));
+    };
+    const blockContext = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    // Attach to the content containers as well as the document so the handler
+    // fires regardless of where the selection lives in the tree.
+    const nodes: Array<Document | HTMLElement> = [document];
+    if (contentRef.current) nodes.push(contentRef.current);
+    if (fullscreenContentRef.current) nodes.push(fullscreenContentRef.current);
+
+    document.addEventListener("keydown", blockKeys);
+    for (const node of nodes) {
+      node.addEventListener("copy", blockCopyCut as EventListener);
+      node.addEventListener("cut", blockCopyCut as EventListener);
+      node.addEventListener("contextmenu", blockContext as EventListener);
+    }
+    return () => {
+      document.removeEventListener("keydown", blockKeys);
+      for (const node of nodes) {
+        node.removeEventListener("copy", blockCopyCut as EventListener);
+        node.removeEventListener("cut", blockCopyCut as EventListener);
+        node.removeEventListener("contextmenu", blockContext as EventListener);
+      }
+    };
+  }, [isAdmin, t, fullscreen, selectedModule]);
 
   // Event delegation: click on any slide image to open lightbox.
-  // MUST be declared BEFORE the conditional early return below — otherwise
+  // MUST be declared BEFORE the conditional early return below - otherwise
   // hook count changes across renders (none on first render when data is
   // still loading, then one once data arrives) and React throws #310.
   const handleContentClick = useCallback((e: React.MouseEvent) => {
@@ -263,7 +475,7 @@ export function RangkumanTab({
           </button>
           <div className="w-px bg-border mx-0.5" />
 
-          {/* TTS button — uses state-based supported check (SSR safe) */}
+          {/* TTS button - uses state-based supported check (SSR safe) */}
           {ttsSupported && (
             <button
               onClick={ttsActive ? handleCloseTTS : handleStartTTS}
@@ -285,22 +497,56 @@ export function RangkumanTab({
           >
             <Maximize2 className="h-3.5 w-3.5" />
           </button>
+
+          {highlights.length > 0 && (
+            <button
+              onClick={handleClearHighlights}
+              className="rounded-md p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+              title={t("highlight.clear_all")}
+            >
+              <Eraser className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Content */}
-      {selectedModule && rangkumanData[selectedModule] && (
+      {selectedModule && rangkumanData[selectedModule] ? (
         <div
           ref={contentRef}
-          className={`copy-protected rounded-xl border border-border p-5 ${modeStyles[mode]} [&_img]:cursor-zoom-in`}
-          onContextMenu={(e) => e.preventDefault()}
+          className={`rounded-xl border border-border p-5 ${modeStyles[mode]} [&_img]:cursor-zoom-in`}
+          onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}
           onClick={handleContentClick}
+          onMouseUp={handleSelectionEnd}
+          onTouchEnd={handleSelectionEnd}
         >
           {parseRangkuman(rangkumanData[selectedModule])}
         </div>
+      ) : selectedModule ? (
+        <div className="rounded-xl border border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            {t("rangkuman.placeholder")}
+          </p>
+        </div>
+      ) : null}
+
+      {/* Highlight tooltip */}
+      {tooltipPos && (
+        <div data-hl-tooltip>
+          <HighlightTooltip
+            x={tooltipPos.x}
+            y={tooltipPos.y}
+            mode={tooltipMode}
+            canVip={canVip}
+            onPickColor={handlePickColor}
+            onSaveToLibrary={handleSaveToLibrary}
+            onRemove={handleRemoveHighlight}
+            onAskAI={tooltipMode === "create" ? handleAskAI : undefined}
+          />
+        </div>
       )}
 
-      {/* TTS controller — mounts useTTS only when user activates. */}
+      {/* TTS controller - mounts useTTS only when user activates. */}
       {ttsActive && selectedModule && rangkumanData[selectedModule] && (
         <TTSController
           key={selectedModule}
@@ -443,8 +689,8 @@ export function RangkumanTab({
             {/* Scrollable content */}
             <div
               ref={fullscreenContentRef}
-              className="flex-1 overflow-y-auto overscroll-contain copy-protected px-4 sm:px-8 md:px-16 lg:px-32 py-6 [&_img]:cursor-zoom-in"
-              onContextMenu={(e) => e.preventDefault()}
+              className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-8 md:px-16 lg:px-32 py-6 [&_img]:cursor-zoom-in"
+              onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}
               onClick={handleContentClick}
             >
               <div

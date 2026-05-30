@@ -9,7 +9,9 @@ import { LanguagePicker } from "@/components/settings/language-picker";
 import { DarkModeToggle } from "@/components/settings/dark-mode-toggle";
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/hooks/use-settings";
+import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { canUseVipFeatures } from "@/lib/tier";
 import { getSoundMuted, setSoundMuted, sounds } from "@/lib/sounds";
 
 interface PostTutorialSettingsProps {
@@ -18,6 +20,7 @@ interface PostTutorialSettingsProps {
 
 export function PostTutorialSettings({ onDone }: PostTutorialSettingsProps) {
   const { t } = useTranslation();
+  const { session } = useSession();
   const { settings, updateSettings } = useSettings();
   const [soundMuted, setSoundMutedState] = useState(() => getSoundMuted());
 
@@ -55,6 +58,7 @@ export function PostTutorialSettings({ onDone }: PostTutorialSettingsProps) {
             {/* Font */}
             <FontPicker
               value={settings.font}
+              canUseVip={canUseVipFeatures(session)}
               onChange={(v) => updateSettings({ font: v })}
             />
 

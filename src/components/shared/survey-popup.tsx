@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ClipboardList, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// One-shot survey popup — shows once per login session (sessionStorage-gated,
+// One-shot survey popup - shows once per login session (sessionStorage-gated,
 // so refreshes don't re-trigger). Clearing the session (closing the tab/window
 // group) resets the gate. Intentionally separate from AnnouncementModal which
 // uses localStorage for permanent dismissal.

@@ -6,9 +6,18 @@ import type { UserProfile } from "@/types";
 
 const STORAGE_KEY = "hs-profile";
 
+const EMPTY: UserProfile = {
+  email: null,
+  phone: null,
+  avatarUrl: null,
+  bio: null,
+  customStatus: null,
+  customStatusEmoji: null,
+};
+
 export function useProfile() {
   const { session } = useSession();
-  const [profile, setProfile] = useState<UserProfile>({ email: null, phone: null });
+  const [profile, setProfile] = useState<UserProfile>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -22,7 +31,7 @@ export function useProfile() {
     // Load cached first
     try {
       const cached = localStorage.getItem(STORAGE_KEY);
-      if (cached) setProfile(JSON.parse(cached));
+      if (cached) setProfile({ ...EMPTY, ...JSON.parse(cached) });
     } catch {}
 
     // Fetch from backend
@@ -32,8 +41,9 @@ export function useProfile() {
         if (res.ok) {
           const data = await res.json();
           if (data.profile) {
-            setProfile(data.profile);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.profile));
+            const merged = { ...EMPTY, ...data.profile };
+            setProfile(merged);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
           }
         }
       } catch {
@@ -61,19 +71,29 @@ export function useProfile() {
           }),
         });
 
-        if (!res.ok) throw new Error("Failed to save profile");
+        if (!res.ok) {
+          // Surface the real server message so the UI can show why it failed
+          // (invalid email, bio too long, etc.) instead of a generic string.
+          let msg = "Failed to save profile";
+          try {
+            const err = await res.json();
+            if (err?.error) msg = err.error;
+          } catch {}
+          throw new Error(msg);
+        }
 
-        const newProfile = {
-          email: updates.email ?? profile.email,
-          phone: updates.phone ?? profile.phone,
-        };
-        setProfile(newProfile);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newProfile));
+        setProfile((prev) => {
+          const { selectedClass: _omit, ...profileUpdates } = updates;
+          void _omit;
+          const next = { ...prev, ...profileUpdates };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
       } finally {
         setSaving(false);
       }
     },
-    [session?.licenseKey, profile]
+    [session?.licenseKey]
   );
 
   return { profile, loading, saving, updateProfile };

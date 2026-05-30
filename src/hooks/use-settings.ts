@@ -49,7 +49,7 @@ function saveLocalSettings(settings: UserSettings) {
  */
 export function useSettings() {
   const { session } = useSession();
-  const { dark, theme, font, setDark, setTheme, setFont, setDarkModeSchedule } = useTheme();
+  const { dark, theme, font, customAccent, setDark, setTheme, setFont, setCustomAccent, setDarkModeSchedule } = useTheme();
   const [settings, setSettingsState] = useState<UserSettings>(
     () => getLocalSettings() || { ...DEFAULT_SETTINGS, selectedClass: session?.selectedClass || "" }
   );
@@ -66,21 +66,28 @@ export function useSettings() {
       setDark(s.darkMode);
       setTheme(s.theme);
       setFont(s.font);
+      setCustomAccent(s.customAccent ?? null);
       setDarkModeSchedule(s.darkModeSchedule);
     },
-    [setDark, setTheme, setFont, setDarkModeSchedule]
+    [setDark, setTheme, setFont, setCustomAccent, setDarkModeSchedule]
   );
 
   // Keep settings state synced with ThemeProvider for header/landing toggles
   // that bypass updateSettings (e.g. header dark mode button)
   useEffect(() => {
     setSettingsState(prev => {
-      if (prev.darkMode === dark && prev.theme === theme && prev.font === font) return prev;
-      const next = { ...prev, darkMode: dark, theme, font };
+      const accentEq =
+        (prev.customAccent ?? null) === (customAccent ?? null) ||
+        (!!prev.customAccent && !!customAccent &&
+          prev.customAccent.h === customAccent.h &&
+          prev.customAccent.s === customAccent.s &&
+          prev.customAccent.l === customAccent.l);
+      if (prev.darkMode === dark && prev.theme === theme && prev.font === font && accentEq) return prev;
+      const next = { ...prev, darkMode: dark, theme, font, customAccent: customAccent ?? null };
       saveLocalSettings(next);
       return next;
     });
-  }, [dark, theme, font]);
+  }, [dark, theme, font, customAccent]);
 
   // Debounced save to server (must be before fetchSettings to avoid TDZ)
   const saveToServer = useCallback(
@@ -144,17 +151,17 @@ export function useSettings() {
             new Date(data.updatedAt) > new Date(localUpdatedAt));
 
         if (serverIsNewer) {
-          // Server has newer data (cross-device sync) — apply everything
+          // Server has newer data (cross-device sync) - apply everything
           setSettingsState(data.settings);
           saveLocalSettings(data.settings);
           setTimeout(() => applyToTheme(data.settings), 0);
         } else if (!localSettings && serverHasData) {
-          // No local settings at all and server has real data — first load
+          // No local settings at all and server has real data - first load
           setSettingsState(data.settings);
           saveLocalSettings(data.settings);
           setTimeout(() => applyToTheme(data.settings), 0);
         }
-        // Otherwise: local settings exist or server only has defaults —
+        // Otherwise: local settings exist or server only has defaults -
         // keep local state, don't override theme. The inline script +
         // ThemeProvider already applied the correct appearance.
         updatedAtRef.current = data.updatedAt;
@@ -200,9 +207,10 @@ export function useSettings() {
       if ("darkMode" in updates) setDark(updates.darkMode!);
       if ("theme" in updates) setTheme(updates.theme!);
       if ("font" in updates) setFont(updates.font!);
+      if ("customAccent" in updates) setCustomAccent(updates.customAccent ?? null);
       if ("darkModeSchedule" in updates) setDarkModeSchedule(updates.darkModeSchedule!);
     },
-    [saveToServer, setDark, setTheme, setFont, setDarkModeSchedule]
+    [saveToServer, setDark, setTheme, setFont, setCustomAccent, setDarkModeSchedule]
   );
 
   // Cross-instance sync: listen for settings changes from other useSettings() instances
@@ -270,6 +278,8 @@ export function useSettings() {
               notifBrowserEnabled: row.notif_browser_enabled ?? true,
               notifPushEnabled: row.notif_push_enabled ?? true,
               notifEmailEnabled: row.notif_email_enabled ?? true,
+              customAccent: row.custom_accent ?? null,
+              highlights: row.highlights ?? {},
             };
             setSettingsState(incoming);
             saveLocalSettings(incoming);

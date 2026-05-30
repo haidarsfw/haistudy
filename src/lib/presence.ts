@@ -1,5 +1,5 @@
 /**
- * Presence utilities — v3 (server-side time tracking).
+ * Presence utilities - v3 (server-side time tracking).
  *
  * CLIENT: Sends heartbeats every 60s (visible) / 5m (hidden).
  *         NO client-side time counting. Zero accumulators.
@@ -20,7 +20,7 @@ import type { OnlineUser } from "@/types";
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let hasSentOffline = false;
 
-// Module-level state — updated via updateHideStatus / updateCurrentSubject
+// Module-level state - updated via updateHideStatus / updateCurrentSubject
 // without restarting the presence setup. This avoids the critical bug where
 // any prop change (settings?.hideStatus, route change) caused the entire
 // presence system to restart, resetting accumulated time.
@@ -47,7 +47,7 @@ export async function setupPresence(opts: {
   currentSubject = opts.currentSubject;
   hasSentOffline = false;
 
-  // ── Simple heartbeat — no time tracking on client ──
+  // ── Simple heartbeat - no time tracking on client ──
   const sendHeartbeat = async () => {
     try {
       await fetch("/api/presence", {
@@ -64,14 +64,14 @@ export async function setupPresence(opts: {
         }),
       });
     } catch {
-      // Network error — will retry next interval
+      // Network error - will retry next interval
     }
   };
 
   // Initial heartbeat
   await sendHeartbeat();
 
-  // Heartbeat interval — 30s when visible, 5m when hidden
+  // Heartbeat interval - 30s when visible, 5m when hidden
   const startHeartbeat = () => {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     const ms = document.hidden
@@ -91,7 +91,7 @@ export async function setupPresence(opts: {
   };
   document.addEventListener("visibilitychange", onVisibilityChange);
 
-  // ── Offline beacon — fire-and-forget when tab closes ──
+  // ── Offline beacon - fire-and-forget when tab closes ──
   const sendOfflineBeacon = () => {
     if (hasSentOffline) return;
     hasSentOffline = true;
@@ -105,7 +105,7 @@ export async function setupPresence(opts: {
       new Blob([payload], { type: "application/json" })
     );
     if (!sent) {
-      // Beacon rejected (queue full) — use keepalive fetch as fallback
+      // Beacon rejected (queue full) - use keepalive fetch as fallback
       fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -147,7 +147,7 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     .order("last_seen", { ascending: false })
     .limit(200);
 
-  // Filter stale entries (last_seen older than 4 minutes — heartbeats are every 60s)
+  // Filter stale entries (last_seen older than 4 minutes - heartbeats are every 60s)
   const STALE_MS = 150_000; // 2.5 minutes (2.5 missed 60s heartbeats)
   const now = Date.now();
   const freshData = (data || []).filter((row: Record<string, unknown>) => {

@@ -26,7 +26,7 @@ export default function AppErrorBoundary({
           Halaman gagal dimuat
         </h2>
         <p className="text-sm text-muted-foreground">
-          Terjadi error saat memuat konten. Navigasi di samping masih aktif —
+          Terjadi error saat memuat konten. Navigasi di samping masih aktif -
           coba ulangi atau pindah halaman.
         </p>
         <Button onClick={reset} size="sm" className="gap-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { getDeviceId } from "@/lib/auth/device";
 import { LogOut, Save, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -24,7 +25,8 @@ import {
 import { useSession } from "@/components/providers/session-provider";
 import { useProfile } from "@/hooks/use-profile";
 import { CLASSES } from "@/lib/constants";
-import { toast } from "sonner";
+import { generateDefaultAvatar } from "@/lib/avatar";
+import { toast } from "@/components/ui/toast";
 
 interface UserProfilePopoverProps {
   children: React.ReactElement;
@@ -91,9 +93,14 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
       <PopoverContent className="w-72 p-0" align="end" sideOffset={8}>
         {/* User header */}
         <div className="flex items-center gap-3 p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shrink-0">
-            {session.name?.charAt(0)?.toUpperCase() || "?"}
-          </div>
+          <Image
+            src={profile.avatarUrl || generateDefaultAvatar(session.name, 80)}
+            alt={session.name}
+            width={40}
+            height={40}
+            unoptimized
+            className="h-10 w-10 rounded-full object-cover shrink-0 ring-1 ring-border"
+          />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold truncate">{session.name}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -115,6 +122,20 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
             </div>
           </div>
         </div>
+
+        {(profile.customStatus || profile.bio) && (
+          <div className="px-4 pb-3 -mt-1 space-y-1">
+            {profile.customStatus && (
+              <p className="text-xs text-foreground/90 flex items-center gap-1.5">
+                {profile.customStatusEmoji && <span>{profile.customStatusEmoji}</span>}
+                <span className="truncate">{profile.customStatus}</span>
+              </p>
+            )}
+            {profile.bio && (
+              <p className="text-[11px] text-muted-foreground line-clamp-2">{profile.bio}</p>
+            )}
+          </div>
+        )}
 
         <Separator />
 

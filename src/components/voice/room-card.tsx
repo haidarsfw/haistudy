@@ -6,12 +6,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Users, LogIn, Loader2, Lock, Unlock, User, Settings, Trash2 } from "lucide-react";
+import { Users, LogIn, Loader2, Lock, Unlock, User, Settings, Trash2, Crown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
+import { useSession } from "@/components/providers/session-provider";
+import { canUseVipFeatures } from "@/lib/tier";
 import type { VoiceRoom } from "@/types";
 import { fadeInUp, hoverLift, tapScale } from "@/lib/motion";
 import { useTranslation } from "@/components/providers/language-provider";
+import { toast } from "@/components/ui/toast";
+
+const VIP_LOUNGE_ID = "00000000-0000-4000-8000-000000000000";
 
 interface RoomCardProps {
   room: VoiceRoom;
@@ -37,6 +42,9 @@ export function RoomCard({
   const isCreator = room.isCustom && room.creatorId === currentLicenseKey;
   const { t } = useTranslation();
   const { guard } = usePreviewGuard();
+  const { session } = useSession();
+  const canVip = canUseVipFeatures(session);
+  const isVipLounge = room.id === VIP_LOUNGE_ID;
   const [showSettings, setShowSettings] = useState(false);
 
   return (
@@ -55,6 +63,9 @@ export function RoomCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold">{room.name}</h3>
+              {isVipLounge && (
+                <Crown className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              )}
               {room.isLocked && (
                 <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
               )}
@@ -127,16 +138,26 @@ export function RoomCard({
               <motion.div whileHover={hoverLift} whileTap={tapScale}>
               <Button
                 size="sm"
-                disabled={joining || isFull || room.isLocked}
-                onClick={() => { if (guard("preview.voice_blocked")) onJoin(room.id); }}
-                variant={isFull ? "outline" : "default"}
+                disabled={joining || isFull || room.isLocked || (isVipLounge && !canVip)}
+                onClick={() => {
+                  if (isVipLounge && !canVip) {
+                    toast.info(t("voice.vip_only_toast"));
+                    return;
+                  }
+                  if (guard("preview.voice_blocked")) onJoin(room.id);
+                }}
+                variant={isFull || (isVipLounge && !canVip) ? "outline" : "default"}
               >
                 {joining ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : isVipLounge && !canVip ? (
+                  <Lock className="mr-1.5 h-3.5 w-3.5" />
                 ) : (
                   <LogIn className="mr-1.5 h-3.5 w-3.5" />
                 )}
-                {room.isLocked ? t("voice.locked") : isFull ? t("voice.full") : t("voice.join")}
+                {isVipLounge && !canVip
+                  ? t("voice.vip_lounge")
+                  : room.isLocked ? t("voice.locked") : isFull ? t("voice.full") : t("voice.join")}
               </Button>
               </motion.div>
             )}

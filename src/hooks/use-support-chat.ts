@@ -28,7 +28,7 @@ export function useSupportChat(): UseSupportChatLegacy {
     async (content: string) => {
       const trimmed = (content || "").trim();
       if (!trimmed) return;
-      // Legacy callers send "[image]URL\n..." raw — pass through; the
+      // Legacy callers send "[image]URL\n..." raw - pass through; the
       // server normalizes it into proper type/media_url.
       const isImage = trimmed.startsWith("[image]");
       if (isImage) {

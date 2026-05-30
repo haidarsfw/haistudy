@@ -65,7 +65,7 @@ export async function checkServerRateLimit(ip: string): Promise<RateLimitDecisio
     .limit(LIMIT_24H + 1);
 
   if (error || !data) {
-    // Fail open — don't lock out users on storage hiccup. Log and allow.
+    // Fail open - don't lock out users on storage hiccup. Log and allow.
     console.error("[rate-limit] query failed", error);
     return { allowed: true, retryAfter: 0 };
   }
@@ -110,7 +110,7 @@ export async function recordLoginAttempt(
 
 /**
  * Returns whether a Cloudflare Turnstile token is required for this IP.
- * Active after 3+ recent fails — defense in depth on top of rate limit.
+ * Active after 3+ recent fails - defense in depth on top of rate limit.
  */
 export async function isCaptchaRequired(ip: string): Promise<boolean> {
   if (!ip || ip === "unknown") return false;

@@ -3,7 +3,7 @@
  * Uses VAPID keys from env. Fire-and-forget on failure but always handles 410/404
  * (subscription gone) by marking the row revoked so we stop trying.
  *
- * Node runtime only — `web-push` is a Node package and won't run on Edge.
+ * Node runtime only - `web-push` is a Node package and won't run on Edge.
  */
 
 import webpush, { type PushSubscription, type SendResult } from "web-push";
@@ -43,7 +43,7 @@ export async function sendWebPush(
     return { ok: false };
   }
 
-  // Web Push payload limit is 4 KB — truncate body to a safe length.
+  // Web Push payload limit is 4 KB - truncate body to a safe length.
   const safePayload = {
     title: payload.title.slice(0, 80),
     body: payload.body.slice(0, 100),
@@ -67,7 +67,7 @@ export async function sendWebPush(
     const err = e as { statusCode?: number; body?: string };
     const status = err.statusCode ?? 0;
     if (status === 404 || status === 410) {
-      // Endpoint gone — mark revoked so we stop sending.
+      // Endpoint gone - mark revoked so we stop sending.
       const supabase = createServerClient();
       if (supabase) {
         await supabase

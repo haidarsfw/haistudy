@@ -97,6 +97,7 @@ const en: Record<string, string> = {
   "notification.title": "Notifications",
   "notification.read_all": "Read all",
   "notification.empty": "No notifications yet",
+  "notification.dismiss": "Dismiss",
   "notification.mentioned_you": "mentioned you",
   "notification.mentioned_all": "mentioned @all",
   "notification.replied_thread": "replied to thread",
@@ -247,7 +248,7 @@ const en: Record<string, string> = {
   "pricing.normal_desc": "Full access with no requirements.",
   "pricing.vip_desc": "All Normal features + AI priority & exclusive badge.",
   "pricing.per_duration": "30 days",
-  "pricing.share_callout": "Requirement: pick one — (1) share this site via WhatsApp broadcast to friends, or (2) repost a story on your main (first) Instagram account. LE86 special: share with 2 friends outside the class → Rp 20,000.",
+  "pricing.share_callout": "Requirement: pick one - (1) share this site via WhatsApp broadcast to friends, or (2) repost a story on your main (first) Instagram account. LE86 special: share with 2 friends outside the class → Rp 20,000.",
   "pricing.share_details": "LE86 class special: Rp 20,000 if shared with 2 people outside the class. Content identical to the Normal plan. Contact admin for additional devices.",
   "pricing.normal_details": "Access all features immediately. No sharing required. Contact admin for additional devices.",
   "pricing.vip_details": "AI priority, VIP badge, faster support. Max 2 devices. Contact admin for more.",
@@ -313,6 +314,8 @@ const en: Record<string, string> = {
 
   // Rangkuman
   "rangkuman.not_available": "Summary not yet available for this subject.",
+  "rangkuman.copy_blocked": "Copying is disabled for this content",
+  "rangkuman.placeholder": "This module's summary is being prepared. Check back soon.",
 
   // Sound effects
   "settings.sound_effects": "Sound Effects",
@@ -397,7 +400,7 @@ const en: Record<string, string> = {
   "support.chat_welcome_desc": "Admin will reply ASAP. Send your questions or concerns here.",
   "support.chat_faster_note": "For faster response, contact via WhatsApp or Instagram.",
 
-  // Support chat v2 — QoL
+  // Support chat v2 - QoL
   "support.edit": "Edit",
   "support.edited": "edited",
   "support.cancel_edit": "Cancel edit",
@@ -433,7 +436,7 @@ const en: Record<string, string> = {
   "support.info_read": "Read",
   "support.info_edited": "Edited",
   "support.info_reactions": "Reactions",
-  "support.internal_note_label": "Internal note — admin only",
+  "support.internal_note_label": "Internal note - admin only",
   "support.internal_note_admin_only": "Only admins see this",
   "support.internal_note_toggle": "Internal note",
   "support.markdown_bold": "Bold",
@@ -507,6 +510,144 @@ const en: Record<string, string> = {
   "preview.voice_blocked": "Buy access to join voice rooms",
   "preview.forum_blocked": "Buy access to post in forum",
   "preview.feedback_blocked": "Buy access to send feedback",
+
+  // PWA install + update
+  "pwa.install_title": "Install haistudy",
+  "pwa.install_desc": "Add haistudy to your home screen for faster access and a full-screen experience.",
+  "pwa.install_button": "Install",
+  "pwa.install_later": "Maybe later",
+  "pwa.install_dont_remind": "Don't remind me again",
+  "pwa.install_ios_hint": "Tap the Share button, then \"Add to Home Screen\".",
+  "pwa.installed_toast": "haistudy installed",
+  "pwa.update_available": "A new version is available",
+  "pwa.update_button": "Update now",
+  "pwa.update_success": "Updated successfully",
+
+  // VIP / tiers
+  "vip.badge": "VIP",
+  "vip.locked_title": "VIP feature",
+  "vip.locked_desc": "Upgrade to VIP to unlock this feature.",
+  "vip.locked_short": "VIP only",
+  "vip.welcome_online": "{name} (VIP) is online",
+  "vip.accent_locked": "Custom accent is a VIP feature",
+  "vip.font_locked": "This font is a VIP feature",
+
+  // Direct messages
+  "dm.title": "Direct Messages",
+  "dm.tab": "DM",
+  "dm.new": "New message",
+  "dm.search_users": "Search VIP members...",
+  "dm.no_users": "No VIP members found",
+  "dm.no_conversations": "No conversations yet",
+  "dm.start_conversation": "Start a conversation",
+  "dm.placeholder": "Type a message...",
+  "dm.send": "Send",
+  "dm.online": "Online",
+  "dm.offline": "Offline",
+  "dm.empty_hint": "Pick a VIP member to start chatting privately.",
+  "dm.you": "You",
+  "dm.vip_only": "DMs are available to VIP members only.",
+
+  // Profile
+  "profile.title": "Profile",
+  "profile.edit": "Edit profile",
+  "profile.avatar": "Avatar",
+  "profile.upload_avatar": "Upload photo",
+  "profile.remove_avatar": "Remove photo",
+  "profile.avatar_hint": "JPG or PNG. A letter avatar is used if none is set.",
+  "profile.bio": "Bio",
+  "profile.bio_placeholder": "Tell others a bit about yourself...",
+  "profile.bio_counter": "{count}/200",
+  "profile.status": "Status",
+  "profile.status_placeholder": "What's on your mind?",
+  "profile.save": "Save profile",
+  "profile.public_unavailable": "Profile unavailable",
+  "profile.edit_own": "Edit profile",
+  "profile.saved": "Profile saved",
+  "profile.save_error": "Could not save profile",
+  "profile.uploading": "Uploading...",
+  "profile.upload_error": "Upload failed",
+  "profile.view_profile": "View profile",
+  "profile.no_bio": "No bio yet",
+
+  // Highlights
+  "highlight.title": "Highlight",
+  "highlight.color_yellow": "Yellow",
+  "highlight.color_blue": "Blue",
+  "highlight.color_green": "Green",
+  "highlight.color_pink": "Pink",
+  "highlight.color_red": "Red",
+  "highlight.save_to_library": "Save to library",
+  "highlight.remove": "Remove highlight",
+  "highlight.saved": "Highlight saved",
+  "highlight.added_to_library": "Saved to library",
+  "highlight.color_locked": "This color is a VIP feature",
+  "highlight.clear_all": "Clear all highlights",
+  "highlight.cleared_all": "All highlights cleared",
+
+  // Snippet library
+  "library.title": "Library",
+  "library.nav": "Library",
+  "library.empty": "Your library is empty",
+  "library.empty_hint": "Highlight text in rangkuman and save it here for quick review.",
+  "library.delete": "Delete",
+  "library.deleted": "Removed from library",
+  "library.copy": "Copy",
+  "library.copied": "Copied",
+  "library.from_subject": "From {subject}",
+  "library.jump_to_source": "Open in summary",
+  "library.all_subjects": "All subjects",
+  "library.count": "{count} snippet(s)",
+  "library.vip_only": "The Library is a VIP feature",
+  "library.section_bookmarks": "Bookmarks",
+  "library.section_snippets": "Snippets",
+  "library.snippets_vip_only": "Snippets are a VIP feature - highlight text in rangkuman and save it here.",
+
+  // Chat channels
+  "chat.channel_global": "Global",
+  "chat.channel_vip": "VIP Lounge",
+  "chat.vip_lounge_locked": "VIP Lounge is for VIP members only",
+  "chat.vip_lounge_empty": "No messages in the VIP Lounge yet",
+
+  // AI (rename / export / limits)
+  "ai.rename": "Rename",
+  "ai.rename_title": "Rename conversation",
+  "ai.rename_placeholder": "Conversation title",
+  "ai.rename_save": "Save",
+  "ai.rename_cancel": "Cancel",
+  "ai.renamed": "Conversation renamed",
+  "ai.export": "Export",
+  "ai.export_title": "Export conversation",
+  "ai.export_format": "Choose format",
+  "ai.exported": "Conversation exported",
+  "ai.export_error": "Could not export conversation",
+  "ai.thinking": "Thinking process",
+  "ai.thinking_show": "Show thinking",
+  "ai.thinking_hide": "Hide thinking",
+  "ai.limit_reached_free": "You've reached the limit of {limit} saved chats. Delete one or upgrade to VIP for more.",
+  "ai.limit_reached_vip": "You've reached the limit of {limit} saved chats. Delete one to start a new conversation.",
+  "ai.view_thinking": "View thinking",
+  "ai.asking_about": "Asking about",
+
+  // Round-2 polish additions
+  "rangkuman.ask_ai": "Ask AI",
+  "profile.label_status": "Status",
+  "profile.label_bio": "Bio",
+  "profile.send_dm": "Send DM",
+
+  // Voice VIP lounge
+  "voice.vip_lounge": "VIP Lounge",
+  "voice.vip_lounge_desc": "Private voice room for VIP members",
+  "voice.vip_only_toast": "The VIP Lounge is for VIP members only",
+
+  // Settings (theme/accent additions)
+  "settings.custom_accent": "Custom accent",
+  "settings.custom_accent_desc": "Pick your own primary color",
+  "settings.accent_lightness": "Lightness",
+  "settings.accent_preview": "Preview",
+  "settings.accent_sample": "Sample",
+  "settings.accent_save": "Save color",
+  "settings.install_app": "Install app",
 };
 
 export default en;

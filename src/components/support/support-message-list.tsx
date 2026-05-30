@@ -24,7 +24,7 @@ interface AuthorMeta {
 
 interface Props {
   messages: SupportMessage[];
-  /** Conversation owner key — used to reset scroll/initial state on switch. */
+  /** Conversation owner key - used to reset scroll/initial state on switch. */
   licenseKey: string | null;
   myKey: string | null;
   myKind: SupportReaderKind;

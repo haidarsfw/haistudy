@@ -12,7 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface DangerAction {
   id: string;
@@ -27,7 +27,7 @@ export function DangerZone() {
   const [step, setStep] = useState(0); // 0=closed, 1=confirm, 2=type, 3=executing
   const [typed, setTyped] = useState("");
 
-  // Danger Zone operates GLOBALLY — affects all scopes. Use the explicit
+  // Danger Zone operates GLOBALLY - affects all scopes. Use the explicit
   // ?allPeriods=1 query so the server records the intent.
   const actions: DangerAction[] = [
     {
@@ -103,7 +103,7 @@ export function DangerZone() {
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400">
-            ⚠️ Semua aksi di sini bersifat <span className="font-bold">GLOBAL</span> — berlaku lintas semua scope (UTS, UAS, semua jurusan, semua semester), abaikan scope filter di admin header.
+            ⚠️ Semua aksi di sini bersifat <span className="font-bold">GLOBAL</span> - berlaku lintas semua scope (UTS, UAS, semua jurusan, semua semester), abaikan scope filter di admin header.
           </div>
           {actions.map((action) => (
             <div

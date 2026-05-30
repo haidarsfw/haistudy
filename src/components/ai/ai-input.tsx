@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Send, ImagePlus, X, Square } from "lucide-react";
+import { Send, ImagePlus, X, Square, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
@@ -13,7 +13,8 @@ interface AiInputProps {
   onStop?: () => void;
   aiModel?: "fast" | "reasoning";
   onModelChange?: (model: "fast" | "reasoning") => void;
-  showModelToggle?: boolean;
+  // Bumped by the parent to request focus (e.g. after "Tanya AI" seeds a reference).
+  focusSignal?: number;
 }
 
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB
@@ -40,7 +41,7 @@ function compressImage(dataUrl: string): Promise<string> {
   });
 }
 
-export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, showModelToggle }: AiInputProps) {
+export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, focusSignal }: AiInputProps) {
   const [value, setValue] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [promptHistory, setPromptHistory] = useState<string[]>([]);
@@ -57,6 +58,11 @@ export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, s
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [value]);
+
+  // Focus on demand when the parent bumps focusSignal (e.g. "Tanya AI" seed).
+  useEffect(() => {
+    if (focusSignal) textareaRef.current?.focus();
+  }, [focusSignal]);
 
   // Auto-focus textarea when streaming ends
   const wasStreamingRef = useRef(false);
@@ -148,8 +154,10 @@ export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, s
 
   return (
     <div className="border-t border-border p-3">
-      {showModelToggle && (
-        <div className="flex items-center gap-0.5 rounded-full bg-muted p-0.5 text-[10px] mb-2 w-fit">
+      {/* Thinking toggle - available to all tiers. "reasoning" enables the
+          DeepSeek thinking trace; "fast" disables it. */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-0.5 rounded-full bg-muted p-0.5 text-[10px] w-fit">
           <button
             onClick={() => onModelChange?.("fast")}
             className={`rounded-full px-2.5 py-0.5 transition-colors ${
@@ -160,14 +168,15 @@ export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, s
           </button>
           <button
             onClick={() => onModelChange?.("reasoning")}
-            className={`rounded-full px-2.5 py-0.5 transition-colors ${
+            className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 transition-colors ${
               aiModel === "reasoning" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
+            <Brain className="h-3 w-3" />
             {t("ai.mode_reasoning")}
           </button>
         </div>
-      )}
+      </div>
 
       {/* Image preview */}
       {image && (

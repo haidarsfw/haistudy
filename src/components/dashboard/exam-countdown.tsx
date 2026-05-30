@@ -120,7 +120,7 @@ export function ExamCountdown() {
         </p>
       )}
 
-      {/* Timer digits — scales with card width */}
+      {/* Timer digits - scales with card width */}
       <div className="mt-4 py-4 md:py-6 flex items-baseline gap-1.5 md:gap-2 lg:gap-3 justify-center">
         {timeLeft.days > 0 && (
           <>

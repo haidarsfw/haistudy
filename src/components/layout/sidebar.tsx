@@ -8,8 +8,8 @@ import {
   BookOpen,
   Calendar,
   BarChart3,
-  Bookmark,
   StickyNote,
+  Library,
   MessageSquarePlus,
   LifeBuoy,
   Settings,
@@ -45,15 +45,15 @@ function buildNavItems(scopePath: string) {
     { labelKey: "nav.subjects", icon: BookOpen, href: `${base}/subjects` },
     { labelKey: "nav.schedule", icon: Calendar, href: `${base}/jadwal` },
     { labelKey: "nav.analytics", icon: BarChart3, href: `${base}/analytics` },
-    { labelKey: "nav.bookmarks", icon: Bookmark, href: `${base}/bookmarks` },
     { labelKey: "nav.notes", icon: StickyNote, href: `${base}/notes` },
+    { labelKey: "library.nav", icon: Library, href: `${base}/library` },
     { labelKey: "nav.feedback", icon: MessageSquarePlus, href: `${base}/feedback` },
   ];
 }
 
 const STORAGE_KEY = "hs-sidebar-collapsed";
 
-// Module-scope memoized NavButton — identity is stable across Sidebar renders
+// Module-scope memoized NavButton - identity is stable across Sidebar renders
 // (when inline-defined inside Sidebar, React treats it as a new component
 // type each render and unmount/remounts every button).
 const NavButton = memo(function NavButton({

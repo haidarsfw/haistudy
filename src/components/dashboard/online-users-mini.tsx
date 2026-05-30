@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Users, ChevronDown, Monitor, Smartphone, Tablet, Lock, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useAvatars } from "@/hooks/use-avatars";
 import type { OnlineUser } from "@/types";
 
 const DOT_COLORS = [
@@ -63,6 +64,14 @@ export function OnlineUsersMini() {
   const myHideStatus = users.find((u) => u.licenseKey === myLicenseKey)?.hideStatus ?? false;
   const visibleUsers = users;
 
+  // Batch-resolve real avatars (cached cross-surface). Masked users render the
+  // anonymized placeholder regardless, so we only need keys for unmasked rows.
+  const avatarKeys = useMemo(
+    () => users.map((u) => u.licenseKey).filter(Boolean) as string[],
+    [users]
+  );
+  const avatarMap = useAvatars(avatarKeys);
+
   // Helper to compute display name for a user
   const getDisplayName = (user: OnlineUser): string => {
     const isSelf = user.licenseKey === myLicenseKey;
@@ -79,7 +88,7 @@ export function OnlineUsersMini() {
   return (
     <>
       <div className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow">
-        {/* Header + count — clickable to expand */}
+        {/* Header + count - clickable to expand */}
         <button
           onClick={() => setExpanded((prev) => !prev)}
           aria-label={expanded ? "Sembunyikan daftar user online" : "Tampilkan daftar user online"}
@@ -110,13 +119,23 @@ export function OnlineUsersMini() {
             <div className="flex -space-x-1.5">
               {visibleUsers.slice(0, 5).map((user, i) => {
                 const masked = isMasked(user);
+                const avatarUrl = !masked && user.licenseKey
+                  ? avatarMap.get(user.licenseKey.toUpperCase()) ?? null
+                  : null;
                 return (
                   <div
                     key={`${user.id}-${i}`}
-                    className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`}
+                    className={`h-6 w-6 overflow-hidden rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`}
                     title={masked ? "Hidden User" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`}
                   >
-                    {masked ? "?" : (user.userName || "?").charAt(0).toUpperCase()}
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarUrl} alt={user.userName || "?"} className="h-full w-full object-cover" />
+                    ) : masked ? (
+                      "?"
+                    ) : (
+                      (user.userName || "?").charAt(0).toUpperCase()
+                    )}
                   </div>
                 );
               })}
@@ -135,7 +154,7 @@ export function OnlineUsersMini() {
           </p>
         )}
 
-        {/* Expandable user list — max 2 users */}
+        {/* Expandable user list - max 2 users */}
         <AnimatePresence>
           {expanded && visibleUsers.length > 0 && (
             <motion.div
@@ -149,7 +168,7 @@ export function OnlineUsersMini() {
                 {visibleUsers.slice(0, MAX_VISIBLE_EXPANDED).map((user, i) => {
                   const masked = isMasked(user);
                   return (
-                    <UserRow key={user.id} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} />
+                    <UserRow key={`${user.licenseKey || user.id}-${i}`} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} />
                   );
                 })}
 

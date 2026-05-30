@@ -22,7 +22,7 @@
   }
 }
 
-/* iPad / tablet landscape adjustments — shorter viewport */
+/* iPad / tablet landscape adjustments - shorter viewport */
 @media (orientation: landscape) and (max-height: 600px) and (min-width: 768px) {
   .landing-glow {
     width: 300px !important;
@@ -277,6 +277,15 @@
   --ring: oklch(0.65 0.18 280);
 }
 
+[data-theme="rose"] {
+  --primary: oklch(0.55 0.16 352);
+  --ring: oklch(0.55 0.16 352);
+}
+[data-theme="rose"].dark {
+  --primary: oklch(0.68 0.15 352);
+  --ring: oklch(0.68 0.15 352);
+}
+
 /* ============================================
    Base Styles
    ============================================ */
@@ -295,6 +304,29 @@
     font-family: var(--font-heading);
   }
 }
+
+/* ============================================
+   Reading highlights - theme-aware <mark> backgrounds.
+   Light mode: deeper, saturated tints (dark-on-light text stays legible).
+   Dark mode: brighter, more opaque tints so the mark reads on dark pages.
+   ============================================ */
+.hs-highlight {
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+  cursor: pointer;
+}
+.hs-hl-yellow { background-color: rgba(234, 179, 8, 0.50); }
+.hs-hl-blue   { background-color: rgba(59, 130, 246, 0.42); }
+.hs-hl-green  { background-color: rgba(16, 185, 129, 0.44); }
+.hs-hl-pink   { background-color: rgba(236, 72, 153, 0.40); }
+.hs-hl-red    { background-color: rgba(239, 68, 68, 0.42); }
+
+.dark .hs-hl-yellow { background-color: rgba(253, 224, 71, 0.68); }
+.dark .hs-hl-blue   { background-color: rgba(125, 185, 255, 0.62); }
+.dark .hs-hl-green  { background-color: rgba(74, 222, 160, 0.62); }
+.dark .hs-hl-pink   { background-color: rgba(249, 140, 193, 0.62); }
+.dark .hs-hl-red    { background-color: rgba(252, 135, 135, 0.66); }
 
 /* ============================================
    Custom Utilities
@@ -801,6 +833,37 @@ html[data-font="poppins"] body {
   font-family: var(--font-poppins), sans-serif !important;
 }
 
+/* VIP fonts - lazy-loaded from Google Fonts via lazy-fonts.ts. Family stacks
+   must match FAMILY_STACK in src/lib/lazy-fonts.ts. Without these rules the
+   <link> injects but nothing applies the family. */
+html[data-font="lora"] {
+  --font-sans: "Lora", Georgia, serif !important;
+}
+html[data-font="lora"] body {
+  font-family: "Lora", Georgia, serif !important;
+}
+
+html[data-font="jetbrains"] {
+  --font-sans: "JetBrains Mono", ui-monospace, monospace !important;
+}
+html[data-font="jetbrains"] body {
+  font-family: "JetBrains Mono", ui-monospace, monospace !important;
+}
+
+html[data-font="quicksand"] {
+  --font-sans: "Quicksand", system-ui, sans-serif !important;
+}
+html[data-font="quicksand"] body {
+  font-family: "Quicksand", system-ui, sans-serif !important;
+}
+
+html[data-font="merriweather"] {
+  --font-sans: "Merriweather", Georgia, serif !important;
+}
+html[data-font="merriweather"] body {
+  font-family: "Merriweather", Georgia, serif !important;
+}
+
 /* ============================================
    Landing: Animated dot grid background
    ============================================ */
@@ -909,7 +972,7 @@ html.tts-bar-open .tts-shift-target {
 }
 
 /* ============================================
-   Dashboard stagger — CSS port of the former framer-motion stagger in
+   Dashboard stagger - CSS port of the former framer-motion stagger in
    src/app/(scoped)/.../dashboard/page.tsx. Visual parity, but removes
    framer-motion variants from the dashboard route chunk.
    ============================================ */
@@ -938,7 +1001,7 @@ html.tts-bar-open .tts-shift-target {
   animation-delay: 160ms;
 }
 
-/* Flashcards — celebration scale-in. */
+/* Flashcards - celebration scale-in. */
 @keyframes flashcard-celebrate-in {
   from { opacity: 0; transform: scale(0.85); }
   to   { opacity: 1; transform: scale(1); }
@@ -947,7 +1010,7 @@ html.tts-bar-open .tts-shift-target {
   animation: flashcard-celebrate-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Flashcards — card swap slide-in (key change remounts). */
+/* Flashcards - card swap slide-in (key change remounts). */
 @keyframes flashcard-swap-in {
   from { opacity: 0; transform: translateX(40px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -956,7 +1019,7 @@ html.tts-bar-open .tts-shift-target {
   animation: flashcard-swap-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Flashcards — CSS 3D flip toggled by .is-flipped class. */
+/* Flashcards - CSS 3D flip toggled by .is-flipped class. */
 .flashcard-flip {
   transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -970,7 +1033,7 @@ html.tts-bar-open .tts-shift-target {
   .flashcard-flip { transition: none; }
 }
 
-/* Exam countdown digit — slide-in on value change (key change remounts). */
+/* Exam countdown digit - slide-in on value change (key change remounts). */
 @keyframes countdown-digit-in {
   from { transform: translateY(-100%); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
@@ -993,7 +1056,7 @@ html.tts-bar-open .tts-shift-target {
   .fade-in-css { animation: none; }
 }
 
-/* Header dark-mode toggle icon — rotate-in on swap (key change remounts). */
+/* Header dark-mode toggle icon - rotate-in on swap (key change remounts). */
 @keyframes dark-toggle-icon-in {
   from { transform: rotate(-90deg); opacity: 0; }
   to   { transform: rotate(0); opacity: 1; }
@@ -1005,7 +1068,7 @@ html.tts-bar-open .tts-shift-target {
   .dark-toggle-icon-anim { animation: none; }
 }
 
-/* TabNav active indicator — replaces framer-motion's layoutId animation.
+/* TabNav active indicator - replaces framer-motion's layoutId animation.
    Plain CSS scale-in from the click point. */
 @keyframes tab-indicator-in {
   from { transform: scaleX(0.4); opacity: 0; }
@@ -1019,7 +1082,7 @@ html.tts-bar-open .tts-shift-target {
   .tab-indicator-anim { animation: none; }
 }
 
-/* Subject-page tab panels — pure-CSS fade-in replacing the previous
+/* Subject-page tab panels - pure-CSS fade-in replacing the previous
    AnimatePresence mode="wait" which forced a 400ms exit-then-enter block on
    every tab click. All panels stay mounted; only the active one paints. */
 @keyframes tab-panel-fade-in {
@@ -1044,7 +1107,7 @@ html.tts-bar-open .tts-shift-target {
   }
 }
 
-/* Preview-mode floating action bar — entrance after LCP via CSS delay
+/* Preview-mode floating action bar - entrance after LCP via CSS delay
    (replaces the previous useState+whenIdle gating which introduced
    hooks-order risk; see Workstream E plan). */
 @keyframes preview-action-bar-in {

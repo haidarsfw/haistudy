@@ -1,5 +1,5 @@
 // ============================================
-// Scope helpers — single source of truth
+// Scope helpers - single source of truth
 // ============================================
 // Parsing, serialization, validation for ScopeTuple. Imported by URL
 // routing (proxy.ts, layout), API routes (requireScope), Realtime
@@ -32,7 +32,7 @@ export function scopePath(s: ScopeTuple): ScopePath {
 }
 
 /**
- * Parse "s2-uas-bm" → ScopeTuple. Strict — rejects out-of-range semester,
+ * Parse "s2-uas-bm" → ScopeTuple. Strict - rejects out-of-range semester,
  * exam not in allow-list, jurusan with path-traversal chars or wrong format.
  */
 export function parseScopeKey(raw: string | null | undefined): ScopeTuple | null {
@@ -84,11 +84,11 @@ export function isAvailableScope(s: ScopeTuple): boolean {
 export const DEFAULT_SCOPE: ScopeTuple = { semester: 2, examPeriod: "uts", jurusan: "bm" };
 
 /**
- * The most recent scope in the manifest — last entry of AVAILABLE_SCOPES.
+ * The most recent scope in the manifest - last entry of AVAILABLE_SCOPES.
  * Admins land here on every fresh login so they default to the current active
  * exam period without needing to switch manually.
  *
- * Append-only — last entry defines LATEST_SCOPE used by /api/auth/validate.
+ * Append-only - last entry defines LATEST_SCOPE used by /api/auth/validate.
  * Reordering AVAILABLE_SCOPES will silently flip the admin landing scope.
  */
 export const LATEST_SCOPE: ScopeTuple = AVAILABLE_SCOPES[AVAILABLE_SCOPES.length - 1];

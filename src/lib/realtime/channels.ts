@@ -6,7 +6,7 @@
 //
 // Why prefix every channel: Supabase Realtime broadcasts on row inserts to
 // every subscriber on the channel. Without per-scope channel names, a chat
-// insert in UTS scope would notify UAS subscribers — defeats isolation.
+// insert in UTS scope would notify UAS subscribers - defeats isolation.
 //
 // Subscribers ALSO filter by `semester` in postgres_changes config
 // (Realtime supports a single `filter` clause), then post-filter
@@ -41,6 +41,10 @@ export function voiceParticipantsChannel(scope: ScopeTuple): string {
 
 export function notificationsChannel(scope: ScopeTuple, licenseKey: string): string {
   return `${scopeKey(scope)}:notif:${licenseKey}`;
+}
+
+export function dmMessagesChannel(scope: ScopeTuple): string {
+  return `${scopeKey(scope)}:dm:messages`;
 }
 
 export function supportMsgsChannel(scope: ScopeTuple, licenseKey: string): string {
@@ -80,7 +84,7 @@ export function flagsChannel(scope: ScopeTuple): string {
 }
 
 /**
- * Common Realtime filter — supabase.channel(name).on(... { filter })
+ * Common Realtime filter - supabase.channel(name).on(... { filter })
  * supports a single column filter; we filter on `semester` here
  * (cheapest narrowing) and post-filter (exam_period, jurusan)
  * client-side from payload.new.

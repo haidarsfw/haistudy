@@ -30,7 +30,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Restore session from localStorage on mount. If empty, hydrate from the
-  // server via /api/auth/me — the hs-session cookie is httpOnly so JS can't
+  // server via /api/auth/me - the hs-session cookie is httpOnly so JS can't
   // detect it directly; let the endpoint decide. Returns 401 if no cookie.
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +77,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           storeSession(data.session);
         }
       } catch {
-        /* network error — leave session null, AppShell will redirect to / */
+        /* network error - leave session null, AppShell will redirect to / */
       } finally {
         if (!cancelled) setIsLoading(false);
       }

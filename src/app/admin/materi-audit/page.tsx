@@ -6,7 +6,8 @@ import { ArrowLeft, ExternalLink, Check, X, Circle, Copy, Filter, Lock } from "l
 import { Button } from "@/components/ui/button";
 import { loadCourses, loadContent } from "@/data";
 import type { MateriItem, Subject, SubjectContent } from "@/types";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeKey } from "@/lib/scope";
 
@@ -190,7 +191,6 @@ export default function MateriAuditPage() {
   }, [allRows, store]);
 
   const resetAll = useCallback(() => {
-    if (!confirm("Reset semua tanda audit? Aksi ini tidak bisa dibatalkan.")) return;
     setStore({});
     writeStore(currentScopeKey, {});
   }, [currentScopeKey]);
@@ -257,9 +257,16 @@ export default function MateriAuditPage() {
           {onlyMismatch ? "Hanya mismatch" : "Semua status"}
         </Button>
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" size="sm" onClick={resetAll}>
-            Reset
-          </Button>
+          <ConfirmDialog
+            trigger={
+              <Button variant="outline" size="sm">
+                Reset
+              </Button>
+            }
+            title="Reset audit"
+            description="Reset semua tanda audit? Aksi ini tidak bisa dibatalkan."
+            onConfirm={resetAll}
+          />
           <Button size="sm" onClick={exportMismatches} className="gap-1.5">
             <Copy className="h-3.5 w-3.5" />
             Copy Mismatches ({counts.mismatch})

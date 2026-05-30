@@ -74,7 +74,7 @@ interface Props {
   /** Re-send if status='error'. */
   onRetry?: () => void;
   onRemoveFailed?: () => void;
-  /** Highlight target — temporarily ring the bubble (set by parent for 1s). */
+  /** Highlight target - temporarily ring the bubble (set by parent for 1s). */
   highlight?: boolean;
   /** Admin-only unsend. Provided when myKind='admin'. */
   onUnsend?: (msg: SupportMessage) => void;
@@ -405,7 +405,7 @@ export function SupportMessageBubble({
           )}
         </div>
 
-        {/* Controlled action menu — opened by long-press (touch) or desktop ⋯ button.
+        {/* Controlled action menu - opened by long-press (touch) or desktop ⋯ button.
             Trigger is a hidden 1px anchor positioned at top of bubble corner so the
             menu floats next to the bubble. The hidden anchor lets BaseUI Menu compute
             position without any visible UI on touch devices. */}
@@ -429,7 +429,7 @@ export function SupportMessageBubble({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Hover toolbar — only visible on hover-capable devices (desktop / mouse).
+        {/* Hover toolbar - only visible on hover-capable devices (desktop / mouse).
             Hidden entirely on touch via @media(hover:hover) so iOS Safari can't
             leave it stuck-visible after a tap. */}
         <div

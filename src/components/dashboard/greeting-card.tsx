@@ -111,7 +111,7 @@ export function GreetingCard() {
     };
   }, [subjects, content]);
 
-  // Scope-aware tips & fun facts — static per-period so tip is in first paint
+  // Scope-aware tips & fun facts - static per-period so tip is in first paint
   // (no LCP delay). Total bundle cost ~10 KiB. Plain consts (no hook) to
   // keep hook count stable across renders.
   const isUas = scopeCtx?.scope.examPeriod === "uas";

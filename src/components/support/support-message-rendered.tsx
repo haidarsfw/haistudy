@@ -91,7 +91,7 @@ export function SupportMessageRendered({ content }: Props) {
           ),
           em: ({ children }) => <em className="italic">{children}</em>,
           hr: () => <hr className="my-2 border-foreground/20" />,
-          // Block raw HTML images entirely — only allow URL-form via
+          // Block raw HTML images entirely - only allow URL-form via
           // sanitize schema; markdown-syntax images would be allowed but
           // we want to avoid layout chaos. Strip <img> from output.
           img: () => null,

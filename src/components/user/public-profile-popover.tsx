@@ -1,0 +1,185 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { Loader2, Send } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { generateDefaultAvatar } from "@/lib/avatar";
+import { useTranslation } from "@/components/providers/language-provider";
+import { useSession } from "@/components/providers/session-provider";
+import { canUseVipFeatures } from "@/lib/tier";
+import { openDmTo } from "@/lib/events";
+import type { PublicProfile } from "@/types";
+
+interface PublicProfilePopoverProps {
+  children: React.ReactElement;
+  licenseKey?: string | null;
+  // Fallbacks rendered immediately + when licenseKey is null (legacy rows).
+  fallbackName: string;
+  fallbackTier?: PublicProfile["packageTier"];
+  fallbackIsAdmin?: boolean;
+}
+
+// Module-scope cache so re-opening a popover (or many authors sharing a key)
+// doesn't refetch. Keyed by license_key.
+const cache = new Map<string, PublicProfile>();
+
+export function PublicProfilePopover({
+  children,
+  licenseKey,
+  fallbackName,
+  fallbackTier,
+  fallbackIsAdmin,
+}: PublicProfilePopoverProps) {
+  const { t } = useTranslation();
+  const { session } = useSession();
+  const [open, setOpen] = useState(false);
+  const [profile, setProfile] = useState<PublicProfile | null>(
+    licenseKey ? cache.get(licenseKey) ?? null : null
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !licenseKey || profile) return;
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/profile/public?licenseKey=${encodeURIComponent(licenseKey)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        const p: PublicProfile | null = d?.profile ?? null;
+        if (p) {
+          cache.set(licenseKey, p);
+          setProfile(p);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, licenseKey, profile]);
+
+  const name = profile?.name ?? fallbackName;
+  const tier = profile?.packageTier ?? fallbackTier ?? null;
+  const isAdmin = profile?.isAdmin ?? fallbackIsAdmin ?? false;
+  const avatar = profile?.avatarUrl || generateDefaultAvatar(name, 80);
+
+  // Issue 4d: DM button only when BOTH viewer and target are VIP+ (vip|diamond|admin).
+  const viewerIsVipPlus = canUseVipFeatures(session);
+  const targetIsVipPlus =
+    isAdmin || tier === "vip" || tier === "diamond";
+  const isSelf = !!licenseKey && session?.licenseKey?.toUpperCase() === licenseKey.toUpperCase();
+  const showDmButton =
+    viewerIsVipPlus && targetIsVipPlus && !!licenseKey && !isSelf;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger render={children} />
+      <PopoverContent className="w-64 p-0" align="start" sideOffset={6}>
+        <div className="flex items-center gap-3 p-4">
+          <Image
+            src={avatar}
+            alt={name}
+            width={44}
+            height={44}
+            unoptimized
+            className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-border"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{name}</p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1">
+              {isAdmin && (
+                <Badge variant="admin-outline" className="px-1 py-0 text-[9px]">
+                  Admin
+                </Badge>
+              )}
+              {tier === "diamond" && (
+                <Badge variant="diamond-outline" className="px-1 py-0 text-[9px]">
+                  Diamond
+                </Badge>
+              )}
+              {(tier === "vip" || tier === "diamond") && (
+                <Badge variant="vip-outline" className="px-1 py-0 text-[9px]">
+                  VIP
+                </Badge>
+              )}
+              {profile?.selectedClass && (
+                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  {profile.selectedClass}
+                </span>
+              )}
+            </div>
+          </div>
+          {loading && (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+          )}
+        </div>
+
+        {(profile?.customStatus || profile?.bio) && (
+          <>
+            <Separator />
+            <div className="space-y-2 p-4">
+              {profile.customStatus && (
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {t("profile.label_status")}
+                  </p>
+                  <p className="mt-0.5 text-xs text-foreground/90">
+                    {profile.customStatus}
+                  </p>
+                </div>
+              )}
+              {profile.bio && (
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {t("profile.label_bio")}
+                  </p>
+                  <p className="mt-0.5 whitespace-pre-wrap text-[11px] text-muted-foreground">
+                    {profile.bio}
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {showDmButton && (
+          <>
+            <Separator />
+            <div className="p-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  openDmTo(licenseKey!);
+                }}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <Send className="h-3.5 w-3.5" />
+                {t("profile.send_dm")}
+              </button>
+            </div>
+          </>
+        )}
+
+        {!licenseKey && (
+          <>
+            <Separator />
+            <p className="px-4 py-2 text-[10px] text-muted-foreground">
+              {t("profile.public_unavailable")}
+            </p>
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}

@@ -52,7 +52,7 @@ export default function SubjectPage() {
   // Track subject visit for "Lanjut Belajar" dashboard
   useEffect(() => {
     const recent = settings.recentSubjects ?? [];
-    // Already most recent — no update needed
+    // Already most recent - no update needed
     if (recent[0] === subjectId) return;
     const updated = [subjectId, ...recent.filter((id) => id !== subjectId)].slice(0, 5);
     updateSettings({ recentSubjects: updated });
@@ -86,7 +86,7 @@ export default function SubjectPage() {
     [setFlashcardsCompleted]
   );
 
-  // Tab counts + dots — memoized BEFORE the early returns so hook order
+  // Tab counts + dots - memoized BEFORE the early returns so hook order
   // stays stable across loaded/empty/loaded transitions (avoids React #310).
   const tabCounts = useMemo<Record<number, number>>(
     () => ({
@@ -211,7 +211,7 @@ export default function SubjectPage() {
           <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
           <p className="flex-1 text-[11px] leading-relaxed text-muted-foreground">
             <span className="font-semibold text-foreground">Tips:</span>{" "}
-            Mata kuliah ini sangat disarankan untuk dipelajari sembari membuka slide materi asli dari BINUSMAYA. Gunakan fitur <span className="font-medium text-foreground">AI haistudy</span> untuk membantu memahami materi dengan lebih mudah — kamu juga bisa upload gambar slide yang kurang kamu pahami!
+            Mata kuliah ini sangat disarankan untuk dipelajari sembari membuka slide materi asli dari BINUSMAYA. Gunakan fitur <span className="font-medium text-foreground">AI haistudy</span> untuk membantu memahami materi dengan lebih mudah - kamu juga bisa upload gambar slide yang kurang kamu pahami!
           </p>
           <button
             onClick={() => setShowTip(false)}
@@ -230,7 +230,7 @@ export default function SubjectPage() {
         tabDots={tabDots}
       />
 
-      {/* Tab content — all tabs stay mounted after first visit. Hidden panels
+      {/* Tab content - all tabs stay mounted after first visit. Hidden panels
           skip painting + receive no pointer events. CSS keyframe fades in
           the active panel. Keeps scroll/TTS/draft state across switches. */}
       <div className="px-4">

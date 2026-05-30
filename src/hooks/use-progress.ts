@@ -74,7 +74,7 @@ export function useProgress(subjectId: string) {
               });
               const data = await res.json();
               if (data.conflict && data.settings?.progress) {
-                // Server had newer data — merge and re-save
+                // Server had newer data - merge and re-save
                 const local = getAllProgress();
                 const merged = mergeProgress(local, data.settings.progress);
                 saveAllProgress(merged);

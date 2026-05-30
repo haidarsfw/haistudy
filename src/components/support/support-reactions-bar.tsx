@@ -5,7 +5,7 @@ import type { SupportReaction } from "@/types";
 
 interface Props {
   reactions: SupportReaction[];
-  /** License key of the current user — used to mark "active" chips. */
+  /** License key of the current user - used to mark "active" chips. */
   myKey: string | null;
   onToggle: (emoji: string) => void;
   isInflight: (emoji: string) => boolean;

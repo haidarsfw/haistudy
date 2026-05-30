@@ -134,5 +134,5 @@ function renderEmailHtml(a: RenderArgs): string {
 }
 
 function renderEmailText(a: RenderArgs): string {
-  return `Halo ${a.recipientName},\n\n${a.senderName} mengirim pesan support:\n\n${a.preview}\n\nBuka: ${a.url}\n\n— haistudy\n`;
+  return `Halo ${a.recipientName},\n\n${a.senderName} mengirim pesan support:\n\n${a.preview}\n\nBuka: ${a.url}\n\n- haistudy\n`;
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Mail, Pencil, Check, X, Loader2, Unlink } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 
 interface OauthLinkCellProps {
@@ -50,7 +50,7 @@ export function OauthLinkCell({
       <div className="flex items-center gap-2 text-xs">
         <Mail className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-muted-foreground">
-          {currentEmail || <span className="italic">—</span>}
+          {currentEmail || <span className="italic">-</span>}
         </span>
         <button
           type="button"

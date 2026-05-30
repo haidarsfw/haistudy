@@ -40,7 +40,7 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
   const { t } = useTranslation();
   const { session } = useSession();
   const [activeTab, setActiveTab] = useState<"help" | "chat">("chat");
-  // For user panel, presence target is "any admin" — pass null to the hook.
+  // For user panel, presence target is "any admin" - pass null to the hook.
   const { presence: adminPresence } = useSupportPresence(null, "admin");
   const { isMuted, toggle: toggleMute } = useSupportMutes();
   const ownLk = session?.licenseKey ?? "";
@@ -246,7 +246,7 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
                 </div>
               </div>
             ) : (
-              /* ===== Chat Tab — v2 thread ===== */
+              /* ===== Chat Tab - v2 thread ===== */
               <div className="flex min-h-0 flex-1 flex-col">
                 <SupportChatThread
                   mode="user"

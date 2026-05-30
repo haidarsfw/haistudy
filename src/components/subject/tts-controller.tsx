@@ -17,7 +17,7 @@ interface TTSControllerProps {
 }
 
 /**
- * TTS controller — isolates the useTTS hook chain (31 hooks) from
+ * TTS controller - isolates the useTTS hook chain (31 hooks) from
  * RangkumanTab. Only mounts when user clicks "Dengarkan Rangkuman", so
  * the long hook chain doesn't run on every Rangkuman tab open. This
  * sidesteps a production React #310 that fired when useTTS rendered

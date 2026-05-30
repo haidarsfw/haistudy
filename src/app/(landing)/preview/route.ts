@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { DEFAULT_SCOPE, scopeKey } from "@/lib/scope";
 
 /**
- * Preview mode entry point — Route Handler.
+ * Preview mode entry point - Route Handler.
  *
  * Returns a 307 redirect to the scoped dashboard with hs-session=PREVIEW
  * and hs-scope set on the *same* response. Using NextResponse.redirect +

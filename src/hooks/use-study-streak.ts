@@ -41,7 +41,7 @@ function daysBetween(a: string, b: string): number {
   );
 }
 
-/** Merge two streak datasets — takes the higher values */
+/** Merge two streak datasets - takes the higher values */
 function mergeStreaks(a: StreakData, b: StreakData): StreakData {
   // Take the one with the more recent lastActiveDate
   const aDate = a.lastActiveDate ? new Date(a.lastActiveDate).getTime() : 0;
@@ -86,7 +86,7 @@ export function useStudyStreak() {
           setStreak(merged);
         }
       } catch {
-        // silent — local data is fine
+        // silent - local data is fine
       }
     })();
   }, [session?.licenseKey]);

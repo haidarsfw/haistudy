@@ -98,7 +98,7 @@ export function useSupportReactions(
           setByMsg((prev) => {
             const next = new Map(prev);
             const list = next.get(r.messageId) ?? [];
-            // Dedup by id AND by (reactor_key, emoji) — server-side UNIQUE
+            // Dedup by id AND by (reactor_key, emoji) - server-side UNIQUE
             // guarantees uniqueness, this guards optimistic-then-realtime races.
             if (
               list.some(
@@ -138,7 +138,7 @@ export function useSupportReactions(
           setByMsg((prev) => {
             const next = new Map(prev);
             // We may not have message_id in the OLD payload depending on
-            // REPLICA IDENTITY — sweep all keys
+            // REPLICA IDENTITY - sweep all keys
             for (const [k, list] of next) {
               const filtered = list.filter((x) => x.id !== old.id);
               if (filtered.length !== list.length) {
@@ -165,7 +165,7 @@ export function useSupportReactions(
       inflightRef.current.add(key);
       setTick((t) => t + 1);
 
-      // Snapshot existing — if my reaction with this emoji already exists,
+      // Snapshot existing - if my reaction with this emoji already exists,
       // we are removing it; else adding it.
       const existing = (byMsg.get(messageId) ?? []).find(
         (r) => r.reactorKey === myKey && r.emoji === emoji

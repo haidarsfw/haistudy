@@ -48,7 +48,7 @@ function readStoredValue(): AdminScopeValue | null {
     if (raw === "all") return "all";
     const parsed = parseScopeKey(raw);
     if (parsed && isAvailableScope(parsed)) return parsed;
-    // Corrupted / unknown — drop and let caller fall back.
+    // Corrupted / unknown - drop and let caller fall back.
     window.localStorage.removeItem(STORAGE_KEY);
     return null;
   } catch {
@@ -65,7 +65,7 @@ function writeStoredValue(value: AdminScopeValue) {
       window.localStorage.setItem(STORAGE_KEY, scopeKey(value));
     }
   } catch {
-    // localStorage full / disabled — non-fatal.
+    // localStorage full / disabled - non-fatal.
   }
 }
 
@@ -77,7 +77,7 @@ export function AdminScopeProvider({ children }: { children: React.ReactNode }) 
   // Hydration order:
   //   localStorage["hs-admin-scope"]  (set by login-form on fresh login;
   //                                    persists across reloads within session)
-  //   → LATEST_SCOPE                  (admins default here when nothing stored —
+  //   → LATEST_SCOPE                  (admins default here when nothing stored -
   //                                    matches the "always land on latest" policy)
   //   → session.scope                 (non-admin fallback; admins skip this)
   //   → DEFAULT_SCOPE

@@ -27,13 +27,20 @@ export const THEMES: ThemeOption[] = [
   { id: "midnight", name: "Midnight", color: "#3d5a80" },
   { id: "rosewood", name: "Rosewood", color: "#b85c5c" },
   { id: "stone", name: "Stone", color: "#708090" },
+  { id: "rose", name: "Rose", color: "#e0699f" },
 ];
 
-// Font options
+// Font options. Free fonts ship in the bundle via next/font (layout.tsx).
+// VIP fonts are lazy-injected from Google Fonts only when selected
+// (see src/lib/lazy-fonts.ts) so the free-user bundle stays unchanged.
 export const FONTS: FontOption[] = [
   { id: "jakarta", name: "Jakarta Sans" },
   { id: "inter", name: "Inter" },
   { id: "poppins", name: "Poppins" },
+  { id: "lora", name: "Lora", vip: true, googleFamily: "Lora:wght@400;500;600;700", cssVar: "--font-lora" },
+  { id: "jetbrains", name: "JetBrains Mono", vip: true, googleFamily: "JetBrains+Mono:wght@400;500;700", cssVar: "--font-jetbrains" },
+  { id: "quicksand", name: "Quicksand", vip: true, googleFamily: "Quicksand:wght@400;500;600;700", cssVar: "--font-quicksand" },
+  { id: "merriweather", name: "Merriweather", vip: true, googleFamily: "Merriweather:wght@400;700", cssVar: "--font-merriweather" },
 ];
 
 // Rate limiting

@@ -26,16 +26,21 @@ import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";
 import { ThemePicker } from "./theme-picker";
 import { FontPicker } from "./font-picker";
+import { AccentPicker } from "./accent-picker";
 import { LanguagePicker } from "./language-picker";
+import { canUseVipFeatures } from "@/lib/tier";
 import { DarkModeToggle } from "./dark-mode-toggle";
 import { ReminderInput } from "./reminder-input";
 import { PrivacyToggle } from "./privacy-toggle";
 import { ReferralCard } from "./referral-card";
 import { SessionInfo } from "./session-info";
+import { ProfileEditor } from "@/components/profile/profile-editor";
 import { NotificationsSettingsTab } from "@/components/notifications/notifications-settings-tab";
 import { Switch } from "@/components/ui/switch";
 import { APP_VERSION } from "@/lib/constants";
 import { getSoundMuted, setSoundMuted, sounds } from "@/lib/sounds";
+import { Download } from "lucide-react";
+import { PWA_EVENTS, isStandalone } from "@/lib/pwa-version";
 
 interface SettingsModalProps {
   open: boolean;
@@ -126,7 +131,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
-                className="px-6 pb-6 pt-2"
+                className="w-full min-w-0 px-6 pb-6 pt-2"
               >
                 {activeTab === "appearance" && (
                   <motion.div
@@ -137,16 +142,40 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   >
                     <motion.div
                       variants={staggerItem}
-                      className="rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 space-y-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
                       <ThemePicker
                         value={settings.theme}
                         onChange={(theme) => updateSettings({ theme })}
                       />
+                    </motion.div>
+
+                    <motion.div
+                      variants={staggerItem}
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                    >
+                      <AccentPicker
+                        value={settings.customAccent ?? null}
+                        locked={!canUseVipFeatures(session)}
+                        onChange={(customAccent) => updateSettings({ customAccent })}
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      variants={staggerItem}
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                    >
                       <FontPicker
                         value={settings.font}
+                        canUseVip={canUseVipFeatures(session)}
                         onChange={(font) => updateSettings({ font })}
                       />
+                    </motion.div>
+
+                    <motion.div
+                      variants={staggerItem}
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                    >
                       <LanguagePicker
                         value={settings.language}
                         onChange={(language) => updateSettings({ language })}
@@ -155,7 +184,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
                     <motion.div
                       variants={staggerItem}
-                      className="rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
                       <DarkModeToggle
                         darkMode={settings.darkMode}
@@ -180,7 +209,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   >
                     <motion.div
                       variants={staggerItem}
-                      className="rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
                       <ReminderInput
                         value={settings.reminder}
@@ -190,7 +219,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
                     <motion.div
                       variants={staggerItem}
-                      className="rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
                       <PrivacyToggle
                         hideStatus={settings.hideStatus}
@@ -207,7 +236,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
                     <motion.div
                       variants={staggerItem}
-                      className="rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -227,6 +256,25 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                         />
                       </div>
                     </motion.div>
+
+                    {!isStandalone() && (
+                      <motion.div
+                        variants={staggerItem}
+                        className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      >
+                        <button
+                          onClick={() => {
+                            sounds.click();
+                            window.dispatchEvent(new Event(PWA_EVENTS.INSTALL_REQUEST));
+                            onOpenChange(false);
+                          }}
+                          className="flex w-full items-center gap-2 text-left cursor-pointer"
+                        >
+                          <Download className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-sm font-medium">{t("settings.install_app")}</p>
+                        </button>
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
 
@@ -243,14 +291,21 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   >
                     <motion.div
                       variants={staggerItem}
-                      className="rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                    >
+                      <ProfileEditor />
+                    </motion.div>
+
+                    <motion.div
+                      variants={staggerItem}
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
                       <ReferralCard />
                     </motion.div>
 
                     <motion.div
                       variants={staggerItem}
-                      className="rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
+                      className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
                       <SessionInfo />
                     </motion.div>

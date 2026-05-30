@@ -40,7 +40,7 @@ export function useProgressSync() {
           // Dispatch event so dashboard widgets can pick up the change
           window.dispatchEvent(new Event("hs-progress-synced"));
         } catch {
-          // silent — dashboard will still show local data
+          // silent - dashboard will still show local data
         }
       })();
     });

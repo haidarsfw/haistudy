@@ -186,8 +186,8 @@ export function QuizSettingsScreen({
             title="Aktifkan Timer"
             description={
               timerEnabled
-                ? `${QUIZ_TIMER_SECONDS} detik per soal — pause otomatis saat menjawab`
-                : "Tanpa batas waktu — baca penjelasan sepuasnya"
+                ? `${QUIZ_TIMER_SECONDS} detik per soal - pause otomatis saat menjawab`
+                : "Tanpa batas waktu - baca penjelasan sepuasnya"
             }
             active={timerEnabled}
             onChange={setTimerEnabled}

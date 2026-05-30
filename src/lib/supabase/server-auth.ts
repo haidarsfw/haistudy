@@ -30,7 +30,7 @@ export async function createServerAuthClient() {
             cookieStore.set(item.name, item.value, item.options);
           } catch {
             // Route handler cookies() may be read-only in some contexts;
-            // ignore — Supabase tolerates this for read-after-write.
+            // ignore - Supabase tolerates this for read-after-write.
           }
         }
       },

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { fadeIn } from "@/lib/motion";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 export function ReferralCard() {
   const { session } = useSession();

@@ -1,4 +1,4 @@
-/* haistudy service worker — multi-channel notifications */
+/* haistudy service worker - multi-channel notifications */
 
 const SW_VERSION = "v1";
 
@@ -67,7 +67,7 @@ self.addEventListener("push", (event) => {
         badge: "/icons/badge-72.png",
         data: payload.data || {},
         renotify: true,
-        // requireInteraction defaults to false — auto-dismiss after a few sec
+        // requireInteraction defaults to false - auto-dismiss after a few sec
       });
     })()
   );
@@ -122,7 +122,7 @@ self.addEventListener("pushsubscriptionchange", (event) => {
           }),
         });
       } catch (_e) {
-        /* swallow — next page-load re-subscribes */
+        /* swallow - next page-load re-subscribes */
       }
     })()
   );

@@ -8,7 +8,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
 import { RoomList } from "./room-list";
 import { VoiceRoom } from "./voice-room";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { sounds } from "@/lib/sounds";
 import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
 import type { VoiceRoom as VoiceRoomType } from "@/types";
@@ -130,7 +130,7 @@ export function VoicePanel({
 
   return (
     <>
-      {/* Backdrop — only when panel is visually open */}
+      {/* Backdrop - only when panel is visually open */}
       {isOpen && (
         <>
           {/* Mobile backdrop */}
@@ -154,7 +154,7 @@ export function VoicePanel({
       )}
 
       {/* 
-        Panel container — ALWAYS in DOM when connected to a room.
+        Panel container - ALWAYS in DOM when connected to a room.
         Uses CSS transform to slide in/out instead of AnimatePresence mount/unmount.
         This prevents VoiceRoom from unmounting and killing the LiveKit connection.
       */}
@@ -273,7 +273,7 @@ export function VoicePanel({
             </Button>
           )}
 
-          {/* Active room — VoiceRoom component stays mounted as long as activeRoom exists */}
+          {/* Active room - VoiceRoom component stays mounted as long as activeRoom exists */}
           {activeRoom && (
             <VoiceRoom
               room={activeRoom}

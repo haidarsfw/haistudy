@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
 import { useActiveSupport } from "@/components/providers/active-support-provider";
@@ -111,7 +111,7 @@ export function useSupportNotifier() {
     if (isAdmin) {
       // Skip messages an admin themselves sent (handled above) or messages
       // from another admin to a different conversation that aren't internal
-      // notes — those are still relevant to all admins (multi-admin support).
+      // notes - those are still relevant to all admins (multi-admin support).
       // Keep as notification.
     } else {
       // User: only notify on messages in OWN conversation, from admin, not internal
@@ -134,7 +134,7 @@ export function useSupportNotifier() {
     }
 
     if (isActive) {
-      // already looking at it — UI inline update is enough; no toast/sound
+      // already looking at it - UI inline update is enough; no toast/sound
       return;
     }
 
@@ -181,7 +181,7 @@ export function useSupportNotifier() {
       });
     }
 
-    // Mark source for telemetry — kept so test scripts can verify
+    // Mark source for telemetry - kept so test scripts can verify
     void source;
   };
 
@@ -228,7 +228,7 @@ export function useSupportNotifier() {
       cancelIdle();
       cleanup?.();
     };
-    // handleIncoming reads everything via refs — safe
+    // handleIncoming reads everything via refs - safe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.licenseKey, session?.isAdmin]);
 

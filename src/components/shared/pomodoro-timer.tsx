@@ -50,7 +50,7 @@ export function PomodoroTimer() {
     intervalRef.current = setInterval(() => {
       setSeconds((prev) => {
         if (prev <= 1) {
-          // Phase complete — play notification
+          // Phase complete - play notification
           sounds.notification();
           if (phase === "focus") {
             setSessions((s) => s + 1);

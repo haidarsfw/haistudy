@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
@@ -59,7 +59,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
     fetchRooms();
   }, [fetchRooms]);
 
-  // Supabase Realtime subscription for participant changes — deferred to idle
+  // Supabase Realtime subscription for participant changes - deferred to idle
   // so it doesn't compete with FCP. Initial room list still arrives via the
   // synchronous fetchRooms() above.
   useEffect(() => {
@@ -169,8 +169,13 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
 
         if (!joinRes.ok) {
           const err = await joinRes.json().catch(() => ({ error: "Unknown error" }));
-          toast.error(err.error || "Gagal bergabung ke room. Coba lagi.");
-          console.error("Join room error:", err.error);
+          // Expected denials (VIP-only, full, locked) - toast only, no console.error
+          if (joinRes.status === 403 || joinRes.status === 409) {
+            toast.error(err.error || "Gagal bergabung ke room.");
+          } else {
+            toast.error(err.error || "Gagal bergabung ke room. Coba lagi.");
+            console.error("Join room error:", err.error);
+          }
           return;
         }
 

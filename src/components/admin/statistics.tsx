@@ -56,7 +56,7 @@ export function Statistics() {
     setLoading(true);
     fetchUsers();
 
-    // Supabase Realtime — scope-aware channel name keyed by adminScopeKey so a
+    // Supabase Realtime - scope-aware channel name keyed by adminScopeKey so a
     // switch tears down the prior subscription before starting a new one.
     if (isSupabaseConfigured) {
       const supabase = createClient();

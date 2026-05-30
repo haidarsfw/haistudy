@@ -44,7 +44,7 @@ export async function POST(request: Request) {
                 p_amount: fullMinutes,
               });
             } catch {
-              // Non-critical — best effort
+              // Non-critical - best effort
             }
           }
 

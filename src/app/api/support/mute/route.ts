@@ -7,7 +7,7 @@ import {
 
 export const runtime = "nodejs";
 
-/* GET — list muted conversation_lks for current user */
+/* GET - list muted conversation_lks for current user */
 export async function GET() {
   const cookieStore = await cookies();
   const recipientLk = cookieStore.get("hs-session")?.value;
@@ -33,7 +33,7 @@ export async function GET() {
   });
 }
 
-/* POST — mute conversation { conversationLk } */
+/* POST - mute conversation { conversationLk } */
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
   const recipientLk = cookieStore.get("hs-session")?.value;
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-/* DELETE — unmute conversation ?conversationLk=KEY */
+/* DELETE - unmute conversation ?conversationLk=KEY */
 export async function DELETE(req: NextRequest) {
   const cookieStore = await cookies();
   const recipientLk = cookieStore.get("hs-session")?.value;

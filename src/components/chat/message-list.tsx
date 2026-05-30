@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./message-bubble";
 import { APP_EVENTS } from "@/lib/events";
+import { useAvatars } from "@/hooks/use-avatars";
 import type { ChatMessage } from "@/types";
 
 interface MessageListProps {
@@ -43,7 +44,7 @@ export function MessageList({
   const hasInitialScrolled = useRef(false);
 
   // Reliable scroll-to-bottom helper
-  // ScrollArea wraps content in a viewport div — we need to scroll THAT
+  // ScrollArea wraps content in a viewport div - we need to scroll THAT
   const scrollToBottom = useCallback((smooth = false) => {
     // Method 1: scrollIntoView on the sentinel div
     if (bottomRef.current) {
@@ -68,7 +69,7 @@ export function MessageList({
     }
   }, [messages.length, scrollToBottom]);
 
-  // Initial scroll to bottom — retry a few times to handle async rendering
+  // Initial scroll to bottom - retry a few times to handle async rendering
   useEffect(() => {
     if (hasInitialScrolled.current) return;
     hasInitialScrolled.current = true;
@@ -143,6 +144,14 @@ export function MessageList({
     groupedMessages[groupedMessages.length - 1].messages.push(msg);
   }
 
+  // Batch-resolve real avatars for everyone in view (cached cross-surface).
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const licenseKeys = useMemo(
+    () => messages.map((m) => m.licenseKey).filter(Boolean) as string[],
+    [messages]
+  );
+  const avatarMap = useAvatars(licenseKeys);
+
   // Build a map of authorName -> role for mention coloring
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const userRoleMap = useMemo(() => {
@@ -205,6 +214,7 @@ export function MessageList({
                   onUnpin={onUnpin}
                   onImageClick={onImageClick}
                   userRoleMap={userRoleMap}
+                  avatarUrl={msg.licenseKey ? avatarMap.get(msg.licenseKey.toUpperCase()) ?? null : null}
                 />
               </div>
             ))}

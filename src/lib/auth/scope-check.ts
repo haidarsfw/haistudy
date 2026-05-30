@@ -1,5 +1,5 @@
 // ============================================
-// requireScope — server-side scope enforcement
+// requireScope - server-side scope enforcement
 // ============================================
 // Called by every API route at the top of the handler. Reads
 // hs-scope cookie (set by /api/auth/validate), optionally cross-checks
@@ -122,7 +122,7 @@ export async function requireScope(req?: Request): Promise<ScopeTuple> {
  * Usage:
  *   const q = scopeEq(scope)(supabase.from("chat_messages").select("*"));
  *
- * Untyped on purpose — the constraint `T extends { eq(...) }` clashes with
+ * Untyped on purpose - the constraint `T extends { eq(...) }` clashes with
  * `.single()` / `.maybeSingle()` thenable shapes. Callers stay typed via
  * Supabase's inference on the chained methods after this wrapper.
  */

@@ -15,20 +15,20 @@ Ada dua sistem pencatatan persediaan:
 
 Pembelian barang untuk dijual kembali langsung dicatat ke akun aset Persediaan (Inventory).
 
-<bullet><b>Biaya Pengiriman (Freight Costs):</b> Syarat pengiriman menentukan siapa yang bayar ongkir. Pada <b>FOB Shipping Point</b>, pembeli yang bayar — nilainya didebit ke Persediaan. Pada <b>FOB Destination</b>, penjual yang bayar — dicatat sebagai Beban Angkut Penjualan (Freight-Out).</bullet>
+<bullet><b>Biaya Pengiriman (Freight Costs):</b> Syarat pengiriman menentukan siapa yang bayar ongkir. Pada <b>FOB Shipping Point</b>, pembeli yang bayar - nilainya didebit ke Persediaan. Pada <b>FOB Destination</b>, penjual yang bayar - dicatat sebagai Beban Angkut Penjualan (Freight-Out).</bullet>
 <bullet><b>Retur dan Potongan Pembelian (Purchase Returns and Allowances):</b> Kalau barang cacat dikembalikan ke pemasok, Persediaan dikredit (berkurang) dan Utang Usaha didebit (berkurang).</bullet>
 <bullet><b>Diskon Pembelian (Purchase Discounts):</b> Potongan harga dari penjual kalau bayar lebih awal sesuai syarat kredit (contoh: 2/10, n/30 artinya diskon 2% kalau bayar dalam 10 hari). Diskon yang diambil dikredit ke Persediaan untuk mengurangi harga pokok barang (lihat materi sesi 7, slide "Purchase Discounts").</bullet>
 
-<b>Contoh:</b> Bayar utang Rp1.000.000 dengan diskon 2% — debit Utang Usaha Rp1.000.000, kredit Kas Rp980.000, kredit Persediaan Rp20.000.
+<b>Contoh:</b> Bayar utang Rp1.000.000 dengan diskon 2% - debit Utang Usaha Rp1.000.000, kredit Kas Rp980.000, kredit Persediaan Rp20.000.
 
 <h2>Pencatatan Penjualan Barang Dagangan (Sistem Perpetual)</h2>
 
 Pendapatan penjualan diakui saat barang sudah berpindah tangan ke pembeli (kewajiban pelaksanaan terpenuhi). Setiap penjualan butuh dua entri jurnal sekaligus: (1) debit Kas/Piutang dan kredit Pendapatan Penjualan sebesar harga jual, (2) debit Harga Pokok Penjualan dan kredit Persediaan sebesar harga pokok barang.
 
-<bullet><b>Retur dan Potongan Penjualan (Sales Returns and Allowances):</b> Akun kontra-pendapatan bersaldo normal debit. Mencatat pengembalian barang dari pelanggan — kalau barangnya masuk gudang lagi, entri persediaan juga harus dibalik.</bullet>
+<bullet><b>Retur dan Potongan Penjualan (Sales Returns and Allowances):</b> Akun kontra-pendapatan bersaldo normal debit. Mencatat pengembalian barang dari pelanggan - kalau barangnya masuk gudang lagi, entri persediaan juga harus dibalik.</bullet>
 <bullet><b>Diskon Penjualan (Sales Discounts):</b> Akun kontra-pendapatan bersaldo normal debit untuk mencatat potongan tunai yang diambil pelanggan karena bayar cepat.</bullet>
 
-<b>Contoh:</b> Diskon penjualan Rp20.000 atas tagihan Rp1.000.000 — debit Kas Rp980.000, debit Diskon Penjualan Rp20.000, kredit Piutang Usaha Rp1.000.000.
+<b>Contoh:</b> Diskon penjualan Rp20.000 atas tagihan Rp1.000.000 - debit Kas Rp980.000, debit Diskon Penjualan Rp20.000, kredit Piutang Usaha Rp1.000.000.
 
 <h2>Laporan Laba Rugi Multi-Langkah (Multiple-Step Income Statement)</h2>
 

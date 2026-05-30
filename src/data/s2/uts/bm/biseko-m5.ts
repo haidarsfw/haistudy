@@ -21,7 +21,7 @@ Perusahaan di struktur pasar persaingan tidak sempurna memanfaatkan kendali atas
 <h3>Teori Objektif Alternatif Perusahaan</h3>
 Terpisahnya kepemilikan modal (pemegang saham) dari fungsi kontrol (manajer) melahirkan prioritas alternatif di luar maksimisasi laba konvensional $MR = MC$.
 <bullet><b>Maksimisasi Pendapatan (Revenue Maximisation):</b> Fokus produksi digeser secara agresif mendekati $MR = 0$, selama syarat minimum profit buat pembagian dividen pemegang saham tetap terpenuhi.</bullet>
-<bullet><b>Maksimisasi Pertumbuhan (Growth Maximisation):</b> Fokusnya ekspansi aset tetap, pelipatgandaan volume penjualan, dan penguasaan pangsa pasar — demi stabilitas jabatan manajerial.</bullet>
+<bullet><b>Maksimisasi Pertumbuhan (Growth Maximisation):</b> Fokusnya ekspansi aset tetap, pelipatgandaan volume penjualan, dan penguasaan pangsa pasar - demi stabilitas jabatan manajerial.</bullet>
 <bullet><b>Taktik Predatori (Predatory Pricing):</b> Harga dipangkas ekstrem sampai di bawah rata-rata biaya variabel (AVC) demi membangkrutkan dan mematikan kompetitor pasar.</bullet>
 <bullet><b>Penetapan Harga Limit (Limit Pricing):</b> Harga ditekan konstan sedikit di bawah kurva rata-rata biaya perusahaan pendatang baru (potential entrants) sebagai barikade permanen untuk cegah mereka masuk industri.</bullet>
 `;

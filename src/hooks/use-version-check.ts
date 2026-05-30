@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { PWA_EVENTS } from "@/lib/pwa-version";
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000; // Poll every 30 minutes (reduced from 5m to stay under Vercel free invocation limit)
 
 /**
  * Polls /api/version to detect new deploys.
- * When the build ID changes, forces a full page reload so users
- * always run the latest version without needing to manually refresh.
+ * When the build ID changes, dispatches PWA_EVENTS.VERSION_CHANGED so the
+ * update-banner can surface a "Update now" pill. We NEVER auto-reload here -
+ * the user applies the update on click so in-progress drafts are never lost.
  */
 export function useVersionCheck() {
   const knownBuildId = useRef<string | null>(null);
@@ -24,15 +26,16 @@ export function useVersionCheck() {
         if (!remoteBuildId || remoteBuildId === "dev") return; // skip in dev
 
         if (knownBuildId.current === null) {
-          // First check — just record the current build ID
+          // First check - just record the current build ID
           knownBuildId.current = remoteBuildId;
         } else if (remoteBuildId !== knownBuildId.current) {
-          // Build ID changed — new deploy detected, reload
-          console.info("[haistudy] New version detected, reloading...");
-          window.location.reload();
+          // Build ID changed - new deploy detected. Surface the update banner
+          // instead of reloading; user applies it when ready.
+          knownBuildId.current = remoteBuildId;
+          window.dispatchEvent(new Event(PWA_EVENTS.VERSION_CHANGED));
         }
       } catch {
-        // Network error — ignore, will retry next interval
+        // Network error - ignore, will retry next interval
       }
     };
 

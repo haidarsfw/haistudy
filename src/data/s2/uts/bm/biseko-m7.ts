@@ -10,7 +10,7 @@ Kelangkaan memicu kebutuhan alokasi sumber daya optimal lewat analisis Kurva Kem
 <h3>Aliran Melingkar Pendapatan Makroekonomi</h3>
 Interaksi fundamental antara rumah tangga dan firma divisualisasikan lewat aliran sirkuler yang melibatkan pasar barang dan pasar faktor produksi. Kebocoran aliran (tabungan, pajak, impor) dan suntikan (investasi, pengeluaran pemerintah, ekspor) menentukan tingkat ekuilibrium pendapatan nasional.
 <bullet>Keseimbangan makroekonomi tercapai saat total kebocoran setara dengan total suntikan.</bullet>
-<bullet><b>Contoh kilat:</b> Pemerintah menyuntikkan dana subsidi infrastruktur sebesar Rp10 triliun yang merangsang perputaran total pendapatan agregat nasional — melampaui angka kebocoran pajak.</bullet>
+<bullet><b>Contoh kilat:</b> Pemerintah menyuntikkan dana subsidi infrastruktur sebesar Rp10 triliun yang merangsang perputaran total pendapatan agregat nasional - melampaui angka kebocoran pajak.</bullet>
 
 <h3>Integrasi Eksternal dan Ekspansi Korporasi</h3>
 Pertumbuhan firma di luar ekspansi organik diwujudkan lewat skema integrasi dan kolaborasi strategis. Integrasi horizontal menyatukan firma pada tahap produksi identik; integrasi vertikal menggabungkan rantai pasok; dan konglomerasi menyerap bisnis lintas industri.
@@ -19,7 +19,7 @@ Pertumbuhan firma di luar ekspansi organik diwujudkan lewat skema integrasi dan 
 <bullet><b>Contoh kilat:</b> Perusahaan kedai kopi mengakuisisi perkebunan biji kopi langsung untuk mengamankan stabilitas harga rantai pasok bahan baku utamanya.</bullet>
 
 <h3>Analisis Kurva Indiferen dan Garis Anggaran</h3>
-Pendekatan ordinal mengukur kepuasan konsumen lewat Kurva Indiferen — representasi kombinasi konsumsi dua barang dengan tingkat utilitas identik. Optimalisasi konsumsi dihitung dengan menyandingkan kurva utilitas ini terhadap Garis Anggaran konsumen.
+Pendekatan ordinal mengukur kepuasan konsumen lewat Kurva Indiferen - representasi kombinasi konsumsi dua barang dengan tingkat utilitas identik. Optimalisasi konsumsi dihitung dengan menyandingkan kurva utilitas ini terhadap Garis Anggaran konsumen.
 <bullet><b>Persamaan Garis Anggaran:</b> $M = (P_x \\times X) + (P_y \\times Y)$.</bullet>
 <bullet>Tingkat Substitusi Marginal (MRS) diformulasikan lewat rasio batas $\\Delta Y / \\Delta X$.</bullet>
 <bullet><b>Contoh kilat:</b> Konsumen menghabiskan alokasi dana Rp500.000 tepat di titik singgung kurva indiferen tertinggi untuk 2 lembar tiket bioskop dan 4 cangkir kopi.</bullet>
@@ -40,10 +40,10 @@ Kombinasi penggunaan input paling efisien secara matematis ada di titik singgung
 Dominasi kekuatan pasar monopoli diukur lewat rasio margin harga jual akhir di atas kurva biaya marginal perusahaan. Monopoli alamiah muncul saat arsitektur biaya perusahaan memunculkan skala ekonomis tanpa batas melintasi seluruh rentang kuantitas permintaan pasar.
 <bullet><b>Penghitungan Indeks Lerner:</b> $L = (P - MC) / P$.</bullet>
 <bullet>Nilai L membentang dari 0 (ekuivalen kompetisi sempurna) hingga mendekati 1 (monopoli absolut).</bullet>
-<bullet><b>Contoh kilat:</b> Perusahaan penyedia jaringan utilitas air bersih mematok harga jual dengan Indeks Lerner 0.6 — karena tidak ada kompetitor pembangun infrastruktur perpipaan bawah tanah di wilayah perkotaan tersebut.</bullet>
+<bullet><b>Contoh kilat:</b> Perusahaan penyedia jaringan utilitas air bersih mematok harga jual dengan Indeks Lerner 0.6 - karena tidak ada kompetitor pembangun infrastruktur perpipaan bawah tanah di wilayah perkotaan tersebut.</bullet>
 
 <h3>Model Cournot dan Keseimbangan Nash Oligopolis</h3>
-Dinamika persaingan oligopoli dibedah lewat proyeksi tindakan reaktif pihak lawan. Model Cournot berasumsi tiap entitas menetapkan takaran produksi secara simultan, bermuara di Keseimbangan Nash — menandakan tidak ada insentif finansial buat menyimpang dari strategi individual.
+Dinamika persaingan oligopoli dibedah lewat proyeksi tindakan reaktif pihak lawan. Model Cournot berasumsi tiap entitas menetapkan takaran produksi secara simultan, bermuara di Keseimbangan Nash - menandakan tidak ada insentif finansial buat menyimpang dari strategi individual.
 <bullet>Kurva fungsi reaksi mensimulasikan output rasional firma A berdasarkan proyeksi volume produksi firma B.</bullet>
 <bullet><b>Contoh kilat:</b> Dua korporasi penyedia layanan telekomunikasi mempertahankan tawaran kuota internet bulanan 50GB secara harmonis, karena modifikasi kuantitas terbukti akan merusak persentase profitabilitas keduanya.</bullet>
 

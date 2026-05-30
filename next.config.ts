@@ -21,7 +21,6 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       "framer-motion",
       "@base-ui/react",
-      "sonner",
       "date-fns",
       "lucide-react",
       "react-markdown",

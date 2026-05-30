@@ -17,7 +17,7 @@ const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
 interface TTSPlayerBarProps {
   tts: UseTTSReturn;
   onClose: () => void;
-  /** When true, renders inline (no fixed positioning) — for use inside fullscreen modals */
+  /** When true, renders inline (no fixed positioning) - for use inside fullscreen modals */
   inline?: boolean;
 }
 

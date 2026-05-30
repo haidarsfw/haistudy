@@ -16,12 +16,12 @@ Dalam jangka panjang, seluruh faktor produksi jadi variabel. Memperluas skala pr
 <bullet><b>Skala Ekonomis (Economies of Scale):</b> Muncul karena spesialisasi pekerja, peralatan yang tidak bisa dibagi (indivisibilities), prinsip kontainer, dominasi mesin besar, pengolahan produk sampingan, fase multi-produksi, serta optimasi fungsi administratif dan finansial. Skala ruang lingkup (economies of scope) juga menekan biaya rata-rata perusahaan multibarang.</bullet>
 <bullet><b>Skala Disekonomis:</b> Dipicu birokrasi manajerial yang kaku, friksi hubungan pekerja, dan eskalasi risiko rantai pasok. Skala ekonomis maupun disekonomis eksternal bersumber dari kondisi industri secara umum.</bullet>
 <bullet><b>Optimalisasi Tambahan:</b> Keputusan lokasi menyeimbangkan biaya transportasi dengan jarak ke pasar atau pemasok bahan mentah. Kombinasi alokasi paling optimal tercapai saat $MPPa/Pa = MPPb/Pb = \\dots = MPPn/Pn$. Dimensi waktu analisis mencakup sangat pendek, pendek, panjang, dan sangat panjang.</bullet>
-Bentuk kurva Biaya Rata-rata Jangka Panjang (LRAC) dibentuk dari titik-titik singgung kurva Biaya Rata-rata Jangka Pendek (SRAC) — dikenal sebagai kurva amplop. Kurva Biaya Marginal Jangka Panjang (LRMC) selalu memotong titik terendah LRAC. Minimum efficient plant size jadi batas terendah skala berbiaya efisien.
+Bentuk kurva Biaya Rata-rata Jangka Panjang (LRAC) dibentuk dari titik-titik singgung kurva Biaya Rata-rata Jangka Pendek (SRAC) - dikenal sebagai kurva amplop. Kurva Biaya Marginal Jangka Panjang (LRMC) selalu memotong titik terendah LRAC. Minimum efficient plant size jadi batas terendah skala berbiaya efisien.
 
 <h3>Pendapatan (Revenue)</h3>
 Total Pendapatan dirumuskan $TR = P \\times Q$. Pendapatan Rata-rata dirumuskan $AR = TR / Q$. Pendapatan Marginal dirumuskan $MR = \\Delta TR / \\Delta Q$.
 <bullet><b>Price Taker:</b> Kurva permintaan berbentuk horizontal sejajar, jadi $D = AR = MR$ konstan dengan kurva TR tegak lurus linear.</bullet>
-<bullet><b>Variasi Harga:</b> Harga yang berfluktuasi menghasilkan kurva permintaan miring ke bawah, mengubah bentuk kurva TR jadi melengkung menyerupai parabola. Pendapatan berkaitan erat dengan elastisitas harga — puncak TR ada tepat di nilai elastisitas -1.</bullet>
+<bullet><b>Variasi Harga:</b> Harga yang berfluktuasi menghasilkan kurva permintaan miring ke bawah, mengubah bentuk kurva TR jadi melengkung menyerupai parabola. Pendapatan berkaitan erat dengan elastisitas harga - puncak TR ada tepat di nilai elastisitas -1.</bullet>
 
 <h3>Maksimisasi Keuntungan</h3>
 Target keuntungan ($T\\Pi$) tercapai lewat selisih paling maksimal antara akumulasi TR dan TC.

@@ -67,7 +67,7 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
     };
   }, [previewAttachment]);
 
-  // Loading timeout — hide spinner after 6s even if iframe never fires onLoad
+  // Loading timeout - hide spinner after 6s even if iframe never fires onLoad
   useEffect(() => {
     if (!isLoading) return;
     const timer = setTimeout(() => setIsLoading(false), 6_000);

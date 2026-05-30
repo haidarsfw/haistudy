@@ -11,14 +11,14 @@ import { ScopeDropdownContent, scopeCompact } from "./scope-dropdown-content";
  * Sticky bar at the top of the admin shell. Lets admins switch between
  * AVAILABLE_SCOPES + an "All periods" sentinel for cross-scope audit.
  *
- * No navigation, no cookie touch — purely React context + localStorage via
+ * No navigation, no cookie touch - purely React context + localStorage via
  * AdminScopeProvider.
  */
 export function AdminScopeHeader() {
   const { adminScope, isAllPeriods, hydrated, setAdminScope } = useAdminScope();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Avoid SSR mismatch — render thin placeholder until localStorage has been read.
+  // Avoid SSR mismatch - render thin placeholder until localStorage has been read.
   if (!hydrated) {
     return (
       <div className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md px-4 py-2.5">
@@ -89,7 +89,7 @@ export function AdminScopeHeader() {
 
         {isAllPeriods && (
           <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-            Mutation disabled — pilih scope spesifik untuk create/update/delete
+            Mutation disabled - pilih scope spesifik untuk create/update/delete
           </span>
         )}
       </div>

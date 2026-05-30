@@ -6,7 +6,7 @@ import { useTranslation } from "@/components/providers/language-provider";
 interface Props {
   replyToName: string | null;
   replyToContent: string | null;
-  /** Click handler — typically scrolls to original message. */
+  /** Click handler - typically scrolls to original message. */
   onClick?: () => void;
   /** Whether the original is gone (deleted/missing). */
   isMissing?: boolean;

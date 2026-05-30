@@ -199,13 +199,13 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
       <div className="sm:hidden">
         {searchOpen && (
           <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
-            {/* Backdrop — tap here to close */}
+            {/* Backdrop - tap here to close */}
             <div
               className="absolute inset-0"
               onClick={() => setSearchOpen(false)}
               onTouchEnd={() => setSearchOpen(false)}
             />
-            {/* Search content — stops propagation so tapping inside doesn't close */}
+            {/* Search content - stops propagation so tapping inside doesn't close */}
             <div
               className="relative z-10 p-4"
               onClick={(e) => e.stopPropagation()}

@@ -63,7 +63,7 @@ export function ScopedDataProvider({ children }: { children: React.ReactNode }) 
 
 /**
  * Returns the active scope's content. When outside the scoped tree (e.g.,
- * landing pages, admin shell), returns the EMPTY shape — components should
+ * landing pages, admin shell), returns the EMPTY shape - components should
  * fall back to the legacy `@/data/subjects` shim or skip rendering.
  */
 export function useScopedData(): ScopedDataValue {

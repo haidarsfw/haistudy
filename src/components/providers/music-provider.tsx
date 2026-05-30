@@ -88,7 +88,7 @@ function buildShuffledOrder(count: number): number[] {
 export function MusicProvider({ children }: { children: ReactNode }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const widgetRef = useRef<SCWidget | null>(null);
-  // Armed flag — gates the SoundCloud script + iframe load until the user first
+  // Armed flag - gates the SoundCloud script + iframe load until the user first
   // interacts with the music player. Saves ~50 KB external script + iframe
   // bundle on every scoped page load. Flipped one-way via arm().
   const [armed, setArmed] = useState(false);

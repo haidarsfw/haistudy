@@ -3,7 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import type { UserSettings, SubjectProgress, ThemeId, FontId } from "@/types";
+import type { UserSettings, SubjectProgress, ThemeId, FontId, CustomAccent, UserHighlight } from "@/types";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 
 function mapRowToSettings(data: Record<string, unknown>): UserSettings {
@@ -26,6 +26,8 @@ function mapRowToSettings(data: Record<string, unknown>): UserSettings {
     notifBrowserEnabled: (data.notif_browser_enabled as boolean | null) ?? true,
     notifPushEnabled: (data.notif_push_enabled as boolean | null) ?? true,
     notifEmailEnabled: (data.notif_email_enabled as boolean | null) ?? true,
+    customAccent: (data.custom_accent as CustomAccent | null) ?? null,
+    highlights: (data.highlights as Record<string, UserHighlight[]>) ?? {},
   };
 }
 
@@ -99,7 +101,12 @@ export async function PUT(request: Request) {
     // Guard against unbounded JSON payloads
     const progressStr = JSON.stringify(settings.progress || {});
     const notesStr = JSON.stringify(settings.notes || {});
-    if (progressStr.length > 100_000 || notesStr.length > 100_000) {
+    const highlightsStr = JSON.stringify(settings.highlights || {});
+    if (
+      progressStr.length > 100_000 ||
+      notesStr.length > 100_000 ||
+      highlightsStr.length > 100_000
+    ) {
       return NextResponse.json({ error: "Data too large" }, { status: 413 });
     }
 
@@ -140,7 +147,7 @@ export async function PUT(request: Request) {
       }
     }
 
-    // Build upsert payload dynamically — only include fields that were
+    // Build upsert payload dynamically - only include fields that were
     // explicitly provided so a progress-only sync doesn't overwrite notes,
     // streak, language, etc. with defaults.
     const row: Record<string, unknown> = {
@@ -165,6 +172,8 @@ export async function PUT(request: Request) {
     if ("notifBrowserEnabled" in settings) row.notif_browser_enabled = settings.notifBrowserEnabled ?? true;
     if ("notifPushEnabled" in settings) row.notif_push_enabled = settings.notifPushEnabled ?? true;
     if ("notifEmailEnabled" in settings) row.notif_email_enabled = settings.notifEmailEnabled ?? true;
+    if ("customAccent" in settings) row.custom_accent = settings.customAccent ?? null;
+    if ("highlights" in settings) row.highlights = settings.highlights ?? {};
 
     const { error } = await supabase.from("user_settings").upsert(
       row,

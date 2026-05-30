@@ -97,6 +97,7 @@ const id: Record<string, string> = {
   "notification.title": "Notifikasi",
   "notification.read_all": "Baca semua",
   "notification.empty": "Belum ada notifikasi",
+  "notification.dismiss": "Tutup",
   "notification.mentioned_you": "menyebut kamu",
   "notification.mentioned_all": "menyebut @all",
   "notification.replied_thread": "membalas thread",
@@ -247,7 +248,7 @@ const id: Record<string, string> = {
   "pricing.normal_desc": "Akses penuh tanpa syarat apapun.",
   "pricing.vip_desc": "Semua fitur Normal + prioritas AI & badge eksklusif.",
   "pricing.per_duration": "30 hari",
-  "pricing.share_callout": "Syarat: pilih salah satu — (1) share link web ini via broadcast WA ke teman, atau (2) repost story di akun Instagram utama (first) kamu. Khusus LE86: tetap share ke 2 teman di luar kelas → Rp 20.000.",
+  "pricing.share_callout": "Syarat: pilih salah satu - (1) share link web ini via broadcast WA ke teman, atau (2) repost story di akun Instagram utama (first) kamu. Khusus LE86: tetap share ke 2 teman di luar kelas → Rp 20.000.",
   "pricing.share_details": "Khusus kelas LE86: harga Rp 20.000 jika share ke 2 orang di luar kelas. Konten identik dengan paket Normal. Hubungi admin jika butuh device lebih.",
   "pricing.normal_details": "Langsung akses semua fitur. Tidak perlu share. Hubungi admin jika butuh device lebih.",
   "pricing.vip_details": "AI prioritas, VIP badge, support cepat. Max 2 device. Hubungi admin jika butuh lebih.",
@@ -313,6 +314,8 @@ const id: Record<string, string> = {
 
   // Rangkuman
   "rangkuman.not_available": "Rangkuman belum tersedia untuk mata kuliah ini.",
+  "rangkuman.copy_blocked": "Menyalin dinonaktifkan untuk konten ini",
+  "rangkuman.placeholder": "Rangkuman modul ini sedang disiapkan. Cek kembali nanti.",
 
   // Sound effects
   "settings.sound_effects": "Efek Suara",
@@ -397,7 +400,7 @@ const id: Record<string, string> = {
   "support.chat_welcome_desc": "Admin akan membalas pesanmu secepatnya. Kirim pertanyaan atau keluhan di sini.",
   "support.chat_faster_note": "Untuk respon lebih cepat, hubungi via WhatsApp atau Instagram.",
 
-  // Support chat v2 — QoL
+  // Support chat v2 - QoL
   "support.edit": "Edit",
   "support.edited": "diedit",
   "support.cancel_edit": "Batalkan edit",
@@ -433,7 +436,7 @@ const id: Record<string, string> = {
   "support.info_read": "Dibaca",
   "support.info_edited": "Diedit",
   "support.info_reactions": "Reaksi",
-  "support.internal_note_label": "Catatan internal — hanya admin",
+  "support.internal_note_label": "Catatan internal - hanya admin",
   "support.internal_note_admin_only": "Hanya admin yang lihat",
   "support.internal_note_toggle": "Catatan internal",
   "support.markdown_bold": "Bold",
@@ -507,6 +510,144 @@ const id: Record<string, string> = {
   "preview.voice_blocked": "Beli akses untuk join voice room",
   "preview.forum_blocked": "Beli akses untuk posting di forum",
   "preview.feedback_blocked": "Beli akses untuk mengirim feedback",
+
+  // PWA install / update
+  "pwa.install_title": "Pasang haistudy",
+  "pwa.install_desc": "Tambahkan haistudy ke layar utama untuk akses lebih cepat dan tampilan layar penuh.",
+  "pwa.install_button": "Pasang",
+  "pwa.install_later": "Nanti saja",
+  "pwa.install_dont_remind": "Jangan ingatkan lagi",
+  "pwa.install_ios_hint": "Ketuk tombol Bagikan, lalu \"Tambah ke Layar Utama\".",
+  "pwa.installed_toast": "haistudy terpasang",
+  "pwa.update_available": "Versi baru tersedia",
+  "pwa.update_button": "Perbarui sekarang",
+  "pwa.update_success": "Berhasil diperbarui",
+
+  // VIP / tiers
+  "vip.badge": "VIP",
+  "vip.locked_title": "Fitur VIP",
+  "vip.locked_desc": "Upgrade ke VIP untuk membuka fitur ini.",
+  "vip.locked_short": "Khusus VIP",
+  "vip.welcome_online": "{name} (VIP) sedang online",
+  "vip.accent_locked": "Warna kustom adalah fitur VIP",
+  "vip.font_locked": "Font ini adalah fitur VIP",
+
+  // Direct messages
+  "dm.title": "Pesan Langsung",
+  "dm.tab": "DM",
+  "dm.new": "Pesan baru",
+  "dm.search_users": "Cari anggota VIP...",
+  "dm.no_users": "Anggota VIP tidak ditemukan",
+  "dm.no_conversations": "Belum ada percakapan",
+  "dm.start_conversation": "Mulai percakapan",
+  "dm.placeholder": "Tulis pesan...",
+  "dm.send": "Kirim",
+  "dm.online": "Online",
+  "dm.offline": "Offline",
+  "dm.empty_hint": "Pilih anggota VIP untuk mulai mengobrol secara pribadi.",
+  "dm.you": "Kamu",
+  "dm.vip_only": "DM hanya tersedia untuk anggota VIP.",
+
+  // Profile
+  "profile.title": "Profil",
+  "profile.edit": "Edit profil",
+  "profile.avatar": "Avatar",
+  "profile.upload_avatar": "Unggah foto",
+  "profile.remove_avatar": "Hapus foto",
+  "profile.avatar_hint": "JPG atau PNG. Avatar huruf dipakai jika tidak diatur.",
+  "profile.bio": "Bio",
+  "profile.bio_placeholder": "Ceritakan sedikit tentang dirimu...",
+  "profile.bio_counter": "{count}/200",
+  "profile.status": "Status",
+  "profile.status_placeholder": "Apa yang kamu pikirkan?",
+  "profile.save": "Simpan profil",
+  "profile.public_unavailable": "Profil tidak tersedia",
+  "profile.edit_own": "Edit profil",
+  "profile.saved": "Profil tersimpan",
+  "profile.save_error": "Gagal menyimpan profil",
+  "profile.uploading": "Mengunggah...",
+  "profile.upload_error": "Unggah gagal",
+  "profile.view_profile": "Lihat profil",
+  "profile.no_bio": "Belum ada bio",
+
+  // Highlights
+  "highlight.title": "Sorotan",
+  "highlight.color_yellow": "Kuning",
+  "highlight.color_blue": "Biru",
+  "highlight.color_green": "Hijau",
+  "highlight.color_pink": "Merah muda",
+  "highlight.color_red": "Merah",
+  "highlight.save_to_library": "Simpan ke pustaka",
+  "highlight.remove": "Hapus sorotan",
+  "highlight.saved": "Sorotan tersimpan",
+  "highlight.added_to_library": "Disimpan ke pustaka",
+  "highlight.color_locked": "Warna ini adalah fitur VIP",
+  "highlight.clear_all": "Hapus semua sorotan",
+  "highlight.cleared_all": "Semua sorotan dihapus",
+
+  // Snippet library
+  "library.title": "Pustaka",
+  "library.nav": "Pustaka",
+  "library.empty": "Pustakamu kosong",
+  "library.empty_hint": "Sorot teks di rangkuman dan simpan di sini untuk ditinjau cepat.",
+  "library.delete": "Hapus",
+  "library.deleted": "Dihapus dari pustaka",
+  "library.copy": "Salin",
+  "library.copied": "Tersalin",
+  "library.from_subject": "Dari {subject}",
+  "library.jump_to_source": "Buka di rangkuman",
+  "library.all_subjects": "Semua mata kuliah",
+  "library.count": "{count} cuplikan",
+  "library.vip_only": "Pustaka adalah fitur VIP",
+  "library.section_bookmarks": "Bookmark",
+  "library.section_snippets": "Cuplikan",
+  "library.snippets_vip_only": "Cuplikan adalah fitur VIP - sorot teks di rangkuman dan simpan di sini.",
+
+  // Chat channels
+  "chat.channel_global": "Global",
+  "chat.channel_vip": "VIP Lounge",
+  "chat.vip_lounge_locked": "VIP Lounge hanya untuk anggota VIP",
+  "chat.vip_lounge_empty": "Belum ada pesan di VIP Lounge",
+
+  // AI (rename / export / limits)
+  "ai.rename": "Ganti nama",
+  "ai.rename_title": "Ganti nama percakapan",
+  "ai.rename_placeholder": "Judul percakapan",
+  "ai.rename_save": "Simpan",
+  "ai.rename_cancel": "Batal",
+  "ai.renamed": "Nama percakapan diganti",
+  "ai.export": "Ekspor",
+  "ai.export_title": "Ekspor percakapan",
+  "ai.export_format": "Pilih format",
+  "ai.exported": "Percakapan diekspor",
+  "ai.export_error": "Gagal mengekspor percakapan",
+  "ai.thinking": "Proses berpikir",
+  "ai.thinking_show": "Lihat proses berpikir",
+  "ai.thinking_hide": "Sembunyikan proses berpikir",
+  "ai.limit_reached_free": "Kamu telah mencapai batas {limit} chat tersimpan. Hapus satu atau upgrade ke VIP untuk lebih banyak.",
+  "ai.limit_reached_vip": "Kamu telah mencapai batas {limit} chat tersimpan. Hapus satu untuk memulai percakapan baru.",
+  "ai.view_thinking": "Lihat proses berpikir",
+  "ai.asking_about": "Bertanya tentang",
+
+  // Round-2 polish additions
+  "rangkuman.ask_ai": "Tanya AI",
+  "profile.label_status": "Status",
+  "profile.label_bio": "Bio",
+  "profile.send_dm": "Kirim DM",
+
+  // Voice VIP lounge
+  "voice.vip_lounge": "VIP Lounge",
+  "voice.vip_lounge_desc": "Ruang suara pribadi untuk anggota VIP",
+  "voice.vip_only_toast": "VIP Lounge hanya untuk anggota VIP",
+
+  // Settings (theme/accent additions)
+  "settings.custom_accent": "Warna kustom",
+  "settings.custom_accent_desc": "Pilih warna utamamu sendiri",
+  "settings.accent_lightness": "Kecerahan",
+  "settings.accent_preview": "Pratinjau",
+  "settings.accent_sample": "Contoh",
+  "settings.accent_save": "Simpan warna",
+  "settings.install_app": "Pasang aplikasi",
 };
 
 export default id;

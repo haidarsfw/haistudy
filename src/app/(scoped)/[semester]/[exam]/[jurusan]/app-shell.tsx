@@ -17,7 +17,7 @@ import { PreviewWatermark } from "@/components/shared/preview-watermark";
 import { ClassSelector } from "@/components/auth/class-selector";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
 
-// Lazy-loaded panels — fetched on first open so they stay off the dashboard
+// Lazy-loaded panels - fetched on first open so they stay off the dashboard
 // critical path. ssr:false is legal here because app-shell.tsx is "use client".
 const ChatPanel = dynamic(
   () => import("@/components/chat/chat-panel").then((m) => ({ default: m.ChatPanel })),
@@ -58,13 +58,16 @@ import { useVersionCheck } from "@/hooks/use-version-check";
 import { usePresence } from "@/hooks/use-presence";
 import type { Notification } from "@/types";
 import { sounds } from "@/lib/sounds";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { APP_EVENTS } from "@/lib/events";
 import { useSupportUnread } from "@/hooks/use-support-unread";
 import { ActiveSupportProvider } from "@/components/providers/active-support-provider";
 import { SWRegister } from "@/components/notifications/sw-register";
 import { EnableNotificationsBanner } from "@/components/notifications/enable-notifications-banner";
 import { useSupportNotifier } from "@/hooks/use-support-notifier";
+import { InstallBanner } from "@/components/system/install-banner";
+import { UpdateBanner } from "@/components/system/update-banner";
+import { VipWelcomeListener } from "@/components/system/vip-welcome-listener";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -89,8 +92,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
+  // Issue 10: AI panel pre-seeded reference (selected materi text).
+  const [aiReference, setAiReference] = useState<{ text: string; subjectId: string | null } | null>(null);
+  // Issue 4d: pending DM target license key (open chat → DM tab → thread).
+  const [pendingDmKey, setPendingDmKey] = useState<string | null>(null);
 
-  // Lazy mount flags — flip true on first open, never back. Keeps the panel
+  // Lazy mount flags - flip true on first open, never back. Keeps the panel
   // mounted across close so AnimatePresence exit animations still play, while
   // deferring the dynamic chunk fetch until the user actually triggers it.
   const [chatMounted, setChatMounted] = useState(false);
@@ -104,14 +111,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   // Detect current subject from URL (e.g. /subject/statistik)
   const currentSubjectId = (params.id as string) || null;
 
-  // Location key for presence — subject ID on /subject/[id], else top-level
+  // Location key for presence - subject ID on /subject/[id], else top-level
   // path segment (e.g. "dashboard", "forum", "admin"). Admin sees this on
   // the online-users card to know what page each user is on.
   const currentLocationKey: string | null =
     currentSubjectId ||
     (pathname ? pathname.replace(/^\//, "").split("/")[0] || null : null);
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
-  const { notifications, dismissNotification } = useNotifications();
+  const { notifications, dismissNotification, markAsRead } = useNotifications();
   const { settings, isLoading: settingsLoading } = useSettings();
   const voiceRoom = useVoice();
 
@@ -129,7 +136,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   // Auto-reload when a new deploy is detected
   useVersionCheck();
 
-  // Presence tracking — globally active on all app pages
+  // Presence tracking - globally active on all app pages
   usePresence(currentLocationKey);
 
   // Lock body scroll when any overlay panel is open
@@ -167,7 +174,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     }
   }, [notifications]);
 
-  // Global ESC handler — closes panels in priority order, then navigates back
+  // Global ESC handler - closes panels in priority order, then navigates back
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -197,6 +204,28 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener(APP_EVENTS.OPEN_CHAT, handleOpenChat);
     return () => window.removeEventListener(APP_EVENTS.OPEN_CHAT, handleOpenChat);
+  }, []);
+
+  // Issue 10: open AI panel pre-seeded with a materi reference ("Tanya AI").
+  useEffect(() => {
+    const handleOpenAi = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { text: string; subjectId: string | null } | undefined;
+      if (detail?.text) setAiReference(detail);
+      setIsAiOpen(true);
+    };
+    window.addEventListener(APP_EVENTS.OPEN_AI, handleOpenAi);
+    return () => window.removeEventListener(APP_EVENTS.OPEN_AI, handleOpenAi);
+  }, []);
+
+  // Issue 4d: open chat → DM tab → conversation with a specific license key.
+  useEffect(() => {
+    const handleOpenDm = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { licenseKey?: string } | undefined;
+      if (detail?.licenseKey) setPendingDmKey(detail.licenseKey);
+      setIsChatOpen(true);
+    };
+    window.addEventListener(APP_EVENTS.OPEN_DM, handleOpenDm);
+    return () => window.removeEventListener(APP_EVENTS.OPEN_DM, handleOpenDm);
   }, []);
 
   const handleChatToggle = useCallback(() => {
@@ -320,12 +349,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <ChatTrigger onClick={handleChatToggle} unreadCount={chatUnread} />
       </div>
 
-      {/* Chat panel — mount on first open, then stay mounted for exit anim */}
+      {/* Chat panel - mount on first open, then stay mounted for exit anim */}
       {chatMounted && (
         <ChatPanel
           isOpen={isChatOpen}
           onClose={handleChatClose}
           onUnreadChange={handleChatUnreadChange}
+          pendingDmKey={pendingDmKey}
+          onDmKeyConsumed={() => setPendingDmKey(null)}
         />
       )}
 
@@ -335,6 +366,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           isOpen={isAiOpen}
           onClose={handleAiClose}
           subjectId={currentSubjectId}
+          reference={aiReference}
+          onReferenceConsumed={() => setAiReference(null)}
         />
       )}
 
@@ -375,7 +408,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <SupportPanel isOpen={isSupportOpen} onClose={() => { setIsSupportOpen(false); markSupportClosed(); }} />
       )}
 
-      {/* Onboarding tutorial — self-gates on localStorage internally */}
+      {/* Onboarding tutorial - self-gates on localStorage internally */}
       <OnboardingOverlay />
     </div>
 
@@ -383,6 +416,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     {popupNotification && (
       <NotificationPopup
         notification={popupNotification}
+        onRead={(id) => markAsRead([id])}
         onDismiss={() => {
           dismissNotification(popupNotification.id);
           setPopupNotification(null);
@@ -392,6 +426,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
     {/* One-shot announcement popup (per-user, localStorage-gated) */}
     <AnnouncementModal />
+
+    {/* PWA install prompt + update pill - both self-gate internally */}
+    <InstallBanner />
+    <UpdateBanner />
+
+    {/* VIP welcome toast - listens hs:vip-online, dedups per session */}
+    <VipWelcomeListener />
 
     </>
   );

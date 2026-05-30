@@ -7,7 +7,7 @@ import type { SupportPresenceState } from "@/types";
 interface Props {
   presence: SupportPresenceState;
   className?: string;
-  /** Show only the dot (no text) — for conversation list rows. */
+  /** Show only the dot (no text) - for conversation list rows. */
   dotOnly?: boolean;
 }
 
@@ -23,7 +23,7 @@ function formatLastSeen(iso: string | null, t: (k: string) => string): string {
   if (hr < 24) return t("support.last_seen_hours").replace("{n}", String(hr));
   const day = Math.floor(hr / 24);
   if (day < 7) return t("support.last_seen_days").replace("{n}", String(day));
-  // Older — show absolute
+  // Older - show absolute
   return t("support.last_seen_at").replace(
     "{time}",
     date.toLocaleString("id-ID", {

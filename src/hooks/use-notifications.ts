@@ -34,7 +34,7 @@ const NotificationsContext = createContext<NotificationsContextValue | null>(nul
  * Mount once per authenticated app shell. Holds a single Realtime subscription
  * + a single initial fetch; every `useNotifications()` consumer reads from
  * the shared context. Previously each consumer call ran its own fetch +
- * subscription — 6 callsites = 6 WebSockets per page load.
+ * subscription - 6 callsites = 6 WebSockets per page load.
  */
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { session } = useSession();
@@ -66,7 +66,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchNotifications, session]);
 
-  // Supabase Realtime subscription — deferred to idle so it doesn't compete
+  // Supabase Realtime subscription - deferred to idle so it doesn't compete
   // with FCP/LCP. Initial state still comes from the synchronous fetch above.
   useEffect(() => {
     if (!isSupabaseConfigured || !session) return;
@@ -172,7 +172,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
 /**
  * Reader hook. When called outside a NotificationsProvider, returns a stable
- * empty stub — keeps landing/admin pages and tests working without forcing
+ * empty stub - keeps landing/admin pages and tests working without forcing
  * the provider on every tree.
  */
 const EMPTY_VALUE: NotificationsContextValue = {

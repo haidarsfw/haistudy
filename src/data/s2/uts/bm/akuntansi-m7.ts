@@ -13,7 +13,7 @@ Laba komprehensif (comprehensive income) mencatat semua perubahan ekuitas selama
 
 Kualitas laba (quality of earnings) menunjukkan seberapa akurat laporan keuangan mencerminkan kondisi ekonomi perusahaan yang sebenarnya. Kualitas laba bisa turun karena tiga hal:
 <bullet><b>Metode Akuntansi Alternatif:</b> Perbedaan pilihan metode penilaian persediaan (FIFO vs LIFO) atau metode penyusutan aset membuat perbandingan laba antarperusahaan jadi tidak setara.</bullet>
-<bullet><b>Laba Pro Forma:</b> Angka laba tidak baku yang dipublikasikan manajemen dengan sengaja mengecualikan beban-beban tertentu dengan alasan tidak berulang — ini bisa menyesatkan investor.</bullet>
+<bullet><b>Laba Pro Forma:</b> Angka laba tidak baku yang dipublikasikan manajemen dengan sengaja mengecualikan beban-beban tertentu dengan alasan tidak berulang - ini bisa menyesatkan investor.</bullet>
 <bullet><b>Pengakuan Tidak Tepat:</b> Manipulasi pembukuan lewat pengakuan pendapatan prematur (channel stuffing) atau kapitalisasi beban operasional harian supaya laba periode berjalan terlihat lebih tinggi dari kenyataan.</bullet>
 
 <h2>Analisis Laporan Keuangan Komparatif</h2>
@@ -22,7 +22,7 @@ Untuk menilai kinerja keuangan, kita perlu membandingkan data lintas periode pak
 
 <bullet><b>Analisis Horizontal (Trend Analysis):</b> Mengevaluasi data untuk melihat besaran dan persentase naik-turunnya suatu item dari periode ke periode (lihat materi sesi 13, slide "Horizontal Analysis"). Rumusnya: (Nilai Tahun Berjalan - Nilai Tahun Dasar) / Nilai Tahun Dasar.</bullet>
 
-<b>Contoh:</b> Pendapatan naik dari Rp10.000.000 (tahun dasar) ke Rp12.000.000 (tahun berjalan) — persentase kenaikannya 20%.
+<b>Contoh:</b> Pendapatan naik dari Rp10.000.000 (tahun dasar) ke Rp12.000.000 (tahun berjalan) - persentase kenaikannya 20%.
 
 <bullet><b>Analisis Vertikal (Common-Size Analysis):</b> Setiap item di laporan keuangan dinyatakan sebagai persentase dari satu nilai dasar pada periode yang sama (lihat materi sesi 13, slide "Vertical Analysis"). Untuk Neraca, basis 100%-nya adalah Total Aset. Untuk Laporan Laba Rugi, basis 100%-nya adalah Penjualan Bersih.</bullet>
 

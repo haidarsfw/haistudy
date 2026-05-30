@@ -34,7 +34,7 @@ export function useSupportMutes() {
     refresh();
   }, [refresh]);
 
-  // Realtime sync — other devices toggle mute, this one updates instantly
+  // Realtime sync - other devices toggle mute, this one updates instantly
   useEffect(() => {
     if (!isSupabaseConfigured || !session) return;
     const supabase = createClient();

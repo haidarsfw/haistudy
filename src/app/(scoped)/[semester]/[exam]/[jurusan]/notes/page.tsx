@@ -30,7 +30,7 @@ export default function NotesPage() {
     ? `${GENERAL_NOTES_KEY}-${session.licenseKey}`
     : GENERAL_NOTES_KEY;
 
-  // Load notes — server first, then localStorage fallback
+  // Load notes - server first, then localStorage fallback
   useEffect(() => {
     if (loadedRef.current || !session) return;
     loadedRef.current = true;

@@ -211,13 +211,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(data);
     }
 
-    // Submit new feedback (user) — scope is user's own cookie scope (NOT admin-overridable).
+    // Submit new feedback (user) - scope is user's own cookie scope (NOT admin-overridable).
     if (!licenseKey || !message || !category) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
     const scope = await requireScope(req);
 
-    // Validate image URLs — only allow Cloudinary HTTPS URLs, max 3
+    // Validate image URLs - only allow Cloudinary HTTPS URLs, max 3
     const imageUrls = (body.imageUrls || [])
       .filter((url: unknown): url is string => typeof url === "string")
       .filter((url: string) => {

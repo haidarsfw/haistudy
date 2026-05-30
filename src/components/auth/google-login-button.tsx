@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
