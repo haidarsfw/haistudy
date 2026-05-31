@@ -54,7 +54,19 @@ export function registerServiceWorker(): Promise<ServiceWorkerRegistration | nul
   if (registrationPromise) return registrationPromise;
   registrationPromise = navigator.serviceWorker
     .register("/sw.js", { scope: "/" })
-    .then((reg) => reg)
+    .then(async (reg) => {
+      // register() resolves as soon as the SW is registered - it may still be
+      // "installing"/"waiting". pushManager.subscribe() throws "no active
+      // Service Worker" without an ACTIVE worker, so wait for activation.
+      // navigator.serviceWorker.ready resolves with the active registration;
+      // bound it so a stuck install can't hang the caller forever.
+      if (reg.active) return reg;
+      const ready = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]);
+      return ready ?? reg;
+    })
     .catch((e) => {
       console.warn("[sw] register failed", e);
       return null;
@@ -84,6 +96,9 @@ export async function subscribePush(): Promise<{
 
   const reg = await registerServiceWorker();
   if (!reg) return { ok: false, reason: "error" };
+  // No active worker (still installing, or torn down) → subscribe() would throw
+  // "no active Service Worker". Fail cleanly so the caller can surface it.
+  if (!reg.active) return { ok: false, reason: "error" };
 
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {

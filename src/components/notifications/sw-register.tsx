@@ -18,21 +18,33 @@ export function SWRegister() {
     // Turbopack chunks that change on every reload → stale "module factory is
     // not available" chunks. Production only.
     if (process.env.NODE_ENV !== "production") {
-      // Actively tear down any SW + caches left behind by a prior prod build
-      // (or an earlier round that only skipped registration). Without this the
-      // old SW stays active in dev and keeps serving stale chunks until the
-      // user manually unregisters it.
-      if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .getRegistrations()
-          .then((rs) => rs.forEach((r) => r.unregister()))
-          .catch(() => {});
-        if (typeof window !== "undefined" && "caches" in window) {
-          caches
-            .keys()
-            .then((ks) => ks.forEach((k) => caches.delete(k)))
+      // ONE-TIME dev cleanup: evict a legacy service worker (pre-v3 versions had
+      // a fetch handler that served stale Turbopack chunks → "module factory is
+      // not available"). Guarded by a flag so it runs once per browser, not on
+      // every load - otherwise it would keep tearing down the on-demand push SW
+      // that the notifications settings register in dev. The current sw.js has
+      // no fetch handler, so leaving a live SW in dev is harmless for chunks.
+      try {
+        const FLAG = "hs-sw-dev-cleaned-v3";
+        if (
+          typeof window !== "undefined" &&
+          "serviceWorker" in navigator &&
+          !window.localStorage.getItem(FLAG)
+        ) {
+          window.localStorage.setItem(FLAG, "1");
+          navigator.serviceWorker
+            .getRegistrations()
+            .then((rs) => rs.forEach((r) => r.unregister()))
             .catch(() => {});
+          if ("caches" in window) {
+            caches
+              .keys()
+              .then((ks) => ks.forEach((k) => caches.delete(k)))
+              .catch(() => {});
+          }
         }
+      } catch {
+        /* localStorage blocked - skip cleanup */
       }
       return;
     }
