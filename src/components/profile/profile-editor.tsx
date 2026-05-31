@@ -92,6 +92,19 @@ export function ProfileEditor() {
         customStatusEmoji: null,
         avatarUrl: avatarUrl || null,
       });
+      // Broadcast so every avatar surface (chat bubbles, dashboard online list,
+      // voice participants) invalidates its cached avatar for this key and
+      // re-renders without a full reload. Consumed by use-avatars.ts.
+      if (session?.licenseKey) {
+        window.dispatchEvent(
+          new CustomEvent("hs:avatar-updated", {
+            detail: {
+              licenseKey: session.licenseKey.toUpperCase(),
+              avatarUrl: avatarUrl || null,
+            },
+          })
+        );
+      }
       sounds.correct();
       toast.success(t("profile.saved"));
     } catch (err) {

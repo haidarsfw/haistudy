@@ -60,19 +60,21 @@ export function FontPicker({ value, canUseVip, onChange }: FontPickerProps) {
               }}
               whileTap={tapScale}
               style={{ fontFamily: fontPreviewStyle[font.id] }}
-              className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm min-h-[38px] transition-colors ${
+              className={`relative flex items-center justify-center rounded-lg border px-6 py-2 text-sm min-h-[38px] transition-colors ${
                 value === font.id
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/40"
               } ${locked ? "opacity-60" : ""}`}
             >
-              <span className="flex min-w-0 items-center gap-1">
+              {/* Label optically centered in the box; the status icon is
+                  absolute so it never shoves the name off-center. */}
+              <span className="flex min-w-0 items-center justify-center gap-1 text-center">
                 {font.vip && (
                   <Crown className="h-3 w-3 shrink-0 text-amber-500" />
                 )}
                 <span className="break-words">{font.name}</span>
               </span>
-              <span className="w-4 flex justify-center shrink-0">
+              <span className="absolute right-2 top-1/2 flex w-4 -translate-y-1/2 justify-center">
                 {locked ? (
                   <Lock className="h-3 w-3 text-muted-foreground" />
                 ) : (

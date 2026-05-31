@@ -1,20 +1,27 @@
 /* haistudy service worker - multi-channel notifications */
 
-const SW_VERSION = "v2";
+const SW_VERSION = "v3";
+const CACHE_PREFIX = "haistudy-";
+const CACHE_NAME = `${CACHE_PREFIX}${SW_VERSION}`;
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  // Defensive: clear any Cache Storage left by a prior SW version so a new
-  // deploy never serves a stale app-shell/chunk. We don't precache today, but
-  // this keeps the update path clean if precaching is ever added.
+  // Versioned cleanup: drop only our own caches that aren't the current
+  // version, so a new deploy never serves a stale app-shell/chunk. Don't nuke
+  // ALL Cache Storage (the prior v2 behavior); that would wipe unrelated
+  // precache/assets too.
   event.waitUntil(
     (async () => {
       try {
         const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
+        await Promise.all(
+          keys
+            .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME)
+            .map((k) => caches.delete(k))
+        );
       } catch (_e) {
         /* swallow - cache API may be unavailable */
       }

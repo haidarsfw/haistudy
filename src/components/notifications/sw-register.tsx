@@ -14,6 +14,10 @@ import { whenIdle } from "@/lib/defer";
  */
 export function SWRegister() {
   useEffect(() => {
+    // Never register the SW in development. A persisted dev SW locks onto
+    // Turbopack chunks that change on every reload → stale "module factory is
+    // not available" chunks. Production only.
+    if (process.env.NODE_ENV !== "production") return;
     return whenIdle(() => {
       void registerServiceWorker();
     });

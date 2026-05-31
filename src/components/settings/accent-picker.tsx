@@ -15,7 +15,7 @@ interface AccentPickerProps {
 }
 
 const DEFAULT_ACCENT: CustomAccent = { h: 200, s: 70, l: 50 };
-const WHEEL_SIZE = 150; // px - fits the 360px modal width without overflow
+const WHEEL_SIZE = 140; // px - fits a 320px viewport modal width without overflow
 
 function hsl({ h, s, l }: CustomAccent): string {
   return `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}%)`;
@@ -90,7 +90,7 @@ export function AccentPicker({ value, locked, onChange }: AccentPickerProps) {
               <p className="mb-2 text-[11px] font-medium text-muted-foreground">
                 {t("settings.accent_preview")}
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-3">
                 <span
                   className="h-10 w-10 shrink-0 rounded-lg ring-1 ring-border"
                   style={{ backgroundColor: hsl(draft) }}

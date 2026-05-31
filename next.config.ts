@@ -22,7 +22,12 @@ const nextConfig: NextConfig = {
       "framer-motion",
       "@base-ui/react",
       "date-fns",
-      "lucide-react",
+      // "lucide-react" REMOVED: lucide-react 0.577 ships per-icon ESM paths and
+      // Next 16 auto-optimizes it internally. A manual entry here triggers a
+      // Turbopack barrel-rewrite that cross-instantiates icon chunks (e.g.
+      // ai-message.tsx pulling ChevronRight via a path it never imports) →
+      // "module factory is not available" crash that takes down the whole
+      // scoped shell. Not a cache issue; this is the fix.
       "react-markdown",
     ],
   },

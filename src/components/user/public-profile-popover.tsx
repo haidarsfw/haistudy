@@ -84,15 +84,15 @@ export function PublicProfilePopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger render={children} />
-      <PopoverContent className="w-64 p-0" align="start" sideOffset={6}>
-        <div className="flex items-center gap-3 p-4">
+      <PopoverContent className="w-56 p-0" align="start" sideOffset={6}>
+        <div className="flex items-center gap-3 p-3">
           <Image
             src={avatar}
             alt={name}
-            width={44}
-            height={44}
+            width={40}
+            height={40}
             unoptimized
-            className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-border"
+            className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border"
           />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{name}</p>
