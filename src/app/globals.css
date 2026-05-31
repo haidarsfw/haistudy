@@ -864,6 +864,14 @@ html[data-font="merriweather"] body {
   font-family: "Merriweather", Georgia, serif !important;
 }
 
+/* Times New Roman - system serif, no webfont. */
+html[data-font="times"] {
+  --font-sans: "Times New Roman", Times, serif !important;
+}
+html[data-font="times"] body {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
 /* ============================================
    Landing: Animated dot grid background
    ============================================ */

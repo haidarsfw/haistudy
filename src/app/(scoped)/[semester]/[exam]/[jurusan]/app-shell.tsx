@@ -412,20 +412,20 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       <OnboardingOverlay />
     </div>
 
-    {/* Notification popup outside clipped flex container; only fetches chunk when a notification appears */}
-    {popupNotification && (
-      <NotificationPopup
-        notification={popupNotification}
-        onRead={(id) => markAsRead([id])}
-        // Announcements stay in the bell list (user reads them via the detail
-        // dialog there); in the transient popup, a click just closes the toast.
-        onAnnouncementClick={() => setPopupNotification(null)}
-        onDismiss={() => {
-          dismissNotification(popupNotification.id);
-          setPopupNotification(null);
-        }}
-      />
-    )}
+    {/* Notification popup outside clipped flex container. Always mounted (pass
+        null to hide) so the AnimatePresence inside can play enter + exit; a
+        keyed motion.div re-animates when the notification changes. */}
+    <NotificationPopup
+      notification={popupNotification}
+      onRead={(id) => markAsRead([id])}
+      // Announcements stay in the bell list (user reads them via the detail
+      // dialog there); in the transient popup, a click just closes the toast.
+      onAnnouncementClick={() => setPopupNotification(null)}
+      onDismiss={() => {
+        if (popupNotification) dismissNotification(popupNotification.id);
+        setPopupNotification(null);
+      }}
+    />
 
     {/* One-shot announcement popup (per-user, localStorage-gated) */}
     <AnnouncementModal />

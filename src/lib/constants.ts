@@ -41,6 +41,8 @@ export const FONTS: FontOption[] = [
   { id: "jetbrains", name: "JetBrains Mono", vip: true, googleFamily: "JetBrains+Mono:wght@400;500;700", cssVar: "--font-jetbrains" },
   { id: "quicksand", name: "Quicksand", vip: true, googleFamily: "Quicksand:wght@400;500;600;700", cssVar: "--font-quicksand" },
   { id: "merriweather", name: "Merriweather", vip: true, googleFamily: "Merriweather:wght@400;700", cssVar: "--font-merriweather" },
+  // Times New Roman ships with every OS - no webfont needed, so no googleFamily.
+  { id: "times", name: "Times New Roman", vip: true },
 ];
 
 // Rate limiting

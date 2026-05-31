@@ -99,6 +99,41 @@ export function notificationLabel(
 }
 
 /**
+ * Single click/tap behavior shared by the notification-center row and the
+ * transient popup so both surfaces behave identically:
+ *  - announcement → open detail dialog (if any), mark read (no dismiss).
+ *  - interactive  → route to target, mark read, dismiss.
+ *  - other        → mark read, dismiss.
+ * The popup wires this via framer's `onTap` (coexists with swipe-to-dismiss);
+ * the row wires it via a native onClick.
+ */
+export function activateNotification(
+  n: Notification,
+  handlers: {
+    navigateForum?: (n: Notification) => void;
+    onRead?: (id: string) => void;
+    onAnnouncementClick?: (n: Notification) => void;
+    onDismiss?: (id: string) => void;
+  }
+): void {
+  const { navigateForum, onRead, onAnnouncementClick, onDismiss } = handlers;
+  if (n.type === "announcement") {
+    onAnnouncementClick?.(n);
+    if (!n.read) onRead?.(n.id);
+    return;
+  }
+  if (isInteractiveNotification(n)) {
+    routeToNotification(n, navigateForum);
+    if (!n.read) onRead?.(n.id);
+    onDismiss?.(n.id);
+    return;
+  }
+  // Non-interactive → just dismiss.
+  if (!n.read) onRead?.(n.id);
+  onDismiss?.(n.id);
+}
+
+/**
  * Route to a notification's target. Returns true if it navigated (caller then
  * dismisses). `navigateForum` lets the caller supply scope-aware forum nav
  * (the helper can't read scope context itself).

@@ -15,6 +15,8 @@ const FAMILY_STACK: Partial<Record<FontId, string>> = {
   jetbrains: '"JetBrains Mono", ui-monospace, monospace',
   quicksand: '"Quicksand", system-ui, sans-serif',
   merriweather: '"Merriweather", Georgia, serif',
+  // System serif - no Google Fonts <link>; ensureFontLoaded() no-ops (no googleFamily).
+  times: '"Times New Roman", Times, serif',
 };
 
 /** CSS font-family stack for a font id (used by theme provider / picker). */

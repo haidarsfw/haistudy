@@ -522,9 +522,15 @@ export async function PUT(request: Request) {
         .eq("jurusan", resolved.scope.jurusan);
     }
 
-    const { data, error } = await q.select().single();
+    const { data, error } = await q.select().maybeSingle();
 
     if (error) throw error;
+    if (!data) {
+      return NextResponse.json(
+        { error: "License tidak ada di scope ini" },
+        { status: 404 }
+      );
+    }
 
     // OAuth link management: linkedEmail present (non-empty) = upsert, null/"" = delete.
     let linkedEmailOut: string | null = null;

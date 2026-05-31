@@ -293,7 +293,7 @@ export function RangkumanTab({
     toast.success(t("highlight.cleared_all"));
   }, [clearAll, t]);
 
-  // Issue 10: "Tanya AI" — open the AI panel grounded in the selected text.
+  // Issue 10: "Tanya AI" - open the AI panel grounded in the selected text.
   const handleAskAI = useCallback(() => {
     const text =
       pendingAnchor?.text || window.getSelection()?.toString().trim() || "";

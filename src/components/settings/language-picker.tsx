@@ -28,14 +28,14 @@ export function LanguagePicker({ value, onChange }: LanguagePickerProps) {
             key={lang.id}
             onClick={() => { sounds.toggle(); onChange(lang.id); }}
             whileTap={tapScale}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+            className={`min-w-0 flex-1 flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
               value === lang.id
                 ? "border-primary bg-primary/10 text-primary"
                 : "border-border bg-card text-muted-foreground hover:bg-muted"
             }`}
           >
-            <span className="text-xs font-bold">{lang.flag}</span>
-            <span>{lang.label}</span>
+            <span className="shrink-0 text-xs font-bold">{lang.flag}</span>
+            <span className="truncate">{lang.label}</span>
             <AnimatePresence>
               {value === lang.id && (
                 <motion.span

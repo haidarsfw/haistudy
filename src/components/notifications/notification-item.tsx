@@ -11,8 +11,7 @@ import {
   notificationIcon,
   contextIcon,
   notificationLabel,
-  isInteractiveNotification,
-  routeToNotification,
+  activateNotification,
 } from "./notification-shared";
 import type { Notification } from "@/types";
 
@@ -24,6 +23,9 @@ interface NotificationItemProps {
   onDismiss: (id: string) => void;
   // Compact variant for the transient popup (no dismiss-on-hover chrome).
   variant?: "center" | "popup";
+  // When false the row doesn't handle its own click - the parent (popup)
+  // routes taps via framer's onTap so swipe-to-dismiss still works.
+  clickable?: boolean;
 }
 
 /**
@@ -41,6 +43,7 @@ export function NotificationItem({
   onRead,
   onDismiss,
   variant = "center",
+  clickable = true,
 }: NotificationItemProps) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -65,33 +68,29 @@ export function NotificationItem({
   );
 
   const handleClick = useCallback(() => {
-    if (notification.type === "announcement") {
-      onAnnouncementClick?.(notification);
-      if (!notification.read) onRead(notification.id);
-      return;
-    }
-    if (isInteractiveNotification(notification)) {
-      routeToNotification(notification, navigateForum);
-      if (!notification.read) onRead(notification.id);
-      onDismiss(notification.id);
-      return;
-    }
-    // Non-interactive → just dismiss.
-    if (!notification.read) onRead(notification.id);
-    onDismiss(notification.id);
+    activateNotification(notification, {
+      navigateForum,
+      onRead,
+      onAnnouncementClick,
+      onDismiss,
+    });
   }, [notification, onAnnouncementClick, onRead, onDismiss, navigateForum]);
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") handleClick();
-      }}
-      className={`group/item flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/50 cursor-pointer ${
-        notification.read && variant === "center" ? "opacity-60" : ""
-      }`}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? handleClick : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.key === "Enter") handleClick();
+            }
+          : undefined
+      }
+      className={`group/item flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/50 ${
+        clickable ? "cursor-pointer" : ""
+      } ${notification.read && variant === "center" ? "opacity-60" : ""}`}
     >
       <div
         className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
@@ -136,6 +135,9 @@ export function NotificationItem({
           e.stopPropagation();
           onDismiss(notification.id);
         }}
+        // Stop framer's drag/tap gesture (popup wrapper) from firing when the
+        // X is pressed, so dismissing never also routes/activates.
+        onPointerDownCapture={(e) => e.stopPropagation()}
         className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground sm:opacity-40 sm:group-hover/item:opacity-100 hover:text-foreground hover:bg-muted transition-all sm:h-5 sm:w-5"
         aria-label={t("notification.dismiss")}
       >

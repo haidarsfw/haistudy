@@ -71,7 +71,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
-  // Issue 10: active reference banner — set from the incoming reference prop,
+  // Issue 10: active reference banner - set from the incoming reference prop,
   // attached to the next send, then cleared. Bump focusSignal to refocus input.
   const [activeReference, setActiveReference] = useState<{ text: string; subjectId: string | null } | null>(null);
   const [focusSignal, setFocusSignal] = useState(0);
@@ -310,7 +310,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
 
   const panelClass = isFullscreen
     ? "fixed top-14 right-0 bottom-0 left-0 z-50 flex flex-col overflow-hidden border-t border-border bg-background shadow-xl"
-    : "fixed right-0 bottom-0 z-50 flex w-full flex-col overflow-hidden border-t border-border bg-background shadow-xl h-[80dvh] max-h-[calc(100dvh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:w-[336px] lg:w-[400px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0";
+    : "fixed right-0 bottom-0 z-50 flex w-full flex-col overflow-hidden border-t border-border bg-background shadow-xl h-[80dvh] max-h-[calc(100dvh-3.5rem)] rounded-t-2xl sm:top-14 sm:bottom-0 sm:right-0 sm:h-auto sm:w-[380px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0";
 
   return (
     <AnimatePresence>
@@ -525,7 +525,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
 
             {/* Input */}
             <div className={isFullscreen ? "mx-auto w-full max-w-3xl" : ""}>
-              {/* Issue 10: reference banner — shows the selected materi text the
+              {/* Issue 10: reference banner - shows the selected materi text the
                   answer will be grounded in. Dismissable; clears on send too. */}
               {activeReference && (
                 <div className="mx-3 mt-2 flex items-start gap-2 rounded-md border-l-2 border-primary bg-muted/50 px-3 py-2 text-xs">

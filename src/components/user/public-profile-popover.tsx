@@ -83,8 +83,10 @@ export function PublicProfilePopover({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={children} />
-      <PopoverContent className="w-56 p-0" align="start" sideOffset={6}>
+      {/* openOnHover = desktop hover (delay 300ms); base-ui ignores hover for
+          touch input, so mobile still opens on tap. */}
+      <PopoverTrigger openOnHover delay={300} render={children} />
+      <PopoverContent className="w-52 p-0" align="start" sideOffset={6}>
         <div className="flex items-center gap-3 p-3">
           <Image
             src={avatar}
@@ -127,13 +129,13 @@ export function PublicProfilePopover({
         {(profile?.customStatus || profile?.bio) && (
           <>
             <Separator />
-            <div className="space-y-2 p-4">
+            <div className="space-y-1.5 p-3">
               {profile.customStatus && (
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     {t("profile.label_status")}
                   </p>
-                  <p className="mt-0.5 text-xs text-foreground/90">
+                  <p className="text-[11px] text-foreground/90">
                     {profile.customStatus}
                   </p>
                 </div>
@@ -143,7 +145,7 @@ export function PublicProfilePopover({
                   <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     {t("profile.label_bio")}
                   </p>
-                  <p className="mt-0.5 whitespace-pre-wrap text-[11px] text-muted-foreground">
+                  <p className="whitespace-pre-wrap text-[11px] text-muted-foreground">
                     {profile.bio}
                   </p>
                 </div>
@@ -162,7 +164,7 @@ export function PublicProfilePopover({
                   setOpen(false);
                   openDmTo(licenseKey!);
                 }}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <Send className="h-3.5 w-3.5" />
                 {t("profile.send_dm")}
@@ -174,7 +176,7 @@ export function PublicProfilePopover({
         {!licenseKey && (
           <>
             <Separator />
-            <p className="px-4 py-2 text-[10px] text-muted-foreground">
+            <p className="px-3 py-2 text-[10px] text-muted-foreground">
               {t("profile.public_unavailable")}
             </p>
           </>

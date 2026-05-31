@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import type { LicenseKey } from "@/types";
 
 interface LicenseFormProps {
@@ -18,6 +19,7 @@ interface LicenseFormProps {
 
 export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
   const isEdit = !!license;
+  const { scopeQuery } = useAdminScope();
 
   const [key, setKey] = useState(license?.key || "");
   const [name, setName] = useState(license?.name || "");
@@ -55,7 +57,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
 
       try {
         if (isEdit) {
-          const res = await fetch("/api/admin/licenses", {
+          const res = await fetch(`/api/admin/licenses${scopeQuery()}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -104,7 +106,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
 
       setSaving(false);
     },
-    [isEdit, key, name, maxDevices, unlimitedDevices, isAdmin, isTester, packageTier, linkedEmail, license, onSave]
+    [isEdit, key, name, maxDevices, unlimitedDevices, isAdmin, isTester, packageTier, linkedEmail, license, onSave, scopeQuery]
   );
 
   return (

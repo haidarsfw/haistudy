@@ -20,7 +20,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";
@@ -76,8 +75,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[85vh] p-0 overflow-hidden bg-background/90 backdrop-blur-xl border-border/30 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-[0.96]">
-        <DialogHeader className="px-6 pt-6 pb-0">
+      <DialogContent className="flex flex-col w-[calc(100vw-2rem)] max-w-md sm:max-w-md max-h-[85dvh] p-0 overflow-hidden bg-background/90 backdrop-blur-xl border-border/30 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-[0.96]">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-0">
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
             {t("settings.title")}
@@ -91,7 +90,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         </DialogHeader>
 
         {/* Custom tab bar */}
-        <div className="flex gap-1 px-6 pt-2">
+        <div className="flex shrink-0 gap-1 px-6 pt-2">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -118,7 +117,9 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           })}
         </div>
 
-        <ScrollArea className="max-h-[calc(85vh-160px)]">
+        {/* Native scroll (no ScrollArea) so there's no overlay scrollbar gutter
+            skewing the layout right; flex-1 + min-h-0 lets it fill the modal. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 pb-6 pt-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -131,7 +132,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
-                className="w-full min-w-0 overflow-x-hidden px-6 pb-6 pt-2"
+                className="w-full min-w-0"
               >
                 {activeTab === "appearance" && (
                   <motion.div
@@ -321,7 +322,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               </motion.div>
             </AnimatePresence>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -7,6 +7,7 @@ import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useAvatars } from "@/hooks/use-avatars";
+import { PublicProfilePopover } from "@/components/user/public-profile-popover";
 import type { OnlineUser } from "@/types";
 
 const DOT_COLORS = [
@@ -25,17 +26,36 @@ const deviceIconMap: Record<string, typeof Monitor> = {
 
 const MAX_VISIBLE_EXPANDED = 2;
 
-function UserRow({ user, index, isAdmin, masked, displayName }: { user: OnlineUser; index: number; isAdmin: boolean; masked: boolean; displayName: string }) {
+function UserRow({ user, index, isAdmin, masked, displayName, popover = true }: { user: OnlineUser; index: number; isAdmin: boolean; masked: boolean; displayName: string; popover?: boolean }) {
   const devices = user.deviceTypes || [user.deviceType];
   return (
     <div className="flex items-center gap-2 text-xs">
       <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
-      <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
-        {displayName}
-        {!masked && user.deviceCount > 1 && (
-          <span className="text-muted-foreground font-normal ml-1">({user.deviceCount})</span>
-        )}
-      </span>
+      {masked || !popover ? (
+        <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
+          {displayName}
+          {!masked && user.deviceCount > 1 && (
+            <span className="text-muted-foreground font-normal ml-1">({user.deviceCount})</span>
+          )}
+        </span>
+      ) : (
+        <PublicProfilePopover
+          licenseKey={user.licenseKey}
+          fallbackName={user.userName || displayName}
+          fallbackIsAdmin={user.isAdmin}
+          fallbackTier={user.packageTier ?? null}
+        >
+          <button
+            type="button"
+            className={`min-w-0 font-medium truncate flex-1 text-left hover:underline ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""}`}
+          >
+            {displayName}
+            {user.deviceCount > 1 && (
+              <span className="text-muted-foreground font-normal ml-1">({user.deviceCount})</span>
+            )}
+          </button>
+        </PublicProfilePopover>
+      )}
       {user.hideStatus && isAdmin && (
         <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
       )}
@@ -122,21 +142,40 @@ export function OnlineUsersMini() {
                 const avatarUrl = !masked && user.licenseKey
                   ? avatarMap.get(user.licenseKey.toUpperCase()) ?? null
                   : null;
+                const avatarClass = `h-6 w-6 overflow-hidden rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`;
+                const title = masked ? "Hidden User" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`;
+                const inner = avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt={user.userName || "?"} className="h-full w-full object-cover" />
+                ) : masked ? (
+                  "?"
+                ) : (
+                  (user.userName || "?").charAt(0).toUpperCase()
+                );
+                // Masked users get NO popover (privacy); everyone else is hoverable.
+                if (masked) {
+                  return (
+                    <div key={`${user.id}-${i}`} className={avatarClass} title={title}>
+                      {inner}
+                    </div>
+                  );
+                }
                 return (
-                  <div
+                  <PublicProfilePopover
                     key={`${user.id}-${i}`}
-                    className={`h-6 w-6 overflow-hidden rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`}
-                    title={masked ? "Hidden User" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`}
+                    licenseKey={user.licenseKey}
+                    fallbackName={user.userName || "?"}
+                    fallbackIsAdmin={user.isAdmin}
+                    fallbackTier={user.packageTier ?? null}
                   >
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={avatarUrl} alt={user.userName || "?"} className="h-full w-full object-cover" />
-                    ) : masked ? (
-                      "?"
-                    ) : (
-                      (user.userName || "?").charAt(0).toUpperCase()
-                    )}
-                  </div>
+                    <button
+                      type="button"
+                      className={`${avatarClass} cursor-pointer transition-transform hover:z-10 hover:scale-110`}
+                      title={title}
+                    >
+                      {inner}
+                    </button>
+                  </PublicProfilePopover>
                 );
               })}
               {visibleUsers.length > 5 && (
@@ -233,6 +272,7 @@ export function OnlineUsersMini() {
                       isAdmin={isAdmin}
                       masked={masked}
                       displayName={getDisplayName(user)}
+                      popover={false}
                     />
                   );
                 })}

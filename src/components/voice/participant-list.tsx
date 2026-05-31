@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 import { useAvatars } from "@/hooks/use-avatars";
+import { PublicProfilePopover } from "@/components/user/public-profile-popover";
 
 interface ParticipantListProps {
   participants: VoiceParticipant[];
@@ -49,37 +50,52 @@ export function ParticipantList({
               isMe ? "bg-primary/5" : "hover:bg-muted/50"
             }`}
           >
-            <div className="relative">
-              <Avatar className="h-8 w-8">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={p.userName} />}
-                <AvatarFallback className="text-xs">
-                  {p.userName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              {/* Speaking indicator ring */}
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-background">
-                {isMe && isMuted ? (
-                  <MicOff className="h-2 w-2 text-destructive" />
-                ) : (
-                  <Mic className="h-2 w-2 text-green-500" />
-                )}
-              </span>
-            </div>
+            <PublicProfilePopover
+              licenseKey={p.licenseKey}
+              fallbackName={p.userName}
+              fallbackTier={p.packageTier}
+              fallbackIsAdmin={p.isAdmin}
+            >
+              <button type="button" className="relative shrink-0 rounded-full transition-opacity hover:opacity-80">
+                <Avatar className="h-8 w-8">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt={p.userName} />}
+                  <AvatarFallback className="text-xs">
+                    {p.userName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Speaking indicator ring */}
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-background">
+                  {isMe && isMuted ? (
+                    <MicOff className="h-2 w-2 text-destructive" />
+                  ) : (
+                    <Mic className="h-2 w-2 text-green-500" />
+                  )}
+                </span>
+              </button>
+            </PublicProfilePopover>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span
-                  className={`truncate text-sm font-semibold ${
-                    ROLE_COLORS[
-                      resolveRole({
-                        isAdmin: p.isAdmin,
-                        isTester: p.isTester,
-                        packageTier: p.packageTier ?? null,
-                      })
-                    ].text
-                  }`}
+                <PublicProfilePopover
+                  licenseKey={p.licenseKey}
+                  fallbackName={p.userName}
+                  fallbackTier={p.packageTier}
+                  fallbackIsAdmin={p.isAdmin}
                 >
-                  {p.userName}
-                </span>
+                  <button
+                    type="button"
+                    className={`min-w-0 truncate text-left text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${
+                      ROLE_COLORS[
+                        resolveRole({
+                          isAdmin: p.isAdmin,
+                          isTester: p.isTester,
+                          packageTier: p.packageTier ?? null,
+                        })
+                      ].text
+                    }`}
+                  >
+                    {p.userName}
+                  </button>
+                </PublicProfilePopover>
                 {isMe && (
                   <Badge variant="outline" className="text-[9px]">
                     Kamu

@@ -3,7 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import type { PublicProfile } from "@/types";
 
 type ProfileRow = {
@@ -20,23 +20,30 @@ type KeyRow = {
   name: string | null;
   package_tier: PublicProfile["packageTier"];
   is_admin: boolean | null;
+  semester: number | null;
+  exam_period: string | null;
+  jurusan: string | null;
 };
 
 function build(
   key: string,
   profiles: Map<string, ProfileRow>,
-  keys: Map<string, KeyRow>
+  keys: Map<string, KeyRow>,
+  inScope: boolean
 ): PublicProfile {
   const p = profiles.get(key);
   const k = keys.get(key);
   return {
     licenseKey: key,
+    // Identity (name, photo, tier, admin badge) is GLOBAL by license_key - the
+    // same person renders consistently in every scope. Bio/status/class are
+    // scope-private and degrade to null when the viewer is in another scope.
     name: k?.name ?? "Pengguna",
     avatarUrl: p?.avatar_url ?? null,
-    bio: p?.bio ?? null,
-    customStatus: p?.custom_status ?? null,
-    customStatusEmoji: p?.custom_status_emoji ?? null,
-    selectedClass: p?.selected_class ?? null,
+    bio: inScope ? p?.bio ?? null : null,
+    customStatus: inScope ? p?.custom_status ?? null : null,
+    customStatusEmoji: inScope ? p?.custom_status_emoji ?? null : null,
+    selectedClass: inScope ? p?.selected_class ?? null : null,
     packageTier: k?.package_tier ?? null,
     isAdmin: k?.is_admin ?? false,
   };
@@ -67,33 +74,46 @@ async function fetchProfiles(
 
   const supabase = createServerClient()!;
 
-  // license_keys is the scope-bound table; only return keys that belong to the
-  // caller's scope. This is the cross-scope leak guard for the directory.
-  const { data: keyRows, error: keyErr } = await scopeEq(scope)(
-    supabase
-      .from("license_keys")
-      .select("key, name, package_tier, is_admin")
-      .in("key", keys)
-  );
+  // Resolve identity GLOBALLY by license_key (no scope filter) - name/photo/tier
+  // are the same person everywhere. The scope columns let us flag which keys
+  // belong to the caller's scope so the scope-private fields can be gated.
+  const { data: keyRows, error: keyErr } = await supabase
+    .from("license_keys")
+    .select("key, name, package_tier, is_admin, semester, exam_period, jurusan")
+    .in("key", keys);
   if (keyErr) throw keyErr;
 
   const keyMap = new Map<string, KeyRow>(
     ((keyRows as KeyRow[]) ?? []).map((r) => [r.key, r])
   );
-  const allowed = [...keyMap.keys()];
-  if (allowed.length === 0) return [];
+  const known = [...keyMap.keys()];
+  if (known.length === 0) return [];
 
   const { data: profRows, error: profErr } = await supabase
     .from("user_profiles")
     .select("license_key, avatar_url, bio, custom_status, custom_status_emoji, selected_class")
-    .in("license_key", allowed);
+    .in("license_key", known);
   if (profErr) throw profErr;
 
   const profMap = new Map<string, ProfileRow>(
     ((profRows as ProfileRow[]) ?? []).map((r) => [r.license_key, r])
   );
 
-  return allowed.map((k) => build(k, profMap, keyMap));
+  // A key is "in scope" when its (semester, exam_period, jurusan) matches the
+  // requester's scope. Only then are bio/status/class returned.
+  const inScopeKeys = new Set(
+    known.filter((k) => {
+      const r = keyMap.get(k);
+      return (
+        !!r &&
+        r.semester === scope.semester &&
+        r.exam_period === scope.examPeriod &&
+        r.jurusan === scope.jurusan
+      );
+    })
+  );
+
+  return known.map((k) => build(k, profMap, keyMap, inScopeKeys.has(k)));
 }
 
 // ─── GET /api/profile/public?licenseKey=xxx ─── single profile

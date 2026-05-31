@@ -27,6 +27,7 @@ const fontPreviewStyle: Record<FontId, string> = {
   jetbrains: '"JetBrains Mono", ui-monospace, monospace',
   quicksand: '"Quicksand", system-ui, sans-serif',
   merriweather: '"Merriweather", Georgia, serif',
+  times: '"Times New Roman", Times, serif',
 };
 
 export function FontPicker({ value, canUseVip, onChange }: FontPickerProps) {
@@ -60,20 +61,18 @@ export function FontPicker({ value, canUseVip, onChange }: FontPickerProps) {
               }}
               whileTap={tapScale}
               style={{ fontFamily: fontPreviewStyle[font.id] }}
-              className={`relative flex items-center justify-center rounded-lg border px-6 py-2 text-sm min-h-[38px] transition-colors ${
+              className={`relative flex items-center justify-center rounded-lg border px-6 py-2 text-sm min-h-[40px] transition-colors ${
                 value === font.id
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/40"
               } ${locked ? "opacity-60" : ""}`}
             >
-              {/* Label optically centered in the box; the status icon is
-                  absolute so it never shoves the name off-center. */}
-              <span className="flex min-w-0 items-center justify-center gap-1 text-center">
-                {font.vip && (
-                  <Crown className="h-3 w-3 shrink-0 text-amber-500" />
-                )}
-                <span className="break-words">{font.name}</span>
-              </span>
+              {/* Crown + status icon are absolute so the name stays optically
+                  centered; px-6 reserves symmetric room for both. */}
+              {font.vip && (
+                <Crown className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-amber-500" />
+              )}
+              <span className="min-w-0 truncate text-center">{font.name}</span>
               <span className="absolute right-2 top-1/2 flex w-4 -translate-y-1/2 justify-center">
                 {locked ? (
                   <Lock className="h-3 w-3 text-muted-foreground" />
