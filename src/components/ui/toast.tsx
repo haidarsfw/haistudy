@@ -206,7 +206,7 @@ function ToastCard({ item }: { item: ToastItem }) {
       }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      className="cn-toast group/toast pointer-events-auto relative flex w-fit min-w-[13rem] max-w-full cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-left text-card-foreground shadow-lg sm:min-w-[17rem] sm:gap-3 sm:px-4 sm:py-3"
+      className="cn-toast group/toast pointer-events-auto relative flex w-full max-w-full cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-left text-card-foreground shadow-lg sm:w-fit sm:min-w-[17rem] sm:gap-3 sm:px-4 sm:py-3"
     >
       {/* Desktop-only dismiss chip (macOS-style, hover-reveal). Mobile has no X
           - tap or swipe dismisses there. Click/swipe also work on desktop. */}
@@ -260,7 +260,7 @@ export function Toaster() {
 
   return (
     <div
-      className="pointer-events-none fixed right-3 top-3 z-[140] flex w-[calc(100vw-1.5rem)] max-w-sm flex-col items-end gap-2 sm:right-4 sm:top-4"
+      className="pointer-events-none fixed right-3 top-3 z-[140] flex w-[calc(100vw-1.5rem)] flex-col items-end gap-2 sm:right-4 sm:top-4 sm:max-w-sm"
       aria-live="polite"
       aria-atomic="false"
     >
