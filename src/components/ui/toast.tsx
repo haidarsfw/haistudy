@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CircleCheckIcon,
   InfoIcon,
@@ -157,66 +158,43 @@ const TYPE_STYLE: Record<ToastType, { tint: string; icon: React.ReactNode }> = {
 };
 
 function ToastCard({ item }: { item: ToastItem }) {
-  const [leaving, setLeaving] = React.useState(false);
-  // Controls the macOS-style corner dismiss. Revealed on hover and kept for a
-  // 2s grace after the pointer leaves (so it never vanishes the instant you
-  // move toward it). Always visible on touch (no hover there).
-  const [showClose, setShowClose] = React.useState(false);
-  const hideTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const close = React.useCallback(() => removeToast(item.id), [item.id]);
 
-  const close = React.useCallback(() => {
-    setLeaving(true);
-    // Match the CSS exit transition before removing from store.
-    setTimeout(() => removeToast(item.id), 180);
-  }, [item.id]);
-
-  const handleEnter = React.useCallback(() => {
-    if (hideTimer.current) {
-      clearTimeout(hideTimer.current);
-      hideTimer.current = null;
-    }
-    setShowClose(true);
-    pauseRemoval(item.id); // don't auto-dismiss while the user is reading/aiming
-  }, [item.id]);
-
-  const handleLeave = React.useCallback(() => {
-    // Keep the X for 2s after leaving, then hide it; resume the auto-dismiss
-    // with the same 2s grace (persistent toasts stay).
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setShowClose(false), 2000);
+  // Pause auto-dismiss while hovered; resume with a short grace on leave. The X
+  // visibility itself is pure CSS group-hover (instant show on hover, instant
+  // hide on un-hover) - no JS state, no linger.
+  const onEnter = React.useCallback(() => pauseRemoval(item.id), [item.id]);
+  const onLeave = React.useCallback(() => {
     if (item.duration !== Infinity) scheduleRemoval(item.id, 2000);
   }, [item.id, item.duration]);
-
-  React.useEffect(
-    () => () => {
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-    },
-    []
-  );
 
   const style = TYPE_STYLE[item.type];
   const icon = item.icon ?? style.icon;
 
   return (
-    <div
+    <motion.div
+      layout
       role="status"
       aria-live="polite"
-      data-leaving={leaving || undefined}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-      className="cn-toast pointer-events-auto relative flex w-fit min-w-[15rem] max-w-full items-start gap-3 rounded-xl border border-border bg-card px-3.5 py-3 text-left text-card-foreground shadow-lg"
+      initial={{ opacity: 0, x: 28, scale: 0.97 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 28, scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.8 }}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      className="cn-toast group/toast pointer-events-auto relative flex w-fit min-w-[15rem] max-w-full items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3 text-left text-card-foreground shadow-lg"
     >
-      {/* Dismiss - top-left CORNER chip, macOS-style. Hover-reveal on desktop
-          (lingers 2s after un-hover); always visible on touch. */}
+      {/* Dismiss - macOS-style translucent corner chip. Hover-only on desktop
+          (hidden when not hovering); always visible on touch. */}
       <button
         onClick={close}
         aria-label="Tutup"
-        className={`absolute -left-2 -top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-700 text-white shadow ring-2 ring-card transition-opacity dark:bg-neutral-600 opacity-100 ${showClose ? "sm:opacity-100" : "sm:opacity-0"}`}
+        className="absolute -left-2 -top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/15 text-foreground/70 ring-1 ring-foreground/10 backdrop-blur-sm transition-[opacity,background-color] hover:bg-foreground/25 hover:text-foreground opacity-100 sm:opacity-0 sm:group-hover/toast:opacity-100"
       >
         <XIcon className="h-3 w-3" />
       </button>
 
-      <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${style.tint}`}>
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${style.tint}`}>
         {icon}
       </div>
 
@@ -239,7 +217,7 @@ function ToastCard({ item }: { item: ToastItem }) {
           </button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -255,9 +233,11 @@ export function Toaster() {
       aria-live="polite"
       aria-atomic="false"
     >
-      {items.map((item) => (
-        <ToastCard key={item.id} item={item} />
-      ))}
+      <AnimatePresence initial={false}>
+        {items.map((item) => (
+          <ToastCard key={item.id} item={item} />
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
