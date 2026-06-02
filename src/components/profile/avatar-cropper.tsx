@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Cropper from "react-easy-crop";
 import type { Area, Point } from "react-easy-crop";
 import { motion } from "framer-motion";
@@ -19,15 +20,20 @@ interface AvatarCropperProps {
 }
 
 /**
- * Self-contained circular avatar cropper. Rendered as a fixed inset-0 overlay
- * at z-[130] so it sits above the settings modal (z-101) and any popover. NOT a
- * nested base-ui Dialog - that would stack focus-traps. Pointer events on the
- * root are stopped so a backdrop click never reaches the underlying modal's
- * outside-press handler. Lazy-loaded by ProfileEditor via next/dynamic, which
- * keeps react-easy-crop out of the initial bundle.
+ * Self-contained circular avatar cropper. Rendered through a PORTAL to
+ * document.body so its `fixed inset-0` overlay is relative to the viewport and
+ * not trapped by the settings/chat modal's framer-motion transformed ancestor
+ * (which would otherwise size + scroll it inside the modal). Result: one full
+ * popup, no scroll, with Cancel/Apply directly under the crop area.
+ *
+ * Native pointer/mouse/touch events are stopped at the overlay so a backdrop
+ * press never reaches the underlying base-ui modal's outside-press handler and
+ * closes it. Lazy-loaded by ProfileEditor via next/dynamic, which keeps
+ * react-easy-crop out of the initial bundle.
  */
 export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperProps) {
   const { t } = useTranslation();
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [area, setArea] = useState<Area | null>(null);
@@ -36,6 +42,36 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setArea(pixels);
   }, []);
+
+  // Stop pointer/mouse/touch from bubbling out of the overlay to document, where
+  // the underlying modal listens for outside-press. Without this, clicking the
+  // cropper backdrop would also dismiss the settings modal beneath it.
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
+    const stop = (e: Event) => e.stopPropagation();
+    el.addEventListener("pointerdown", stop);
+    el.addEventListener("mousedown", stop);
+    el.addEventListener("touchstart", stop, { passive: true });
+    return () => {
+      el.removeEventListener("pointerdown", stop);
+      el.removeEventListener("mousedown", stop);
+      el.removeEventListener("touchstart", stop);
+    };
+  }, []);
+
+  // Escape closes the cropper (only). Capture phase + stopImmediatePropagation so
+  // the underlying modal doesn't also close on the same keypress.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation();
+        onCancel();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [onCancel]);
 
   const handleApply = async () => {
     if (!area) return;
@@ -50,14 +86,15 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
     }
   };
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <motion.div
+      ref={overlayRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
     >
       {/* Backdrop click = cancel */}
       <button
@@ -73,10 +110,10 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={{ type: "spring", damping: 26, stiffness: 320 }}
-        className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+        className="relative z-10 flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
           <h3 className="text-sm font-semibold">{t("profile.crop_title")}</h3>
           <button
             type="button"
@@ -89,7 +126,7 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
         </div>
 
         {/* Crop surface */}
-        <div className="relative h-72 w-full bg-black sm:h-80">
+        <div className="relative h-64 w-full shrink-0 bg-black sm:h-72">
           <Cropper
             image={src}
             crop={crop}
@@ -107,8 +144,8 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
           />
         </div>
 
-        {/* Zoom + actions */}
-        <div className="space-y-3 p-4">
+        {/* Zoom + actions (always visible, no scroll) */}
+        <div className="shrink-0 space-y-3 p-4">
           <div className="flex items-center gap-3">
             <ZoomIn className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
@@ -140,14 +177,13 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
               onClick={handleApply}
               disabled={applying || !area}
             >
-              {applying ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              ) : null}
+              {applying ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
               {t("profile.crop_apply")}
             </Button>
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
