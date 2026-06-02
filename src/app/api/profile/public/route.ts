@@ -20,39 +20,34 @@ type KeyRow = {
   name: string | null;
   package_tier: PublicProfile["packageTier"];
   is_admin: boolean | null;
-  semester: number | null;
-  exam_period: string | null;
-  jurusan: string | null;
 };
 
 function build(
   key: string,
   profiles: Map<string, ProfileRow>,
-  keys: Map<string, KeyRow>,
-  inScope: boolean
+  keys: Map<string, KeyRow>
 ): PublicProfile {
   const p = profiles.get(key);
   const k = keys.get(key);
   return {
     licenseKey: key,
-    // Identity (name, photo, tier, admin badge) is GLOBAL by license_key - the
-    // same person renders consistently in every scope. Bio/status/class are
-    // scope-private and degrade to null when the viewer is in another scope.
+    // Every profile field (name, photo, tier, admin badge, bio, status, class)
+    // is GLOBAL by license_key. user_profiles has no scope columns, so the same
+    // person renders identically in every scope. requireScope still guards the
+    // route for auth; it does not narrow which fields are returned. This is what
+    // lets all users (including admins viewing another scope) see avatar/status/bio.
     name: k?.name ?? "Pengguna",
     avatarUrl: p?.avatar_url ?? null,
-    bio: inScope ? p?.bio ?? null : null,
-    customStatus: inScope ? p?.custom_status ?? null : null,
-    customStatusEmoji: inScope ? p?.custom_status_emoji ?? null : null,
-    selectedClass: inScope ? p?.selected_class ?? null : null,
+    bio: p?.bio ?? null,
+    customStatus: p?.custom_status ?? null,
+    customStatusEmoji: p?.custom_status_emoji ?? null,
+    selectedClass: p?.selected_class ?? null,
     packageTier: k?.package_tier ?? null,
     isAdmin: k?.is_admin ?? false,
   };
 }
 
-async function fetchProfiles(
-  scope: Awaited<ReturnType<typeof requireScope>>,
-  licenseKeys: string[]
-): Promise<PublicProfile[]> {
+async function fetchProfiles(licenseKeys: string[]): Promise<PublicProfile[]> {
   const keys = [...new Set(licenseKeys.map((k) => k.toUpperCase()))]
     .filter(Boolean)
     .slice(0, 200);
@@ -74,12 +69,11 @@ async function fetchProfiles(
 
   const supabase = createServerClient()!;
 
-  // Resolve identity GLOBALLY by license_key (no scope filter) - name/photo/tier
-  // are the same person everywhere. The scope columns let us flag which keys
-  // belong to the caller's scope so the scope-private fields can be gated.
+  // Resolve identity GLOBALLY by license_key (no scope filter). name/photo/tier
+  // are the same person everywhere; there are no scope-private fields to gate.
   const { data: keyRows, error: keyErr } = await supabase
     .from("license_keys")
-    .select("key, name, package_tier, is_admin, semester, exam_period, jurusan")
+    .select("key, name, package_tier, is_admin")
     .in("key", keys);
   if (keyErr) throw keyErr;
 
@@ -99,27 +93,13 @@ async function fetchProfiles(
     ((profRows as ProfileRow[]) ?? []).map((r) => [r.license_key, r])
   );
 
-  // A key is "in scope" when its (semester, exam_period, jurusan) matches the
-  // requester's scope. Only then are bio/status/class returned.
-  const inScopeKeys = new Set(
-    known.filter((k) => {
-      const r = keyMap.get(k);
-      return (
-        !!r &&
-        r.semester === scope.semester &&
-        r.exam_period === scope.examPeriod &&
-        r.jurusan === scope.jurusan
-      );
-    })
-  );
-
-  return known.map((k) => build(k, profMap, keyMap, inScopeKeys.has(k)));
+  return known.map((k) => build(k, profMap, keyMap));
 }
 
 // ─── GET /api/profile/public?licenseKey=xxx ─── single profile
 export async function GET(request: Request) {
   try {
-    const scope = await requireScope(request);
+    await requireScope(request);
     const { searchParams } = new URL(request.url);
     const licenseKey = searchParams.get("licenseKey");
 
@@ -130,7 +110,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const [profile] = await fetchProfiles(scope, [licenseKey]);
+    const [profile] = await fetchProfiles([licenseKey]);
     return NextResponse.json({ profile: profile ?? null });
   } catch (error) {
     if (error instanceof ScopeError) {
@@ -144,11 +124,11 @@ export async function GET(request: Request) {
 // ─── POST /api/profile/public ─── batch for the offline directory
 export async function POST(request: Request) {
   try {
-    const scope = await requireScope(request);
+    await requireScope(request);
     const body = await request.json().catch(() => ({}));
     const licenseKeys = Array.isArray(body?.licenseKeys) ? body.licenseKeys : [];
 
-    const profiles = await fetchProfiles(scope, licenseKeys as string[]);
+    const profiles = await fetchProfiles(licenseKeys as string[]);
     return NextResponse.json({ profiles });
   } catch (error) {
     if (error instanceof ScopeError) {

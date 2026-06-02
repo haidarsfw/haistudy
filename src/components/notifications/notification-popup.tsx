@@ -24,6 +24,9 @@ export function NotificationPopup({
   onAnnouncementClick,
 }: NotificationPopupProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True while a drag is in progress so the click handler can ignore the
+  // click that fires at the end of a drag (otherwise a swipe also activates).
+  const draggedRef = useRef(false);
   const router = useRouter();
   const scopeCtx = useOptionalScope();
 
@@ -56,25 +59,45 @@ export function NotificationPopup({
           initial="hidden"
           animate="visible"
           exit="exit"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.4}
-          onDragEnd={(_, info) => {
-            if (info.offset.x > 80) onDismiss();
+          drag
+          dragSnapToOrigin
+          dragElastic={0.5}
+          onDragStart={() => {
+            draggedRef.current = true;
           }}
-          onTap={() =>
+          onDragEnd={(_, info) => {
+            const { offset, velocity } = info;
+            // Dismiss on a decisive swipe in ANY of right/left/up, or a fast
+            // flick. Otherwise the card springs back to origin.
+            const dismiss =
+              offset.x > 70 ||
+              offset.x < -70 ||
+              offset.y < -70 ||
+              Math.abs(velocity.x) > 500 ||
+              velocity.y < -500;
+            if (dismiss) onDismiss();
+            // Clear AFTER the click that trailing a drag would fire.
+            requestAnimationFrame(() => {
+              draggedRef.current = false;
+            });
+          }}
+          onClick={() => {
+            // Ignore the click synthesized at the end of a drag; a genuine tap
+            // (no drag) reliably activates - non-interactive falls through to
+            // dismiss inside activateNotification.
+            if (draggedRef.current) return;
             activateNotification(notification, {
               navigateForum,
               onRead: (id) => onRead?.(id),
               onAnnouncementClick,
               onDismiss: () => onDismiss(),
-            })
-          }
-          className="fixed right-4 top-16 z-[60] w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-border bg-card shadow-lg max-h-[70vh]"
+            });
+          }}
+          className="fixed right-4 top-16 z-[60] w-96 max-w-[calc(100vw-2rem)] cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-lg max-h-[70vh]"
         >
-          {/* Shared item = identical style to the notification center. Tap is
-              handled by the wrapper's onTap (coexists with swipe-to-dismiss),
-              so the item itself is non-clickable; its X button still dismisses. */}
+          {/* Shared item = identical style to the notification center. The
+              wrapper owns the click + drag gestures, so the item is
+              non-clickable; its X button still dismisses via stopPropagation. */}
           <NotificationItem
             notification={notification}
             variant="popup"

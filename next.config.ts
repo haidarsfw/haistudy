@@ -97,17 +97,17 @@ const nextConfig: NextConfig = {
               // layout.tsx's theme-init script can't cover those, and a
               // nonce CSP via proxy.ts would force every page out of static
               // prerendering. Lighthouse BP loses ~5 points but site works.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live https://w.soundcloud.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://gvjwxccwuyuhgexypgbn.supabase.co https://lh3.googleusercontent.com https://*.googleusercontent.com https://res.cloudinary.com",
               "media-src 'self' blob: https://gvjwxccwuyuhgexypgbn.supabase.co https://res.cloudinary.com",
-              "connect-src 'self' https://gvjwxccwuyuhgexypgbn.supabase.co wss://gvjwxccwuyuhgexypgbn.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://va.vercel-scripts.com https://vitals.vercel-insights.com https://generativelanguage.googleapis.com https://api.openai.com https://api.cloudinary.com",
+              "connect-src 'self' https://gvjwxccwuyuhgexypgbn.supabase.co wss://gvjwxccwuyuhgexypgbn.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://va.vercel-scripts.com https://vitals.vercel-insights.com https://generativelanguage.googleapis.com https://api.openai.com https://api.cloudinary.com https://w.soundcloud.com",
               "worker-src 'self' blob:",
               // frame-src controls who WE can embed (Google Slides/Drive viewers
               // for MateriTab; YouTube for video lessons). Distinct from
               // frame-ancestors below which controls who can embed US.
-              "frame-src 'self' https://docs.google.com https://drive.google.com https://accounts.google.com https://content.googleapis.com https://www.youtube.com https://www.youtube-nocookie.com",
+              "frame-src 'self' https://docs.google.com https://drive.google.com https://accounts.google.com https://content.googleapis.com https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",

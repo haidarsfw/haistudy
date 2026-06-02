@@ -272,7 +272,6 @@ export function OnlineUsersMini() {
                       isAdmin={isAdmin}
                       masked={masked}
                       displayName={getDisplayName(user)}
-                      popover={false}
                     />
                   );
                 })}

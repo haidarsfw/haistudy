@@ -294,7 +294,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                       variants={staggerItem}
                       className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
-                      <ProfileEditor />
+                      <ProfileEditor onSaved={() => onOpenChange(false)} />
                     </motion.div>
 
                     <motion.div

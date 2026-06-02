@@ -557,7 +557,7 @@ const id: Record<string, string> = {
   "profile.avatar": "Avatar",
   "profile.upload_avatar": "Unggah foto",
   "profile.remove_avatar": "Hapus foto",
-  "profile.avatar_hint": "JPG atau PNG. Avatar huruf dipakai jika tidak diatur.",
+  "profile.avatar_hint": "JPG, PNG, WEBP, GIF atau HEIC. Avatar huruf dipakai jika tidak diatur.",
   "profile.bio": "Bio",
   "profile.bio_placeholder": "Ceritakan sedikit tentang dirimu...",
   "profile.bio_counter": "{count}/200",
@@ -572,6 +572,10 @@ const id: Record<string, string> = {
   "profile.upload_error": "Unggah gagal",
   "profile.view_profile": "Lihat profil",
   "profile.no_bio": "Belum ada bio",
+  "profile.crop_title": "Sesuaikan foto",
+  "profile.crop_apply": "Terapkan",
+  "profile.crop_zoom": "Perbesar",
+  "profile.converting": "Mengonversi foto...",
 
   // Highlights
   "highlight.title": "Sorotan",

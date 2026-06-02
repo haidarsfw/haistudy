@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Loader2, Send } from "lucide-react";
 import {
@@ -30,6 +30,11 @@ interface PublicProfilePopoverProps {
 // doesn't refetch. Keyed by license_key.
 const cache = new Map<string, PublicProfile>();
 
+// Module-scope coordinator: only ONE popover may be open at a time. Opening any
+// instance (via hover or click) closes the previously-open one, so two popovers
+// can never be visible simultaneously.
+let activeClose: (() => void) | null = null;
+
 export function PublicProfilePopover({
   children,
   licenseKey,
@@ -40,6 +45,8 @@ export function PublicProfilePopover({
   const { t } = useTranslation();
   const { session } = useSession();
   const [open, setOpen] = useState(false);
+  // Stable closer for the module-level coordinator (setOpen is stable).
+  const closeRef = useRef(() => setOpen(false));
   const [profile, setProfile] = useState<PublicProfile | null>(
     licenseKey ? cache.get(licenseKey) ?? null : null
   );
@@ -68,6 +75,14 @@ export function PublicProfilePopover({
     };
   }, [open, licenseKey, profile]);
 
+  // If this instance owned the active slot when it unmounts, release it.
+  useEffect(() => {
+    const close = closeRef.current;
+    return () => {
+      if (activeClose === close) activeClose = null;
+    };
+  }, []);
+
   const name = profile?.name ?? fallbackName;
   const tier = profile?.packageTier ?? fallbackTier ?? null;
   const isAdmin = profile?.isAdmin ?? fallbackIsAdmin ?? false;
@@ -82,7 +97,19 @@ export function PublicProfilePopover({
     viewerIsVipPlus && targetIsVipPlus && !!licenseKey && !isSelf;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          // Opening: close whoever else is open, then claim the slot.
+          if (activeClose && activeClose !== closeRef.current) activeClose();
+          activeClose = closeRef.current;
+        } else if (activeClose === closeRef.current) {
+          activeClose = null;
+        }
+        setOpen(next);
+      }}
+    >
       {/* openOnHover = desktop hover (delay 300ms); base-ui ignores hover for
           touch input, so mobile still opens on tap. */}
       <PopoverTrigger openOnHover delay={300} render={children} />

@@ -131,6 +131,15 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                     animate="visible"
                     exit="exit"
                     layout
+                    drag="x"
+                    dragSnapToOrigin
+                    dragElastic={0.4}
+                    onDragEnd={(_, info) => {
+                      // Swipe a row far enough left/right to dismiss it. framer
+                      // suppresses the trailing click, so a swipe never also
+                      // activates the row.
+                      if (Math.abs(info.offset.x) > 80) dismissNotification(notif.id);
+                    }}
                   >
                     <NotificationItem
                       notification={notif}

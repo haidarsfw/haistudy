@@ -557,7 +557,7 @@ const en: Record<string, string> = {
   "profile.avatar": "Avatar",
   "profile.upload_avatar": "Upload photo",
   "profile.remove_avatar": "Remove photo",
-  "profile.avatar_hint": "JPG or PNG. A letter avatar is used if none is set.",
+  "profile.avatar_hint": "JPG, PNG, WEBP, GIF or HEIC. A letter avatar is used if none is set.",
   "profile.bio": "Bio",
   "profile.bio_placeholder": "Tell others a bit about yourself...",
   "profile.bio_counter": "{count}/200",
@@ -572,6 +572,10 @@ const en: Record<string, string> = {
   "profile.upload_error": "Upload failed",
   "profile.view_profile": "View profile",
   "profile.no_bio": "No bio yet",
+  "profile.crop_title": "Adjust photo",
+  "profile.crop_apply": "Apply",
+  "profile.crop_zoom": "Zoom",
+  "profile.converting": "Converting photo...",
 
   // Highlights
   "highlight.title": "Highlight",

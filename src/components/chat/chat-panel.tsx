@@ -412,7 +412,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
         <DialogHeader>
           <DialogTitle>{t("profile.edit_own")}</DialogTitle>
         </DialogHeader>
-        <ProfileEditor />
+        <ProfileEditor onSaved={() => setProfileOpen(false)} />
       </DialogContent>
     </Dialog>
     </>
