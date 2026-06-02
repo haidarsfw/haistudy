@@ -149,12 +149,12 @@ function getServerSnapshot() {
 // Per-type icon + circle tint. Mirrors the notification card so every top-right
 // surface (toasts + the bell popup) shares one visual language.
 const TYPE_STYLE: Record<ToastType, { tint: string; icon: React.ReactNode }> = {
-  success: { tint: "bg-emerald-500/10 text-emerald-500", icon: <CircleCheckIcon className="h-4 w-4" /> },
-  error: { tint: "bg-destructive/10 text-destructive", icon: <OctagonXIcon className="h-4 w-4" /> },
-  info: { tint: "bg-sky-500/10 text-sky-500", icon: <InfoIcon className="h-4 w-4" /> },
-  warning: { tint: "bg-amber-500/10 text-amber-500", icon: <TriangleAlertIcon className="h-4 w-4" /> },
-  default: { tint: "bg-primary/10 text-primary", icon: <BellIcon className="h-4 w-4" /> },
-  message: { tint: "bg-primary/10 text-primary", icon: <BellIcon className="h-4 w-4" /> },
+  success: { tint: "bg-emerald-500/10 text-emerald-500", icon: <CircleCheckIcon className="h-3.5 w-3.5" /> },
+  error: { tint: "bg-destructive/10 text-destructive", icon: <OctagonXIcon className="h-3.5 w-3.5" /> },
+  info: { tint: "bg-sky-500/10 text-sky-500", icon: <InfoIcon className="h-3.5 w-3.5" /> },
+  warning: { tint: "bg-amber-500/10 text-amber-500", icon: <TriangleAlertIcon className="h-3.5 w-3.5" /> },
+  default: { tint: "bg-primary/10 text-primary", icon: <BellIcon className="h-3.5 w-3.5" /> },
+  message: { tint: "bg-primary/10 text-primary", icon: <BellIcon className="h-3.5 w-3.5" /> },
 };
 
 function ToastCard({ item }: { item: ToastItem }) {
@@ -182,7 +182,7 @@ function ToastCard({ item }: { item: ToastItem }) {
       transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.8 }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      className="cn-toast group/toast pointer-events-auto relative flex w-fit min-w-[15rem] max-w-full items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3 text-left text-card-foreground shadow-lg"
+      className="cn-toast group/toast pointer-events-auto relative flex w-fit min-w-[13rem] max-w-full items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-left text-card-foreground shadow-lg"
     >
       {/* Dismiss - macOS-style translucent corner chip. Hover-only on desktop
           (hidden when not hovering); always visible on touch. */}
@@ -194,14 +194,14 @@ function ToastCard({ item }: { item: ToastItem }) {
         <XIcon className="h-3 w-3" />
       </button>
 
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${style.tint}`}>
+      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${style.tint}`}>
         {icon}
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold leading-snug break-words">{item.title}</div>
+        <div className="text-[13px] font-medium leading-snug break-words">{item.title}</div>
         {item.description && (
-          <div className="mt-0.5 text-xs leading-snug text-muted-foreground break-words">
+          <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground break-words">
             {item.description}
           </div>
         )}
