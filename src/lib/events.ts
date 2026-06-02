@@ -3,27 +3,12 @@
  * Uses the native CustomEvent API to dispatch and listen for events.
  */
 
-import type { Notification } from "@/types";
-
 export const APP_EVENTS = {
   OPEN_CHAT: "app:open-chat",
   SCROLL_TO_MESSAGE: "app:scroll-to-message",
   OPEN_AI: "app:open-ai",
   OPEN_DM: "app:open-dm",
-  NOTIF_PREVIEW: "app:notif-preview",
 } as const;
-
-/**
- * Show a notification using the real in-app popup (the redesigned card). Used by
- * the settings "test notification" button so the user sees exactly how
- * notifications look - the web-push path renders the OS-native style, which we
- * cannot restyle.
- */
-export function previewNotification(notification: Notification) {
-  window.dispatchEvent(
-    new CustomEvent(APP_EVENTS.NOTIF_PREVIEW, { detail: notification })
-  );
-}
 
 /**
  * Dispatch an event to open the chat panel and optionally scroll to a message.

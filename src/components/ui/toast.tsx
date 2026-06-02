@@ -7,6 +7,7 @@ import {
   TriangleAlertIcon,
   OctagonXIcon,
   XIcon,
+  BellIcon,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────
@@ -134,13 +135,15 @@ function getServerSnapshot() {
   return emptySnapshot;
 }
 
-const TYPE_ICON: Record<ToastType, React.ReactNode> = {
-  success: <CircleCheckIcon className="size-4 text-emerald-500" />,
-  error: <OctagonXIcon className="size-4 text-destructive" />,
-  info: <InfoIcon className="size-4 text-sky-500" />,
-  warning: <TriangleAlertIcon className="size-4 text-amber-500" />,
-  default: null,
-  message: null,
+// Per-type icon + circle tint. Mirrors the notification card so every top-right
+// surface (toasts + the bell popup) shares one visual language.
+const TYPE_STYLE: Record<ToastType, { tint: string; icon: React.ReactNode }> = {
+  success: { tint: "bg-emerald-500/10 text-emerald-500", icon: <CircleCheckIcon className="h-3.5 w-3.5" /> },
+  error: { tint: "bg-destructive/10 text-destructive", icon: <OctagonXIcon className="h-3.5 w-3.5" /> },
+  info: { tint: "bg-sky-500/10 text-sky-500", icon: <InfoIcon className="h-3.5 w-3.5" /> },
+  warning: { tint: "bg-amber-500/10 text-amber-500", icon: <TriangleAlertIcon className="h-3.5 w-3.5" /> },
+  default: { tint: "bg-primary/10 text-primary", icon: <BellIcon className="h-3.5 w-3.5" /> },
+  message: { tint: "bg-primary/10 text-primary", icon: <BellIcon className="h-3.5 w-3.5" /> },
 };
 
 function ToastCard({ item }: { item: ToastItem }) {
@@ -152,20 +155,34 @@ function ToastCard({ item }: { item: ToastItem }) {
     setTimeout(() => removeToast(item.id), 180);
   }, [item.id]);
 
-  const icon = item.icon ?? TYPE_ICON[item.type];
+  const style = TYPE_STYLE[item.type];
+  const icon = item.icon ?? style.icon;
 
+  // Layout mirrors NotificationItem: small top-left dismiss (hover-reveal on
+  // desktop, always on mobile), type icon in a tinted circle, title + desc.
   return (
     <div
       role="status"
       aria-live="polite"
       data-leaving={leaving || undefined}
-      className="cn-toast pointer-events-auto flex w-full items-start gap-2.5 rounded-[var(--radius)] border border-border bg-popover px-3.5 py-3 text-popover-foreground shadow-lg"
+      className="cn-toast group/item pointer-events-auto relative flex w-full items-start gap-3 rounded-lg border border-border bg-card py-2.5 pl-9 pr-3 text-card-foreground shadow-lg"
     >
-      {icon && <div className="mt-0.5 shrink-0">{icon}</div>}
+      <button
+        onClick={close}
+        aria-label="Tutup"
+        className="absolute left-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 text-muted-foreground ring-1 ring-border backdrop-blur transition-opacity hover:text-foreground opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100"
+      >
+        <XIcon className="h-3 w-3" />
+      </button>
+
+      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${style.tint}`}>
+        {icon}
+      </div>
+
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium leading-snug break-words">{item.title}</div>
+        <div className="text-xs font-medium leading-snug break-words">{item.title}</div>
         {item.description && (
-          <div className="mt-0.5 text-xs text-muted-foreground break-words">
+          <div className="mt-0.5 text-[11px] text-muted-foreground break-words">
             {item.description}
           </div>
         )}
@@ -175,19 +192,12 @@ function ToastCard({ item }: { item: ToastItem }) {
               item.action!.onClick();
               close();
             }}
-            className="mt-2 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="mt-2 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {item.action.label}
           </button>
         )}
       </div>
-      <button
-        onClick={close}
-        aria-label="Tutup"
-        className="shrink-0 rounded-md p-0.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <XIcon className="size-3.5" />
-      </button>
     </div>
   );
 }
@@ -200,7 +210,7 @@ export function Toaster() {
 
   return (
     <div
-      className="pointer-events-none fixed right-3 top-3 z-[100] flex w-[calc(100vw-1.5rem)] max-w-sm flex-col gap-2 sm:right-4 sm:top-4"
+      className="pointer-events-none fixed right-3 top-3 z-[140] flex w-[calc(100vw-1.5rem)] max-w-sm flex-col gap-2 sm:right-4 sm:top-4"
       aria-live="polite"
       aria-atomic="false"
     >
