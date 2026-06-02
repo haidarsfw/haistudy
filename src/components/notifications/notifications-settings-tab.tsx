@@ -21,6 +21,8 @@ import { useWebPush } from "@/hooks/use-web-push";
 import { useSession } from "@/components/providers/session-provider";
 import { sounds, getSoundMuted, setSoundMuted } from "@/lib/sounds";
 import { toast } from "@/components/ui/toast";
+import { previewNotification } from "@/lib/events";
+import type { Notification } from "@/types";
 
 function PermissionBadge({ state }: { state: string }) {
   if (state === "granted") {
@@ -132,11 +134,32 @@ export function NotificationsSettingsTab() {
 
   const handleTest = async () => {
     sounds.click();
+    // Show the redesigned in-app notification popup immediately so the user sees
+    // exactly how notifications look. (The web-push below renders the OS-native
+    // notification, whose style is owned by the browser/OS and cannot be themed.)
+    const demo: Notification = {
+      id: `test-${Date.now()}`,
+      type: "announcement",
+      senderName: "haistudy",
+      preview: "Ini pratinjau tampilan notifikasi terbaru di haistudy.",
+      context: "system",
+      threadId: null,
+      subjectId: null,
+      threadTitle: null,
+      messageId: null,
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    previewNotification(demo);
+
     setTesting(true);
     try {
       const ok = await sendTest();
-      if (ok) toast.success("Test push terkirim.");
-      else toast.error("Tidak ada subscription aktif. Aktifkan dulu push.");
+      if (ok) {
+        toast.success("Test push terkirim. Lihat juga pratinjau di pojok kanan atas.");
+      } else {
+        toast.info("Pratinjau notifikasi ditampilkan. Aktifkan push untuk uji kiriman ke perangkat.");
+      }
     } finally {
       setTesting(false);
     }

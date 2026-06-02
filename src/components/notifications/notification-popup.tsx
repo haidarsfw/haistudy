@@ -93,7 +93,7 @@ export function NotificationPopup({
               onDismiss: () => onDismiss(),
             });
           }}
-          className="fixed right-4 top-16 z-[60] w-96 max-w-[calc(100vw-2rem)] cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-lg max-h-[70vh]"
+          className="fixed right-4 top-16 z-[140] w-96 max-w-[calc(100vw-2rem)] cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-lg max-h-[70vh]"
         >
           {/* Shared item = identical style to the notification center. The
               wrapper owns the click + drag gestures, so the item is

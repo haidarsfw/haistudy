@@ -228,6 +228,21 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(APP_EVENTS.OPEN_DM, handleOpenDm);
   }, []);
 
+  // Settings "test notification" preview: render the synthetic notification in
+  // the real redesigned in-app popup so the user sees the actual notification
+  // look (the web-push test shows the OS-native style, which we can't restyle).
+  useEffect(() => {
+    const handlePreview = (e: Event) => {
+      const detail = (e as CustomEvent).detail as Notification | undefined;
+      if (!detail) return;
+      lastPopupId.current = detail.id; // don't let the unread-scan re-trigger
+      setPopupNotification(detail);
+      sounds.notification();
+    };
+    window.addEventListener(APP_EVENTS.NOTIF_PREVIEW, handlePreview);
+    return () => window.removeEventListener(APP_EVENTS.NOTIF_PREVIEW, handlePreview);
+  }, []);
+
   const handleChatToggle = useCallback(() => {
     if (session?.isPreview) {
       toast.error("Chat tidak tersedia di mode preview", {
