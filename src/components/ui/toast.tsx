@@ -7,7 +7,6 @@ import {
   InfoIcon,
   TriangleAlertIcon,
   OctagonXIcon,
-  XIcon,
   BellIcon,
 } from "lucide-react";
 
@@ -158,11 +157,11 @@ const TYPE_STYLE: Record<ToastType, { tint: string; icon: React.ReactNode }> = {
 };
 
 function ToastCard({ item }: { item: ToastItem }) {
+  // True during a drag so the trailing click doesn't also fire dismiss.
+  const draggedRef = React.useRef(false);
   const close = React.useCallback(() => removeToast(item.id), [item.id]);
 
-  // Pause auto-dismiss while hovered; resume with a short grace on leave. The X
-  // visibility itself is pure CSS group-hover (instant show on hover, instant
-  // hide on un-hover) - no JS state, no linger.
+  // Pause auto-dismiss while hovered; resume with a short grace on leave.
   const onEnter = React.useCallback(() => pauseRemoval(item.id), [item.id]);
   const onLeave = React.useCallback(() => {
     if (item.duration !== Infinity) scheduleRemoval(item.id, 2000);
@@ -171,6 +170,7 @@ function ToastCard({ item }: { item: ToastItem }) {
   const style = TYPE_STYLE[item.type];
   const icon = item.icon ?? style.icon;
 
+  // No X button: click or swipe (any direction) to dismiss.
   return (
     <motion.div
       layout
@@ -180,34 +180,50 @@ function ToastCard({ item }: { item: ToastItem }) {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 28, scale: 0.96 }}
       transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.8 }}
+      drag
+      dragSnapToOrigin
+      dragElastic={0.5}
+      onDragStart={() => {
+        draggedRef.current = true;
+      }}
+      onDragEnd={(_, info) => {
+        const { offset, velocity } = info;
+        const dismiss =
+          offset.x > 60 ||
+          offset.x < -60 ||
+          offset.y < -60 ||
+          Math.abs(velocity.x) > 500 ||
+          velocity.y < -500;
+        if (dismiss) close();
+        requestAnimationFrame(() => {
+          draggedRef.current = false;
+        });
+      }}
+      onClick={() => {
+        if (draggedRef.current) return;
+        close();
+      }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      className="cn-toast group/toast pointer-events-auto relative flex w-fit min-w-[13rem] max-w-full items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-left text-card-foreground shadow-lg"
+      className="cn-toast pointer-events-auto relative flex w-fit min-w-[13rem] max-w-full cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-left text-card-foreground shadow-lg sm:min-w-[17rem] sm:gap-3 sm:px-4 sm:py-3"
     >
-      {/* Dismiss - macOS-style translucent corner chip. Hover-only on desktop
-          (hidden when not hovering); always visible on touch. */}
-      <button
-        onClick={close}
-        aria-label="Tutup"
-        className="absolute -left-2 -top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/15 text-foreground/70 ring-1 ring-foreground/10 backdrop-blur-sm transition-[opacity,background-color] hover:bg-foreground/25 hover:text-foreground opacity-100 sm:opacity-0 sm:group-hover/toast:opacity-100"
-      >
-        <XIcon className="h-3 w-3" />
-      </button>
-
       <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${style.tint}`}>
         {icon}
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="text-[13px] font-medium leading-snug break-words">{item.title}</div>
+        <div className="text-[13px] font-medium leading-snug break-words sm:text-sm">
+          {item.title}
+        </div>
         {item.description && (
-          <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground break-words">
+          <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground break-words sm:text-xs">
             {item.description}
           </div>
         )}
         {item.action && (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               item.action!.onClick();
               close();
             }}
