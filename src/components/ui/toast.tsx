@@ -7,6 +7,7 @@ import {
   InfoIcon,
   TriangleAlertIcon,
   OctagonXIcon,
+  XIcon,
   BellIcon,
 } from "lucide-react";
 
@@ -205,8 +206,22 @@ function ToastCard({ item }: { item: ToastItem }) {
       }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      className="cn-toast pointer-events-auto relative flex w-fit min-w-[13rem] max-w-full cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-left text-card-foreground shadow-lg sm:min-w-[17rem] sm:gap-3 sm:px-4 sm:py-3"
+      className="cn-toast group/toast pointer-events-auto relative flex w-fit min-w-[13rem] max-w-full cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-left text-card-foreground shadow-lg sm:min-w-[17rem] sm:gap-3 sm:px-4 sm:py-3"
     >
+      {/* Desktop-only dismiss chip (macOS-style, hover-reveal). Mobile has no X
+          - tap or swipe dismisses there. Click/swipe also work on desktop. */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          close();
+        }}
+        onPointerDownCapture={(e) => e.stopPropagation()}
+        aria-label="Tutup"
+        className="absolute -left-2 -top-2 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-foreground/15 text-foreground/70 opacity-0 ring-1 ring-foreground/10 backdrop-blur-sm transition-[opacity,background-color] hover:bg-foreground/25 hover:text-foreground sm:flex sm:group-hover/toast:opacity-100"
+      >
+        <XIcon className="h-3 w-3" />
+      </button>
+
       <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${style.tint}`}>
         {icon}
       </div>
