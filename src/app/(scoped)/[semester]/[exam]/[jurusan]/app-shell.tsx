@@ -314,7 +314,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-    <div className="flex h-[100dvh] bg-background overflow-x-clip max-w-[100vw]">
+    <div className="flex min-h-[100dvh] sm:h-[100dvh] bg-background overflow-x-clip max-w-[100vw]">
       <PreviewWatermark />
       <Sidebar onSettingsOpen={handleSettingsOpen} supportUnread={supportUnread} onSupportOpen={() => {
         if (session?.isAdmin) { router.push("/admin?tab=7"); } else { markSupportRead(); setIsSupportOpen(true); }
@@ -322,19 +322,24 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       {/* scope context is used in header/sidebar for nav. dashboardHref defined for ESC handler. */}
 
       {/* Main content area */}
-      <div className="flex h-[100dvh] flex-1 flex-col min-w-0">
+      <div className="flex min-h-[100dvh] sm:h-[100dvh] flex-1 flex-col min-w-0">
         <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} />
         <AnnouncementBanner />
         <EnableNotificationsBanner />
         <SessionTimeout />
         <SWRegister />
-        <main className="flex-1 overflow-y-auto overflow-x-clip pb-14 sm:pb-0">{children}</main>
+        {/* Mobile: no inner overflow — the document/window scrolls so iOS
+            Safari retracts its bottom toolbar (reclaims vertical space). The
+            outer container's overflow-x-clip still prevents horizontal scroll.
+            Desktop (sm+): inner scroll container, unchanged. */}
+        <main className="flex-1 pb-[calc(var(--hs-mobile-nav)+env(safe-area-inset-bottom))] sm:overflow-y-auto sm:overflow-x-clip sm:pb-0">{children}</main>
       </div>
 
       <MobileNav
         onChatToggle={handleChatToggle}
         isChatOpen={isChatOpen}
         onAiToggle={handleAiToggle}
+        isAiOpen={isAiOpen}
         supportUnread={supportUnread}
         onSupportOpen={() => {
           if (session?.isAdmin) { router.push("/admin?tab=7"); } else { markSupportRead(); setIsSupportOpen(true); }

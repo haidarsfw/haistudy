@@ -45,6 +45,8 @@ function oauthErrorBanner(
       return email
         ? `Email ${email} belum didaftarkan admin. Login dengan license key atau hubungi admin.`
         : "Email belum didaftarkan admin. Login dengan license key atau hubungi admin.";
+    case "use_key_login":
+      return "Akun ini login dengan license key, bukan Google. Masukkan license key kamu di bawah.";
     case "no_email":
       return "Akun Google tidak memberikan alamat email. Coba dengan akun lain.";
     case "suspended":
@@ -214,6 +216,11 @@ function LicenseKeyLoginForm() {
         const data = await res.json();
 
         if (!data.valid) {
+          // Known-valid key on the wrong login path — don't penalize the user.
+          if (data.reason === "wrong_method") {
+            setError(data.error || t("login.login_failed"));
+            return;
+          }
           const result = recordFailedAttempt();
           if (result.locked) {
             setLockoutMs(result.lockoutMs);

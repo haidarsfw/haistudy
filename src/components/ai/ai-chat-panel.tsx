@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type PointerEvent as ReactPointerEvent } from "react";
 import {
   X,
   Bot,
@@ -16,7 +16,8 @@ import {
   FileCode,
   FileType,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,18 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
   const { session } = useSession();
   const { t } = useTranslation();
   const scopeCtx = useOptionalScope();
+  // Mobile: rise from the bottom (matches the bottom-nav button origin).
+  // Desktop: slide in from the right (matches the right-side FAB).
+  const isMobile = useIsMobile();
+  // Drag-to-dismiss (mobile bottom-sheet): drag is started only from the
+  // header / grab handle via these controls, never from the scrollable body.
+  const dragControls = useDragControls();
+  const startSheetDrag = (e: ReactPointerEvent) => {
+    if (!isMobile) return;
+    // Let taps on header controls through; only the bare header area drags.
+    if ((e.target as HTMLElement).closest("button,a,input,textarea,[role='button']")) return;
+    dragControls.start(e);
+  };
   const examLabel = scopeCtx?.scope.examPeriod === "uas" ? "UAS" : "UTS";
   const {
     messages,
@@ -336,14 +349,34 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
 
           {/* Panel */}
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            initial={isMobile ? { y: "100%" } : { x: "100%" }}
+            animate={isMobile ? { y: 0 } : { x: 0 }}
+            exit={isMobile ? { y: "100%" } : { x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 250 }}
+            drag={isMobile ? "y" : false}
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.6 }}
+            dragSnapToOrigin
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 90 || info.velocity.y > 500) onClose();
+            }}
             className={panelClass}
           >
+            {/* Drag-to-dismiss grab handle (mobile bottom-sheet) */}
+            <div
+              onPointerDown={startSheetDrag}
+              className="flex shrink-0 cursor-grab touch-none justify-center pt-2 pb-1 active:cursor-grabbing sm:hidden"
+            >
+              <span className="h-1.5 w-10 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+            </div>
+
             {/* Header */}
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <div
+              onPointerDown={startSheetDrag}
+              className="flex touch-none items-center gap-3 border-b border-border px-4 py-3 sm:touch-auto"
+            >
               <Bot className="h-5 w-5 text-primary" />
               <div className="flex-1 min-w-0">
                 <h2 className="text-sm font-semibold">haistudy AI</h2>

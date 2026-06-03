@@ -74,7 +74,7 @@ export function TTSPlayerBar({ tts, onClose, inline }: TTSPlayerBarProps) {
   return (
     <div className={inline
       ? "shrink-0 animate-in slide-in-from-bottom duration-300"
-      : "fixed bottom-14 sm:bottom-0 left-0 sm:left-16 right-0 z-50 animate-in slide-in-from-bottom duration-300"
+      : "fixed bottom-[calc(var(--hs-mobile-nav)+env(safe-area-inset-bottom))] sm:bottom-0 left-0 sm:left-16 right-0 z-50 animate-in slide-in-from-bottom duration-300"
     }>
       {/* Progress bar */}
       <div className="h-0.5 bg-muted">

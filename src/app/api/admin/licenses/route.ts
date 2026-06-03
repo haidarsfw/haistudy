@@ -142,6 +142,7 @@ function mapLicenseRow(row: Record<string, unknown>): LicenseKey & { semester: n
     semester: (row.semester as number) ?? 2,
     examPeriod: ((row.exam_period as "uts" | "uas") ?? "uts"),
     jurusan: ((row.jurusan as string) ?? "bm"),
+    loginMethod: (row.login_method as "key" | "email" | null) ?? null,
   };
 }
 
@@ -293,7 +294,20 @@ export async function POST(request: Request) {
 
     const resolved = await resolveAdminScope(request);
     const body = await request.json();
-    const { key: rawKey, name, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier, linkedEmail } = body;
+    const { key: rawKey, name, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier, linkedEmail, loginMethod: loginMethodRaw } = body;
+    // 'key' | 'email' | null (null = legacy, both login paths allowed).
+    const loginMethod =
+      loginMethodRaw === "key" || loginMethodRaw === "email" ? loginMethodRaw : null;
+    // An 'email' key logs in via Google ONLY — it MUST have a linked Gmail, else
+    // it would be locked out of both paths (key login 403 + Google email_not_linked).
+    const linkedEmailNorm =
+      typeof linkedEmail === "string" ? linkedEmail.trim().toLowerCase() : "";
+    if (loginMethod === "email" && !linkedEmailNorm) {
+      return NextResponse.json(
+        { error: "login_method 'email' membutuhkan linkedEmail (Gmail) untuk membuat link Google." },
+        { status: 400 }
+      );
+    }
     // Keys are looked up uppercased at login (validate route uppercases input);
     // store them uppercased so custom admin-typed keys match on login.
     const key = typeof rawKey === "string" ? rawKey.trim().toUpperCase() : rawKey;
@@ -343,6 +357,7 @@ export async function POST(request: Request) {
         totalQuizScore: 0,
         totalOnlineMinutes: 0,
         packageTier: (packageTier as "share" | "normal" | "vip" | "diamond") || "normal",
+        loginMethod,
         createdAt: now,
         updatedAt: now,
         semester: scope.semester,
@@ -383,6 +398,7 @@ export async function POST(request: Request) {
         max_devices: maxDevices || 2,
         unlimited_devices: unlimitedDevices || false,
         package_tier: packageTier || "normal",
+        login_method: loginMethod,
         ...scopeColumns(scope),
       })
       .select()

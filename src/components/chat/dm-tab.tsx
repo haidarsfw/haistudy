@@ -8,6 +8,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { useDmChat } from "@/hooks/use-dm-chat";
 import { useAvatars } from "@/hooks/use-avatars";
 import { generateDefaultAvatar } from "@/lib/avatar";
+import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import { DmUserPicker } from "./dm-user-picker";
 import { MessageInput } from "./message-input";
 import { MessageBubble } from "./message-bubble";
@@ -231,7 +232,7 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="truncate text-sm font-semibold">
+              <span className={`truncate text-sm font-semibold ${getRoleNameClass(resolveRole({ isAdmin: activeConv.otherIsAdmin, packageTier: activeConv.otherTier ?? null }))}`}>
                 {activeConv.otherName ?? t("dm.you")}
               </span>
               {activeConv.otherIsAdmin ? (
@@ -361,7 +362,7 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="truncate text-sm font-medium">
+                    <span className={`truncate text-sm font-medium ${getRoleNameClass(resolveRole({ isAdmin: c.otherIsAdmin, packageTier: c.otherTier ?? null }))}`}>
                       {c.otherName ?? t("dm.you")}
                     </span>
                     {c.lastBody && (

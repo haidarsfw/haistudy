@@ -56,3 +56,26 @@ export function resolveRole(flags: {
 export function getRoleTextClass(role: UserRole): string {
   return ROLE_COLORS[role].text;
 }
+
+/**
+ * Exclusive animated name glow for the Diamond tier (see `.hs-diamond-glow`
+ * in globals.css). Returns "" for every other role so callers can safely
+ * spread it into a className. Pair with the role text color class as needed.
+ */
+export function getRoleNameClass(role: UserRole): string {
+  return role === "diamond" ? "hs-diamond-glow" : "";
+}
+
+/**
+ * Convenience for name-render sites: resolves the role from flags and returns
+ * the role text color + the exclusive Diamond glow (when applicable) in one
+ * className string. Use wherever a user's display name is shown.
+ */
+export function roleNameClass(flags: {
+  isAdmin?: boolean | null;
+  isTester?: boolean | null;
+  packageTier?: "share" | "normal" | "vip" | "diamond" | null;
+}): string {
+  const role = resolveRole(flags);
+  return `${ROLE_COLORS[role].text} ${getRoleNameClass(role)}`.trim();
+}

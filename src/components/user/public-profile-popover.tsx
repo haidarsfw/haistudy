@@ -14,6 +14,7 @@ import { generateDefaultAvatar } from "@/lib/avatar";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { canUseVipFeatures } from "@/lib/tier";
+import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import { openDmTo } from "@/lib/events";
 import type { PublicProfile } from "@/types";
 
@@ -124,7 +125,7 @@ export function PublicProfilePopover({
             className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{name}</p>
+            <p className={`truncate text-sm font-semibold ${getRoleNameClass(resolveRole({ isAdmin, packageTier: tier }))}`}>{name}</p>
             <div className="mt-0.5 flex flex-wrap items-center gap-1">
               {isAdmin && (
                 <Badge variant="admin-outline" className="px-1 py-0 text-[9px]">

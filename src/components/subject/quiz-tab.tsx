@@ -110,10 +110,16 @@ export function QuizTab({ questions, onScoreSave, subjectId }: QuizTabProps) {
       if (optionIdx === current.answer) sounds.correct();
       else sounds.wrong();
       selectAnswer(optionIdx);
-      // Scroll parent <main> after explanation renders
+      // Scroll so the freshly-rendered explanation comes into view. Desktop
+      // (sm+) scrolls the inner <main> container; mobile scrolls the document
+      // itself, since <main> no longer owns the scroll there.
       setTimeout(() => {
         const main = document.querySelector("main");
-        if (main) main.scrollTo({ top: main.scrollHeight, behavior: "smooth" });
+        const mobile = window.matchMedia("(max-width: 639px)").matches;
+        const el: Element | null = mobile
+          ? document.scrollingElement ?? document.documentElement
+          : main;
+        el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
       }, 500);
     },
     [filteredQuestions, currentIdx, answers, selectAnswer]

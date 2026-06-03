@@ -313,12 +313,32 @@ export interface VoiceParticipant {
   packageTier?: "share" | "normal" | "vip" | "diamond" | null;
 }
 
+// Rich metadata captured by the on-site /payments form (migration 037: meta jsonb).
+export interface PurchaseMeta {
+  classCode?: string;
+  campus?: string;
+  deviceLimit?: number;
+  paymentMethod?: string;   // "bca" | "ewallet" | "qris"
+  uniqueAmount?: number;    // basePrice + last 3 digits of WA
+  basePrice?: number;
+  source?: string;          // how they heard about haistudy
+  sourceOther?: string;
+  leShareNote?: string;     // LE86 share acknowledgement
+  scopeKey?: string;        // e.g. "s2-uts-bm"
+  // How the buyer chose to log in. 'key' = license key, 'email' = Google.
+  loginMethod?: "key" | "email";
+  // The Gmail used for Google login (only set when loginMethod === 'email').
+  // Contact/notification email lives in the purchase_requests.email column.
+  loginEmail?: string;
+}
+
 export interface PurchaseRequest {
   id: string;
   name: string;
   whatsapp: string;
   email: string | null;
-  package: "discount" | "normal" | "free";
+  // 'share'|'normal'|'vip'|'diamond' = on-site form tiers; 'discount'|'free' = legacy rows.
+  package: "share" | "normal" | "vip" | "diamond" | "discount" | "free";
   status: "pending" | "approved" | "rejected";
   licenseKey: string | null;
   approvedAt: string | null;
@@ -326,6 +346,10 @@ export interface PurchaseRequest {
   semester: number;
   examPeriod: ExamPeriod;
   jurusan: string;
+  meta?: PurchaseMeta;
+  // Short-lived signed URLs to the private payment-proofs bucket (admin GET only).
+  paymentProofUrl?: string | null;
+  shareProofUrl?: string | null;
 }
 
 // ============================================
@@ -417,6 +441,9 @@ export interface LicenseKey {
   createdAt: string;
   updatedAt: string;
   linkedEmail?: string | null;
+  // null = legacy (both login paths allowed); 'key' = license-key only;
+  // 'email' = Google login only. Bound at admin approval (migration 038).
+  loginMethod?: "key" | "email" | null;
 }
 
 export interface Activation {

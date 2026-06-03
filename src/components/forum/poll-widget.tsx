@@ -11,7 +11,7 @@ import { useTranslation } from "@/components/providers/language-provider";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
 import type { ForumPoll } from "@/types";
 import { sounds } from "@/lib/sounds";
-import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
+import { roleNameClass } from "@/lib/role-colors";
 
 interface PollWidgetProps {
   poll: ForumPoll;
@@ -34,15 +34,11 @@ export function PollWidget({ poll, isAdmin, onVote, onDelete }: PollWidgetProps)
           <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <span>oleh</span>
             <span
-              className={`font-semibold ${
-                ROLE_COLORS[
-                  resolveRole({
-                    isAdmin: poll.isAdmin,
-                    isTester: poll.isTester,
-                    packageTier: poll.packageTier ?? null,
-                  })
-                ].text
-              }`}
+              className={`font-semibold ${roleNameClass({
+                isAdmin: poll.isAdmin,
+                isTester: poll.isTester,
+                packageTier: poll.packageTier ?? null,
+              })}`}
             >
               {poll.authorName}
             </span>

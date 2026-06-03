@@ -57,11 +57,19 @@ const FAQ = [
   },
   {
     q: "Bagaimana cara mendapatkan akses?",
-    a: "Pilih paket yang sesuai (Share, Normal, atau VIP), lakukan pembayaran, dan kamu akan mendapatkan license key. Masukkan key tersebut di halaman login untuk mulai belajar.",
+    a: "Pilih paket (Share, Normal, VIP, atau Diamond) di halaman ini, isi formulir pembelian langsung di web haistudy, lakukan pembayaran (transfer bank / e-wallet / QRIS), lalu unggah bukti bayar di formulir. Admin akan memverifikasi dan mengirim license key kamu via WhatsApp. Masukkan key di halaman login untuk mulai belajar.",
   },
   {
     q: "Apa bedanya paket Share dan Normal?",
-    a: "Konten yang diakses sama persis. Perbedaannya: paket Share lebih murah tapi kamu wajib share link haistudy ke 1 teman (LE86: 1 teman di luar kelas). Normal langsung akses tanpa syarat share.",
+    a: "Konten yang diakses sama persis. Perbedaannya: paket Share lebih murah tapi kamu wajib share link haistudy ke teman (LE86: 2 teman di luar kelas → Rp 20.000). Normal langsung akses tanpa syarat share.",
+  },
+  {
+    q: "Apa keuntungan paket VIP?",
+    a: "VIP membuka model AI eksklusif (DeepSeek V4 Pro) dengan prioritas dan limit chat lebih tinggi, VIP Lounge, Direct Message (DM) antar anggota, Snippet Library, warna aksen & highlight kustom, font premium, perks voice room, badge VIP, dan support lebih cepat.",
+  },
+  {
+    q: "Apa itu paket Diamond?",
+    a: "Diamond mencakup SEMUA fitur VIP, plus efek nama “glow” eksklusif yang tampil di seluruh haistudy (chat global, forum, DM, voice room, profil), badge Diamond, dan menjadi bentuk apresiasi/dukungan langsung untuk pengembangan haistudy ke depan.",
   },
   {
     q: "Berapa device yang bisa digunakan?",

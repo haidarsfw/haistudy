@@ -14,6 +14,8 @@ import { PurchaseQueue } from "./purchase-queue";
 import { DangerZone } from "./danger-zone";
 import { FeedbackList } from "./feedback-list";
 import { AdminSupportChat } from "./admin-support-chat";
+import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { useAdminPurchaseCount } from "@/hooks/use-admin-purchase-count";
 import {
   Zap,
   KeyRound,
@@ -43,13 +45,17 @@ interface AdminTabsProps {
 
 export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
   const [feedbackCount, setFeedbackCount] = useState(0);
+  const { scopeQuery } = useAdminScope();
+  const { pendingCount, refresh: refreshPurchaseCount } = useAdminPurchaseCount({ scopeQuery });
 
   useEffect(() => {
     fetch("/api/feedback?countUnread=true")
       .then((r) => r.json())
       .then((data) => setFeedbackCount(data.unreadCount || 0))
       .catch(() => {});
-  }, [activeTab]); // Refetch when switching tabs (e.g. after marking as read)
+    // Refresh the pending-purchase badge on tab change (e.g. after approve/reject).
+    refreshPurchaseCount();
+  }, [activeTab, refreshPurchaseCount]); // Refetch when switching tabs (e.g. after marking as read)
 
   return (
     <Tabs
@@ -61,6 +67,11 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
           <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5">
             <tab.icon className="h-4 w-4" />
             <span className="hidden sm:inline">{tab.label}</span>
+            {tab.value === 5 && pendingCount > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white">
+                {pendingCount > 9 ? "9+" : pendingCount}
+              </span>
+            )}
             {tab.value === 6 && feedbackCount > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white">
                 {feedbackCount > 9 ? "9+" : feedbackCount}

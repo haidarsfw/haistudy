@@ -75,3 +75,71 @@ export async function getCroppedBlob(
     );
   });
 }
+
+function canvasToBlob(canvas: HTMLCanvasElement, mime: string, quality: number): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob((b) => resolve(b), mime, quality));
+}
+
+/**
+ * Aggressively compress a user-picked image down to a byte budget for upload
+ * (payment / share proofs). Converts HEIC → JPEG first (iPhone screenshots),
+ * downscales the long edge, then steps quality down until under `maxBytes`.
+ * Browser-only; returns the original file if run server-side or on failure.
+ */
+export async function compressImageToBudget(
+  file: File,
+  opts?: { maxBytes?: number; maxDimension?: number; mime?: string }
+): Promise<File> {
+  const maxBytes = opts?.maxBytes ?? 500 * 1024;
+  let maxDim = opts?.maxDimension ?? 1600;
+  const mime = opts?.mime ?? "image/jpeg";
+  if (typeof window === "undefined") return file;
+
+  // iPhone HEIC → JPEG before any canvas work.
+  const working = isHeic(file) ? await heicToJpeg(file) : file;
+
+  const url = URL.createObjectURL(working);
+  try {
+    const img = await loadImage(url);
+    const base = working.name.replace(/\.\w+$/, "") || "proof";
+
+    const render = (targetDim: number, quality: number): Promise<Blob | null> => {
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+      const longest = Math.max(w, h);
+      if (longest > targetDim) {
+        const scale = targetDim / longest;
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return Promise.resolve(null);
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, w, h);
+      return canvasToBlob(canvas, mime, quality);
+    };
+
+    // Quality ladder at the initial dimension.
+    let quality = 0.85;
+    let blob = await render(maxDim, quality);
+    while (blob && blob.size > maxBytes && quality > 0.4) {
+      quality -= 0.12;
+      blob = await render(maxDim, quality);
+    }
+    // Still over budget → shrink the long edge and try once more.
+    if (blob && blob.size > maxBytes) {
+      maxDim = 1100;
+      blob = await render(maxDim, 0.72);
+    }
+
+    if (!blob) return working;
+    return new File([blob], `${base}.jpg`, { type: mime });
+  } catch {
+    return working;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}

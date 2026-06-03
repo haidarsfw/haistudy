@@ -31,6 +31,7 @@ import { UserProfilePopover } from "@/components/user/user-profile-popover";
 import { AdminScopeSwitcher } from "@/components/admin/admin-scope-switcher";
 import { sounds } from "@/lib/sounds";
 import { useOptionalScope } from "@/components/providers/scope-provider";
+import { useAdminPurchaseCount } from "@/hooks/use-admin-purchase-count";
 
 interface SidebarProps {
   onSettingsOpen: () => void;
@@ -130,6 +131,8 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
   const subjectsHref = `/${scopePath}/subjects`;
   const [collapsed, setCollapsed] = useState(false);
   const [feedbackCount, setFeedbackCount] = useState(0);
+  const { pendingCount: purchasePending } = useAdminPurchaseCount();
+  const adminBadge = feedbackCount + purchasePending;
 
   // Load collapsed state from localStorage
   useEffect(() => {
@@ -291,9 +294,9 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
               onHrefHover={onHrefHover}
               collapsed={collapsed}
             />
-            {feedbackCount > 0 && (
+            {adminBadge > 0 && (
               <span className="absolute right-2 top-1/2 -translate-y-1/2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white pointer-events-none">
-                {feedbackCount > 9 ? "9+" : feedbackCount}
+                {adminBadge > 9 ? "9+" : adminBadge}
               </span>
             )}
           </div>

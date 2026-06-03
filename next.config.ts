@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Permit a real device on the LAN (e.g. an iPhone) to load dev-server
+  // assets/HMR without Next's cross-origin dev block. Add the Mac's current
+  // LAN IP here if it changes (DHCP). Dev-only; ignored by build/start.
+  allowedDevOrigins: ["192.168.100.25", "10.38.53.48"],
   env: {
     NEXT_PUBLIC_BUILD_ID: Date.now().toString(),
   },

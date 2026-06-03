@@ -30,6 +30,7 @@ import type { ChatMessage } from "@/types";
 import {
   ROLE_COLORS,
   resolveRole,
+  getRoleNameClass,
   type UserRole,
 } from "@/lib/role-colors";
 
@@ -81,7 +82,8 @@ export function MessageBubble({
     const role: UserRole = userRoleMap?.get(name) || "normal";
     const base = `font-semibold ${ROLE_COLORS[role].text}`;
     if (role === "diamond") {
-      return `${base} drop-shadow-[0_0_6px_oklch(0.7_0.15_230/0.5)]`;
+      // Exclusive animated glow even for @mentions of diamond users.
+      return "hs-diamond-glow";
     }
     if (role === "vip") {
       return `${base} drop-shadow-[0_0_6px_oklch(0.7_0.15_80/0.5)]`;
@@ -159,7 +161,7 @@ export function MessageBubble({
         {/* Header */}
         <div className="flex items-center gap-2">
           {isOwn ? (
-            <span className="text-sm font-semibold text-primary">
+            <span className={`text-sm font-semibold text-primary ${getRoleNameClass(authorRole)}`}>
               {message.authorName}
             </span>
           ) : (
@@ -171,7 +173,7 @@ export function MessageBubble({
             >
               <button
                 type="button"
-                className={`cursor-pointer text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${ROLE_COLORS[authorRole].text}`}
+                className={`cursor-pointer text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${ROLE_COLORS[authorRole].text} ${getRoleNameClass(authorRole)}`}
               >
                 {message.authorName}
               </button>

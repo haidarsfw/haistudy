@@ -45,7 +45,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     titleKey: "onboarding.ai_title",
     descriptionKey: "onboarding.ai_desc",
     target: "[data-onboarding='ai']",
-    skipOnMobile: true,
+    // Mobile: spotlight the elevated center AI FAB in the floating dock.
+    mobileTarget: "[data-onboarding='ai-mobile']",
   },
   {
     id: "voice",

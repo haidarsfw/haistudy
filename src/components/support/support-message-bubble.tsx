@@ -31,6 +31,7 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import {
   ROLE_COLORS,
   resolveRole,
+  getRoleNameClass,
 } from "@/lib/role-colors";
 import { SUPPORT_EDIT_WINDOW_MS } from "@/lib/constants";
 import type {
@@ -289,7 +290,7 @@ export function SupportMessageBubble({
           {/* Sender name (for non-own + showSender) */}
           {!isOwn && showSender && (
             <span
-              className={`mb-0.5 px-1 text-[10px] font-semibold ${ROLE_COLORS[authorRole].text}`}
+              className={`mb-0.5 px-1 text-[10px] font-semibold ${ROLE_COLORS[authorRole].text} ${getRoleNameClass(authorRole)}`}
             >
               {message.senderName}
               {message.isAdmin && " (Admin)"}

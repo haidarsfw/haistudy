@@ -97,6 +97,12 @@ export async function GET(request: Request) {
     return redirectToLoginError(origin, "license_not_found");
   }
 
+  // Login-method binding (migration 038): a 'key' license logs in with the
+  // license key only — block the Google path. NULL = legacy, both allowed.
+  if (license.login_method === "key") {
+    return redirectToLoginError(origin, "use_key_login", email);
+  }
+
   // Server-generated device id for OAuth path (key-login path uses client device id)
   const cookieHeader = request.headers.get("cookie") || "";
   const existingDeviceId = cookieHeader

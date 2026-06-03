@@ -96,6 +96,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Login-method binding (migration 038): an 'email' key logs in via Google only.
+    // NULL = legacy, both paths allowed. This is a KNOWN-VALID key entered on the
+    // wrong path — do NOT record a failed attempt (no IP/lockout penalty for an
+    // honest method mismatch). The `reason` lets the client skip its own lockout.
+    if (license.login_method === "email") {
+      return NextResponse.json(
+        {
+          valid: false,
+          reason: "wrong_method",
+          error: "Akun ini login lewat Google. Gunakan tombol “Login dengan Google”.",
+        },
+        { status: 403 }
+      );
+    }
+
     try {
       const { session, embeddedSettings } = await activateLicense(
         supabase,

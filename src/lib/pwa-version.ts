@@ -12,12 +12,19 @@ export const PWA_EVENTS = {
   INSTALL_REQUEST: "hs:pwa-install-request",
   // use-version-check detects a new deploy → update-banner appears.
   VERSION_CHANGED: "hs-version-changed",
+  // Onboarding (tutorial + post-tutorial) finished → install-banner may surface
+  // on a first login (it defers until this fires, so it never collides with
+  // the tutorial spotlight).
+  ONBOARDING_DONE: "hs:onboarding-done",
 } as const;
 
 // localStorage / sessionStorage keys
 export const INSTALL_DISMISS_KEY = "hs-install-dismissed-until-sw-version";
 export const INSTALL_SHOWN_KEY = "hs-install-shown";
 export const JUST_UPDATED_KEY = "hs-just-updated";
+// Set once per session when onboarding completes, so the install banner can
+// open even if it (re)mounts after the ONBOARDING_DONE event already fired.
+export const ONBOARDING_DONE_SESSION_KEY = "hs-onboarding-done-session";
 
 /** True if the user dismissed the install banner for the CURRENT SW_VERSION. */
 export function isInstallDismissed(): boolean {

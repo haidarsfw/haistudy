@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { scopeColumns } from "@/lib/auth/scope-check";
-import { DEFAULT_SCOPE, isAvailableScope, parseScopeKey } from "@/lib/scope";
+import { DEFAULT_SCOPE, isAvailableScope, parseScopeKey, scopeFullLabel } from "@/lib/scope";
+import { PACKAGE_PRICES, PACKAGE_LABELS, computeUniqueAmount, type PurchasablePackageId } from "@/lib/payments";
+import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 
 // ─── POST /api/webhooks/purchase - Google Form webhook ───
 // Expected payload from Google Apps Script:
@@ -86,6 +89,21 @@ export async function POST(request: Request) {
       .single();
 
     if (error) throw error;
+
+    // Background: alert admins (push + email). Never blocks the webhook response.
+    const pkgId = pkg as PurchasablePackageId;
+    const basePrice = PACKAGE_PRICES[pkgId] ?? 0;
+    waitUntil(
+      notifyAdminsOnPurchase({
+        requestId: (data.id as string) ?? null,
+        name: name.trim(),
+        packageLabel: PACKAGE_LABELS[pkgId] ?? pkg,
+        uniqueAmount: computeUniqueAmount(basePrice, whatsapp),
+        scopeLabel: scopeFullLabel(scope),
+        whatsapp: whatsapp.trim(),
+        loginMethod: null,
+      }).catch((e) => console.error("[webhook] admin alert failed", e))
+    );
 
     return NextResponse.json({ success: true, id: data.id });
   } catch (error) {

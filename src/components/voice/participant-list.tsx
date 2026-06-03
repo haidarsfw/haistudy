@@ -7,7 +7,7 @@ import { Mic, MicOff, Shield, Crown, Gem } from "lucide-react";
 import type { VoiceParticipant } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
+import { roleNameClass } from "@/lib/role-colors";
 import { useAvatars } from "@/hooks/use-avatars";
 import { PublicProfilePopover } from "@/components/user/public-profile-popover";
 
@@ -83,15 +83,11 @@ export function ParticipantList({
                 >
                   <button
                     type="button"
-                    className={`min-w-0 truncate text-left text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${
-                      ROLE_COLORS[
-                        resolveRole({
-                          isAdmin: p.isAdmin,
-                          isTester: p.isTester,
-                          packageTier: p.packageTier ?? null,
-                        })
-                      ].text
-                    }`}
+                    className={`min-w-0 truncate text-left text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${roleNameClass({
+                      isAdmin: p.isAdmin,
+                      isTester: p.isTester,
+                      packageTier: p.packageTier ?? null,
+                    })}`}
                   >
                     {p.userName}
                   </button>

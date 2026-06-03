@@ -30,7 +30,7 @@ import { MediaEmbed } from "./media-embed";
 import { parseForumContent } from "@/lib/content-parser";
 import { detectMediaType } from "@/lib/media-utils";
 import type { ForumThread, Attachment } from "@/types";
-import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
+import { roleNameClass } from "@/lib/role-colors";
 
 interface ThreadViewProps {
   thread: ForumThread;
@@ -113,15 +113,11 @@ export function ThreadView({
         {/* Author info */}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span
-            className={`text-sm font-semibold ${
-              ROLE_COLORS[
-                resolveRole({
-                  isAdmin: thread.isAdmin,
-                  isTester: thread.isTester,
-                  packageTier: thread.packageTier ?? null,
-                })
-              ].text
-            }`}
+            className={`text-sm font-semibold ${roleNameClass({
+              isAdmin: thread.isAdmin,
+              isTester: thread.isTester,
+              packageTier: thread.packageTier ?? null,
+            })}`}
           >
             {thread.authorName}
           </span>

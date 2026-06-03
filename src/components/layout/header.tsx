@@ -18,6 +18,7 @@ import { PomodoroTimer } from "@/components/shared/pomodoro-timer";
 import { MusicPlayer } from "@/components/layout/music-player";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { sounds } from "@/lib/sounds";
+import { useHideOnScroll } from "@/hooks/use-hide-on-scroll";
 
 interface HeaderProps {
   onSettingsOpen?: () => void;
@@ -31,6 +32,9 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
   const { t } = useTranslation();
   const { dark, toggleDark } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
+  // Hide on scroll-down, reveal on scroll-up (mobile only — see hook). Forced
+  // visible while the mobile search overlay is open so the field stays put.
+  const hidden = useHideOnScroll() && !searchOpen;
 
   // Cmd/Ctrl+K shortcut
   useEffect(() => {
@@ -49,7 +53,12 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
   const isHome = pathname === "/dashboard" || /^\/s\d+\/(uts|uas)\/[a-z0-9-]+\/dashboard$/.test(pathname);
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md">
+    <>
+    <header
+      className={`sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md transition-transform duration-300 ease-out will-change-transform ${
+        hidden ? "-translate-y-full" : "translate-y-0"
+      }`}
+    >
       {/* Left: Logo on mobile, back button on sub-pages */}
       {isHome ? (
         <h1 className="font-heading text-lg font-bold sm:hidden">
@@ -195,7 +204,11 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
         </Button>
       </div>
 
-      {/* Mobile search: fullscreen overlay with explicit backdrop for close */}
+    </header>
+
+      {/* Mobile search: fullscreen overlay. Sibling of <header> so the header's
+          hide-on-scroll transform never becomes the containing block for this
+          fixed overlay (a transformed ancestor would trap it to header size). */}
       <div className="sm:hidden">
         {searchOpen && (
           <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
@@ -216,6 +229,6 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
           </div>
         )}
       </div>
-    </header>
+    </>
   );
 }

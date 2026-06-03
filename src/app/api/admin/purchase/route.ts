@@ -6,7 +6,7 @@ import {
 import { validateAdmin } from "@/lib/auth/admin-guard";
 import { resolveAdminScope } from "@/lib/auth/admin-scope";
 import { ScopeError } from "@/lib/auth/scope-check";
-import type { PurchaseRequest } from "@/types";
+import type { PurchaseRequest, PurchaseMeta } from "@/types";
 
 function scopeErrorResponse(error: unknown) {
   if (error instanceof ScopeError) {
@@ -59,7 +59,7 @@ function mapRow(row: Record<string, unknown>): PurchaseRequest {
     name: row.name as string,
     whatsapp: row.whatsapp as string,
     email: (row.email as string) || null,
-    package: row.package as "discount" | "normal" | "free",
+    package: row.package as PurchaseRequest["package"],
     status: row.status as "pending" | "approved" | "rejected",
     licenseKey: (row.license_key as string) || null,
     approvedAt: (row.approved_at as string) || null,
@@ -67,7 +67,35 @@ function mapRow(row: Record<string, unknown>): PurchaseRequest {
     semester: (row.semester as number) ?? 2,
     examPeriod: (row.exam_period as "uts" | "uas") ?? "uts",
     jurusan: (row.jurusan as string) ?? "bm",
+    meta: (row.meta as PurchaseMeta) ?? undefined,
+    paymentProofUrl: null,
+    shareProofUrl: null,
   };
+}
+
+// Build short-lived signed URLs for the private payment-proofs bucket so the
+// admin can preview proofs without making the bucket public.
+async function signProofs(
+  supabase: ReturnType<typeof createServerClient>,
+  rows: Record<string, unknown>[]
+): Promise<PurchaseRequest[]> {
+  return Promise.all(
+    rows.map(async (row) => {
+      const pr = mapRow(row);
+      if (!supabase) return pr;
+      const payPath = (row.payment_proof_path as string) || null;
+      const sharePath = (row.share_proof_path as string) || null;
+      if (payPath) {
+        const { data } = await supabase.storage.from("payment-proofs").createSignedUrl(payPath, 3600);
+        pr.paymentProofUrl = data?.signedUrl ?? null;
+      }
+      if (sharePath) {
+        const { data } = await supabase.storage.from("payment-proofs").createSignedUrl(sharePath, 3600);
+        pr.shareProofUrl = data?.signedUrl ?? null;
+      }
+      return pr;
+    })
+  );
 }
 
 // ─── GET /api/admin/purchase?status=pending&scope=...|allPeriods=1 ───
@@ -80,6 +108,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
+    const wantPendingCount = searchParams.get("count") === "pending";
 
     if (!isSupabaseServerConfigured) {
       let purchases = Array.from(mockPurchases.values());
@@ -91,6 +120,11 @@ export async function GET(request: Request) {
             p.jurusan === resolved.scope.jurusan
         );
       }
+      if (wantPendingCount) {
+        return NextResponse.json({
+          pendingCount: purchases.filter((p) => p.status === "pending").length,
+        });
+      }
       if (status) {
         purchases = purchases.filter((p) => p.status === status);
       }
@@ -99,6 +133,24 @@ export async function GET(request: Request) {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       return NextResponse.json({ purchases });
+    }
+
+    // Lightweight pending-count (red-dot badge) — head query, no rows fetched.
+    if (wantPendingCount) {
+      const supabase = createServerClient()!;
+      let cq = supabase
+        .from("purchase_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      if (resolved.mode === "scoped") {
+        cq = cq
+          .eq("semester", resolved.scope.semester)
+          .eq("exam_period", resolved.scope.examPeriod)
+          .eq("jurusan", resolved.scope.jurusan);
+      }
+      const { count, error: cErr } = await cq;
+      if (cErr) throw cErr;
+      return NextResponse.json({ pendingCount: count ?? 0 });
     }
 
     const supabase = createServerClient()!;
@@ -121,9 +173,8 @@ export async function GET(request: Request) {
     const { data, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({
-      purchases: (data || []).map(mapRow),
-    });
+    const purchases = await signProofs(supabase, (data || []) as Record<string, unknown>[]);
+    return NextResponse.json({ purchases });
   } catch (error) {
     const r = scopeErrorResponse(error);
     if (r) return r;

@@ -14,20 +14,34 @@ import {
   MessageCircle,
   Loader2,
   RefreshCw,
+  ListChecks,
+  BarChart3,
+  Download,
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import type { PurchaseRequest } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
-import { scopeKey } from "@/lib/scope";
+import { scopeKey, scopeFullLabel } from "@/lib/scope";
+import { MediaPreviewer } from "@/components/shared/media-previewer";
+import { PurchaseSummary } from "@/components/admin/purchase-summary";
 
 const PACKAGE_LABELS: Record<string, string> = {
   share: "Share (Rp25.000)",
   normal: "Normal (Rp30.000)",
   vip: "VIP (Rp35.000)",
-  discount: "Diskon (Rp35.000)",
+  diamond: "Diamond (Rp50.000)",
+  discount: "Diskon (legacy)",
   free: "Free",
+};
+
+// Purchase package → license_keys.package_tier granted on approval.
+const TIER_MAP: Record<string, "share" | "normal" | "vip" | "diamond"> = {
+  share: "share",
+  normal: "normal",
+  vip: "vip",
+  diamond: "diamond",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -42,6 +56,23 @@ export function PurchaseQueue() {
   const [purchases, setPurchases] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [view, setView] = useState<"queue" | "summary">("queue");
+
+  const exportFile = useCallback(
+    (format: "csv" | "xlsx") => {
+      const q = scopeQuery();
+      if (!q) return; // not hydrated yet
+      const url = `/api/admin/purchase/export${q}&format=${format}`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    },
+    [scopeQuery]
+  );
 
   const fetchPurchases = useCallback(async () => {
     if (!hydrated) return;
@@ -74,6 +105,28 @@ export function PurchaseQueue() {
       jurusan: purchase.jurusan,
     });
 
+    // Grant the tier the buyer actually paid for + the device limit they
+    // requested. Without these the key silently defaulted to Normal / 2 devices.
+    const packageTier = TIER_MAP[purchase.package] ?? "normal";
+    const maxDevices = purchase.meta?.deviceLimit ?? 2;
+
+    // Login-method binding: 'email' buyers log in via Google (link the Gmail so
+    // the oauth_links row is created); 'key' buyers log in with the license key.
+    const loginMethod = purchase.meta?.loginMethod === "email" ? "email" : "key";
+    const gmail = (purchase.meta?.loginEmail || purchase.email || "").trim();
+    const periode = scopeFullLabel({
+      semester: purchase.semester,
+      examPeriod: purchase.examPeriod,
+      jurusan: purchase.jurusan,
+    });
+
+    // Email-login buyer with no Gmail on file would mint a locked-out key. Stop here.
+    if (loginMethod === "email" && !gmail) {
+      toast.error("Pembeli pilih login via Google tapi email Gmail kosong. Perbaiki data pembeli dulu.");
+      setProcessingId(null);
+      return;
+    }
+
     try {
       // Create the license key in the purchase's scope
       const createRes = await fetch(`/api/admin/licenses?scope=${purchaseScopeKey}`, {
@@ -82,8 +135,11 @@ export function PurchaseQueue() {
         body: JSON.stringify({
           key: newKey,
           name: purchase.name,
-          maxDevices: 2,
+          packageTier,
+          maxDevices,
           scope: purchaseScopeKey,
+          loginMethod,
+          ...(loginMethod === "email" && gmail ? { linkedEmail: gmail } : {}),
         }),
       });
       if (!createRes.ok) throw new Error("Failed to create key");
@@ -105,10 +161,27 @@ export function PurchaseQueue() {
         prev.map((p) => (p.id === purchase.id ? updated : p))
       );
 
-      // Open WhatsApp
+      // Open WhatsApp with a clean, copy-friendly activation message,
+      // branched by the buyer's login method.
       let phone = purchase.whatsapp.replace(/\D/g, "");
       if (phone.startsWith("0")) phone = "62" + phone.slice(1);
-      const message = `Halo ${purchase.name}! License key haistudy kamu sudah siap:\n\n🔐 ${newKey}\n\nSilakan login di https://haistudy.site`;
+      const message =
+        loginMethod === "email"
+          ? `Halo ${purchase.name}! 🎉 Pembelian haistudy kamu sudah aktif.\n\n` +
+            `Cara login:\n` +
+            `1. Buka https://haistudy.site/login\n` +
+            `2. Klik "Login dengan Google"\n` +
+            `3. Pilih email: ${gmail}\n\n` +
+            `Periode: ${periode}\n\n` +
+            `Akunmu sudah terhubung ke email itu. Butuh bantuan? Balas chat ini.`
+          : `Halo ${purchase.name}! 🎉 Pembelian haistudy kamu sudah aktif.\n\n` +
+            `🔑 License Key:\n${newKey}\n\n` +
+            `Cara login:\n` +
+            `1. Buka https://haistudy.site/login\n` +
+            `2. Tempel license key di atas\n` +
+            `3. Masuk & mulai belajar\n\n` +
+            `Periode: ${periode}\n\n` +
+            `Simpan key ini baik-baik. Butuh bantuan? Balas chat ini.`;
       window.open(
         `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`,
         "_blank"
@@ -144,6 +217,46 @@ export function PurchaseQueue() {
   const pendingCount = purchases.filter((p) => p.status === "pending").length;
 
   return (
+    <>
+    {/* View toggle (Antrian | Ringkasan) + export */}
+    <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="inline-flex rounded-lg border border-border p-0.5">
+        <button
+          type="button"
+          onClick={() => setView("queue")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            view === "queue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <ListChecks className="h-3.5 w-3.5" />
+          Antrian
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("summary")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            view === "summary" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <BarChart3 className="h-3.5 w-3.5" />
+          Ringkasan
+        </button>
+      </div>
+      <div className="ml-auto flex items-center gap-1.5">
+        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => exportFile("csv")} disabled={!hydrated}>
+          <Download className="h-3.5 w-3.5" />
+          CSV
+        </Button>
+        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => exportFile("xlsx")} disabled={!hydrated}>
+          <Download className="h-3.5 w-3.5" />
+          XLSX
+        </Button>
+      </div>
+    </div>
+
+    {view === "summary" ? (
+      <PurchaseSummary purchases={purchases} />
+    ) : (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -221,6 +334,56 @@ export function PurchaseQueue() {
                           </code>
                         </p>
                       )}
+                      {purchase.meta && (
+                        <div className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">
+                          {purchase.meta.classCode && <span>Kelas: {purchase.meta.classCode}</span>}
+                          {purchase.meta.campus && <span>&middot; {purchase.meta.campus}</span>}
+                          {purchase.meta.deviceLimit && <span>&middot; {purchase.meta.deviceLimit} device</span>}
+                          {purchase.meta.paymentMethod && <span>&middot; {purchase.meta.paymentMethod.toUpperCase()}</span>}
+                          {typeof purchase.meta.uniqueAmount === "number" && (
+                            <span className="font-medium text-foreground">
+                              &middot; Rp {purchase.meta.uniqueAmount.toLocaleString("id-ID")}
+                            </span>
+                          )}
+                          {purchase.meta.source && <span>&middot; via {purchase.meta.source}</span>}
+                        </div>
+                      )}
+                      {(purchase.paymentProofUrl || purchase.shareProofUrl) && (
+                        <div className="mt-2 flex gap-2">
+                          {purchase.paymentProofUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewSrc(purchase.paymentProofUrl!)}
+                              className="group/proof flex flex-col items-center gap-0.5"
+                              title="Lihat bukti pembayaran"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={purchase.paymentProofUrl}
+                                alt="Bukti bayar"
+                                className="h-14 w-14 rounded-md border border-border object-cover transition-opacity group-hover/proof:opacity-80"
+                              />
+                              <span className="text-[9px] text-muted-foreground">Bayar</span>
+                            </button>
+                          )}
+                          {purchase.shareProofUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewSrc(purchase.shareProofUrl!)}
+                              className="group/proof flex flex-col items-center gap-0.5"
+                              title="Lihat bukti share"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={purchase.shareProofUrl}
+                                alt="Bukti share"
+                                className="h-14 w-14 rounded-md border border-border object-cover transition-opacity group-hover/proof:opacity-80"
+                              />
+                              <span className="text-[9px] text-muted-foreground">Share</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {purchase.status === "pending" && (
                       <div className="flex shrink-0 gap-1">
@@ -280,5 +443,8 @@ export function PurchaseQueue() {
         )}
       </CardContent>
     </Card>
+    )}
+    <MediaPreviewer src={previewSrc} onClose={() => setPreviewSrc(null)} />
+    </>
   );
 }

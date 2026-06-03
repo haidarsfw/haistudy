@@ -26,6 +26,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { useProfile } from "@/hooks/use-profile";
 import { CLASSES } from "@/lib/constants";
 import { generateDefaultAvatar } from "@/lib/avatar";
+import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import { toast } from "@/components/ui/toast";
 
 interface UserProfilePopoverProps {
@@ -102,7 +103,7 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
             className="h-10 w-10 rounded-full object-cover shrink-0 ring-1 ring-border"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold truncate">{session.name}</p>
+            <p className={`text-sm font-semibold truncate ${getRoleNameClass(resolveRole({ isAdmin: session.isAdmin, isTester: session.isTester, packageTier: session.packageTier }))}`}>{session.name}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <code className="text-[10px] text-muted-foreground font-mono">
                 {session.licenseKey.slice(0, 4)}***

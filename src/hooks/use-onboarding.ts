@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ONBOARDING_STEPS } from "@/lib/onboarding-steps";
 import { useSession } from "@/components/providers/session-provider";
+import { PWA_EVENTS, ONBOARDING_DONE_SESSION_KEY } from "@/lib/pwa-version";
 
 const STORAGE_KEY = "hs-onboarding-complete";
 
@@ -92,6 +93,25 @@ export function useOnboarding() {
       return "none";
     });
   }, []);
+
+  // Fire ONBOARDING_DONE exactly once, when the whole flow (tutorial + post
+  // phases) ends. The install banner waits for this on a first login so it
+  // never overlaps the tutorial spotlight. Side-effect lives in an effect (not
+  // the setState updater) so React strict-mode double-invocation can't dupe it.
+  const wasInPostPhase = useRef(false);
+  useEffect(() => {
+    if (postPhase === "contact-form" || postPhase === "settings-setup") {
+      wasInPostPhase.current = true;
+    } else if (postPhase === "none" && wasInPostPhase.current) {
+      wasInPostPhase.current = false;
+      try {
+        sessionStorage.setItem(ONBOARDING_DONE_SESSION_KEY, "1");
+        window.dispatchEvent(new Event(PWA_EVENTS.ONBOARDING_DONE));
+      } catch {
+        // storage / dispatch unavailable
+      }
+    }
+  }, [postPhase]);
 
   return {
     shouldShow,

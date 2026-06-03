@@ -9,6 +9,7 @@ import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progre
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { scopeFullLabel } from "@/lib/scope";
+import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import {
   TIPS as TIPS_UTS,
   FUN_FACTS as FUN_FACTS_UTS,
@@ -164,7 +165,19 @@ export function GreetingCard() {
             )}
           </div>
           <h2 className="font-heading text-xl sm:text-2xl font-extrabold mt-1 break-words">
-            {t(greetingKey)}, {session?.name || "Student"}!
+            {t(greetingKey)},{" "}
+            <span
+              className={getRoleNameClass(
+                resolveRole({
+                  isAdmin: session?.isAdmin,
+                  isTester: session?.isTester,
+                  packageTier: session?.packageTier,
+                })
+              )}
+            >
+              {session?.name || "Student"}
+            </span>
+            !
           </h2>
           <p className="mt-1 text-sm text-muted-foreground break-words">{motivation}</p>
 

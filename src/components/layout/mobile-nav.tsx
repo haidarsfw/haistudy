@@ -23,16 +23,18 @@ import {
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useHideOnScroll } from "@/hooks/use-hide-on-scroll";
+import { useAdminPurchaseCount } from "@/hooks/use-admin-purchase-count";
 import { getDeviceId } from "@/lib/auth/device";
 import { sounds } from "@/lib/sounds";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { MobileScopeSwitcher } from "@/components/admin/admin-scope-switcher";
-import { jurusanLabel } from "@/lib/scope";
 
 interface MobileNavProps {
   onChatToggle?: () => void;
   isChatOpen?: boolean;
   onAiToggle?: () => void;
+  isAiOpen?: boolean;
   onSupportOpen?: () => void;
   onSettingsOpen?: () => void;
   chatUnread?: number;
@@ -43,6 +45,7 @@ export function MobileNav({
   onChatToggle,
   isChatOpen,
   onAiToggle,
+  isAiOpen,
   onSupportOpen,
   onSettingsOpen,
   chatUnread = 0,
@@ -53,6 +56,8 @@ export function MobileNav({
   const { session, logout } = useSession();
   const { t } = useTranslation();
   const { unreadCount } = useNotifications();
+  const { pendingCount: purchasePending } = useAdminPurchaseCount();
+  const navHidden = useHideOnScroll();
   const scopeCtx = useOptionalScope();
   const scopePath = scopeCtx?.scopePath ?? "s2/uts/bm";
   const base = `/${scopePath}`;
@@ -104,6 +109,9 @@ export function MobileNav({
 
   const handleMainNav = (href: string) => {
     sounds.click();
+    // Subtle tactile feedback on supporting devices (Android/Chrome). iOS
+    // ignores the Vibration API silently, so this is a no-op there.
+    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(8);
     if (href === "#chat") {
       onChatToggle?.();
       return;
@@ -174,20 +182,20 @@ export function MobileNav({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 inset-x-0 z-50 rounded-t-2xl border-t border-border bg-background pb-[calc(3.5rem+env(safe-area-inset-bottom))] max-h-[60vh] overflow-y-auto sm:hidden"
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 500) setMoreOpen(false);
+              }}
+              className="fixed bottom-0 inset-x-0 z-50 rounded-t-3xl border-t border-border bg-background pb-[calc(env(safe-area-inset-bottom)+1rem)] max-h-[70vh] overflow-y-auto shadow-[0_-8px_30px_rgb(0_0_0/0.12)] dark:shadow-[0_-8px_30px_rgb(0_0_0/0.5)] sm:hidden"
             >
-              {/* Scope info header */}
-              {scopeCtx && (
-                <div className="mx-4 mt-4 mb-2 rounded-lg bg-primary/5 border border-primary/10 px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">Scope Aktif</p>
-                  <p className="text-sm font-medium text-foreground">
-                    Semester {scopeCtx.scope.semester} · {scopeCtx.scope.examPeriod.toUpperCase()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{jurusanLabel(scopeCtx.scope)}</p>
-                </div>
-              )}
+              {/* Grab handle */}
+              <div className="sticky top-0 flex justify-center bg-background pt-2.5 pb-1">
+                <span className="h-1.5 w-10 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+              </div>
 
-              {/* Admin scope switcher */}
+              {/* Current scope + admin switcher (collapsed by default) */}
               <MobileScopeSwitcher />
 
               <div className="flex items-center justify-between px-4 pt-2 pb-2">
@@ -220,6 +228,11 @@ export function MobileNav({
                           {supportUnread > 9 ? "9+" : supportUnread}
                         </span>
                       )}
+                      {item.labelKey === "nav.admin" && purchasePending > 0 && (
+                        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white">
+                          {purchasePending > 9 ? "9+" : purchasePending}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -240,38 +253,119 @@ export function MobileNav({
       </AnimatePresence>
 
 
-      {/* Bottom nav bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] sm:hidden">
-        {mainItems.map((item) => {
-          const active = isActive(item.href);
-          const badgeCount = item.href === "#chat" ? chatUnread : item.href === "#more" ? (unreadCount + supportUnread) : 0;
-          const showRedDot = badgeCount > 0;
-          return (
-            <button
-              key={item.labelKey}
-              data-onboarding={item.href === "#chat" ? "chat-mobile" : undefined}
-              onClick={() => handleMainNav(item.href)}
-              aria-label={t(item.labelKey)}
-              aria-current={active ? "page" : undefined}
-              className={`hs-press relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] transition-colors ${
-                active
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <div className="relative">
-                <item.icon className="h-5 w-5" aria-hidden="true" />
-                {showRedDot && (
-                  <span className="absolute -right-1.5 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[8px] font-bold text-white">
-                    {badgeCount > 9 ? "9+" : badgeCount}
+      {/* Floating dock — immersive bottom nav */}
+      <motion.nav
+        initial={{ y: 120, opacity: 0 }}
+        animate={{ y: navHidden ? 170 : 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 28 }}
+        aria-label={t("mobile_nav.more_title")}
+        className="fixed inset-x-0 bottom-0 z-40 sm:hidden"
+      >
+        <div className="relative mx-3 mb-[calc(env(safe-area-inset-bottom)+0.5rem)] grid h-16 grid-cols-5 items-stretch rounded-[1.75rem] border border-border/60 bg-background/80 shadow-[0_8px_30px_rgb(0_0_0/0.12)] backdrop-blur-xl dark:bg-background/70 dark:shadow-[0_8px_30px_rgb(0_0_0/0.55)]">
+          {mainItems.map((item) => {
+            // Center slot: elevated, protruding AI button (faux-notch).
+            if (item.href === "#ai") {
+              return (
+                <div
+                  key={item.labelKey}
+                  className="relative flex h-full flex-col items-center justify-end pb-2.5"
+                >
+                  <button
+                    onClick={() => handleMainNav(item.href)}
+                    aria-label={t(item.labelKey)}
+                    aria-current={isAiOpen ? "page" : undefined}
+                    data-onboarding="ai-mobile"
+                    className="hs-press absolute left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-[38%] items-center justify-center"
+                  >
+                    {/* Opaque disc cuts the translucent bar → notch illusion */}
+                    <span
+                      className="absolute h-[3.75rem] w-[3.75rem] rounded-full bg-background"
+                      aria-hidden="true"
+                    />
+                    {/* Soft primary halo — lets the smaller button pop a touch */}
+                    <span
+                      className="absolute h-12 w-12 rounded-full bg-primary/35 blur-md"
+                      aria-hidden="true"
+                    />
+                    <motion.span
+                      whileTap={{ scale: 0.9 }}
+                      animate={{ scale: isAiOpen ? 1.05 : 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                      className={`relative flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40 ring-2 ring-background ${
+                        isAiOpen ? "hs-nav-fab-glow" : ""
+                      }`}
+                    >
+                      <Sparkles className="h-5 w-5" aria-hidden="true" />
+                    </motion.span>
+                  </button>
+                  <span
+                    className={`text-[10px] font-medium transition-colors ${
+                      isAiOpen ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {t(item.labelKey)}
                   </span>
+                </div>
+              );
+            }
+
+            // Side slots: icon + label with a sliding shared-layout pill.
+            const active = isActive(item.href);
+            const badgeCount =
+              item.href === "#chat"
+                ? chatUnread
+                : item.href === "#more"
+                  ? unreadCount + supportUnread + (session?.isAdmin ? purchasePending : 0)
+                  : 0;
+            const showRedDot = badgeCount > 0;
+            return (
+              <button
+                key={item.labelKey}
+                data-onboarding={item.href === "#chat" ? "chat-mobile" : undefined}
+                onClick={() => handleMainNav(item.href)}
+                aria-label={t(item.labelKey)}
+                aria-current={active ? "page" : undefined}
+                className="hs-press relative flex h-full flex-col items-center justify-center gap-0.5"
+              >
+                {active && (
+                  <motion.span
+                    layoutId="hs-nav-pill"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    className="absolute inset-x-1.5 inset-y-2 rounded-2xl bg-primary/12"
+                    aria-hidden="true"
+                  />
                 )}
-              </div>
-              <span>{t(item.labelKey)}</span>
-            </button>
-          );
-        })}
-      </nav>
+                <motion.span
+                  animate={{ scale: active ? 1.12 : 1, y: active ? -1 : 0 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 20 }}
+                  className={`relative z-10 ${active ? "text-primary" : "text-muted-foreground"}`}
+                >
+                  <item.icon className="h-5 w-5" aria-hidden="true" />
+                  <AnimatePresence>
+                    {showRedDot && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        className="absolute -right-2 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[8px] font-bold text-white"
+                      >
+                        {badgeCount > 9 ? "9+" : badgeCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.span>
+                <span
+                  className={`relative z-10 text-[10px] transition-colors ${
+                    active ? "font-semibold text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {t(item.labelKey)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </motion.nav>
     </>
   );
 }
