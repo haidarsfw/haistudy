@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,9 @@ import {
   ListChecks,
   BarChart3,
   Download,
+  Search,
+  Trash2,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import type { PurchaseRequest } from "@/types";
@@ -50,7 +53,14 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: "bg-red-500/10 text-red-600",
 };
 
-export function PurchaseQueue() {
+const STATUS_FILTER_LABELS: Record<string, string> = {
+  all: "Semua",
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Ditolak",
+};
+
+export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
   const { t } = useTranslation();
   const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
   const [purchases, setPurchases] = useState<PurchaseRequest[]>([]);
@@ -58,6 +68,10 @@ export function PurchaseQueue() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [view, setView] = useState<"queue" | "summary">("queue");
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [sort, setSort] = useState<"newest" | "oldest" | "amount">("newest");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const exportFile = useCallback(
     (format: "csv" | "xlsx") => {
@@ -89,7 +103,7 @@ export function PurchaseQueue() {
 
   useEffect(() => {
     fetchPurchases();
-  }, [fetchPurchases, adminScopeKey]);
+  }, [fetchPurchases, adminScopeKey, reloadToken]);
 
   const handleApprove = useCallback(async (purchase: PurchaseRequest) => {
     setProcessingId(purchase.id);
@@ -214,6 +228,61 @@ export function PurchaseQueue() {
     setProcessingId(null);
   }, [scopeQuery]);
 
+  const handleDelete = useCallback(async (id: string) => {
+    setProcessingId(id);
+    try {
+      const res = await fetch(`/api/admin/purchase${scopeQuery()}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error();
+      setPurchases((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Order dihapus");
+    } catch {
+      toast.error("Gagal menghapus order");
+    }
+    setProcessingId(null);
+  }, [scopeQuery]);
+
+  // Client-side search + status filter + sort over the fetched list.
+  const visible = useMemo(() => {
+    let list = purchases;
+    if (statusFilter !== "all") list = list.filter((p) => p.status === statusFilter);
+    const q = query.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p) => {
+        const hay = [
+          p.name,
+          p.whatsapp,
+          p.email,
+          p.meta?.loginEmail,
+          p.licenseKey,
+          p.meta?.classCode,
+          p.meta?.campus,
+          p.meta?.source,
+          p.package,
+          p.createdAt,
+          new Date(p.createdAt).toLocaleString("id-ID"),
+          typeof p.meta?.uniqueAmount === "number" ? String(p.meta.uniqueAmount) : "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return hay.includes(q);
+      });
+    }
+    const sorted = [...list];
+    if (sort === "oldest") {
+      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else if (sort === "amount") {
+      sorted.sort((a, b) => (b.meta?.uniqueAmount ?? 0) - (a.meta?.uniqueAmount ?? 0));
+    } else {
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return sorted;
+  }, [purchases, query, statusFilter, sort]);
+
   const pendingCount = purchases.filter((p) => p.status === "pending").length;
 
   return (
@@ -284,167 +353,262 @@ export function PurchaseQueue() {
             Belum ada purchase request
           </p>
         ) : (
-          <ScrollArea className="max-h-[500px]">
-            <div className="space-y-2">
-              {purchases.map((purchase) => (
-                <div
-                  key={purchase.id}
-                  className={`rounded-lg border p-3 ${
-                    purchase.status !== "pending" ? "opacity-60" : ""
-                  }`}
+          <>
+            {/* Search + status filter + sort */}
+            <div className="mb-3 space-y-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Cari nama, WhatsApp, email, key, kelas, sumber, tanggal…"
+                  className="h-9 w-full rounded-lg border border-border bg-background pl-8 pr-3 text-sm outline-none transition-colors focus:border-primary/50"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(["all", "pending", "approved", "rejected"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatusFilter(s)}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                      statusFilter === s
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {STATUS_FILTER_LABELS[s]}
+                  </button>
+                ))}
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as typeof sort)}
+                  className="ml-auto h-7 rounded-md border border-border bg-background px-2 text-xs outline-none"
+                  aria-label="Urutkan"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{purchase.name}</span>
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] ${STATUS_COLORS[purchase.status] || ""}`}
+                  <option value="newest">Terbaru</option>
+                  <option value="oldest">Terlama</option>
+                  <option value="amount">Nominal tertinggi</option>
+                </select>
+              </div>
+            </div>
+
+            {visible.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Tidak ada hasil untuk filter ini
+              </p>
+            ) : (
+              <ScrollArea className="max-h-[560px]">
+                <div className="space-y-2">
+                  {visible.map((purchase) => {
+                    const expanded = expandedId === purchase.id;
+                    return (
+                      <div key={purchase.id} className="overflow-hidden rounded-lg border border-border">
+                        {/* Clickable summary row → toggles full detail */}
+                        <button
+                          type="button"
+                          onClick={() => setExpandedId(expanded ? null : purchase.id)}
+                          className="flex w-full items-start justify-between gap-2 p-3 text-left transition-colors hover:bg-muted/40"
                         >
-                          {purchase.status}
-                        </Badge>
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                        <span>{purchase.whatsapp}</span>
-                        {purchase.email && (
-                          <span>&middot; {purchase.email}</span>
-                        )}
-                        <span>
-                          &middot;{" "}
-                          {PACKAGE_LABELS[purchase.package] || purchase.package}
-                        </span>
-                        <span>
-                          &middot;{" "}
-                          {formatDistanceToNow(new Date(purchase.createdAt), {
-                            addSuffix: true,
-                            locale: idLocale,
-                          })}
-                        </span>
-                        {isAllPeriods && (
-                          <Badge variant="outline" className="text-[10px] font-mono">
-                            s{purchase.semester}-{purchase.examPeriod}-{purchase.jurusan}
-                          </Badge>
-                        )}
-                      </div>
-                      {purchase.licenseKey && (
-                        <p className="mt-1 text-xs">
-                          Key:{" "}
-                          <code className="font-semibold">
-                            {purchase.licenseKey}
-                          </code>
-                        </p>
-                      )}
-                      {purchase.meta && (
-                        <div className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">
-                          {purchase.meta.classCode && <span>Kelas: {purchase.meta.classCode}</span>}
-                          {purchase.meta.campus && <span>&middot; {purchase.meta.campus}</span>}
-                          {purchase.meta.deviceLimit && <span>&middot; {purchase.meta.deviceLimit} device</span>}
-                          {purchase.meta.paymentMethod && <span>&middot; {purchase.meta.paymentMethod.toUpperCase()}</span>}
-                          {typeof purchase.meta.uniqueAmount === "number" && (
-                            <span className="font-medium text-foreground">
-                              &middot; Rp {purchase.meta.uniqueAmount.toLocaleString("id-ID")}
-                            </span>
-                          )}
-                          {purchase.meta.source && <span>&middot; via {purchase.meta.source}</span>}
-                        </div>
-                      )}
-                      {(purchase.paymentProofUrl || purchase.shareProofUrl) && (
-                        <div className="mt-2 flex gap-2">
-                          {purchase.paymentProofUrl && (
-                            <button
-                              type="button"
-                              onClick={() => setPreviewSrc(purchase.paymentProofUrl!)}
-                              className="group/proof flex flex-col items-center gap-0.5"
-                              title="Lihat bukti pembayaran"
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={purchase.paymentProofUrl}
-                                alt="Bukti bayar"
-                                className="h-14 w-14 rounded-md border border-border object-cover transition-opacity group-hover/proof:opacity-80"
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-medium">{purchase.name}</span>
+                              <Badge
+                                variant="secondary"
+                                className={`text-[10px] ${STATUS_COLORS[purchase.status] || ""}`}
+                              >
+                                {purchase.status}
+                              </Badge>
+                              {isAllPeriods && (
+                                <Badge variant="outline" className="font-mono text-[10px]">
+                                  s{purchase.semester}-{purchase.examPeriod}-{purchase.jurusan}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                              <span>{PACKAGE_LABELS[purchase.package] || purchase.package}</span>
+                              {purchase.meta?.classCode && <span>· {purchase.meta.classCode}</span>}
+                              {purchase.meta?.campus && <span>· {purchase.meta.campus}</span>}
+                              {purchase.meta?.deviceLimit && <span>· {purchase.meta.deviceLimit} device</span>}
+                              {purchase.meta?.paymentMethod && <span>· {purchase.meta.paymentMethod.toUpperCase()}</span>}
+                              <span>
+                                ·{" "}
+                                {formatDistanceToNow(new Date(purchase.createdAt), {
+                                  addSuffix: true,
+                                  locale: idLocale,
+                                })}
+                              </span>
+                            </div>
+                            {purchase.licenseKey && (
+                              <p className="mt-1 text-xs">
+                                Key: <code className="font-semibold">{purchase.licenseKey}</code>
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            {typeof purchase.meta?.uniqueAmount === "number" && (
+                              <span className="text-sm font-bold text-foreground">
+                                Rp {purchase.meta.uniqueAmount.toLocaleString("id-ID")}
+                              </span>
+                            )}
+                            <ChevronDown
+                              className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+                            />
+                          </div>
+                        </button>
+
+                        {/* Full detail (all fields + larger proofs) */}
+                        {expanded && (
+                          <div className="border-t border-border/60 bg-muted/20 px-3 pb-3 pt-2.5">
+                            <div className="grid gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
+                              <DetailRow label="WhatsApp" value={purchase.whatsapp} />
+                              <DetailRow label="Email kontak" value={purchase.email || "—"} />
+                              <DetailRow
+                                label="Metode login"
+                                value={purchase.meta?.loginMethod === "email" ? "Google (Email)" : "License Key"}
                               />
-                              <span className="text-[9px] text-muted-foreground">Bayar</span>
-                            </button>
-                          )}
-                          {purchase.shareProofUrl && (
-                            <button
-                              type="button"
-                              onClick={() => setPreviewSrc(purchase.shareProofUrl!)}
-                              className="group/proof flex flex-col items-center gap-0.5"
-                              title="Lihat bukti share"
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={purchase.shareProofUrl}
-                                alt="Bukti share"
-                                className="h-14 w-14 rounded-md border border-border object-cover transition-opacity group-hover/proof:opacity-80"
+                              {purchase.meta?.loginEmail && (
+                                <DetailRow label="Email Google" value={purchase.meta.loginEmail} />
+                              )}
+                              {typeof purchase.meta?.basePrice === "number" && (
+                                <DetailRow label="Harga dasar" value={`Rp ${purchase.meta.basePrice.toLocaleString("id-ID")}`} />
+                              )}
+                              {typeof purchase.meta?.uniqueAmount === "number" && (
+                                <DetailRow label="Nominal unik" value={`Rp ${purchase.meta.uniqueAmount.toLocaleString("id-ID")}`} />
+                              )}
+                              <DetailRow label="Kelas" value={purchase.meta?.classCode || "—"} />
+                              <DetailRow label="Kampus" value={purchase.meta?.campus || "—"} />
+                              <DetailRow label="Sumber" value={purchase.meta?.source || "—"} />
+                              <DetailRow
+                                label="Periode"
+                                value={`s${purchase.semester}-${purchase.examPeriod}-${purchase.jurusan}`}
                               />
-                              <span className="text-[9px] text-muted-foreground">Share</span>
-                            </button>
+                              <DetailRow label="Dibuat" value={new Date(purchase.createdAt).toLocaleString("id-ID")} />
+                              {purchase.approvedAt && (
+                                <DetailRow label="Disetujui" value={new Date(purchase.approvedAt).toLocaleString("id-ID")} />
+                              )}
+                              {purchase.meta?.leShareNote && (
+                                <DetailRow label="Catatan LE86" value={purchase.meta.leShareNote} />
+                              )}
+                            </div>
+
+                            {(purchase.paymentProofUrl || purchase.shareProofUrl || purchase.shareProofUrl2) && (
+                              <div className="mt-3 flex flex-wrap gap-3">
+                                {purchase.paymentProofUrl && (
+                                  <ProofThumb src={purchase.paymentProofUrl} label="Bukti Bayar" onClick={() => setPreviewSrc(purchase.paymentProofUrl!)} />
+                                )}
+                                {purchase.shareProofUrl && (
+                                  <ProofThumb src={purchase.shareProofUrl} label="Bukti Share" onClick={() => setPreviewSrc(purchase.shareProofUrl!)} />
+                                )}
+                                {purchase.shareProofUrl2 && (
+                                  <ProofThumb src={purchase.shareProofUrl2} label="Bukti Share 2" onClick={() => setPreviewSrc(purchase.shareProofUrl2!)} />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 px-3 py-2">
+                          {purchase.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="h-7 gap-1 text-xs"
+                                onClick={() => handleApprove(purchase)}
+                                disabled={processingId === purchase.id}
+                              >
+                                {processingId === purchase.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Check className="h-3 w-3" />
+                                )}
+                                Approve
+                              </Button>
+                              <ConfirmDialog
+                                trigger={
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                                    disabled={processingId === purchase.id}
+                                  >
+                                    <X className="h-3 w-3" /> Tolak
+                                  </Button>
+                                }
+                                description={t("confirm.reject_purchase")}
+                                onConfirm={() => handleReject(purchase.id)}
+                              />
+                            </>
                           )}
-                        </div>
-                      )}
-                    </div>
-                    {purchase.status === "pending" && (
-                      <div className="flex shrink-0 gap-1">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="h-7 gap-1 text-xs"
-                          onClick={() => handleApprove(purchase)}
-                          disabled={processingId === purchase.id}
-                        >
-                          {processingId === purchase.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
-                          Approve
-                        </Button>
-                        <ConfirmDialog
-                          trigger={
+                          {purchase.status === "approved" && purchase.whatsapp && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
-                              disabled={processingId === purchase.id}
+                              className="h-7 gap-1 text-xs"
+                              onClick={() => {
+                                let phone = purchase.whatsapp.replace(/\D/g, "");
+                                if (phone.startsWith("0")) phone = "62" + phone.slice(1);
+                                window.open(`https://api.whatsapp.com/send?phone=${phone}`, "_blank");
+                              }}
                             >
-                              <X className="h-3 w-3" />
+                              <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                             </Button>
-                          }
-                          description={t("confirm.reject_purchase")}
-                          onConfirm={() => handleReject(purchase.id)}
-                        />
+                          )}
+                          {purchase.status === "rejected" && (
+                            <ConfirmDialog
+                              trigger={
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                                  disabled={processingId === purchase.id}
+                                >
+                                  <Trash2 className="h-3 w-3" /> Hapus
+                                </Button>
+                              }
+                              description={t("confirm.delete_purchase")}
+                              onConfirm={() => handleDelete(purchase.id)}
+                            />
+                          )}
+                        </div>
                       </div>
-                    )}
-                    {purchase.status === "approved" && purchase.whatsapp && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 shrink-0"
-                        onClick={() => {
-                          let phone = purchase.whatsapp.replace(/\D/g, "");
-                          if (phone.startsWith("0"))
-                            phone = "62" + phone.slice(1);
-                          window.open(
-                            `https://api.whatsapp.com/send?phone=${phone}`,
-                            "_blank"
-                          );
-                        }}
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
+              </ScrollArea>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
     )}
     <MediaPreviewer src={previewSrc} onClose={() => setPreviewSrc(null)} />
     </>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-2 border-b border-border/40 py-0.5 last:border-0">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-words text-right font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function ProofThumb({ src, label, onClick }: { src: string; label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="group/proof flex flex-col items-center gap-1" title={label}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={label}
+        className="h-24 w-24 rounded-md border border-border object-cover transition-opacity group-hover/proof:opacity-80"
+      />
+      <span className="text-[10px] text-muted-foreground">{label}</span>
+    </button>
   );
 }

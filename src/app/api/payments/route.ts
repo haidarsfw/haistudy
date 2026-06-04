@@ -106,13 +106,18 @@ export async function POST(request: Request) {
     // ── Files ──
     const paymentProof = asUpload(fd.get("paymentProof"));
     const shareProof = asUpload(fd.get("shareProof"));
+    const shareProof2 = asUpload(fd.get("shareProof2"));
     if (!paymentProof) {
       return NextResponse.json({ error: "Bukti pembayaran wajib diunggah." }, { status: 400 });
     }
     if (pkg === "share" && !shareProof) {
       return NextResponse.json({ error: "Bukti share wajib diunggah." }, { status: 400 });
     }
-    for (const f of [paymentProof, shareProof]) {
+    // LE86 must share to 2 people → a second proof is mandatory for them.
+    if (pkg === "share" && classCode === "LE86" && !shareProof2) {
+      return NextResponse.json({ error: "Bukti share kedua wajib untuk kelas LE86." }, { status: 400 });
+    }
+    for (const f of [paymentProof, shareProof, shareProof2]) {
       if (!f) continue;
       if (f.size > MAX_UPLOAD_BYTES) {
         return NextResponse.json({ error: "Ukuran file terlalu besar." }, { status: 400 });
@@ -145,6 +150,7 @@ export async function POST(request: Request) {
 
     const paymentPath = await uploadOne(paymentProof, "pay");
     const sharePath = shareProof ? await uploadOne(shareProof, "share") : null;
+    const sharePath2 = shareProof2 ? await uploadOne(shareProof2, "share2") : null;
 
     const meta = {
       classCode,
@@ -172,6 +178,7 @@ export async function POST(request: Request) {
         meta,
         payment_proof_path: paymentPath,
         share_proof_path: sharePath,
+        share_proof_path_2: sharePath2,
       })
       .select("id")
       .single();

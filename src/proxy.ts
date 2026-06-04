@@ -34,8 +34,9 @@ const DEFAULT_SCOPE_COOKIE = "s2-uts-bm";
 // favicons, robots, sitemap). Without these, the proxy 307s social/crawler
 // fetches to /login and breaks link previews + indexing.
 const metadataRoutes = new Set([
-  "/opengraph-image",
-  "/twitter-image",
+  // NOTE: /opengraph-image (+ /twitter-image) intentionally removed in round-9 —
+  // the OG image convention file was deleted pending the official asset.
+  // Re-add both here when the official opengraph-image is restored.
   "/icon",
   "/apple-icon",
   "/robots.txt",

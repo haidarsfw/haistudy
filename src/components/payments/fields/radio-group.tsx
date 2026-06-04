@@ -7,6 +7,8 @@ export interface RadioOption {
   value: string;
   label: string;
   description?: string;
+  /** Greyed-out, non-interactive (e.g. a device count not allowed for the chosen package). */
+  disabled?: boolean;
 }
 
 interface RadioGroupProps {
@@ -39,18 +41,25 @@ export function RadioGroup({
       <div className={cn("grid items-stretch gap-2", gridClass)} role="radiogroup" aria-label={name}>
         {options.map((o) => {
           const selected = value === o.value;
+          const disabled = !!o.disabled;
           return (
             <button
               key={o.value}
               type="button"
               role="radio"
               aria-checked={selected}
-              onClick={() => onChange(o.value)}
+              aria-disabled={disabled}
+              disabled={disabled}
+              onClick={() => {
+                if (!disabled) onChange(o.value);
+              }}
               className={cn(
                 "flex h-full min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border px-3 py-3 text-center transition-all",
-                selected
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                  : "border-border hover:border-primary/30 hover:bg-muted/40"
+                disabled
+                  ? "cursor-not-allowed border-border opacity-40"
+                  : selected
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                    : "border-border hover:border-primary/30 hover:bg-muted/40"
               )}
             >
               <span

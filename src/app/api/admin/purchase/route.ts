@@ -70,6 +70,7 @@ function mapRow(row: Record<string, unknown>): PurchaseRequest {
     meta: (row.meta as PurchaseMeta) ?? undefined,
     paymentProofUrl: null,
     shareProofUrl: null,
+    shareProofUrl2: null,
   };
 }
 
@@ -92,6 +93,11 @@ async function signProofs(
       if (sharePath) {
         const { data } = await supabase.storage.from("payment-proofs").createSignedUrl(sharePath, 3600);
         pr.shareProofUrl = data?.signedUrl ?? null;
+      }
+      const sharePath2 = (row.share_proof_path_2 as string) || null;
+      if (sharePath2) {
+        const { data } = await supabase.storage.from("payment-proofs").createSignedUrl(sharePath2, 3600);
+        pr.shareProofUrl2 = data?.signedUrl ?? null;
       }
       return pr;
     })
@@ -251,11 +257,151 @@ export async function PATCH(request: Request) {
     const { data, error } = await q.select().single();
 
     if (error) throw error;
+
+    // On approval, propagate the buyer's contact info to their account so the
+    // post-tutorial "Stay Connected" modal can auto-fill (and skip). Only fill
+    // fields not already set — never clobber a value the user chose themselves.
+    if (status === "approved" && data?.license_key) {
+      const lk = data.license_key as string;
+      const phone = (data.whatsapp as string) || null;
+      const contactEmail = (data.email as string) || null;
+      if (phone || contactEmail) {
+        const { data: existing } = await supabase
+          .from("user_profiles")
+          .select("phone, email")
+          .eq("license_key", lk)
+          .maybeSingle();
+        const patch: Record<string, unknown> = { license_key: lk };
+        if (phone && !existing?.phone) patch.phone = phone;
+        if (contactEmail && !existing?.email) patch.email = contactEmail;
+        if (Object.keys(patch).length > 1) {
+          const { error: pErr } = await supabase
+            .from("user_profiles")
+            .upsert(patch, { onConflict: "license_key" });
+          if (pErr) console.error("[purchase] profile contact propagate failed", pErr);
+        }
+      }
+    }
+
     return NextResponse.json({ purchase: mapRow(data) });
   } catch (error) {
     const r = scopeErrorResponse(error);
     if (r) return r;
     console.error("Admin purchase PATCH error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+// ─── DELETE /api/admin/purchase ───
+// Body: { id }                  → delete one order (UI exposes this on rejected rows).
+//       { action: "clearAll" }  → wipe EVERY order in the resolved scope (Danger Zone).
+// Both remove the private proof images from storage before deleting the rows.
+export async function DELETE(request: Request) {
+  try {
+    const { authorized } = await validateAdmin();
+    if (!authorized) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
+    const resolved = await resolveAdminScope(request);
+    const body = await request.json().catch(() => ({}));
+    const { id, action } = body as { id?: string; action?: string };
+    const clearAll = action === "clearAll";
+
+    if (!clearAll && !id) {
+      return NextResponse.json({ error: "id or action required" }, { status: 400 });
+    }
+
+    if (!isSupabaseServerConfigured) {
+      if (clearAll) {
+        for (const [key, p] of Array.from(mockPurchases.entries())) {
+          if (
+            resolved.mode === "scoped" &&
+            (p.semester !== resolved.scope.semester ||
+              p.examPeriod !== resolved.scope.examPeriod ||
+              p.jurusan !== resolved.scope.jurusan)
+          )
+            continue;
+          mockPurchases.delete(key);
+        }
+        return NextResponse.json({ success: true });
+      }
+      if (id) mockPurchases.delete(id);
+      return NextResponse.json({ success: true });
+    }
+
+    const supabase = createServerClient()!;
+
+    // Strip the private proof images for the given rows (chunked — storage.remove
+    // caps the payload, so big wipes can't exceed it).
+    const removeProofs = async (rows: Record<string, unknown>[]) => {
+      const paths = rows
+        .flatMap((r) => [
+          r.payment_proof_path as string | null,
+          r.share_proof_path as string | null,
+          r.share_proof_path_2 as string | null,
+        ])
+        .filter((p): p is string => !!p);
+      for (let i = 0; i < paths.length; i += 100) {
+        const chunk = paths.slice(i, i + 100);
+        if (chunk.length) await supabase.storage.from("payment-proofs").remove(chunk);
+      }
+    };
+
+    if (clearAll) {
+      // Wiping every order is a per-period reset — refuse the "All periods" view.
+      if (resolved.mode !== "scoped") {
+        return NextResponse.json(
+          { error: "Pilih satu periode (bukan Semua) untuk menghapus semua order." },
+          { status: 400 }
+        );
+      }
+      const { data: rows, error: selErr } = await supabase
+        .from("purchase_requests")
+        .select("payment_proof_path, share_proof_path, share_proof_path_2")
+        .eq("semester", resolved.scope.semester)
+        .eq("exam_period", resolved.scope.examPeriod)
+        .eq("jurusan", resolved.scope.jurusan);
+      if (selErr) throw selErr;
+      await removeProofs((rows || []) as Record<string, unknown>[]);
+      const { error: delErr } = await supabase
+        .from("purchase_requests")
+        .delete()
+        .eq("semester", resolved.scope.semester)
+        .eq("exam_period", resolved.scope.examPeriod)
+        .eq("jurusan", resolved.scope.jurusan);
+      if (delErr) throw delErr;
+      return NextResponse.json({ success: true, cleared: (rows || []).length });
+    }
+
+    // Single delete — scoped guard so an admin can't reach another period's row.
+    let selQ = supabase
+      .from("purchase_requests")
+      .select("payment_proof_path, share_proof_path, share_proof_path_2")
+      .eq("id", id);
+    if (resolved.mode === "scoped") {
+      selQ = selQ
+        .eq("semester", resolved.scope.semester)
+        .eq("exam_period", resolved.scope.examPeriod)
+        .eq("jurusan", resolved.scope.jurusan);
+    }
+    const { data: row, error: rowErr } = await selQ.maybeSingle();
+    if (rowErr) throw rowErr;
+    if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    await removeProofs([row as Record<string, unknown>]);
+
+    let delQ = supabase.from("purchase_requests").delete().eq("id", id);
+    if (resolved.mode === "scoped") {
+      delQ = delQ
+        .eq("semester", resolved.scope.semester)
+        .eq("exam_period", resolved.scope.examPeriod)
+        .eq("jurusan", resolved.scope.jurusan);
+    }
+    const { error: delErr } = await delQ;
+    if (delErr) throw delErr;
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const r = scopeErrorResponse(error);
+    if (r) return r;
+    console.error("Admin purchase DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

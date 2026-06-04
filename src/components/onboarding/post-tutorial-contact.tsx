@@ -9,13 +9,16 @@ import { sounds } from "@/lib/sounds";
 
 interface PostTutorialContactProps {
   onDone: () => void;
+  /** Pre-fill from the account (e.g. contact propagated from the purchase). */
+  initialPhone?: string;
+  initialEmail?: string;
 }
 
-export function PostTutorialContact({ onDone }: PostTutorialContactProps) {
+export function PostTutorialContact({ onDone, initialPhone = "", initialEmail = "" }: PostTutorialContactProps) {
   const { t } = useTranslation();
   const { updateProfile, saving } = useProfile();
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState(initialPhone);
+  const [email, setEmail] = useState(initialEmail);
 
   const handleSave = async () => {
     sounds.send();

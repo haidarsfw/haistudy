@@ -1,13 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Share2, GraduationCap, Crown, Gem, Check, ChevronDown, Sparkles, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   packageAccent,
   formatIDR,
@@ -15,7 +9,6 @@ import {
   type PackageDef,
 } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
-import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
@@ -71,27 +64,13 @@ export function getAccentClasses(id: PackageDef["id"]): AccentClasses {
   return ACCENTS[packageAccent(id)];
 }
 
-// ─── "Lihat semua fitur" — popover (desktop) / accordion (mobile) ───
-function FeaturesDisclosure({
-  pkg,
-  open,
-  onOpenChange,
-  checkClass,
-}: {
-  pkg: PackageDef;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  checkClass: string;
-}) {
+/**
+ * Grouped feature list — a clean indented list with no surrounding box.
+ * Shared by the landing accordion AND the picker's right-side detail panel.
+ */
+export function FeatureGroups({ pkg, checkClass }: { pkg: PackageDef; checkClass: string }) {
   const { t } = useTranslation();
-  const isMobile = useIsMobile();
-  // Defer the popover-vs-accordion split until after mount so the server HTML
-  // and the first client paint match (PricingSection is server-rendered).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const mobile = mounted && isMobile;
-
-  const groups = (
+  return (
     <div className="flex flex-col gap-2.5 text-left">
       {pkg.featureGroups.map((g) => (
         <div key={g.labelKey}>
@@ -110,63 +89,77 @@ function FeaturesDisclosure({
       ))}
     </div>
   );
+}
 
-  // Mobile: inline accordion that expands down under the card.
-  if (mobile) {
-    return (
-      <div className="mt-2 w-full">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenChange(!open);
-          }}
-          aria-expanded={open}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
-        >
-          {t("pricing.see_all")}
-          <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
-        </button>
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="overflow-hidden"
-            >
-              <div className="mt-2 rounded-xl border border-border bg-muted/30 p-3">{groups}</div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
+/** First N feature item keys, flattened across groups, for the always-visible preview. */
+function previewItems(pkg: PackageDef, n: number): string[] {
+  const flat: string[] = [];
+  for (const g of pkg.featureGroups) {
+    for (const k of g.itemKeys) {
+      flat.push(k);
+      if (flat.length >= n) return flat;
+    }
   }
+  return flat;
+}
 
-  // Desktop: popover anchored beside the card (base-ui auto-flips on collision).
+// ─── "Lihat semua fitur" — downward accordion (both mobile + desktop), no box ───
+// Shows a 4-item preview always, then reveals the full grouped list on expand.
+function FeaturesDisclosure({
+  pkg,
+  open,
+  onOpenChange,
+  checkClass,
+}: {
+  pkg: PackageDef;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  checkClass: string;
+}) {
+  const { t } = useTranslation();
+  const preview = previewItems(pkg, 4);
+
   return (
     <div className="mt-2 w-full">
-      <Popover open={open} onOpenChange={onOpenChange}>
-        <PopoverTrigger
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline data-[popup-open]:text-foreground"
-        >
-          {t("pricing.see_all")}
-          <ChevronDown
-            className={cn("h-3 w-3 transition-transform", open && "rotate-180")}
-          />
-        </PopoverTrigger>
-        <PopoverContent
-          side="right"
-          align="start"
-          sideOffset={10}
-          onClick={(e) => e.stopPropagation()}
-          className="w-64"
-        >
-          {groups}
-        </PopoverContent>
-      </Popover>
+      {/* Always-visible feature preview (first 4) */}
+      <ul className="space-y-1 text-left">
+        {preview.map((k) => (
+          <li key={k} className="flex items-start gap-1.5 text-xs text-foreground/90">
+            <Check className={cn("mt-0.5 h-3 w-3 shrink-0", checkClass)} strokeWidth={3} />
+            <span>{t(k)}</span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenChange(!open);
+        }}
+        aria-expanded={open}
+        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+      >
+        {open ? t("pricing.show_less") : t("pricing.see_all")}
+        <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            {/* Subtle divider instead of a bordered card — "no box" per feedback. */}
+            <div className="mt-2 border-t border-border/60 pt-2">
+              <FeatureGroups pkg={pkg} checkClass={checkClass} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -179,6 +172,12 @@ interface PackageCardProps {
   onFeaturesOpenChange: (open: boolean) => void;
   /** Shared framer layoutId so the selected outline slides between cards. */
   layoutId: string;
+  /**
+   * How "see all features" behaves:
+   * - "accordion" (default): expands a feature list downward inside the card (landing).
+   * - "button": a plain toggle button; the parent renders features elsewhere (picker detail panel).
+   */
+  featuresVariant?: "accordion" | "button";
   /** Render a check badge in the corner when selected (form picker). */
   showCheck?: boolean;
   /** Footer action (e.g. Buy link). Pinned to the bottom of the card. */
@@ -193,6 +192,7 @@ export function PackageCard({
   featuresOpen,
   onFeaturesOpenChange,
   layoutId,
+  featuresVariant = "accordion",
   showCheck,
   children,
   className,
@@ -301,14 +301,31 @@ export function PackageCard({
         {t(pkg.shortKey)}
       </p>
 
-      {/* Lihat semua fitur → popover (desktop) / accordion (mobile) */}
-      <div className="relative z-10">
-        <FeaturesDisclosure
-          pkg={pkg}
-          open={featuresOpen}
-          onOpenChange={onFeaturesOpenChange}
-          checkClass={accent.check}
-        />
+      {/* Features: inline accordion (landing) or a toggle button driving an external panel (picker) */}
+      <div className="relative z-10 w-full">
+        {featuresVariant === "button" ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFeaturesOpenChange(!featuresOpen);
+            }}
+            aria-expanded={featuresOpen}
+            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+          >
+            {t("pricing.see_all")}
+            <ChevronDown
+              className={cn("h-3 w-3 transition-transform", featuresOpen && "rotate-180")}
+            />
+          </button>
+        ) : (
+          <FeaturesDisclosure
+            pkg={pkg}
+            open={featuresOpen}
+            onOpenChange={onFeaturesOpenChange}
+            checkClass={accent.check}
+          />
+        )}
       </div>
 
       {/* Footer action (Buy link, etc.) */}

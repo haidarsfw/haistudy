@@ -350,6 +350,7 @@ export interface PurchaseRequest {
   // Short-lived signed URLs to the private payment-proofs bucket (admin GET only).
   paymentProofUrl?: string | null;
   shareProofUrl?: string | null;
+  shareProofUrl2?: string | null;
 }
 
 // ============================================

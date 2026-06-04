@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -14,7 +14,7 @@ import {
   QrCode,
   Landmark,
   Wallet,
-  GraduationCap,
+  Home,
   MessageCircle,
 } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -32,11 +32,12 @@ import {
   computeUniqueAmount,
   formatIDR,
   getPackage,
+  packageMaxDevices,
   purchasableScopes,
   type PurchasablePackageId,
   type PaymentMethodId,
 } from "@/lib/payments";
-import { DEFAULT_SCOPE, scopeKey, scopeFullLabel } from "@/lib/scope";
+import { LATEST_SCOPE, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { FieldShell } from "./fields/field-shell";
 import { ShortAnswer } from "./fields/short-answer";
 import { Dropdown } from "./fields/dropdown";
@@ -44,6 +45,7 @@ import { RadioGroup, type RadioOption } from "./fields/radio-group";
 import { CheckboxField } from "./fields/checkbox-group";
 import { PackagePicker } from "./fields/package-picker";
 import { FileUpload } from "./fields/file-upload";
+import { cn } from "@/lib/utils";
 
 type LoginMethod = "key" | "email";
 
@@ -64,6 +66,7 @@ interface FormState {
   paymentMethod: PaymentMethodId | "";
   paymentProof: File | null;
   shareProof: File | null;
+  shareProof2: File | null;
   source: string;
   sourceOther: string;
 }
@@ -99,10 +102,11 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
     pkg: isPackageId(initialPkg) ? initialPkg : "normal",
     deviceLimit: 2,
     shareAck: false,
-    scopeKey: scopeKey(DEFAULT_SCOPE),
+    scopeKey: scopeKey(LATEST_SCOPE),
     paymentMethod: "",
     paymentProof: null,
     shareProof: null,
+    shareProof2: null,
     source: "",
     sourceOther: "",
   });
@@ -110,7 +114,18 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Clamp the device count down when switching to a package with a lower cap
+  // (Share/Normal cap at 2; VIP/Diamond allow 3).
+  useEffect(() => {
+    setForm((f) => {
+      const m = packageMaxDevices(f.pkg);
+      return f.deviceLimit > m ? { ...f, deviceLimit: m } : f;
+    });
+  }, [form.pkg]);
+
   const isShare = form.pkg === "share";
+  const isLE86 = form.classCode === "LE86";
+  const maxDevices = packageMaxDevices(form.pkg);
   const price = PACKAGE_PRICES[form.pkg];
   const uniqueAmount = useMemo(
     () => computeUniqueAmount(price, form.whatsapp),
@@ -120,7 +135,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   const resolvedCampus = form.campus === "Other" ? form.campusOther.trim() : form.campus;
   const resolvedSource = form.source === "other" ? form.sourceOther.trim() : form.source;
   const selectedScope =
-    purchasableScopes().find((s) => scopeKey(s) === form.scopeKey) ?? DEFAULT_SCOPE;
+    purchasableScopes().find((s) => scopeKey(s) === form.scopeKey) ?? LATEST_SCOPE;
 
   const validateStep = (s: number): Record<string, string> => {
     const e: Record<string, string> = {};
@@ -145,6 +160,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       if (!form.paymentMethod) e.paymentMethod = t("payments.err_required");
       if (!form.paymentProof) e.paymentProof = t("payments.err_proof");
       if (isShare && !form.shareProof) e.shareProof = t("payments.err_proof");
+      if (isShare && isLE86 && !form.shareProof2) e.shareProof2 = t("payments.err_proof_share2");
       if (!form.source) e.source = t("payments.err_required");
       else if (form.source === "other" && !form.sourceOther.trim())
         e.sourceOther = t("payments.err_required");
@@ -217,6 +233,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       if (isShare) fd.set("leShareNote", "ack");
       if (form.paymentProof) fd.set("paymentProof", form.paymentProof);
       if (form.shareProof) fd.set("shareProof", form.shareProof);
+      if (form.shareProof2) fd.set("shareProof2", form.shareProof2);
 
       const res = await fetch("/api/payments", { method: "POST", body: fd });
       if (!res.ok) {
@@ -263,11 +280,11 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
         </div>
         <div className="mt-6 flex w-full flex-col gap-2.5">
           <Link
-            href="/login"
+            href="/"
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90"
           >
-            <GraduationCap className="h-4 w-4" />
-            {t("payments.success_login")}
+            <Home className="h-4 w-4" />
+            {t("payments.success_home")}
           </Link>
           <a
             href={`https://api.whatsapp.com/send?phone=${WA_ADMIN}&text=${waText}`}
@@ -291,9 +308,16 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   ];
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] max-w-xl flex-col px-4 py-6 sm:py-10">
+    <div
+      className={cn(
+        "mx-auto flex min-h-[100dvh] w-full flex-col px-4 py-6 sm:py-10",
+        // The package step widens on desktop so the feature detail panel fits
+        // beside the cards; every other step stays at the narrow form width.
+        step === 1 ? "max-w-xl lg:max-w-4xl" : "max-w-xl"
+      )}
+    >
       {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mx-auto mb-5 flex w-full max-w-xl items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -307,7 +331,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       </div>
 
       {/* Progress */}
-      <div className="mb-6">
+      <div className="mx-auto mb-6 w-full max-w-xl">
         <div className="flex items-center gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
@@ -410,63 +434,75 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   <PackagePicker value={form.pkg} onChange={(id) => set("pkg", id)} />
                 </FieldShell>
 
-                <FieldShell label={t("payments.device_label")} description={t("payments.device_desc")} required error={errors.deviceLimit}>
-                  <RadioGroup
-                    name="device"
-                    variant="tile"
-                    value={String(form.deviceLimit)}
-                    onChange={(v) => set("deviceLimit", parseInt(v, 10))}
-                    columns={3}
-                    options={DEVICE_OPTIONS.map((d) => ({
-                      value: String(d),
-                      label: `${d} ${t("payments.device_unit")}`,
-                    }))}
-                  />
-                  <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-                    {t("payments.device_3_note")}
-                  </p>
-                  <p className="mt-1 text-[11px] font-medium leading-relaxed text-amber-600 dark:text-amber-400">
-                    {t("payments.device_share_warn")}
-                  </p>
-                </FieldShell>
-
-                {isShare && (
-                  <FieldShell label={t("payments.share_ack_label")} required error={errors.shareAck}>
-                    <CheckboxField
-                      checked={form.shareAck}
-                      onChange={(v) => set("shareAck", v)}
-                      label={t("payments.share_ack_check")}
-                      description={t("payments.share_ack_desc")}
-                      invalid={!!errors.shareAck}
+                {/* Device, share terms, and period stay at the narrow form width
+                    even when the package picker above spans wider on desktop. */}
+                <div className="mx-auto w-full max-w-xl space-y-5">
+                  <FieldShell label={t("payments.device_label")} description={t("payments.device_desc")} required error={errors.deviceLimit}>
+                    <RadioGroup
+                      name="device"
+                      variant="tile"
+                      value={String(form.deviceLimit)}
+                      onChange={(v) => set("deviceLimit", parseInt(v, 10))}
+                      columns={3}
+                      options={DEVICE_OPTIONS.map((d) => ({
+                        value: String(d),
+                        label: `${d} ${t("payments.device_unit")}`,
+                        disabled: d > maxDevices,
+                      }))}
                     />
+                    {maxDevices >= 3 && (
+                      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                        {t("payments.device_3_note")}
+                      </p>
+                    )}
+                    <p className="mt-1 text-[11px] font-medium leading-relaxed text-amber-600 dark:text-amber-400">
+                      {t("payments.device_share_warn")}
+                    </p>
                   </FieldShell>
-                )}
 
-                {/* Scope (exam period) */}
-                <div className="rounded-xl border border-border bg-muted/30 p-3.5">
-                  <p className="text-xs text-muted-foreground">{t("payments.scope_current")}</p>
-                  <p className="mt-0.5 text-sm font-medium text-foreground">{scopeFullLabel(selectedScope)}</p>
-                  {!scopeOpen ? (
-                    <button
-                      type="button"
-                      onClick={() => setScopeOpen(true)}
-                      className="mt-2 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                    >
-                      {t("payments.scope_switch")}
-                    </button>
-                  ) : (
-                    <div className="mt-3">
-                      <RadioGroup
-                        name="scope"
-                        value={form.scopeKey}
-                        onChange={(v) => set("scopeKey", v)}
-                        options={purchasableScopes().map((s) => ({
-                          value: scopeKey(s),
-                          label: scopeFullLabel(s),
-                        }))}
+                  {isShare && (
+                    <FieldShell label={t("payments.share_ack_label")} required error={errors.shareAck}>
+                      <CheckboxField
+                        checked={form.shareAck}
+                        onChange={(v) => set("shareAck", v)}
+                        label={t("payments.share_ack_check")}
+                        description={t("payments.share_ack_desc")}
+                        invalid={!!errors.shareAck}
                       />
-                    </div>
+                      {isLE86 && (
+                        <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-700 dark:text-amber-300">
+                          {t("payments.share_le86_note")}
+                        </p>
+                      )}
+                    </FieldShell>
                   )}
+
+                  {/* Scope (exam period) */}
+                  <div className="rounded-xl border border-border bg-muted/30 p-3.5">
+                    <p className="text-xs text-muted-foreground">{t("payments.scope_current")}</p>
+                    <p className="mt-0.5 text-sm font-medium text-foreground">{scopeFullLabel(selectedScope)}</p>
+                    {!scopeOpen ? (
+                      <button
+                        type="button"
+                        onClick={() => setScopeOpen(true)}
+                        className="mt-2 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                      >
+                        {t("payments.scope_switch")}
+                      </button>
+                    ) : (
+                      <div className="mt-3">
+                        <RadioGroup
+                          name="scope"
+                          value={form.scopeKey}
+                          onChange={(v) => set("scopeKey", v)}
+                          options={purchasableScopes().map((s) => ({
+                            value: scopeKey(s),
+                            label: scopeFullLabel(s),
+                          }))}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </>
             )}
@@ -563,6 +599,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   <ReviewRow label={t("payments.method_label")} value={t(PAYMENT_METHODS.find((m) => m.id === form.paymentMethod)?.labelKey ?? "")} />
                   <ReviewRow label={t("payments.proof_pay_label")} value={form.paymentProof ? "✓" : "—"} />
                   {isShare && <ReviewRow label={t("payments.proof_share_label")} value={form.shareProof ? "✓" : "—"} />}
+                  {isShare && isLE86 && <ReviewRow label={t("payments.proof_share2_label")} value={form.shareProof2 ? "✓" : "—"} />}
                   <ReviewRow label={t("payments.source_label")} value={resolvedSource} />
                 </ReviewSection>
 
@@ -576,7 +613,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       </div>
 
       {/* Footer nav */}
-      <div className="mt-7 flex gap-2.5">
+      <div className="mx-auto mt-7 flex w-full max-w-xl gap-2.5">
         {step > 0 && (
           <button
             type="button"
@@ -671,13 +708,19 @@ function QrisCard({ label, expandHint }: { label: string; expandHint: string }) 
           <p className="text-[11px] text-muted-foreground">{broken ? label : expandHint}</p>
         </div>
         {!broken ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={PAYMENT_ACCOUNTS.qrisImage}
-            alt="QRIS"
-            onError={() => setBroken(true)}
-            className="h-16 w-16 shrink-0 rounded-lg border border-border object-contain"
-          />
+          // Collapsed thumbnail shows ONLY the QR square — the QRIS logo, merchant
+          // name and footer are cropped out via CSS. scale + object-position are
+          // tuned to the current /payment/qris.jpg (QR centered ~50%/52%); revisit
+          // if that asset changes. The expanded view below shows the full card.
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={PAYMENT_ACCOUNTS.qrisImage}
+              alt="QRIS"
+              onError={() => setBroken(true)}
+              className="h-full w-full scale-[1.75] object-cover object-[50%_52%]"
+            />
+          </span>
         ) : (
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-dashed border-border text-[9px] text-muted-foreground">
             QRIS

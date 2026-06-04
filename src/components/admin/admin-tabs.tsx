@@ -45,8 +45,9 @@ interface AdminTabsProps {
 
 export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
   const [feedbackCount, setFeedbackCount] = useState(0);
-  const { scopeQuery } = useAdminScope();
+  const { scopeQuery, adminScopeKey, isAllPeriods } = useAdminScope();
   const { pendingCount, refresh: refreshPurchaseCount } = useAdminPurchaseCount({ scopeQuery });
+  const [purchaseReload, setPurchaseReload] = useState(0);
 
   useEffect(() => {
     fetch("/api/feedback?countUnread=true")
@@ -110,8 +111,16 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
           </TabsContent>
           <TabsContent value={5}>
             <div className="space-y-6">
-              <PurchaseQueue />
-              <DangerZone />
+              <PurchaseQueue reloadToken={purchaseReload} />
+              <DangerZone
+                purchaseScopeKey={adminScopeKey}
+                purchaseIsAllPeriods={isAllPeriods}
+                purchaseScopeQuery={scopeQuery}
+                onPurchasesCleared={() => {
+                  setPurchaseReload((n) => n + 1);
+                  refreshPurchaseCount();
+                }}
+              />
             </div>
           </TabsContent>
           <TabsContent value={6}>

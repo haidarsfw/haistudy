@@ -22,14 +22,48 @@ interface DangerAction {
   action: () => Promise<void>;
 }
 
-export function DangerZone() {
+export function DangerZone({
+  purchaseScopeKey,
+  purchaseIsAllPeriods,
+  purchaseScopeQuery,
+  onPurchasesCleared,
+}: {
+  purchaseScopeKey?: string;
+  purchaseIsAllPeriods?: boolean;
+  purchaseScopeQuery?: () => string;
+  onPurchasesCleared?: () => void;
+} = {}) {
   const [activeAction, setActiveAction] = useState<DangerAction | null>(null);
   const [step, setStep] = useState(0); // 0=closed, 1=confirm, 2=type, 3=executing
   const [typed, setTyped] = useState("");
 
+  // "Hapus Semua Order" is SCOPED to the selected period (unlike the global log
+  // actions below). Hidden in the All-periods view — clearing every period at
+  // once is intentionally not offered. The type-to-confirm string is the scope key.
+  const clearPurchasesAction: DangerAction | null =
+    purchaseScopeQuery && purchaseScopeKey && !purchaseIsAllPeriods
+      ? {
+          id: "clear-purchases",
+          label: `Hapus Semua Order — ${purchaseScopeKey}`,
+          description:
+            "Hapus SEMUA purchase order di periode ini (termasuk yang sudah di-approve) beserta bukti pembayaran & share-nya. Tidak bisa dikembalikan.",
+          confirmText: purchaseScopeKey,
+          action: async () => {
+            const res = await fetch(`/api/admin/purchase${purchaseScopeQuery()}`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "clearAll" }),
+            });
+            if (!res.ok) throw new Error();
+            onPurchasesCleared?.();
+          },
+        }
+      : null;
+
   // Danger Zone operates GLOBALLY - affects all scopes. Use the explicit
   // ?allPeriods=1 query so the server records the intent.
   const actions: DangerAction[] = [
+    ...(clearPurchasesAction ? [clearPurchasesAction] : []),
     {
       id: "clear-activity",
       label: "Clear Activity Logs (GLOBAL)",
@@ -103,7 +137,7 @@ export function DangerZone() {
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400">
-            ⚠️ Semua aksi di sini bersifat <span className="font-bold">GLOBAL</span> - berlaku lintas semua scope (UTS, UAS, semua jurusan, semua semester), abaikan scope filter di admin header.
+            ⚠️ Aksi log di sini bersifat <span className="font-bold">GLOBAL</span> - berlaku lintas semua scope (UTS, UAS, semua jurusan, semua semester). Khusus <span className="font-bold">&ldquo;Hapus Semua Order&rdquo;</span> hanya berlaku untuk periode yang dipilih di header admin.
           </div>
           {actions.map((action) => (
             <div

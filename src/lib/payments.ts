@@ -25,6 +25,8 @@ export interface PackageDef {
   tier: PackageTier;
   /** Base price in IDR (before the unique-amount suffix). */
   price: number;
+  /** Max devices a buyer may pick for this package. Share/Normal=2, VIP/Diamond=3. */
+  maxDevices: number;
   /** Lucide icon name (component resolved in the UI layer). */
   icon: "Share2" | "GraduationCap" | "Crown" | "Gem";
   nameKey: string;
@@ -72,6 +74,7 @@ export const PACKAGES: PackageDef[] = [
     id: "share",
     tier: "share",
     price: 25000,
+    maxDevices: 2,
     icon: "Share2",
     nameKey: "pricing.share_name",
     badgeKey: "pricing.share_badge",
@@ -103,6 +106,7 @@ export const PACKAGES: PackageDef[] = [
     id: "normal",
     tier: "normal",
     price: 30000,
+    maxDevices: 2,
     icon: "GraduationCap",
     nameKey: "pricing.normal_name",
     badgeKey: "pricing.normal_badge",
@@ -135,6 +139,7 @@ export const PACKAGES: PackageDef[] = [
     id: "vip",
     tier: "vip",
     price: 35000,
+    maxDevices: 3,
     icon: "Crown",
     nameKey: "pricing.vip_name",
     badgeKey: "pricing.vip_badge",
@@ -175,6 +180,7 @@ export const PACKAGES: PackageDef[] = [
     id: "diamond",
     tier: "diamond",
     price: 50000,
+    maxDevices: 3,
     icon: "Gem",
     nameKey: "pricing.diamond_name",
     badgeKey: "pricing.diamond_badge",
@@ -201,6 +207,10 @@ export const PACKAGES: PackageDef[] = [
 export function getPackage(id: string): PackageDef | undefined {
   return PACKAGES.find((p) => p.id === id);
 }
+
+/** Max devices selectable for a package (Share/Normal=2, VIP/Diamond=3). */
+export const packageMaxDevices = (id: PurchasablePackageId): number =>
+  PACKAGES.find((p) => p.id === id)?.maxDevices ?? 2;
 
 // ─── Payment accounts (confirmed by owner; shown on the payment step) ───
 export const PAYMENT_ACCOUNTS = {

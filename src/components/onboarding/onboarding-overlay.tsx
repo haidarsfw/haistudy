@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnboarding } from "@/hooks/use-onboarding";
+import { useProfile } from "@/hooks/use-profile";
 import { useTranslation } from "@/components/providers/language-provider";
 import { PostTutorialContact } from "./post-tutorial-contact";
 import { PostTutorialSettings } from "./post-tutorial-settings";
@@ -19,6 +20,7 @@ export function OnboardingOverlay() {
   const { shouldShow, currentStep, step, totalSteps, isMobile, next, prev, postPhase, advancePostPhase } =
     useOnboarding();
   const { t } = useTranslation();
+  const { profile, loading: profileLoading } = useProfile();
   const [spotlight, setSpotlight] = useState<SpotlightRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -69,9 +71,34 @@ export function OnboardingOverlay() {
     };
   }, [shouldShow, resolvedTarget]);
 
+  // Auto-skip the post-tutorial contact modal when both phone & email are
+  // already linked to the account (propagated from the purchase at approval).
+  useEffect(() => {
+    if (
+      !shouldShow &&
+      postPhase === "contact-form" &&
+      !profileLoading &&
+      profile.phone &&
+      profile.email
+    ) {
+      advancePostPhase();
+    }
+  }, [shouldShow, postPhase, profileLoading, profile.phone, profile.email, advancePostPhase]);
+
   // Render post-tutorial phases
   if (!shouldShow && postPhase === "contact-form") {
-    return <PostTutorialContact onDone={advancePostPhase} />;
+    // Contact already on file → don't show the modal (the effect above advances
+    // the phase). While the profile is still loading, render nothing to avoid a
+    // flash of the form before we know whether to skip it.
+    if (profileLoading) return null;
+    if (profile.phone && profile.email) return null;
+    return (
+      <PostTutorialContact
+        onDone={advancePostPhase}
+        initialPhone={profile.phone ?? ""}
+        initialEmail={profile.email ?? ""}
+      />
+    );
   }
   if (!shouldShow && postPhase === "settings-setup") {
     return <PostTutorialSettings onDone={advancePostPhase} />;

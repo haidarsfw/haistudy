@@ -27,7 +27,14 @@ export function PricingSection() {
           {t("pricing.subtitle")}
         </p>
 
-        <div className="mt-10 grid grid-cols-1 items-stretch gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* items-stretch keeps cards equal-height when collapsed; once any card's
+            features accordion is open, switch to items-start so only that card grows. */}
+        <div
+          className={cn(
+            "mt-10 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4",
+            openFeatures ? "items-start" : "items-stretch"
+          )}
+        >
           {PACKAGES.map((pkg) => {
             const isSelected = selectedPkg === pkg.id;
             const accent = getAccentClasses(pkg.id);
