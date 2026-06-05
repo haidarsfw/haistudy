@@ -554,6 +554,13 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   </FieldShell>
                 )}
 
+                {/* LE86 must share to 2 people → second proof (required only for LE86). */}
+                {isShare && (
+                  <FieldShell label={t("payments.proof_share2_label")} description={t("payments.proof_share2_desc")} required={isLE86} error={errors.shareProof2}>
+                    <FileUpload value={form.shareProof2} onChange={(f) => set("shareProof2", f)} invalid={!!errors.shareProof2} />
+                  </FieldShell>
+                )}
+
                 <FieldShell label={t("payments.source_label")} required error={errors.source || errors.sourceOther}>
                   <RadioGroup
                     name="source"

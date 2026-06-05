@@ -108,16 +108,10 @@ function styleSheet(ws: XLSX.WorkSheet, nRows: number) {
   }
 
   ws["!rows"] = [{ hpt: 22 }]; // taller header row
+  // Autofilter on the header row. (Note: xlsx-js-style has no freeze-pane support,
+  // so a frozen header isn't possible here — autofilter is the closest equivalent.)
   ws["!autofilter"] = {
     ref: `${XLSX.utils.encode_cell({ r: 0, c: 0 })}:${XLSX.utils.encode_cell({ r: nRows, c: nCols - 1 })}`,
-  };
-  // Freeze the header row (ignored gracefully by readers that don't support it).
-  (ws as Record<string, unknown>)["!freeze"] = {
-    xSplit: 0,
-    ySplit: 1,
-    topLeftCell: "A2",
-    activePane: "bottomLeft",
-    state: "frozen",
   };
 }
 
