@@ -211,6 +211,7 @@ export async function PATCH(request: Request) {
 // ─── DELETE /api/notifications - Clear announcement notifications ───
 export async function DELETE(request: Request) {
   try {
+    const scope = await requireScope(request);
     const body = await request.json();
     const { action, notificationId, licenseKey } = body;
 
@@ -231,10 +232,11 @@ export async function DELETE(request: Request) {
       }
 
       const supabase = createServerClient()!;
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("type", "announcement");
+      // Scope the clear to the admin's current scope so clearing announcements
+      // in one scope never wipes another scope's announcement notifications.
+      const { error } = await scopeEq(scope)(
+        supabase.from("notifications").delete().eq("type", "announcement")
+      );
       if (error) throw error;
       return NextResponse.json({ success: true });
     }
@@ -251,10 +253,14 @@ export async function DELETE(request: Request) {
       }
 
       const supabase = createServerClient()!;
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("id", notificationId);
+      // Only the owner can dismiss, and only within the current scope.
+      const { error } = await scopeEq(scope)(
+        supabase
+          .from("notifications")
+          .delete()
+          .eq("id", notificationId)
+          .eq("license_key", licenseKey)
+      );
       if (error) throw error;
       return NextResponse.json({ success: true });
     }
@@ -264,6 +270,9 @@ export async function DELETE(request: Request) {
       { status: 400 }
     );
   } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Notifications DELETE error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

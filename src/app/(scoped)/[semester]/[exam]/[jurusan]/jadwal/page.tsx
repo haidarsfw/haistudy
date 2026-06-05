@@ -17,14 +17,6 @@ import { staggerContainer, staggerItem } from "@/lib/motion";
 import { useScope } from "@/components/providers/scope-provider";
 import { loadCourses, loadSchedule } from "@/data";
 
-const subjectColors: Record<string, string> = {
-  statistik: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  biseko: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  cbkwn: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  akuntansi: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-  foundai: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-};
-
 export default function JadwalPage() {
   const { t, locale } = useTranslation();
   const { scope, scopePath } = useScope();
@@ -83,8 +75,9 @@ export default function JadwalPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {examSchedule.map((exam) => {
               const subject = subjectsById[exam.subjectId];
-              const colorClass =
-                subjectColors[exam.subjectId] || "bg-primary/10 text-primary";
+              // Color from the subject's own `color` field (scope-driven) so any
+              // scope's subjects get distinct accents without a hardcoded id map.
+              const iconColor = subject?.color || "text-primary";
               const hasDate = !!exam.examDate;
 
               return (
@@ -97,12 +90,12 @@ export default function JadwalPage() {
                     className="flex items-start gap-3 group"
                   >
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg shrink-0 ${colorClass}`}
+                      className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0 bg-muted"
                     >
                       {subject ? (
-                        <SubjectIcon icon={subject.icon} className="h-5 w-5" />
+                        <SubjectIcon icon={subject.icon} className={`h-5 w-5 ${iconColor}`} />
                       ) : (
-                        <BookOpen className="h-5 w-5" />
+                        <BookOpen className="h-5 w-5 text-primary" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

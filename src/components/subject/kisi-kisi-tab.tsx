@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import { ChevronDown, ChevronRight, CheckCircle2, Monitor, FileText, ExternalLink, X, Loader2, ClipboardList } from "lucide-react";
 import type { KisiKisiItem, KisiKisiAttachment } from "@/types";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
@@ -150,13 +150,23 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
           </div>
         )}
 
-        {items.map((item) => {
+        {items.map((item, idx) => {
           const isExpanded = expanded.has(item.topic);
+          const prevSection = idx > 0 ? items[idx - 1].section : undefined;
+          const showSection = item.section && item.section !== prevSection;
           return (
-            <div
-              key={item.topic}
-              className="relative rounded-xl border border-border bg-card overflow-hidden"
-            >
+            <Fragment key={item.topic}>
+              {/* Section header (groups numbered sub-topics under it) */}
+              {showSection && (
+                <div className="px-1 pt-3 pb-0.5 first:pt-0">
+                  <h3 className="font-heading text-sm font-bold uppercase tracking-wide text-foreground/80">
+                    {item.section}
+                  </h3>
+                </div>
+              )}
+              <div
+                className="relative rounded-xl border border-border bg-card overflow-hidden"
+              >
               {/* Topic header */}
               <div
                 role="button"
@@ -171,6 +181,11 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 )}
                 <span className="font-heading text-base font-semibold flex-1">
+                  {item.number ? (
+                    <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-muted-foreground align-middle">
+                      {item.number}
+                    </span>
+                  ) : null}
                   {item.topic}
                 </span>
                 <span className="text-[10px] text-muted-foreground shrink-0">
@@ -234,7 +249,8 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
                   )}
                 </div>
               )}
-            </div>
+              </div>
+            </Fragment>
           );
         })}
 

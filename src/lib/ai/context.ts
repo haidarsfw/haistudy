@@ -77,8 +77,7 @@ NAVIGASI UTAMA (SIDEBAR KIRI):
    - Countdown menuju ujian terdekat (hari, jam, menit, detik)
    - Quick notes / catatan cepat
    - Status jadwal ujian berikutnya
-2. **Mata Kuliah** (/subjects): Daftar 5 mata kuliah:
-   - Statistics I, Business Economics, CB: Kewarganegaraan, Accounting for Business, Foundations of AI
+2. **Mata Kuliah** (/subjects): Daftar mata kuliah untuk scope/periode yang sedang aktif (daftar lengkap beserta isinya ada di DATABASE MATERI yang disisipkan di bawah).
    - Setiap mata kuliah berisi: Materi Slide (PPT), Rangkuman, Kisi-Kisi, Flashcards, Quiz, Forum, Catatan
 3. **Jadwal Ujian** (/jadwal): Jadwal lengkap ujian dengan countdown per mata kuliah
 4. **Analytics** (/analytics): Statistik belajar, streak, waktu belajar, progress per mata kuliah

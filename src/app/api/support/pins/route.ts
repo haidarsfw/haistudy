@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { resolveSupportSender, rowToSupportPin } from "@/lib/support/server";
+import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 const MAX_SUPPORT_PINS = 3;
 
@@ -53,6 +54,8 @@ export async function POST(req: NextRequest) {
     if (!messageId || !licenseKey) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
+
+    const scope = await requireScope(req);
 
     if (!(await isAdminFromCookies())) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
@@ -112,6 +115,7 @@ export async function POST(req: NextRequest) {
         message_id: messageId,
         license_key: licenseKey,
         pinned_by: sender.licenseKey,
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -125,7 +129,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, pin: rowToSupportPin(inserted) });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

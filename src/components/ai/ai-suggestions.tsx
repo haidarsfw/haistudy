@@ -25,6 +25,34 @@ const GENERAL_SUGGESTIONS_UAS = [
   "Tips persiapan UAS yang efektif",
 ];
 
+// s1-uas-bm subjects: marketing, hr, mis, intro.
+const SUBJECT_SUGGESTIONS_S1_UAS: Record<string, string[]> = {
+  marketing: [
+    "Jelaskan tingkatan saluran distribusi (channel levels)",
+    "Apa itu IMC dan elemen-elemennya?",
+    "Bagaimana strategi menciptakan keunggulan kompetitif?",
+    "Jelaskan konsep sustainable marketing",
+  ],
+  hr: [
+    "Jelaskan strategi kompensasi dan sistem insentif",
+    "Apa saja komponen manajemen K3 dan risiko kerja?",
+    "Jelaskan hubungan tenaga kerja dan perundingan kolektif",
+    "Apa itu HR Analytics dan model Ulrich?",
+  ],
+  mis: [
+    "Jelaskan hierarki data, informasi, dan pengetahuan",
+    "Bagaimana sistem informasi mendukung pengambilan keputusan?",
+    "Apa saja tahap membangun sistem informasi?",
+    "Jelaskan konsep e-commerce dan pasar digital",
+  ],
+  intro: [
+    "Jelaskan teori kepemimpinan (leadership)",
+    "Apa fungsi pengendalian (controlling) dalam manajemen?",
+    "Jelaskan perbedaan kewirausahaan dan bisnis kecil",
+    "Apa saja tahap dalam proses manajemen strategis?",
+  ],
+};
+
 const SUBJECT_SUGGESTIONS_UTS: Record<string, string[]> = {
   statistik: [
     "Jelaskan perbedaan mean, median, dan modus",
@@ -85,12 +113,26 @@ const SUBJECT_SUGGESTIONS_UAS: Record<string, string[]> = {
   ],
 };
 
+// Per-scope-key maps so every scope gets its own suggestions (NOT examPeriod-keyed).
+const SUBJECT_SUGGESTIONS_BY_SCOPE: Record<string, Record<string, string[]>> = {
+  "s1-uas-bm": SUBJECT_SUGGESTIONS_S1_UAS,
+  "s2-uts-bm": SUBJECT_SUGGESTIONS_UTS,
+  "s2-uas-bm": SUBJECT_SUGGESTIONS_UAS,
+};
+
+const GENERAL_SUGGESTIONS_BY_SCOPE: Record<string, string[]> = {
+  "s1-uas-bm": GENERAL_SUGGESTIONS_UAS,
+  "s2-uts-bm": GENERAL_SUGGESTIONS_UTS,
+  "s2-uas-bm": GENERAL_SUGGESTIONS_UAS,
+};
+
 export function AiSuggestions({ subjectId, onSelect }: AiSuggestionsProps) {
   const scopeCtx = useOptionalScope();
-  const isUas = scopeCtx?.scope.examPeriod === "uas";
+  const key = scopeCtx?.scopeKey ?? "s2-uts-bm";
 
-  const subjectMap = isUas ? SUBJECT_SUGGESTIONS_UAS : SUBJECT_SUGGESTIONS_UTS;
-  const generalSuggestions = isUas ? GENERAL_SUGGESTIONS_UAS : GENERAL_SUGGESTIONS_UTS;
+  const subjectMap = SUBJECT_SUGGESTIONS_BY_SCOPE[key] ?? {};
+  const generalSuggestions =
+    GENERAL_SUGGESTIONS_BY_SCOPE[key] ?? GENERAL_SUGGESTIONS_UTS;
 
   const suggestions = subjectId
     ? subjectMap[subjectId] || generalSuggestions

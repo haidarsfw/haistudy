@@ -19,6 +19,7 @@ export const ALLOWED_JURUSAN: readonly Jurusan[] = ["bm"] as const;
 // Re-exported in src/data/index.ts; mirrored here as the authoritative
 // constant. Mutating the manifest changes which scopes the app accepts.
 export const AVAILABLE_SCOPES: ScopeTuple[] = [
+  { semester: 1, examPeriod: "uas", jurusan: "bm" },
   { semester: 2, examPeriod: "uts", jurusan: "bm" },
   { semester: 2, examPeriod: "uas", jurusan: "bm" },
 ];

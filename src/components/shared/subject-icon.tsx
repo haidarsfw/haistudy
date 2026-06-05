@@ -9,6 +9,9 @@ import {
   Scale,
   Settings2,
   BookOpen,
+  Users,
+  Monitor,
+  Briefcase,
   type LucideProps,
 } from "lucide-react";
 
@@ -21,6 +24,9 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   Scale,
   Settings2,
   BookOpen,
+  Users,
+  Monitor,
+  Briefcase,
 };
 
 interface SubjectIconProps extends LucideProps {

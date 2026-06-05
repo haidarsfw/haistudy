@@ -10,6 +10,7 @@ import {
   SUPPORT_EDIT_WINDOW_MS,
 } from "@/lib/constants";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 
 /**
  * PATCH /api/support/messages/[id]
@@ -28,6 +29,8 @@ export async function PATCH(
     if (!id) {
       return NextResponse.json({ error: "Missing message id" }, { status: 400 });
     }
+
+    const scope = await requireScope(req);
 
     const sender = await resolveSupportSender();
     if (!sender.licenseKey) {
@@ -50,11 +53,9 @@ export async function PATCH(
 
     const supabase = createServerClient()!;
 
-    const { data: row, error: fetchErr } = await supabase
-      .from("support_messages")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+    const { data: row, error: fetchErr } = await scopeEq(scope)(
+      supabase.from("support_messages").select("*").eq("id", id)
+    ).maybeSingle();
     if (fetchErr) {
       return NextResponse.json({ error: fetchErr.message }, { status: 500 });
     }
@@ -80,13 +81,15 @@ export async function PATCH(
       );
     }
 
-    const { data: updated, error: updErr } = await supabase
-      .from("support_messages")
-      .update({
-        content: newContent,
-        edited_at: new Date().toISOString(),
-      })
-      .eq("id", id)
+    const { data: updated, error: updErr } = await scopeEq(scope)(
+      supabase
+        .from("support_messages")
+        .update({
+          content: newContent,
+          edited_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+    )
       .select()
       .single();
 
@@ -95,7 +98,10 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true, message: rowToSupportMessage(updated) });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
@@ -113,7 +119,7 @@ export async function PATCH(
  * Realtime UPDATE event auto-propagates to both sides.
  */
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -121,6 +127,8 @@ export async function DELETE(
     if (!id) {
       return NextResponse.json({ error: "Missing message id" }, { status: 400 });
     }
+
+    const scope = await requireScope(req);
 
     if (!(await isAdminFromCookies())) {
       return NextResponse.json(
@@ -143,11 +151,9 @@ export async function DELETE(
 
     const supabase = createServerClient()!;
 
-    const { data: row, error: fetchErr } = await supabase
-      .from("support_messages")
-      .select("id, deleted, is_system")
-      .eq("id", id)
-      .maybeSingle();
+    const { data: row, error: fetchErr } = await scopeEq(scope)(
+      supabase.from("support_messages").select("id, deleted, is_system").eq("id", id)
+    ).maybeSingle();
     if (fetchErr) {
       return NextResponse.json({ error: fetchErr.message }, { status: 500 });
     }
@@ -167,16 +173,18 @@ export async function DELETE(
       );
     }
 
-    const { data: updated, error: updErr } = await supabase
-      .from("support_messages")
-      .update({
-        deleted: true,
-        unsent_by: sender.licenseKey,
-        unsent_at: new Date().toISOString(),
-        content: "",
-        media_url: null,
-      })
-      .eq("id", id)
+    const { data: updated, error: updErr } = await scopeEq(scope)(
+      supabase
+        .from("support_messages")
+        .update({
+          deleted: true,
+          unsent_by: sender.licenseKey,
+          unsent_at: new Date().toISOString(),
+          content: "",
+          media_url: null,
+        })
+        .eq("id", id)
+    )
       .select()
       .single();
 
@@ -184,7 +192,9 @@ export async function DELETE(
       return NextResponse.json({ error: updErr.message }, { status: 500 });
     }
 
-    // Cascade: remove reactions + pin (best-effort; failures don't undo unsend)
+    // Cascade: remove reactions + pin (best-effort; failures don't undo unsend).
+    // message_id is a unique UUID and the parent message was already verified
+    // in-scope above, so deleting by message_id is implicitly scope-bounded.
     await supabase.from("support_reactions").delete().eq("message_id", id);
     await supabase
       .from("support_pinned_messages")
@@ -195,7 +205,10 @@ export async function DELETE(
       success: true,
       message: rowToSupportMessage(updated),
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

@@ -10,14 +10,20 @@ import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { scopeFullLabel } from "@/lib/scope";
 import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
-import {
-  TIPS as TIPS_UTS,
-  FUN_FACTS as FUN_FACTS_UTS,
-} from "@/data/s2/uts/bm/greeting-content";
-import {
-  TIPS as TIPS_UAS,
-  FUN_FACTS as FUN_FACTS_UAS,
-} from "@/data/s2/uas/bm/greeting-content";
+import * as greetingS1Uas from "@/data/s1/uas/bm/greeting-content";
+import * as greetingS2Uts from "@/data/s2/uts/bm/greeting-content";
+import * as greetingS2Uas from "@/data/s2/uas/bm/greeting-content";
+
+// Scope-keyed greeting content. Static imports keep tips in first paint and let
+// Turbopack code-split per scope. Add a new scope here when its folder exists.
+const GREETING_BY_SCOPE: Record<
+  string,
+  { TIPS: readonly string[]; FUN_FACTS: readonly string[] }
+> = {
+  "s1-uas-bm": greetingS1Uas,
+  "s2-uts-bm": greetingS2Uts,
+  "s2-uas-bm": greetingS2Uas,
+};
 
 
 function getGreetingKey(): string {
@@ -112,13 +118,13 @@ export function GreetingCard() {
     };
   }, [subjects, content]);
 
-  // Scope-aware tips & fun facts - static per-period so tip is in first paint
-  // (no LCP delay). Total bundle cost ~10 KiB. Plain consts (no hook) to
-  // keep hook count stable across renders.
-  const isUas = scopeCtx?.scope.examPeriod === "uas";
+  // Scope-aware tips & fun facts - keyed by full scope-key (NOT examPeriod) so
+  // each scope is isolated. Static per-scope so the tip is in first paint.
+  const greeting =
+    (scopeCtx ? GREETING_BY_SCOPE[scopeCtx.scopeKey] : undefined) ?? greetingS2Uts;
   const rotationIndex = Math.floor(Date.now() / (6 * 3600 * 1000));
-  const tipsArr = isUas ? TIPS_UAS : TIPS_UTS;
-  const factsArr = isUas ? FUN_FACTS_UAS : FUN_FACTS_UTS;
+  const tipsArr = greeting.TIPS;
+  const factsArr = greeting.FUN_FACTS;
   const tip = tipsArr[rotationIndex % tipsArr.length];
   const funFact = factsArr[rotationIndex % factsArr.length];
 

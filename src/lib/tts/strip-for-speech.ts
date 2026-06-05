@@ -27,6 +27,7 @@ function stripInlineTags(text: string): string {
     .replace(/<b>([\s\S]*?)<\/b>/g, "$1")
     .replace(/<i>([\s\S]*?)<\/i>/g, "$1")
     .replace(/<slide[^/]*\/>/g, "")
+    .replace(/<img[^>]*\/?>/g, "")
     .trim();
 }
 
@@ -61,11 +62,28 @@ export function stripForSpeech(
   let sectionIdx = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    const trimmed = lines[i].trim();
+    let trimmed = lines[i].trim();
     if (!trimmed) continue;
 
-    // Skip slide tags - not speakable
-    if (/^<slide\s/.test(trimmed)) continue;
+    // Multi-line block tag (e.g. a <bullet> whose body spans lines): accumulate
+    // through the closing line so lineIndex matches the renderer's data-tts-line
+    // (which uses the closing-line index for multi-line blocks).
+    const open = trimmed.match(/^<(h1|h2|h3|bullet|subtitle|warning)>/);
+    if (open && !trimmed.includes(`</${open[1]}>`)) {
+      const tag = open[1];
+      let j = i;
+      const buf: string[] = [];
+      while (j < lines.length) {
+        buf.push(lines[j]);
+        if (lines[j].includes(`</${tag}>`)) break;
+        j++;
+      }
+      trimmed = buf.join("\n").trim();
+      i = j;
+    }
+
+    // Skip non-speakable tags
+    if (/^<slide\s/.test(trimmed) || /^<img\s/.test(trimmed)) continue;
 
     // ── Headings start new sections ──
     const h1 = trimmed.match(/^<h1>([\s\S]*?)<\/h1>$/);
@@ -108,6 +126,16 @@ export function stripForSpeech(
     const subtitle = trimmed.match(/^<subtitle>([\s\S]*?)<\/subtitle>$/);
     if (subtitle) {
       const text = toSpeechText(subtitle[1], lang);
+      if (text) {
+        current.blocks.push({ text, lineIndex: i, type: "text" });
+      }
+      continue;
+    }
+
+    // ── Warning callout ──
+    const warning = trimmed.match(/^<warning>([\s\S]*?)<\/warning>$/);
+    if (warning) {
+      const text = toSpeechText(warning[1], lang);
       if (text) {
         current.blocks.push({ text, lineIndex: i, type: "text" });
       }

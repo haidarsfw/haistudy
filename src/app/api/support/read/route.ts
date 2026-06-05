@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { resolveSupportSender, rowToSupportReceipt } from "@/lib/support/server";
+import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 /**
  * POST /api/support/read  { licenseKey, upToMessageId }
@@ -17,6 +18,8 @@ export async function POST(req: NextRequest) {
     if (!licenseKey || !upToMessageId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
+
+    const scope = await requireScope(req);
 
     const sender = await resolveSupportSender();
     if (!sender.licenseKey) {
@@ -72,6 +75,7 @@ export async function POST(req: NextRequest) {
       license_key: licenseKey,
       message_id: id,
       reader_kind: readerKind,
+      ...scopeColumns(scope),
     }));
 
     // upsert with do-nothing on conflict (UNIQUE on message_id+reader_kind)
@@ -88,7 +92,10 @@ export async function POST(req: NextRequest) {
       marked: inserted?.length ?? 0,
       receipts: (inserted || []).map(rowToSupportReceipt),
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

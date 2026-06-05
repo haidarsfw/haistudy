@@ -87,6 +87,15 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           },
           (payload) => {
             const row = payload.new;
+            // Realtime filter is semester-only; ensure this notification is
+            // actually for THIS user in THIS scope (no cross-user/cross-scope).
+            if (
+              row.license_key !== session.licenseKey ||
+              row.exam_period !== scope.examPeriod ||
+              row.jurusan !== scope.jurusan
+            ) {
+              return;
+            }
             const notif: Notification = {
               id: row.id,
               type: row.type,

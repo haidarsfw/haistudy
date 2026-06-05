@@ -61,6 +61,11 @@ export interface KisiKisiItem {
   topic: string;
   items: string[];
   attachments?: KisiKisiAttachment[];
+  /** Section group label (e.g. "A. TOPIK STUDI KASUS"). Consecutive items
+   * sharing a section render under one section header. */
+  section?: string;
+  /** Display number within the section (e.g. "1", "2"). */
+  number?: string;
 }
 
 export interface FlashcardItem {

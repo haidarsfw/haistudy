@@ -6,6 +6,7 @@ import {
   rateLimit,
 } from "@/lib/support/server";
 import { SUPPORT_REACTION_RATE_LIMIT_MS } from "@/lib/constants";
+import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 /**
  * POST /api/support/messages/[id]/reactions
@@ -23,6 +24,8 @@ export async function POST(
     if (!id) {
       return NextResponse.json({ error: "Missing message id" }, { status: 400 });
     }
+
+    const scope = await requireScope(req);
 
     const sender = await resolveSupportSender();
     if (!sender.licenseKey) {
@@ -101,6 +104,7 @@ export async function POST(
         reactor_name: sender.name ?? sender.licenseKey.slice(0, 8),
         is_admin: sender.isAdmin,
         emoji,
+        ...scopeColumns(scope),
       })
       .select()
       .single();
@@ -113,7 +117,10 @@ export async function POST(
       action: "added",
       reaction: rowToSupportReaction(inserted),
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

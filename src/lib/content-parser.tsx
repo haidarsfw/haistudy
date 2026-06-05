@@ -2,7 +2,7 @@
  * Custom HTML tag parser for rangkuman content.
  * Converts custom markup tags to React elements.
  *
- * Supported tags: <h1>, <h2>, <h3>, <bullet>, <subtitle>, <b>, <i>
+ * Supported tags: <h1>, <h2>, <h3>, <bullet>, <subtitle>, <warning>, <img>, <b>, <i>
  * Supports LaTeX math via $...$ (inline) using KaTeX
  */
 
@@ -15,7 +15,7 @@ const SUPABASE_STORAGE_URL =
   "https://gvjwxccwuyuhgexypgbn.supabase.co/storage/v1/object/public/slides";
 
 interface ParsedElement {
-  type: "h1" | "h2" | "h3" | "bullet" | "subtitle" | "slide" | "text";
+  type: "h1" | "h2" | "h3" | "bullet" | "subtitle" | "warning" | "image" | "slide" | "text";
   content: React.ReactNode;
   label?: string;
 }
@@ -187,25 +187,51 @@ export function parseInline(text: string): React.ReactNode {
   return parts.length === 1 ? parts[0] : <>{parts}</>;
 }
 
+/**
+ * Like parseInline but treats embedded newlines as line breaks. Used for block
+ * tags (e.g. <bullet>) whose body can span multiple source lines. Single-line
+ * input behaves identically to parseInline.
+ */
+function parseInlineML(text: string): React.ReactNode {
+  if (!text.includes("\n")) return parseInline(text);
+  const segments = text.split("\n");
+  return (
+    <>
+      {segments.map((seg, k) => (
+        <React.Fragment key={k}>
+          {k > 0 ? <br /> : null}
+          {parseInline(seg.trim())}
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
+
 function parseLine(line: string): ParsedElement | null {
   const trimmed = line.trim();
   if (!trimmed) return null;
 
   // Match block-level tags
   const h1 = trimmed.match(/^<h1>([\s\S]*?)<\/h1>$/);
-  if (h1) return { type: "h1", content: parseInline(h1[1]) };
+  if (h1) return { type: "h1", content: parseInlineML(h1[1]) };
 
   const h2 = trimmed.match(/^<h2>([\s\S]*?)<\/h2>$/);
-  if (h2) return { type: "h2", content: parseInline(h2[1]) };
+  if (h2) return { type: "h2", content: parseInlineML(h2[1]) };
 
   const h3 = trimmed.match(/^<h3>([\s\S]*?)<\/h3>$/);
-  if (h3) return { type: "h3", content: parseInline(h3[1]) };
+  if (h3) return { type: "h3", content: parseInlineML(h3[1]) };
 
   const bullet = trimmed.match(/^<bullet>([\s\S]*?)<\/bullet>$/);
-  if (bullet) return { type: "bullet", content: parseInline(bullet[1]) };
+  if (bullet) return { type: "bullet", content: parseInlineML(bullet[1]) };
 
   const subtitle = trimmed.match(/^<subtitle>([\s\S]*?)<\/subtitle>$/);
-  if (subtitle) return { type: "subtitle", content: parseInline(subtitle[1]) };
+  if (subtitle) return { type: "subtitle", content: parseInlineML(subtitle[1]) };
+
+  const warning = trimmed.match(/^<warning>([\s\S]*?)<\/warning>$/);
+  if (warning) return { type: "warning", content: parseInlineML(warning[1]) };
+
+  const img = trimmed.match(/^<img\s+src="(\/[^"]+)"(?:\s+alt="([^"]*)")?\s*\/?>$/);
+  if (img) return { type: "image", content: img[1], label: img[2] || "" };
 
   const slide = trimmed.match(/^<slide\s+src="([^"]+)"(?:\s+alt="([^"]*)")?\s*\/>$/);
   if (slide) {
@@ -236,7 +262,27 @@ export function parseRangkuman(content: string): React.ReactNode {
   const elements: React.ReactNode[] = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const parsed = parseLine(lines[i]);
+    let source = lines[i];
+    const trimmed = source.trim();
+
+    // Multi-line block tag: opening tag on this line, closing tag on a later
+    // line (e.g. a <bullet> whose body has an "Example:" on the next line).
+    // Accumulate through the closing line so it renders as one block.
+    const open = trimmed.match(/^<(h1|h2|h3|bullet|subtitle|warning)>/);
+    if (open && !trimmed.includes(`</${open[1]}>`)) {
+      const tag = open[1];
+      let j = i;
+      const buf: string[] = [];
+      while (j < lines.length) {
+        buf.push(lines[j]);
+        if (lines[j].includes(`</${tag}>`)) break;
+        j++;
+      }
+      source = buf.join("\n");
+      i = j; // resume after the closing line
+    }
+
+    const parsed = parseLine(source);
     if (!parsed) continue;
 
     switch (parsed.type) {
@@ -305,6 +351,38 @@ export function parseRangkuman(content: string): React.ReactNode {
           >
             {parsed.content}
           </p>
+        );
+        break;
+      case "warning":
+        elements.push(
+          <div
+            key={i}
+            data-tts-line={i}
+            className="my-3 flex gap-2 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-3 py-2 transition-colors duration-300 dark:bg-amber-950/30"
+          >
+            <span className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">
+              {parsed.content}
+            </span>
+          </div>
+        );
+        break;
+      case "image":
+        elements.push(
+          <div key={i} data-tts-line={i} className="my-4">
+            <Image
+              src={parsed.content as string}
+              alt={parsed.label || "Gambar"}
+              width={1200}
+              height={800}
+              unoptimized
+              className="w-full h-auto rounded-lg border border-border"
+            />
+            {parsed.label ? (
+              <p className="mt-1 text-center text-xs text-muted-foreground">
+                {parsed.label}
+              </p>
+            ) : null}
+          </div>
         );
         break;
       default:

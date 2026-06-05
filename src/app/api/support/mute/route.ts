@@ -4,6 +4,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
 export const runtime = "nodejs";
 
@@ -47,12 +48,22 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+  let scope;
+  try {
+    scope = await requireScope(req);
+  } catch (e) {
+    if (e instanceof ScopeError) {
+      return NextResponse.json({ error: e.message }, { status: e.status });
+    }
+    throw e;
+  }
   if (!isSupabaseServerConfigured) return NextResponse.json({ ok: true });
   const supabase = createServerClient()!;
   const { error } = await supabase.from("support_mutes").upsert(
     {
       recipient_lk: recipientLk,
       conversation_lk: conversationLk,
+      ...scopeColumns(scope),
     },
     { onConflict: "recipient_lk,conversation_lk" }
   );
