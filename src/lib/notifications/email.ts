@@ -11,6 +11,7 @@
  */
 
 import { Resend } from "resend";
+import { WA_ADMIN } from "@/lib/payments";
 
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const FROM = process.env.EMAIL_FROM || "noreply@haistudy.site";
@@ -193,6 +194,132 @@ function renderPurchaseAlertText(a: PurchaseAlertRenderArgs): string {
     (a.whatsapp ? `WhatsApp: ${a.whatsapp}\n` : "") +
     `Metode login: ${loginMethodLabel(a.loginMethod)}\n\n` +
     `Buka Purchase Queue: ${a.url}\n`
+  );
+}
+
+// ─── Buyer purchase invoice (sent to the buyer right after submission) ───
+
+export interface PurchaseInvoiceEmailOpts {
+  to: string;
+  buyerName: string;
+  orderNo?: number;
+  scopeLabel: string;
+  packageLabel: string;
+  amount: string; // pre-formatted, e.g. "Rp 20.000"
+  whatsapp: string;
+  loginMethod: "key" | "email";
+}
+
+/**
+ * Email the buyer a "we received your order, verifying within 1×12 jam"
+ * invoice. No-op when Resend is unconfigured or `to` is empty. Never throws
+ * to the caller's await (errors are returned, not raised).
+ */
+export async function sendPurchaseInvoiceEmail(opts: PurchaseInvoiceEmailOpts): Promise<{
+  ok: boolean;
+  id?: string;
+  error?: string;
+}> {
+  const r = getClient();
+  if (!r) return { ok: false, error: "missing-resend-key" };
+  if (!opts.to) return { ok: false, error: "no-recipient" };
+
+  const invoiceNo = opts.orderNo ? `#${String(opts.orderNo).padStart(3, "0")}` : "";
+  const subject = invoiceNo
+    ? `Invoice ${invoiceNo} · Pesanan haistudy diterima`
+    : `Pesanan haistudy diterima`;
+  const html = renderPurchaseInvoiceHtml({ ...opts, invoiceNo });
+  const text = renderPurchaseInvoiceText({ ...opts, invoiceNo });
+
+  try {
+    const res = await r.emails.send({
+      from: `haistudy <${FROM}>`,
+      to: opts.to,
+      replyTo: REPLY_TO || undefined,
+      subject,
+      html,
+      text,
+    });
+    if (res.error) return { ok: false, error: res.error.message };
+    return { ok: true, id: res.data?.id };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+  }
+}
+
+interface InvoiceRenderArgs extends PurchaseInvoiceEmailOpts {
+  invoiceNo: string;
+}
+
+function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
+  const safe = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:4px 0;font-size:13px;color:#94a3b8">${safe(label)}</td>` +
+    `<td style="padding:4px 0;font-size:13px;color:#e2e8f0;text-align:right;font-weight:600">${safe(value)}</td></tr>`;
+  const loginLabel = a.loginMethod === "email" ? "Login via Google (Email)" : "Login via License Key";
+  const website = APP_URL.replace(/\/$/, "");
+  const waUrl = `https://wa.me/${WA_ADMIN}`;
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><title>haistudy</title></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:24px">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background:#1e293b;border-radius:14px;overflow:hidden">
+    <tr><td style="padding:24px 24px 8px">
+      <div style="font-weight:900;font-size:20px;letter-spacing:-0.5px">
+        <span style="color:#22c55e">h</span><span style="color:#fff">aistudy</span>
+      </div>
+    </td></tr>
+    <tr><td style="padding:8px 24px 16px">
+      <p style="margin:0 0 4px;font-size:13px;color:#94a3b8">Halo ${safe(a.buyerName)},</p>
+      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#fff">Pesananmu sudah kami terima ✅</p>
+      ${
+        a.invoiceNo
+          ? `<p style="margin:0 0 14px;font-size:13px;color:#22c55e;font-weight:700">Invoice ${safe(a.invoiceNo)} · ${safe(a.scopeLabel)}</p>`
+          : `<p style="margin:0 0 14px;font-size:13px;color:#94a3b8">${safe(a.scopeLabel)}</p>`
+      }
+      <div style="background:#0f172a;border-left:3px solid #22c55e;padding:12px 14px;border-radius:6px;margin-bottom:16px">
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#cbd5e1">
+          Pembayaran &amp; buktimu sedang <strong style="color:#e2e8f0">diverifikasi admin</strong>.
+          Maksimal <strong style="color:#e2e8f0">1&times;12 jam</strong>, <strong style="color:#e2e8f0">license key / akses login</strong>
+          kami kirim ke WhatsApp-mu (${safe(a.whatsapp)}). Kamu tidak perlu melakukan apa pun sekarang 🙌
+        </p>
+      </div>
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#0f172a;border-radius:8px;padding:8px 14px;margin-bottom:18px">
+        ${row("Paket", a.packageLabel)}
+        ${row("Nominal", a.amount)}
+        ${row("Periode", a.scopeLabel)}
+        ${row("Metode login", loginLabel)}
+        ${row("Status", "Menunggu verifikasi")}
+      </table>
+      <a href="${website}" style="display:inline-block;background:#22c55e;color:#0f172a;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:8px;font-size:14px">
+        Buka haistudy
+      </a>
+      <p style="margin:14px 0 0;font-size:12px;color:#94a3b8">
+        Ada kendala atau ingin menyusulkan info? <a href="${waUrl}" style="color:#94a3b8;text-decoration:underline">Hubungi admin via WhatsApp</a>.
+      </p>
+      <p style="margin:18px 0 0;font-size:11px;color:#64748b;line-height:1.5">
+        Email otomatis dari haistudy${a.invoiceNo ? ` · Invoice ${safe(a.invoiceNo)}` : ""}. Simpan sebagai referensi pesananmu.
+      </p>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+function renderPurchaseInvoiceText(a: InvoiceRenderArgs): string {
+  const website = APP_URL.replace(/\/$/, "");
+  const loginLabel = a.loginMethod === "email" ? "Login via Google (Email)" : "Login via License Key";
+  return (
+    `Halo ${a.buyerName},\n\n` +
+    `Pesananmu sudah kami terima${a.invoiceNo ? ` (Invoice ${a.invoiceNo})` : ""}.\n` +
+    `Pembayaran & buktimu sedang diverifikasi admin. Maks 1x12 jam, license key / akses login kami kirim ke WhatsApp-mu (${a.whatsapp}).\n\n` +
+    `Paket: ${a.packageLabel}\n` +
+    `Nominal: ${a.amount}\n` +
+    `Periode: ${a.scopeLabel}\n` +
+    `Metode login: ${loginLabel}\n` +
+    `Status: Menunggu verifikasi\n\n` +
+    `Buka haistudy: ${website}\n` +
+    `Hubungi admin: https://wa.me/${WA_ADMIN}\n\n` +
+    `- haistudy\n`
   );
 }
 

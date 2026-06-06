@@ -121,15 +121,18 @@ function FeaturesDisclosure({
 
   return (
     <div className="mt-2 w-full">
-      {/* Always-visible feature preview (first 4) */}
-      <ul className="space-y-1 text-left">
-        {preview.map((k) => (
-          <li key={k} className="flex items-start gap-1.5 text-xs text-foreground/90">
-            <Check className={cn("mt-0.5 h-3 w-3 shrink-0", checkClass)} strokeWidth={3} />
-            <span>{t(k)}</span>
-          </li>
-        ))}
-      </ul>
+      {/* Feature preview (first 4) — hidden once expanded so the full list below
+          doesn't repeat these four items. */}
+      {!open && (
+        <ul className="space-y-1 text-left">
+          {preview.map((k) => (
+            <li key={k} className="flex items-start gap-1.5 text-xs text-foreground/90">
+              <Check className={cn("mt-0.5 h-3 w-3 shrink-0", checkClass)} strokeWidth={3} />
+              <span>{t(k)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <button
         type="button"
@@ -313,7 +316,7 @@ export function PackageCard({
             aria-expanded={featuresOpen}
             className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
           >
-            {t("pricing.see_all")}
+            {featuresOpen ? t("pricing.show_less") : t("pricing.see_all")}
             <ChevronDown
               className={cn("h-3 w-3 transition-transform", featuresOpen && "rotate-180")}
             />

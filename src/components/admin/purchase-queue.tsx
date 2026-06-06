@@ -134,6 +134,17 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       jurusan: purchase.jurusan,
     });
 
+    const orderNo = purchase.meta?.orderNo;
+    const invoiceTag = orderNo ? `Invoice #${String(orderNo).padStart(3, "0")}\n` : "";
+    const pkgName =
+      ({ share: "Share", normal: "Normal", vip: "VIP", diamond: "Diamond" } as Record<string, string>)[
+        purchase.package
+      ] ?? purchase.package;
+    const amount =
+      typeof purchase.meta?.uniqueAmount === "number"
+        ? `Rp ${purchase.meta.uniqueAmount.toLocaleString("id-ID")}`
+        : "—";
+
     // Email-login buyer with no Gmail on file would mint a locked-out key. Stop here.
     if (loginMethod === "email" && !gmail) {
       toast.error("Pembeli pilih login via Google tapi email Gmail kosong. Perbaiki data pembeli dulu.");
@@ -181,21 +192,47 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       if (phone.startsWith("0")) phone = "62" + phone.slice(1);
       const message =
         loginMethod === "email"
-          ? `Halo ${purchase.name}! 🎉 Pembelian haistudy kamu sudah aktif.\n\n` +
-            `Cara login:\n` +
-            `1. Buka https://haistudy.site/login\n` +
-            `2. Klik "Login dengan Google"\n` +
-            `3. Pilih email: ${gmail}\n\n` +
-            `Periode: ${periode}\n\n` +
-            `Akunmu sudah terhubung ke email itu. Butuh bantuan? Balas chat ini.`
-          : `Halo ${purchase.name}! 🎉 Pembelian haistudy kamu sudah aktif.\n\n` +
-            `🔑 License Key:\n${newKey}\n\n` +
-            `Cara login:\n` +
-            `1. Buka https://haistudy.site/login\n` +
-            `2. Tempel license key di atas\n` +
-            `3. Masuk & mulai belajar\n\n` +
-            `Periode: ${periode}\n\n` +
-            `Simpan key ini baik-baik. Butuh bantuan? Balas chat ini.`;
+          ? `🎉 *haistudy — Pembelian Disetujui!*\n` +
+            invoiceTag +
+            `\nHalo ${purchase.name} 👋\n` +
+            `Pembayaranmu sudah kami verifikasi. Selamat datang di haistudy! 🚀\n\n` +
+            `📦 *Detail Pesanan*\n` +
+            `• Paket: ${pkgName}\n` +
+            `• Nominal: ${amount}\n` +
+            `• Periode: ${periode}\n` +
+            `• Status: ✅ LUNAS\n\n` +
+            `📲 *Cara Login (via Google)*\n` +
+            `1️⃣  Buka https://haistudy.site/login\n` +
+            `2️⃣  Klik "Login dengan Google"\n` +
+            `3️⃣  Pilih email: ${gmail}\n` +
+            `4️⃣  Setelah masuk, screenshot Dashboard & kirim ke chat ini untuk validasi device 🔒\n\n` +
+            `💡 *Tips*\n` +
+            `• Akunmu sudah terhubung ke email di atas — pakai email itu setiap login.\n` +
+            `• Device dikunci sesuai screenshot yang kamu kirim.\n\n` +
+            `Ada kendala? Balas chat ini, kami bantu sampai bisa 💚\n` +
+            `Selamat belajar & sukses ujiannya! ✨`
+          : `🎉 *haistudy — Pembelian Disetujui!*\n` +
+            invoiceTag +
+            `\nHalo ${purchase.name} 👋\n` +
+            `Pembayaranmu sudah kami verifikasi. Selamat datang di haistudy! 🚀\n\n` +
+            `📦 *Detail Pesanan*\n` +
+            `• Paket: ${pkgName}\n` +
+            `• Nominal: ${amount}\n` +
+            `• Periode: ${periode}\n` +
+            `• Status: ✅ LUNAS\n\n` +
+            `🔑 *License Key Kamu*\n` +
+            `${newKey}\n` +
+            `_(salin kode di atas)_\n\n` +
+            `📲 *Cara Aktivasi (penting!)*\n` +
+            `1️⃣  Buka https://haistudy.site/login\n` +
+            `2️⃣  Tempel license key di atas\n` +
+            `3️⃣  Login dari device utamamu (HP/laptop)\n` +
+            `4️⃣  Screenshot Dashboard & kirim ke chat ini untuk validasi device 🔒\n\n` +
+            `💡 *Tips*\n` +
+            `• Simpan key ini baik-baik, jangan dibagikan — 1 key terkunci untuk device-mu.\n` +
+            `• Device dikunci sesuai screenshot yang kamu kirim.\n\n` +
+            `Ada kendala? Balas chat ini, kami bantu sampai bisa 💚\n` +
+            `Selamat belajar & sukses ujiannya! ✨`;
       window.open(
         `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`,
         "_blank"
@@ -480,6 +517,12 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                               <DetailRow label="Kelas" value={purchase.meta?.classCode || "—"} />
                               <DetailRow label="Kampus" value={purchase.meta?.campus || "—"} />
                               <DetailRow label="Sumber" value={purchase.meta?.source || "—"} />
+                              {purchase.meta?.shareMethod && (
+                                <DetailRow
+                                  label="Metode share"
+                                  value={purchase.meta.shareMethod === "story" ? "Instagram Story" : "Broadcast"}
+                                />
+                              )}
                               <DetailRow
                                 label="Periode"
                                 value={`s${purchase.semester}-${purchase.examPeriod}-${purchase.jurusan}`}
@@ -499,10 +542,10 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                                   <ProofThumb src={purchase.paymentProofUrl} label="Bukti Bayar" onClick={() => setPreviewSrc(purchase.paymentProofUrl!)} />
                                 )}
                                 {purchase.shareProofUrl && (
-                                  <ProofThumb src={purchase.shareProofUrl} label="Bukti Share" onClick={() => setPreviewSrc(purchase.shareProofUrl!)} />
+                                  <ProofThumb src={purchase.shareProofUrl} label="Bukti Share #1" onClick={() => setPreviewSrc(purchase.shareProofUrl!)} />
                                 )}
                                 {purchase.shareProofUrl2 && (
-                                  <ProofThumb src={purchase.shareProofUrl2} label="Bukti Share 2" onClick={() => setPreviewSrc(purchase.shareProofUrl2!)} />
+                                  <ProofThumb src={purchase.shareProofUrl2} label="Bukti Share #2" onClick={() => setPreviewSrc(purchase.shareProofUrl2!)} />
                                 )}
                               </div>
                             )}

@@ -22,7 +22,7 @@ import { toast } from "@/components/ui/toast";
 import { sounds } from "@/lib/sounds";
 import { CLASSES } from "@/lib/constants";
 import {
-  PACKAGE_PRICES,
+  effectiveBasePrice,
   PAYMENT_ACCOUNTS,
   PAYMENT_METHODS,
   CAMPUSES,
@@ -67,6 +67,7 @@ interface FormState {
   paymentProof: File | null;
   shareProof: File | null;
   shareProof2: File | null;
+  shareMethod: "" | "broadcast" | "story";
   source: string;
   sourceOther: string;
 }
@@ -107,6 +108,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
     paymentProof: null,
     shareProof: null,
     shareProof2: null,
+    shareMethod: "",
     source: "",
     sourceOther: "",
   });
@@ -125,17 +127,35 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
 
   const isShare = form.pkg === "share";
   const isLE86 = form.classCode === "LE86";
+  const resolvedClass = form.classCode === "Other" ? form.classOther.trim() : form.classCode;
+  const resolvedCampus = form.campus === "Other" ? form.campusOther.trim() : form.campus;
+  const resolvedSource = form.source === "other" ? form.sourceOther.trim() : form.source;
   const maxDevices = packageMaxDevices(form.pkg);
-  const price = PACKAGE_PRICES[form.pkg];
+  // 0 = not a share package. Story = 1 proof. Broadcast = LE86 → 2, others → 1.
+  const requiredShareProofs = !isShare
+    ? 0
+    : form.shareMethod === "story"
+      ? 1
+      : isLE86
+        ? 2
+        : 1;
+  // LE86 + Share = Rp20.000 (flat); else the package list price.
+  const price = effectiveBasePrice(form.pkg, resolvedClass);
   const uniqueAmount = useMemo(
     () => computeUniqueAmount(price, form.whatsapp),
     [price, form.whatsapp]
   );
-  const resolvedClass = form.classCode === "Other" ? form.classOther.trim() : form.classCode;
-  const resolvedCampus = form.campus === "Other" ? form.campusOther.trim() : form.campus;
-  const resolvedSource = form.source === "other" ? form.sourceOther.trim() : form.source;
   const selectedScope =
     purchasableScopes().find((s) => scopeKey(s) === form.scopeKey) ?? LATEST_SCOPE;
+
+  // Drop a stale second broadcast proof when it's no longer required
+  // (method switched to Story, package changed, or class is no longer LE86).
+  useEffect(() => {
+    const keepSecond = isShare && form.shareMethod === "broadcast" && isLE86;
+    if (!keepSecond) {
+      setForm((f) => (f.shareProof2 ? { ...f, shareProof2: null } : f));
+    }
+  }, [isShare, form.shareMethod, isLE86]);
 
   const validateStep = (s: number): Record<string, string> => {
     const e: Record<string, string> = {};
@@ -159,8 +179,10 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
     } else if (s === 2) {
       if (!form.paymentMethod) e.paymentMethod = t("payments.err_required");
       if (!form.paymentProof) e.paymentProof = t("payments.err_proof");
-      if (isShare && !form.shareProof) e.shareProof = t("payments.err_proof");
-      if (isShare && isLE86 && !form.shareProof2) e.shareProof2 = t("payments.err_proof_share2");
+      if (isShare && !form.shareMethod) e.shareMethod = t("payments.err_share_method");
+      if (isShare && form.shareMethod && !form.shareProof) e.shareProof = t("payments.err_proof");
+      if (isShare && form.shareMethod === "broadcast" && isLE86 && !form.shareProof2)
+        e.shareProof2 = t("payments.err_proof_share2");
       if (!form.source) e.source = t("payments.err_required");
       else if (form.source === "other" && !form.sourceOther.trim())
         e.sourceOther = t("payments.err_required");
@@ -230,7 +252,10 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       fd.set("uniqueAmount", String(uniqueAmount));
       fd.set("basePrice", String(price));
       fd.set("source", resolvedSource);
-      if (isShare) fd.set("leShareNote", "ack");
+      if (isShare) {
+        fd.set("leShareNote", "ack");
+        fd.set("shareMethod", form.shareMethod);
+      }
       if (form.paymentProof) fd.set("paymentProof", form.paymentProof);
       if (form.shareProof) fd.set("shareProof", form.shareProof);
       if (form.shareProof2) fd.set("shareProof2", form.shareProof2);
@@ -448,6 +473,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                         value: String(d),
                         label: `${d} ${t("payments.device_unit")}`,
                         disabled: d > maxDevices,
+                        disabledHint: d > maxDevices ? t("payments.device_locked_hint") : undefined,
                       }))}
                     />
                     {maxDevices >= 3 && (
@@ -549,14 +575,65 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                 </FieldShell>
 
                 {isShare && (
-                  <FieldShell label={t("payments.proof_share_label")} description={t("payments.proof_share_desc")} required error={errors.shareProof}>
+                  <FieldShell
+                    label={t("payments.share_method_label")}
+                    description={t("payments.share_method_desc")}
+                    required
+                    error={errors.shareMethod}
+                  >
+                    <RadioGroup
+                      name="shareMethod"
+                      value={form.shareMethod}
+                      onChange={(v) => set("shareMethod", v as FormState["shareMethod"])}
+                      columns={1}
+                      options={[
+                        {
+                          value: "broadcast",
+                          label: t("payments.share_method_broadcast"),
+                          description: isLE86
+                            ? t("payments.share_method_broadcast_desc_le86")
+                            : t("payments.share_method_broadcast_desc"),
+                        },
+                        {
+                          value: "story",
+                          label: t("payments.share_method_story"),
+                          description: t("payments.share_method_story_desc"),
+                        },
+                      ]}
+                    />
+                  </FieldShell>
+                )}
+
+                {isShare && form.shareMethod && (
+                  <FieldShell
+                    label={
+                      form.shareMethod === "story"
+                        ? t("payments.proof_story_label")
+                        : requiredShareProofs === 2
+                          ? t("payments.proof_broadcast1_label")
+                          : t("payments.proof_broadcast_label")
+                    }
+                    description={
+                      form.shareMethod === "story"
+                        ? t("payments.proof_story_desc")
+                        : requiredShareProofs === 2
+                          ? t("payments.proof_broadcast1_desc")
+                          : t("payments.proof_broadcast_desc")
+                    }
+                    required
+                    error={errors.shareProof}
+                  >
                     <FileUpload value={form.shareProof} onChange={(f) => set("shareProof", f)} invalid={!!errors.shareProof} />
                   </FieldShell>
                 )}
 
-                {/* LE86 must share to 2 people → second proof (required only for LE86). */}
-                {isShare && (
-                  <FieldShell label={t("payments.proof_share2_label")} description={t("payments.proof_share2_desc")} required={isLE86} error={errors.shareProof2}>
+                {isShare && form.shareMethod === "broadcast" && isLE86 && (
+                  <FieldShell
+                    label={t("payments.proof_broadcast2_label")}
+                    description={t("payments.proof_broadcast2_desc")}
+                    required
+                    error={errors.shareProof2}
+                  >
                     <FileUpload value={form.shareProof2} onChange={(f) => set("shareProof2", f)} invalid={!!errors.shareProof2} />
                   </FieldShell>
                 )}
@@ -605,8 +682,16 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   <ReviewRow label={t("payments.amount_label")} value={formatIDR(uniqueAmount)} highlight />
                   <ReviewRow label={t("payments.method_label")} value={t(PAYMENT_METHODS.find((m) => m.id === form.paymentMethod)?.labelKey ?? "")} />
                   <ReviewRow label={t("payments.proof_pay_label")} value={form.paymentProof ? "✓" : "—"} />
+                  {isShare && (
+                    <ReviewRow
+                      label={t("payments.review_share_method")}
+                      value={form.shareMethod === "story" ? t("payments.share_method_story") : t("payments.share_method_broadcast")}
+                    />
+                  )}
                   {isShare && <ReviewRow label={t("payments.proof_share_label")} value={form.shareProof ? "✓" : "—"} />}
-                  {isShare && isLE86 && <ReviewRow label={t("payments.proof_share2_label")} value={form.shareProof2 ? "✓" : "—"} />}
+                  {isShare && form.shareMethod === "broadcast" && isLE86 && (
+                    <ReviewRow label={t("payments.proof_broadcast2_label")} value={form.shareProof2 ? "✓" : "—"} />
+                  )}
                   <ReviewRow label={t("payments.source_label")} value={resolvedSource} />
                 </ReviewSection>
 
@@ -715,17 +800,20 @@ function QrisCard({ label, expandHint }: { label: string; expandHint: string }) 
           <p className="text-[11px] text-muted-foreground">{broken ? label : expandHint}</p>
         </div>
         {!broken ? (
-          // Collapsed thumbnail shows ONLY the QR square — the QRIS logo, merchant
-          // name and footer are cropped out via CSS. scale + object-position are
-          // tuned to the current /payment/qris.jpg (QR centered ~50%/52%); revisit
-          // if that asset changes. The expanded view below shows the full card.
+          // Collapsed thumbnail crops to the QR square — the QRIS logo, merchant
+          // name and footer are trimmed via CSS. The QR is ~74% of the card width,
+          // so scale-[1.3] with object-[52%_47%] fits the WHOLE QR inside the 64px
+          // frame with only a thin margin and no red corner bleed (was scale-[1.75],
+          // which clipped the QR edges). Tuned visually to the current
+          // /payment/qris.jpg; revisit if that asset changes. The expanded view
+          // below shows the full card.
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={PAYMENT_ACCOUNTS.qrisImage}
               alt="QRIS"
               onError={() => setBroken(true)}
-              className="h-full w-full scale-[1.75] object-cover object-[50%_52%]"
+              className="h-full w-full scale-[1.3] object-cover object-[52%_47%]"
             />
           </span>
         ) : (

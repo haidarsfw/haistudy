@@ -60,6 +60,23 @@ export const PACKAGE_PRICES: Record<PurchasablePackageId, number> = {
   diamond: 50000,
 };
 
+/** LE86 class gets a special Share price (class promo). */
+export const LE86_SHARE_PRICE = 20000;
+
+/**
+ * Effective base price for a buyer. LE86 + Share = Rp20.000 (flat, regardless
+ * of share method); everything else = the package list price. Used by BOTH the
+ * client flow and the server route so the unique amount, review, success-screen
+ * WhatsApp text, admin alert email, and the buyer invoice email all agree.
+ */
+export function effectiveBasePrice(
+  pkg: PurchasablePackageId,
+  classCode: string
+): number {
+  if (pkg === "share" && classCode === "LE86") return LE86_SHARE_PRICE;
+  return PACKAGE_PRICES[pkg];
+}
+
 /** Plain, locale-agnostic package names for server-side use (emails, push). */
 export const PACKAGE_LABELS: Record<PurchasablePackageId, string> = {
   share: "Share",

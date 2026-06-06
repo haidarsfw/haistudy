@@ -7,8 +7,9 @@ import {
 import { scopeColumns } from "@/lib/auth/scope-check";
 import { parseScopeKey, isAvailableScope, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { rateLimit } from "@/lib/support/server";
-import { PACKAGE_PRICES, PACKAGE_LABELS, computeUniqueAmount, type PurchasablePackageId } from "@/lib/payments";
+import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, type PurchasablePackageId } from "@/lib/payments";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
+import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
 
 // ─── POST /api/payments - on-site purchase submission (public, pre-login) ───
 // multipart/form-data. No requireScope: the buyer has no session cookie yet, so
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
     const leShareNote = getStr(fd, "leShareNote", 20);
     const loginMethod = getStr(fd, "loginMethod", 10) || "key";
     const loginEmail = getStr(fd, "loginEmail", 120);
+    const shareMethod = getStr(fd, "shareMethod", 12);
 
     // ── Validation ──
     if (!name || whatsapp.replace(/\D/g, "").length < 8) {
@@ -113,9 +115,14 @@ export async function POST(request: Request) {
     if (pkg === "share" && !shareProof) {
       return NextResponse.json({ error: "Bukti share wajib diunggah." }, { status: 400 });
     }
-    // LE86 must share to 2 people → a second proof is mandatory for them.
-    if (pkg === "share" && classCode === "LE86" && !shareProof2) {
-      return NextResponse.json({ error: "Bukti share kedua wajib untuk kelas LE86." }, { status: 400 });
+    // Share method gates the proof count: Story = 1, Broadcast = LE86 → 2, else 1.
+    if (pkg === "share") {
+      if (shareMethod !== "broadcast" && shareMethod !== "story") {
+        return NextResponse.json({ error: "Metode berbagi tidak valid." }, { status: 400 });
+      }
+      if (shareMethod === "broadcast" && classCode === "LE86" && !shareProof2) {
+        return NextResponse.json({ error: "Bukti broadcast kedua wajib untuk kelas LE86." }, { status: 400 });
+      }
     }
     for (const f of [paymentProof, shareProof, shareProof2]) {
       if (!f) continue;
@@ -127,7 +134,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const basePrice = PACKAGE_PRICES[pkg];
+    const basePrice = effectiveBasePrice(pkg, classCode);
     const uniqueAmount = computeUniqueAmount(basePrice, whatsapp);
 
     // Dev mode (no Supabase): accept as a no-op success.
@@ -152,6 +159,14 @@ export async function POST(request: Request) {
     const sharePath = shareProof ? await uploadOne(shareProof, "share") : null;
     const sharePath2 = shareProof2 ? await uploadOne(shareProof2, "share2") : null;
 
+    // Per-period invoice number for the buyer email (Item 10).
+    // count(*) of purchase_requests in this exact scope + 1 (this new row).
+    const { count: scopeCount } = await supabase
+      .from("purchase_requests")
+      .select("id", { count: "exact", head: true })
+      .match(scopeColumns(scope));
+    const orderNo = (scopeCount ?? 0) + 1;
+
     const meta = {
       classCode,
       campus,
@@ -164,6 +179,8 @@ export async function POST(request: Request) {
       loginMethod,
       ...(loginMethod === "email" ? { loginEmail: loginEmail.toLowerCase() } : {}),
       scopeKey: sk,
+      orderNo,
+      ...(pkg === "share" ? { shareMethod } : {}),
     };
 
     const { data: inserted, error: insErr } = await supabase
@@ -196,6 +213,22 @@ export async function POST(request: Request) {
         loginMethod: loginMethod === "email" ? "email" : "key",
       }).catch((e) => console.error("[payments] admin alert failed", e))
     );
+
+    // Background: email the buyer their invoice (received & verifying). /payments only.
+    if (email) {
+      waitUntil(
+        sendPurchaseInvoiceEmail({
+          to: email,
+          buyerName: name,
+          orderNo,
+          scopeLabel: scopeFullLabel(scope),
+          packageLabel: PACKAGE_LABELS[pkg] ?? pkg,
+          amount: formatIDR(uniqueAmount),
+          whatsapp,
+          loginMethod: loginMethod === "email" ? "email" : "key",
+        }).catch((e) => console.error("[payments] buyer invoice email failed", e))
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

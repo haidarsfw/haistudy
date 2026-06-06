@@ -335,6 +335,10 @@ export interface PurchaseMeta {
   // The Gmail used for Google login (only set when loginMethod === 'email').
   // Contact/notification email lives in the purchase_requests.email column.
   loginEmail?: string;
+  // How the buyer fulfilled the Share requirement (Items 4/6).
+  shareMethod?: "broadcast" | "story";
+  // Per-period invoice/order number, computed at submission (Item 10).
+  orderNo?: number;
 }
 
 export interface PurchaseRequest {
