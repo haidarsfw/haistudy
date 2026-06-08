@@ -159,13 +159,17 @@ export async function POST(request: Request) {
     const sharePath = shareProof ? await uploadOne(shareProof, "share") : null;
     const sharePath2 = shareProof2 ? await uploadOne(shareProof2, "share2") : null;
 
-    // Per-period invoice number for the buyer email (Item 10).
-    // count(*) of purchase_requests in this exact scope + 1 (this new row).
-    const { count: scopeCount } = await supabase
-      .from("purchase_requests")
-      .select("id", { count: "exact", head: true })
-      .match(scopeColumns(scope));
-    const orderNo = (scopeCount ?? 0) + 1;
+    // Per-scope invoice number (atomic). next_scope_invoice() hands out a
+    // gap-free sequence per scope (migration 041) so two concurrent submissions
+    // never collide — unlike the old count(*) + 1. Seeded to each scope's
+    // existing order count, so live numbering continues seamlessly.
+    const { data: nextNo, error: ctrErr } = await supabase.rpc("next_scope_invoice", {
+      p_sem: scope.semester,
+      p_exam: scope.examPeriod,
+      p_jur: scope.jurusan,
+    });
+    if (ctrErr) throw ctrErr;
+    const orderNo = (nextNo as number) ?? 1;
 
     const meta = {
       classCode,

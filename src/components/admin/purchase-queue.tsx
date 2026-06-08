@@ -19,6 +19,7 @@ import {
   Download,
   Search,
   Trash2,
+  RotateCcw,
   ChevronDown,
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
@@ -192,47 +193,19 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       if (phone.startsWith("0")) phone = "62" + phone.slice(1);
       const message =
         loginMethod === "email"
-          ? `🎉 *haistudy — Pembelian Disetujui!*\n` +
-            invoiceTag +
-            `\nHalo ${purchase.name} 👋\n` +
-            `Pembayaranmu sudah kami verifikasi. Selamat datang di haistudy! 🚀\n\n` +
-            `📦 *Detail Pesanan*\n` +
-            `• Paket: ${pkgName}\n` +
-            `• Nominal: ${amount}\n` +
-            `• Periode: ${periode}\n` +
-            `• Status: ✅ LUNAS\n\n` +
-            `📲 *Cara Login (via Google)*\n` +
-            `1️⃣  Buka https://haistudy.site/login\n` +
-            `2️⃣  Klik "Login dengan Google"\n` +
-            `3️⃣  Pilih email: ${gmail}\n` +
-            `4️⃣  Setelah masuk, screenshot Dashboard & kirim ke chat ini untuk validasi device 🔒\n\n` +
-            `💡 *Tips*\n` +
-            `• Akunmu sudah terhubung ke email di atas — pakai email itu setiap login.\n` +
-            `• Device dikunci sesuai screenshot yang kamu kirim.\n\n` +
-            `Ada kendala? Balas chat ini, kami bantu sampai bisa 💚\n` +
-            `Selamat belajar & sukses ujiannya! ✨`
-          : `🎉 *haistudy — Pembelian Disetujui!*\n` +
-            invoiceTag +
-            `\nHalo ${purchase.name} 👋\n` +
-            `Pembayaranmu sudah kami verifikasi. Selamat datang di haistudy! 🚀\n\n` +
-            `📦 *Detail Pesanan*\n` +
-            `• Paket: ${pkgName}\n` +
-            `• Nominal: ${amount}\n` +
-            `• Periode: ${periode}\n` +
-            `• Status: ✅ LUNAS\n\n` +
-            `🔑 *License Key Kamu*\n` +
-            `${newKey}\n` +
-            `_(salin kode di atas)_\n\n` +
-            `📲 *Cara Aktivasi (penting!)*\n` +
-            `1️⃣  Buka https://haistudy.site/login\n` +
-            `2️⃣  Tempel license key di atas\n` +
-            `3️⃣  Login dari device utamamu (HP/laptop)\n` +
-            `4️⃣  Screenshot Dashboard & kirim ke chat ini untuk validasi device 🔒\n\n` +
-            `💡 *Tips*\n` +
-            `• Simpan key ini baik-baik, jangan dibagikan — 1 key terkunci untuk device-mu.\n` +
-            `• Device dikunci sesuai screenshot yang kamu kirim.\n\n` +
-            `Ada kendala? Balas chat ini, kami bantu sampai bisa 💚\n` +
-            `Selamat belajar & sukses ujiannya! ✨`;
+          ? `Halo ${purchase.name}, pesanan kamu sudah aktif ✅\n\n` +
+            `Login: haistudy.site/login → "Login dengan Google" → pilih ${gmail}.\n` +
+            `Setelah masuk, kirim screenshot Dashboard ke chat ini untuk validasi device.\n\n` +
+            `Paket ${pkgName} · ${amount} · ${periode}\n` +
+            `${invoiceTag.trim()}\n` +
+            `Ada kendala? Balas chat ini.`
+          : `Halo ${purchase.name}, pesanan kamu sudah aktif ✅\n\n` +
+            `License key: ${newKey}\n` +
+            `Login: haistudy.site/login → tempel key.\n` +
+            `Setelah masuk, kirim screenshot Dashboard ke chat ini untuk validasi device.\n\n` +
+            `Paket ${pkgName} · ${amount} · ${periode}\n` +
+            `${invoiceTag.trim()}\n` +
+            `Jangan bagikan key-mu. Ada kendala? Balas chat ini.`;
       window.open(
         `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`,
         "_blank"
@@ -357,6 +330,20 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
           <Download className="h-3.5 w-3.5" />
           XLSX
         </Button>
+        <ConfirmDialog
+          trigger={
+            <Button size="sm" variant="outline" className="gap-1.5" disabled={!hydrated || isAllPeriods}>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset Invoice
+            </Button>
+          }
+          description={`Reset nomor invoice untuk ${adminScopeKey} kembali ke #001? Order lama tetap tersimpan; hanya penomoran berikutnya yang di-reset.`}
+          onConfirm={async () => {
+            const res = await fetch(`/api/admin/invoice-counter${scopeQuery()}`, { method: "POST" });
+            if (res.ok) toast.success("Nomor invoice di-reset ke #001");
+            else toast.error("Gagal reset invoice");
+          }}
+        />
       </div>
     </div>
 

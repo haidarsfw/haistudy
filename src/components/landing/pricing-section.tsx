@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 
 export function PricingSection() {
   const [selectedPkg, setSelectedPkg] = useState("normal");
-  const [openFeatures, setOpenFeatures] = useState<string | null>(null);
+  // Multiple cards may be expanded at once so users can compare feature lists
+  // side by side — opening one no longer collapses the others.
+  const [openFeatures, setOpenFeatures] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
 
   return (
@@ -32,7 +34,7 @@ export function PricingSection() {
         <div
           className={cn(
             "mt-10 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4",
-            openFeatures ? "items-start" : "items-stretch"
+            openFeatures.size > 0 ? "items-start" : "items-stretch"
           )}
         >
           {PACKAGES.map((pkg) => {
@@ -44,8 +46,15 @@ export function PricingSection() {
                 pkg={pkg}
                 selected={isSelected}
                 onSelect={() => setSelectedPkg(pkg.id)}
-                featuresOpen={openFeatures === pkg.id}
-                onFeaturesOpenChange={(open) => setOpenFeatures(open ? pkg.id : null)}
+                featuresOpen={openFeatures.has(pkg.id)}
+                onFeaturesOpenChange={(open) =>
+                  setOpenFeatures((prev) => {
+                    const next = new Set(prev);
+                    if (open) next.add(pkg.id);
+                    else next.delete(pkg.id);
+                    return next;
+                  })
+                }
                 layoutId="hs-pricing-ring"
               >
                 {isSelected ? (
@@ -53,7 +62,7 @@ export function PricingSection() {
                     href={`/payments?pkg=${pkg.id}`}
                     onClick={(e) => e.stopPropagation()}
                     className={cn(
-                      "inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg",
+                      "inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg",
                       accent.button
                     )}
                   >
@@ -67,7 +76,7 @@ export function PricingSection() {
                       e.stopPropagation();
                       setSelectedPkg(pkg.id);
                     }}
-                    className="inline-flex h-11 w-full items-center justify-center rounded-lg border-0 bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="inline-flex h-9 w-full items-center justify-center rounded-lg border-0 bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
                     {t("pricing.select")}
                   </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -24,7 +24,8 @@ interface PackagePickerProps {
 
 export function PackagePicker({ value, onChange }: PackagePickerProps) {
   const { t } = useTranslation();
-  // Which package's feature list is open. null = none open.
+  // Which package's feature list is open. null = none open. One at a time —
+  // the desktop side panel is a single panel, and mobile expands one card.
   const [detailPkgId, setDetailPkgId] = useState<PurchasablePackageId | null>(null);
 
   const detailPkg = detailPkgId ? getPackage(detailPkgId) : null;
@@ -38,47 +39,30 @@ export function PackagePicker({ value, onChange }: PackagePickerProps) {
 
   return (
     <>
-      {/* ── MOBILE / TABLET (<lg): single column + inline accordion under the tapped card ── */}
-      <div className="grid grid-cols-1 gap-2.5 lg:hidden">
-        {PACKAGES.map((pkg) => {
-          const accent = getAccentClasses(pkg.id);
-          const open = detailPkgId === pkg.id;
-          return (
-            <Fragment key={pkg.id}>
-              <PackageCard
-                pkg={pkg}
-                selected={value === pkg.id}
-                onSelect={() => handleSelect(pkg.id)}
-                featuresOpen={open}
-                onFeaturesOpenChange={(o) => setDetailPkgId(o ? pkg.id : null)}
-                featuresVariant="button"
-                layoutId="hs-picker-ring-m"
-                showCheck
-                className="p-3.5"
-              />
-              <AnimatePresence initial={false}>
-                {open && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                    className="overflow-hidden"
-                  >
-                    {/* Feature list ONLY — name/price/desc are on the card directly
-                        above, so we don't repeat them (Item 1). */}
-                    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                      <FeatureGroups pkg={pkg} checkClass={accent.check} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Fragment>
-          );
-        })}
+      {/* ── MOBILE / TABLET (<lg): compact-row cards, features expand inline ── */}
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:hidden",
+          detailPkgId ? "items-start" : "items-stretch"
+        )}
+      >
+        {PACKAGES.map((pkg) => (
+          <PackageCard
+            key={pkg.id}
+            pkg={pkg}
+            selected={value === pkg.id}
+            onSelect={() => handleSelect(pkg.id)}
+            featuresOpen={detailPkgId === pkg.id}
+            onFeaturesOpenChange={(o) => setDetailPkgId(o ? pkg.id : null)}
+            featuresVariant="accordion"
+            layoutId="hs-picker-ring-m"
+            showCheck
+            className="p-3.5"
+          />
+        ))}
       </div>
 
-      {/* ── DESKTOP (≥lg): master-detail side panel (unchanged from current behaviour) ── */}
+      {/* ── DESKTOP (≥lg): master-detail — features show in a side panel ── */}
       <div
         className={cn(
           "hidden gap-3 lg:grid",

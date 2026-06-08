@@ -158,7 +158,7 @@ function renderPurchaseAlertHtml(a: PurchaseAlertRenderArgs): string {
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background:#1e293b;border-radius:14px;overflow:hidden">
     <tr><td style="padding:24px 24px 8px">
       <div style="font-weight:900;font-size:20px;letter-spacing:-0.5px">
-        <span style="color:#22c55e">h</span><span style="color:#fff">aistudy</span>
+        <span style="color:#22c55e">hai</span><span style="color:#fff">study</span>
       </div>
     </td></tr>
     <tr><td style="padding:8px 24px 16px">
@@ -257,6 +257,10 @@ function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
   const row = (label: string, value: string) =>
     `<tr><td style="padding:4px 0;font-size:13px;color:#94a3b8">${safe(label)}</td>` +
     `<td style="padding:4px 0;font-size:13px;color:#e2e8f0;text-align:right;font-weight:600">${safe(value)}</td></tr>`;
+  // Emphasized row — the nominal the buyer must transfer stands out (accent + larger).
+  const nominalRow = (label: string, value: string) =>
+    `<tr><td style="padding:9px 0;font-size:13px;color:#94a3b8;vertical-align:middle">${safe(label)}</td>` +
+    `<td style="padding:9px 0;text-align:right"><span style="font-size:19px;font-weight:800;color:#22c55e">${safe(value)}</span></td></tr>`;
   const loginLabel = a.loginMethod === "email" ? "Login via Google (Email)" : "Login via License Key";
   const website = APP_URL.replace(/\/$/, "");
   const waUrl = `https://wa.me/${WA_ADMIN}`;
@@ -266,7 +270,7 @@ function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background:#1e293b;border-radius:14px;overflow:hidden">
     <tr><td style="padding:24px 24px 8px">
       <div style="font-weight:900;font-size:20px;letter-spacing:-0.5px">
-        <span style="color:#22c55e">h</span><span style="color:#fff">aistudy</span>
+        <span style="color:#22c55e">hai</span><span style="color:#fff">study</span>
       </div>
     </td></tr>
     <tr><td style="padding:8px 24px 16px">
@@ -277,21 +281,23 @@ function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
           ? `<p style="margin:0 0 14px;font-size:13px;color:#22c55e;font-weight:700">Invoice ${safe(a.invoiceNo)} · ${safe(a.scopeLabel)}</p>`
           : `<p style="margin:0 0 14px;font-size:13px;color:#94a3b8">${safe(a.scopeLabel)}</p>`
       }
-      <div style="background:#0f172a;border-left:3px solid #22c55e;padding:12px 14px;border-radius:6px;margin-bottom:16px">
-        <p style="margin:0;font-size:14px;line-height:1.6;color:#cbd5e1">
-          Pembayaran &amp; buktimu sedang <strong style="color:#e2e8f0">diverifikasi admin</strong>.
-          Maksimal <strong style="color:#e2e8f0">1&times;12 jam</strong>, <strong style="color:#e2e8f0">license key / akses login</strong>
-          kami kirim ke WhatsApp-mu (${safe(a.whatsapp)}). Kamu tidak perlu melakukan apa pun sekarang 🙌
-        </p>
-      </div>
-      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#0f172a;border-radius:8px;padding:8px 14px;margin-bottom:18px">
+      <p style="margin:14px 0 18px;font-size:14px;line-height:1.6;color:#cbd5e1">
+        Pembayaran &amp; buktimu sedang <strong style="color:#e2e8f0">kami verifikasi</strong>. Santai aja — kamu
+        <strong style="color:#e2e8f0">tidak perlu melakukan apa pun</strong> sekarang. 🙌
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#0f172a;border-radius:10px;padding:6px 16px;margin-bottom:14px">
         ${row("Paket", a.packageLabel)}
-        ${row("Nominal", a.amount)}
+        ${nominalRow("Nominal", a.amount)}
         ${row("Periode", a.scopeLabel)}
         ${row("Metode login", loginLabel)}
         ${row("Status", "Menunggu verifikasi")}
       </table>
-      <a href="${website}" style="display:inline-block;background:#22c55e;color:#0f172a;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:8px;font-size:14px">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px">
+        <tr><td style="border-left:3px solid #22c55e;padding:3px 0 3px 12px;font-size:13px;line-height:1.6;color:#cbd5e1">
+          <strong style="color:#e2e8f0">Maks 1&times;12 jam</strong> — license key / akses login dikirim ke WhatsApp-mu <strong style="color:#e2e8f0">${safe(a.whatsapp)}</strong>.
+        </td></tr>
+      </table>
+      <a href="${website}" style="display:inline-block;background:#22c55e;color:#0f172a;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:9px;font-size:14px;letter-spacing:0.2px">
         Buka haistudy
       </a>
       <p style="margin:14px 0 0;font-size:12px;color:#94a3b8">
@@ -311,12 +317,13 @@ function renderPurchaseInvoiceText(a: InvoiceRenderArgs): string {
   return (
     `Halo ${a.buyerName},\n\n` +
     `Pesananmu sudah kami terima${a.invoiceNo ? ` (Invoice ${a.invoiceNo})` : ""}.\n` +
-    `Pembayaran & buktimu sedang diverifikasi admin. Maks 1x12 jam, license key / akses login kami kirim ke WhatsApp-mu (${a.whatsapp}).\n\n` +
+    `Pembayaran & buktimu sedang kami verifikasi. Santai aja — kamu tidak perlu melakukan apa pun sekarang.\n\n` +
     `Paket: ${a.packageLabel}\n` +
     `Nominal: ${a.amount}\n` +
     `Periode: ${a.scopeLabel}\n` +
     `Metode login: ${loginLabel}\n` +
     `Status: Menunggu verifikasi\n\n` +
+    `Maks 1x12 jam — license key / akses login dikirim ke WhatsApp-mu (${a.whatsapp}).\n\n` +
     `Buka haistudy: ${website}\n` +
     `Hubungi admin: https://wa.me/${WA_ADMIN}\n\n` +
     `- haistudy\n`
@@ -344,7 +351,7 @@ function renderEmailHtml(a: RenderArgs): string {
     <tr>
       <td style="padding:24px 24px 8px">
         <div style="font-weight:900;font-size:20px;letter-spacing:-0.5px">
-          <span style="color:#22c55e">h</span><span style="color:#fff">aistudy</span>
+          <span style="color:#22c55e">hai</span><span style="color:#fff">study</span>
         </div>
       </td>
     </tr>

@@ -369,6 +369,17 @@ export async function DELETE(request: Request) {
         .eq("exam_period", resolved.scope.examPeriod)
         .eq("jurusan", resolved.scope.jurusan);
       if (delErr) throw delErr;
+      // Wiping all orders also resets the per-scope invoice counter to #001.
+      await supabase.from("scope_invoice_counter").upsert(
+        {
+          semester: resolved.scope.semester,
+          exam_period: resolved.scope.examPeriod,
+          jurusan: resolved.scope.jurusan,
+          value: 0,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "semester,exam_period,jurusan" }
+      );
       return NextResponse.json({ success: true, cleared: (rows || []).length });
     }
 

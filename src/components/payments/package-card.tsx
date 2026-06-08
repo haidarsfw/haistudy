@@ -66,7 +66,7 @@ export function getAccentClasses(id: PackageDef["id"]): AccentClasses {
 
 /**
  * Grouped feature list — a clean indented list with no surrounding box.
- * Shared by the landing accordion AND the picker's right-side detail panel.
+ * Rendered inline (downward accordion) inside the card on both desktop & mobile.
  */
 export function FeatureGroups({ pkg, checkClass }: { pkg: PackageDef; checkClass: string }) {
   const { t } = useTranslation();
@@ -91,82 +91,6 @@ export function FeatureGroups({ pkg, checkClass }: { pkg: PackageDef; checkClass
   );
 }
 
-/** First N feature item keys, flattened across groups, for the always-visible preview. */
-function previewItems(pkg: PackageDef, n: number): string[] {
-  const flat: string[] = [];
-  for (const g of pkg.featureGroups) {
-    for (const k of g.itemKeys) {
-      flat.push(k);
-      if (flat.length >= n) return flat;
-    }
-  }
-  return flat;
-}
-
-// ─── "Lihat semua fitur" — downward accordion (both mobile + desktop), no box ───
-// Shows a 4-item preview always, then reveals the full grouped list on expand.
-function FeaturesDisclosure({
-  pkg,
-  open,
-  onOpenChange,
-  checkClass,
-}: {
-  pkg: PackageDef;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  checkClass: string;
-}) {
-  const { t } = useTranslation();
-  const preview = previewItems(pkg, 4);
-
-  return (
-    <div className="mt-2 w-full">
-      {/* Feature preview (first 4) — hidden once expanded so the full list below
-          doesn't repeat these four items. */}
-      {!open && (
-        <ul className="space-y-1 text-left">
-          {preview.map((k) => (
-            <li key={k} className="flex items-start gap-1.5 text-xs text-foreground/90">
-              <Check className={cn("mt-0.5 h-3 w-3 shrink-0", checkClass)} strokeWidth={3} />
-              <span>{t(k)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpenChange(!open);
-        }}
-        aria-expanded={open}
-        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
-      >
-        {open ? t("pricing.show_less") : t("pricing.see_all")}
-        <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            {/* Subtle divider instead of a bordered card — "no box" per feedback. */}
-            <div className="mt-2 border-t border-border/60 pt-2">
-              <FeatureGroups pkg={pkg} checkClass={checkClass} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
 interface PackageCardProps {
   pkg: PackageDef;
   selected: boolean;
@@ -177,8 +101,10 @@ interface PackageCardProps {
   layoutId: string;
   /**
    * How "see all features" behaves:
-   * - "accordion" (default): expands a feature list downward inside the card (landing).
-   * - "button": a plain toggle button; the parent renders features elsewhere (picker detail panel).
+   * - "accordion" (default): expands the grouped feature list downward INSIDE the
+   *   card, full-width below both the desktop column and mobile-row headers.
+   * - "button": the toggle only flips state; the parent renders the feature list
+   *   elsewhere (no inline expansion). Legacy escape hatch — unused in-tree.
    */
   featuresVariant?: "accordion" | "button";
   /** Render a check badge in the corner when selected (form picker). */
@@ -204,6 +130,12 @@ export function PackageCard({
   const Icon = ICONS[pkg.icon] ?? GraduationCap;
   const accent = ACCENTS[packageAccent(pkg.id)];
 
+  const toggleFeatures = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onFeaturesOpenChange(!featuresOpen);
+  };
+  const toggleLabel = featuresOpen ? t("pricing.show_less") : t("pricing.see_all");
+
   return (
     <motion.div
       whileTap={{ scale: 0.985 }}
@@ -218,7 +150,7 @@ export function PackageCard({
         }
       }}
       className={cn(
-        "relative flex h-full cursor-pointer flex-col items-center rounded-2xl border p-4 text-center transition-colors",
+        "relative flex h-full cursor-pointer flex-col rounded-2xl border p-4 transition-colors",
         selected
           ? cn(accent.selected, accent.glow)
           : "border-border bg-card hover:border-primary/25 hover:bg-muted/30",
@@ -270,68 +202,115 @@ export function PackageCard({
         </span>
       )}
 
-      {/* Icon + tier badge */}
-      <div className="relative z-10 flex flex-col items-center gap-2">
+      {/* ─── DESKTOP (≥sm): centered column (Claude-style) ─── */}
+      <div className="relative z-10 hidden w-full flex-col items-center text-center sm:flex">
+        {/* Icon chip + tier badge */}
+        <div className="flex flex-col items-center gap-2">
+          <span
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+              selected ? accent.iconBg : cn("bg-muted", accent.iconIdle)
+            )}
+          >
+            <Icon className="h-5 w-5" />
+          </span>
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors",
+              selected ? accent.badgeOn : "bg-muted text-muted-foreground"
+            )}
+          >
+            {t(pkg.badgeKey)}
+          </span>
+        </div>
+
+        {/* Name */}
+        <h3 className="mt-2 font-heading text-lg font-bold">{t(pkg.nameKey)}</h3>
+
+        {/* Price — amount on ONE line (nowrap), "/30 hari" centered beneath */}
+        <div className="mt-1 flex flex-col items-center">
+          <span className="whitespace-nowrap text-3xl font-bold leading-none text-foreground">
+            {formatIDR(pkg.price)}
+          </span>
+          <span className="mt-1 text-xs text-muted-foreground">/ {t("pricing.per_duration")}</span>
+        </div>
+
+        {/* Punchy short highlight (NOT the full list) */}
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t(pkg.shortKey)}</p>
+
+        {/* Inline feature toggle */}
+        <button
+          type="button"
+          onClick={toggleFeatures}
+          aria-expanded={featuresOpen}
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+        >
+          {toggleLabel}
+          <ChevronDown className={cn("h-3 w-3 transition-transform", featuresOpen && "rotate-180")} />
+        </button>
+      </div>
+
+      {/* ─── MOBILE (<sm): compact row — [icon] [name+badge … price] [chevron] ─── */}
+      <div className="relative z-10 flex w-full items-center gap-3 text-left sm:hidden">
         <span
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
             selected ? accent.iconBg : cn("bg-muted", accent.iconIdle)
           )}
         >
           <Icon className="h-5 w-5" />
         </span>
-        <span
-          className={cn(
-            "rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors",
-            selected ? accent.badgeOn : "bg-muted text-muted-foreground"
-          )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate font-heading text-sm font-bold">{t(pkg.nameKey)}</span>
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium transition-colors",
+                  selected ? accent.badgeOn : "bg-muted text-muted-foreground"
+                )}
+              >
+                {t(pkg.badgeKey)}
+              </span>
+            </span>
+            <span className="shrink-0 whitespace-nowrap text-base font-bold text-foreground">
+              {formatIDR(pkg.price)}
+            </span>
+          </div>
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{t(pkg.shortKey)}</p>
+        </div>
+        <button
+          type="button"
+          onClick={toggleFeatures}
+          aria-expanded={featuresOpen}
+          aria-label={toggleLabel}
+          className="shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          {t(pkg.badgeKey)}
-        </span>
+          <ChevronDown className={cn("h-4 w-4 transition-transform", featuresOpen && "rotate-180")} />
+        </button>
       </div>
 
-      {/* Name + price */}
-      <h3 className="relative z-10 mt-2 font-heading text-lg font-bold">{t(pkg.nameKey)}</h3>
-      <div className="relative z-10 mt-0.5 flex items-baseline gap-1">
-        <span className="text-2xl font-bold text-foreground sm:text-[1.65rem]">
-          {formatIDR(pkg.price)}
-        </span>
-        <span className="text-xs text-muted-foreground">/ {t("pricing.per_duration")}</span>
-      </div>
+      {/* ─── SHARED inline feature expansion (full-width, both layouts) ─── */}
+      {featuresVariant !== "button" && (
+        <AnimatePresence initial={false}>
+          {featuresOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="relative z-10 overflow-hidden"
+            >
+              {/* Subtle divider instead of a bordered card — "no box" per feedback. */}
+              <div className="mt-3 border-t border-border/60 pt-3">
+                <FeatureGroups pkg={pkg} checkClass={accent.check} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
-      {/* Punchy short highlight (NOT the full list) */}
-      <p className="relative z-10 mt-2 text-xs leading-relaxed text-muted-foreground">
-        {t(pkg.shortKey)}
-      </p>
-
-      {/* Features: inline accordion (landing) or a toggle button driving an external panel (picker) */}
-      <div className="relative z-10 w-full">
-        {featuresVariant === "button" ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onFeaturesOpenChange(!featuresOpen);
-            }}
-            aria-expanded={featuresOpen}
-            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
-          >
-            {featuresOpen ? t("pricing.show_less") : t("pricing.see_all")}
-            <ChevronDown
-              className={cn("h-3 w-3 transition-transform", featuresOpen && "rotate-180")}
-            />
-          </button>
-        ) : (
-          <FeaturesDisclosure
-            pkg={pkg}
-            open={featuresOpen}
-            onOpenChange={onFeaturesOpenChange}
-            checkClass={accent.check}
-          />
-        )}
-      </div>
-
-      {/* Footer action (Buy link, etc.) */}
+      {/* Footer action (Buy link, etc.) — pinned to the bottom. */}
       {children && <div className="relative z-10 mt-auto w-full pt-4">{children}</div>}
     </motion.div>
   );

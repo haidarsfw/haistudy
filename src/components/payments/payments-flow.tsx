@@ -476,7 +476,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                         disabledHint: d > maxDevices ? t("payments.device_locked_hint") : undefined,
                       }))}
                     />
-                    {maxDevices >= 3 && (
+                    {form.deviceLimit === 3 && (
                       <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
                         {t("payments.device_3_note")}
                       </p>
@@ -563,6 +563,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                 <FieldShell label={t("payments.method_label")} required error={errors.paymentMethod}>
                   <RadioGroup
                     name="method"
+                    variant="tile"
                     value={form.paymentMethod}
                     onChange={(v) => set("paymentMethod", v as PaymentMethodId)}
                     columns={3}
@@ -800,20 +801,22 @@ function QrisCard({ label, expandHint }: { label: string; expandHint: string }) 
           <p className="text-[11px] text-muted-foreground">{broken ? label : expandHint}</p>
         </div>
         {!broken ? (
-          // Collapsed thumbnail crops to the QR square — the QRIS logo, merchant
-          // name and footer are trimmed via CSS. The QR is ~74% of the card width,
-          // so scale-[1.3] with object-[52%_47%] fits the WHOLE QR inside the 64px
-          // frame with only a thin margin and no red corner bleed (was scale-[1.75],
-          // which clipped the QR edges). Tuned visually to the current
-          // /payment/qris.jpg; revisit if that asset changes. The expanded view
-          // below shows the full card.
+          // Collapsed thumbnail crops to the QR square — the QRIS red header,
+          // merchant name and footer text are trimmed via CSS. The QR square sits
+          // ~28–79% vertically (center ~53%) of the portrait /payment/qris.jpg, so
+          // scale-[1.35] (zoom past the oversized square cover window) with
+          // object-[50%_58%] (pull the crop down onto the QR) frames the WHOLE QR
+          // inside the 64px box with only a thin quiet-zone margin and no red
+          // header bleed (was scale-[1.3] object-[52%_47%], which sat too high and
+          // clipped the QR's bottom edge). Tuned visually; revisit these two values
+          // if the asset changes. The expanded view below shows the full card.
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={PAYMENT_ACCOUNTS.qrisImage}
               alt="QRIS"
               onError={() => setBroken(true)}
-              className="h-full w-full scale-[1.3] object-cover object-[52%_47%]"
+              className="h-full w-full scale-[1.35] object-cover object-[50%_58%]"
             />
           </span>
         ) : (
