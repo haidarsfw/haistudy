@@ -35,9 +35,13 @@ export interface Schedule {
   startTime: string;
   endTime: string;
   sessions: number;
-  examDate?: string; // ISO datetime for UTS
-  examType?: "onsite" | "online";
+  examDate?: string; // ISO datetime (local WIB). For onsite = start; for online/assignment = deadline.
+  examType?: "onsite" | "online" | "assignment";
   examNote?: string;
+  /** Theory/assessment descriptor, e.g. "Theory: Final Exam", "AOL Group Project". */
+  examFormat?: string;
+  /** Submission/exam portal URL. When set, the card links here instead of the default BINUS portal. */
+  examLink?: string;
 }
 
 export interface MateriItem {
@@ -49,6 +53,8 @@ export interface MateriItem {
   xp?: number;
   sectionLabel?: string;
   sectionNote?: string;
+  /** Surface this item under its own subject tab instead of "Materi". */
+  tab?: "diktat" | "soal";
 }
 
 export interface KisiKisiAttachment {

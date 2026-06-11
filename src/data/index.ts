@@ -17,6 +17,7 @@ import { scopeKey } from "@/lib/scope";
 
 // Authoritative - must match AVAILABLE_SCOPES in src/lib/scope.ts.
 export const AVAILABLE_SCOPES: ScopeTuple[] = [
+  { semester: 1, examPeriod: "uts", jurusan: "bm" },
   { semester: 1, examPeriod: "uas", jurusan: "bm" },
   { semester: 2, examPeriod: "uts", jurusan: "bm" },
   { semester: 2, examPeriod: "uas", jurusan: "bm" },
@@ -31,6 +32,13 @@ interface ScopeLoaders {
 }
 
 const loaders: Record<ScopeKey, ScopeLoaders> = {
+  "s1-uts-bm": {
+    courses:   () => import("./s1/uts/bm/courses").then((m) => m.courses),
+    content:   () => import("./s1/uts/bm/content").then((m) => m.content),
+    schedule:  () => import("./s1/uts/bm/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
+    rangkuman: () => import("./s1/uts/bm/rangkuman").then((m) => m.rangkumanContent),
+    pinnedThreads: () => import("./s1/uts/bm/pinned-threads").then((m) => m.PINNED_THREADS),
+  },
   "s1-uas-bm": {
     courses:   () => import("./s1/uas/bm/courses").then((m) => m.courses),
     content:   () => import("./s1/uas/bm/content").then((m) => m.content),

@@ -9,11 +9,18 @@ import {
   HelpCircle,
   MessageSquare,
   StickyNote,
+  BookMarked,
+  ClipboardList,
 } from "lucide-react";
 import { sounds } from "@/lib/sounds";
 
+// Diktat (7) + Soal Ujian (8) sit right after Materi in display order but keep
+// high ids so existing tab numbers (Forum=5, Catatan=6) and ?tab= deep-links
+// stay stable. They only appear for subjects that tag materi items with `tab`.
 export const SUBJECT_TABS = [
   { id: 0, label: "Materi", shortLabel: "Materi", icon: FileText },
+  { id: 7, label: "Diktat", shortLabel: "Diktat", icon: BookMarked },
+  { id: 8, label: "Soal Ujian", shortLabel: "Soal", icon: ClipboardList },
   { id: 1, label: "Rangkuman", shortLabel: "Rangkum", icon: BookOpen },
   { id: 2, label: "Kisi-Kisi", shortLabel: "Kisi", icon: List },
   { id: 3, label: "Flashcards", shortLabel: "Flash", icon: Layers },
@@ -27,6 +34,8 @@ interface TabNavProps {
   onTabChange: (tab: number) => void;
   counts?: Record<number, number>;
   tabDots?: Record<number, boolean>;
+  /** Tab ids to hide entirely (e.g. content tabs with no data). */
+  hiddenTabs?: ReadonlySet<number>;
 }
 
 export const TabNav = memo(function TabNav({
@@ -34,11 +43,12 @@ export const TabNav = memo(function TabNav({
   onTabChange,
   counts,
   tabDots,
+  hiddenTabs,
 }: TabNavProps) {
   return (
     <div className="border-b border-border">
       <div className="relative flex flex-wrap">
-        {SUBJECT_TABS.map((tab) => {
+        {SUBJECT_TABS.filter((tab) => !hiddenTabs?.has(tab.id)).map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button

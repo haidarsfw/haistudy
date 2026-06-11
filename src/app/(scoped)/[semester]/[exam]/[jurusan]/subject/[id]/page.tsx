@@ -42,7 +42,13 @@ export default function SubjectPage() {
     setVisited((v) => (v.has(tab) ? v : new Set(v).add(tab)));
   }, []);
 
-  const { subjects, content: scopedContent, loaded: scopedLoaded } = useScopedData();
+  const {
+    subjects,
+    content: scopedContent,
+    loaded: scopedLoaded,
+    rangkuman,
+    rangkumanLoaded,
+  } = useScopedData();
   const subject = useMemo(() => subjects.find((s) => s.id === subjectId), [subjects, subjectId]);
   const content = scopedContent[subjectId] ?? null;
   const loaded = scopedLoaded;
@@ -90,13 +96,15 @@ export default function SubjectPage() {
   // stays stable across loaded/empty/loaded transitions (avoids React #310).
   const tabCounts = useMemo<Record<number, number>>(
     () => ({
-      0: content?.materi.length ?? 0,
+      0: content?.materi.filter((m) => !m.tab).length ?? 0,
       2: content?.kisiKisi.length ?? 0,
       3: content?.flashcards.length ?? 0,
       4: content?.quiz.length ?? 0,
+      7: content?.materi.filter((m) => m.tab === "diktat").length ?? 0,
+      8: content?.materi.filter((m) => m.tab === "soal").length ?? 0,
     }),
     [
-      content?.materi.length,
+      content?.materi,
       content?.kisiKisi.length,
       content?.flashcards.length,
       content?.quiz.length,
@@ -107,6 +115,35 @@ export default function SubjectPage() {
     () => (subjectHasForumUnread ? { 5: true } : undefined),
     [subjectHasForumUnread]
   );
+
+  // Diktat (7) + Soal (8) are opt-in: hidden unless the subject tags materi for
+  // them. The standard content tabs (Rangkuman/Kisi-Kisi/Flashcards/Quiz) stay
+  // visible even when empty — each renders its own "belum tersedia" note — so a
+  // slides-only subject still exposes every tab. The lone exception is a subject
+  // that ships Diktat/Soal alt-content (e.g. CB Pancasila): there those replace
+  // the standard tabs, so we hide the empty ones to avoid dead panels.
+  const hiddenTabs = useMemo<Set<number>>(() => {
+    const h = new Set<number>();
+    if (!content) return h;
+    const hasAltContent = content.materi.some(
+      (m) => m.tab === "diktat" || m.tab === "soal"
+    );
+    if (hasAltContent) {
+      if (rangkumanLoaded && Object.keys(rangkuman[subjectId] ?? {}).length === 0) h.add(1);
+      if (content.kisiKisi.length === 0) h.add(2);
+      if (content.flashcards.length === 0) h.add(3);
+      if (content.quiz.length === 0) h.add(4);
+    }
+    if (content.materi.every((m) => m.tab !== "diktat")) h.add(7);
+    if (content.materi.every((m) => m.tab !== "soal")) h.add(8);
+    return h;
+  }, [content, rangkuman, rangkumanLoaded, subjectId]);
+
+  // If the active tab is hidden (e.g. a deep-link to an empty tab), fall back
+  // to Materi.
+  useEffect(() => {
+    if (hiddenTabs.has(activeTab)) setActiveTab(0);
+  }, [hiddenTabs, activeTab]);
 
   if (!loaded) {
     return (
@@ -142,6 +179,12 @@ export default function SubjectPage() {
   const radius = 18;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  // Diktat + Soal Ujian get their own tabs (tagged via materi `tab`); the
+  // Materi tab shows only untagged items (e.g. lecture slides).
+  const materiMain = content.materi.filter((m) => !m.tab);
+  const materiDiktat = content.materi.filter((m) => m.tab === "diktat");
+  const materiSoal = content.materi.filter((m) => m.tab === "soal");
 
   return (
     <div className="mx-auto max-w-5xl overflow-x-hidden">
@@ -228,6 +271,7 @@ export default function SubjectPage() {
         onTabChange={handleTabChange}
         counts={tabCounts}
         tabDots={tabDots}
+        hiddenTabs={hiddenTabs}
       />
 
       {/* Tab content - all tabs stay mounted after first visit. Hidden panels
@@ -238,11 +282,37 @@ export default function SubjectPage() {
           {visited.has(0) && (
             <PreviewLock title="Materi">
               <MateriTab
-                items={content.materi}
+                items={materiMain}
                 completedIds={progress.materi}
                 onToggleComplete={handleMateriToggle}
                 subjectId={subjectId}
                 highlightTitle={searchParams.get("highlight") || undefined}
+              />
+            </PreviewLock>
+          )}
+        </div>
+
+        <div className="tab-panel" hidden={activeTab !== 7}>
+          {visited.has(7) && (
+            <PreviewLock title="Diktat">
+              <MateriTab
+                items={materiDiktat}
+                completedIds={progress.materi}
+                onToggleComplete={handleMateriToggle}
+                subjectId={subjectId}
+              />
+            </PreviewLock>
+          )}
+        </div>
+
+        <div className="tab-panel" hidden={activeTab !== 8}>
+          {visited.has(8) && (
+            <PreviewLock title="Soal Ujian">
+              <MateriTab
+                items={materiSoal}
+                completedIds={progress.materi}
+                onToggleComplete={handleMateriToggle}
+                subjectId={subjectId}
               />
             </PreviewLock>
           )}

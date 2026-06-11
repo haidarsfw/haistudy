@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { Subject, SubjectContent, Schedule } from "@/types";
 import { useScope, useOptionalScope } from "@/components/providers/scope-provider";
-import { loadCourses, loadContent, loadSchedule } from "@/data";
+import { loadCourses, loadContent, loadSchedule, loadRangkuman } from "@/data";
 
 interface ScopedDataValue {
   subjects: Subject[];
@@ -11,6 +11,9 @@ interface ScopedDataValue {
   weeklySchedule: Schedule[];
   examSchedule: Schedule[];
   loaded: boolean;
+  /** subjectId -> { moduleTitle: html }. Used for tab visibility (empty = hide). */
+  rangkuman: Record<string, Record<string, string>>;
+  rangkumanLoaded: boolean;
 }
 
 const EMPTY: ScopedDataValue = {
@@ -19,6 +22,8 @@ const EMPTY: ScopedDataValue = {
   weeklySchedule: [],
   examSchedule: [],
   loaded: false,
+  rangkuman: {},
+  rangkumanLoaded: false,
 };
 
 const ScopedDataContext = createContext<ScopedDataValue>(EMPTY);
@@ -41,14 +46,23 @@ export function ScopedDataProvider({ children }: { children: React.ReactNode }) 
       loadSchedule(scope),
     ]).then(([subjects, content, sched]) => {
       if (cancelled) return;
-      setValue({
+      setValue((v) => ({
+        ...v,
         subjects,
         content,
         weeklySchedule: sched.weekly,
         examSchedule: sched.exam,
         loaded: true,
-      });
+      }));
     });
+    // Rangkuman loads separately so it never blocks dashboard readiness
+    // (`loaded`). Functional updates keep both results regardless of order.
+    (loadRangkuman(scope) as Promise<Record<string, Record<string, string>>>).then(
+      (rangkuman) => {
+        if (cancelled) return;
+        setValue((v) => ({ ...v, rangkuman, rangkumanLoaded: true }));
+      }
+    );
     return () => {
       cancelled = true;
     };

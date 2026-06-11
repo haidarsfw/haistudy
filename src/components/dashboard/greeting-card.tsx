@@ -10,6 +10,7 @@ import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { scopeFullLabel } from "@/lib/scope";
 import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
+import * as greetingS1Uts from "@/data/s1/uts/bm/greeting-content";
 import * as greetingS1Uas from "@/data/s1/uas/bm/greeting-content";
 import * as greetingS2Uts from "@/data/s2/uts/bm/greeting-content";
 import * as greetingS2Uas from "@/data/s2/uas/bm/greeting-content";
@@ -20,6 +21,7 @@ const GREETING_BY_SCOPE: Record<
   string,
   { TIPS: readonly string[]; FUN_FACTS: readonly string[] }
 > = {
+  "s1-uts-bm": greetingS1Uts,
   "s1-uas-bm": greetingS1Uas,
   "s2-uts-bm": greetingS2Uts,
   "s2-uas-bm": greetingS2Uas,

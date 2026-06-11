@@ -25,6 +25,40 @@ const GENERAL_SUGGESTIONS_UAS = [
   "Tips persiapan UAS yang efektif",
 ];
 
+// s1-uts-bm subjects: marketing, hr, mis, intro, pancasila.
+const SUBJECT_SUGGESTIONS_S1_UTS: Record<string, string[]> = {
+  marketing: [
+    "Jelaskan 5 langkah dalam Marketing Process",
+    "Apa itu BCG Matrix dan keempat kuadrannya?",
+    "Jelaskan proses keputusan pembelian konsumen (5 tahap)",
+    "Apa itu STP: Segmentation, Targeting, Positioning?",
+  ],
+  hr: [
+    "Jelaskan perbedaan line authority dan staff authority",
+    "Apa itu model ADDIE dalam training & development?",
+    "Jelaskan metode STAR dalam wawancara kerja",
+    "Bagaimana hubungan talent management dengan performance?",
+  ],
+  mis: [
+    "Jelaskan perbedaan data dan informasi",
+    "Apa itu Porter's Five Forces?",
+    "Jelaskan service model cloud (IaaS, PaaS, SaaS)",
+    "Apa saja jenis malware dan cara mengamankan sistem?",
+  ],
+  intro: [
+    "Jelaskan perbedaan efficiency dan effectiveness",
+    "Apa saja 8 langkah pengambilan keputusan?",
+    "Jelaskan struktur mechanistic vs organic",
+    "Apa itu Inverted-U Model dalam konflik?",
+  ],
+  pancasila: [
+    "Jelaskan sejarah perumusan Pancasila di BPUPKI",
+    "Apa makna 'negara berketuhanan' dalam sila pertama?",
+    "Jelaskan perbedaan demokrasi Pancasila dan liberal",
+    "Apa saja tiga tingkatan nilai Pancasila?",
+  ],
+};
+
 // s1-uas-bm subjects: marketing, hr, mis, intro.
 const SUBJECT_SUGGESTIONS_S1_UAS: Record<string, string[]> = {
   marketing: [
@@ -115,12 +149,14 @@ const SUBJECT_SUGGESTIONS_UAS: Record<string, string[]> = {
 
 // Per-scope-key maps so every scope gets its own suggestions (NOT examPeriod-keyed).
 const SUBJECT_SUGGESTIONS_BY_SCOPE: Record<string, Record<string, string[]>> = {
+  "s1-uts-bm": SUBJECT_SUGGESTIONS_S1_UTS,
   "s1-uas-bm": SUBJECT_SUGGESTIONS_S1_UAS,
   "s2-uts-bm": SUBJECT_SUGGESTIONS_UTS,
   "s2-uas-bm": SUBJECT_SUGGESTIONS_UAS,
 };
 
 const GENERAL_SUGGESTIONS_BY_SCOPE: Record<string, string[]> = {
+  "s1-uts-bm": GENERAL_SUGGESTIONS_UTS,
   "s1-uas-bm": GENERAL_SUGGESTIONS_UAS,
   "s2-uts-bm": GENERAL_SUGGESTIONS_UTS,
   "s2-uas-bm": GENERAL_SUGGESTIONS_UAS,
