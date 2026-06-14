@@ -89,6 +89,20 @@ export function useProfile() {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
           return next;
         });
+
+        // Avatar changed -> tell every useAvatars() surface (global chat, DM,
+        // online list) + the profile-preview popover to repaint with the new
+        // PFP immediately, no reload. Without this the chat avatar stays stale.
+        if (updates.avatarUrl !== undefined && typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("hs:avatar-updated", {
+              detail: {
+                licenseKey: session.licenseKey,
+                avatarUrl: updates.avatarUrl,
+              },
+            })
+          );
+        }
       } finally {
         setSaving(false);
       }

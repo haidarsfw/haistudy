@@ -18,16 +18,8 @@ import { uploadToCloudinary } from "@/lib/cloudinary";
 import { APP_EVENTS } from "@/lib/events";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useSession } from "@/components/providers/session-provider";
 import { useProfile } from "@/hooks/use-profile";
-import { CLASSES } from "@/lib/constants";
 import { generateDefaultAvatar } from "@/lib/avatar";
 import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import { toast } from "@/components/ui/toast";
@@ -38,16 +30,14 @@ interface UserProfilePopoverProps {
 
 export function UserProfilePopover({ children }: UserProfilePopoverProps) {
   const router = useRouter();
-  const { session, logout, updateSession } = useSession();
+  const { session, logout } = useSession();
   const { profile, saving, updateProfile } = useProfile();
   const [open, setOpen] = useState(false);
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [selectedClass, setSelectedClass] = useState("");
   const [bio, setBio] = useState("");
   const [customStatus, setCustomStatus] = useState("");
-  const [statusEmoji, setStatusEmoji] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,12 +46,13 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
     if (open) {
       setEmail(profile.email || "");
       setPhone(profile.phone || "");
-      setSelectedClass(session?.selectedClass || "");
       setBio(profile.bio || "");
-      setCustomStatus(profile.customStatus || "");
-      setStatusEmoji(profile.customStatusEmoji || "");
+      // Status is a single field now; merge any legacy emoji + text on load.
+      setCustomStatus(
+        [profile.customStatusEmoji, profile.customStatus].filter(Boolean).join(" ")
+      );
     }
-  }, [open, profile, session?.selectedClass]);
+  }, [open, profile]);
 
   // Open from the chat self-preview "Edit profil" action (desktop sidebar).
   useEffect(() => {
@@ -97,17 +88,10 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
       await updateProfile({
         email: email || null,
         phone: phone || null,
-        selectedClass,
         bio: bio || null,
         customStatus: customStatus || null,
-        customStatusEmoji: statusEmoji || null,
+        customStatusEmoji: null,
       });
-
-      // Update session class if changed
-      if (selectedClass !== session?.selectedClass) {
-        updateSession({ selectedClass });
-      }
-
       toast.success("Profil disimpan");
       setOpen(false);
     } catch {
@@ -240,43 +224,17 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="profile-class" className="text-xs">
-              Kelas
+            <Label htmlFor="profile-status" className="text-xs">
+              Status
             </Label>
-            <Select value={selectedClass} onValueChange={(v) => setSelectedClass(v || "")}>
-              <SelectTrigger id="profile-class" className="h-8 text-sm">
-                <SelectValue placeholder="Pilih kelas" />
-              </SelectTrigger>
-              <SelectContent>
-                {CLASSES.map((cls) => (
-                  <SelectItem key={cls} value={cls}>
-                    {cls}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Status</Label>
-            <div className="flex gap-1.5">
-              <Input
-                value={statusEmoji}
-                onChange={(e) => setStatusEmoji(e.target.value)}
-                placeholder="🙂"
-                maxLength={8}
-                className="h-8 w-12 text-center text-sm"
-                aria-label="Emoji status"
-              />
-              <Input
-                value={customStatus}
-                onChange={(e) => setCustomStatus(e.target.value)}
-                placeholder="lagi belajar UAS..."
-                maxLength={80}
-                className="h-8 flex-1 text-sm"
-                aria-label="Status"
-              />
-            </div>
+            <Input
+              id="profile-status"
+              value={customStatus}
+              onChange={(e) => setCustomStatus(e.target.value)}
+              placeholder="🙂 lagi belajar UAS..."
+              maxLength={80}
+              className="h-8 text-sm"
+            />
           </div>
 
           <div className="space-y-1.5">

@@ -84,6 +84,22 @@ export function PublicProfilePopover({
     };
   }, []);
 
+  // Repaint live when this user's avatar changes (their own upload), refreshing
+  // the module cache so a previously-cached null avatar updates everywhere.
+  useEffect(() => {
+    if (!licenseKey) return;
+    const onAvatar = (e: Event) => {
+      const d = (e as CustomEvent).detail || {};
+      if (!d.licenseKey || String(d.licenseKey).toUpperCase() !== licenseKey.toUpperCase()) return;
+      const url: string | null = d.avatarUrl ?? null;
+      const cached = cache.get(licenseKey);
+      if (cached) cache.set(licenseKey, { ...cached, avatarUrl: url });
+      setProfile((p) => (p ? { ...p, avatarUrl: url } : p));
+    };
+    window.addEventListener("hs:avatar-updated", onAvatar);
+    return () => window.removeEventListener("hs:avatar-updated", onAvatar);
+  }, [licenseKey]);
+
   const name = profile?.name ?? fallbackName;
   const tier = profile?.packageTier ?? fallbackTier ?? null;
   const isAdmin = profile?.isAdmin ?? fallbackIsAdmin ?? false;
