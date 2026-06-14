@@ -22,6 +22,7 @@ import { useTheme } from "@/components/providers/theme-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useHighlights } from "@/hooks/use-highlights";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { canUseVipFeatures } from "@/lib/tier";
 import {
   HighlightTooltip,
@@ -48,6 +49,7 @@ export function RangkumanTab({
 }: RangkumanTabProps) {
   const { dark } = useTheme();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<ReadingMode>(() =>
     dark ? "dark" : "light"
   );
@@ -200,6 +202,22 @@ export function RangkumanTab({
       document.removeEventListener("mousedown", onClick, true);
     };
   }, [tooltipPos]);
+
+  // Mobile: iOS selection handles don't reliably fire touchend on the content,
+  // so also surface the bottom action bar whenever the selection changes.
+  useEffect(() => {
+    if (!isMobile) return;
+    let raf = 0;
+    const onSel = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => handleSelectionEnd());
+    };
+    document.addEventListener("selectionchange", onSel);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("selectionchange", onSel);
+    };
+  }, [isMobile, handleSelectionEnd]);
 
   // Save highlight + optional save-to-library.
   const handlePickColor = useCallback(
@@ -620,6 +638,7 @@ export function RangkumanTab({
                 : undefined
             }
             onAskAI={tooltipMode === "create" ? handleAskAI : undefined}
+            variant={isMobile ? "bar" : "floating"}
           />
         </div>
       )}

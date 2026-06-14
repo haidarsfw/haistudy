@@ -265,6 +265,38 @@ export function parseRangkuman(content: string): React.ReactNode {
     let source = lines[i];
     const trimmed = source.trim();
 
+    // Display math block: a line that is exactly $$...$$ renders centered on
+    // its own line (formulas stack vertically). Wide ones scroll horizontally
+    // instead of breaking the layout. Inline $...$ stays inline via parseInline.
+    const displayMath = trimmed.match(/^\$\$([\s\S]+?)\$\$$/);
+    if (displayMath) {
+      let html = "";
+      try {
+        html = katex.renderToString(displayMath[1].trim(), {
+          throwOnError: false,
+          displayMode: true,
+          trust: true,
+        });
+      } catch {
+        html = "";
+      }
+      elements.push(
+        html ? (
+          <div
+            key={i}
+            data-tts-line={i}
+            className="katex-display my-3 overflow-x-auto"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        ) : (
+          <code key={i} data-tts-line={i} className="block my-3 text-sm">
+            {displayMath[1].trim()}
+          </code>
+        )
+      );
+      continue;
+    }
+
     // Multi-line block tag: opening tag on this line, closing tag on a later
     // line (e.g. a <bullet> whose body has an "Example:" on the next line).
     // Accumulate through the closing line so it renders as one block.
@@ -291,7 +323,7 @@ export function parseRangkuman(content: string): React.ReactNode {
           <h2
             key={i}
             data-tts-line={i}
-            className="font-heading text-xl font-bold mt-6 mb-2 first:mt-0 transition-colors duration-300"
+            className="font-heading text-xl font-bold mt-8 mb-3 first:mt-0 transition-colors duration-300"
           >
             {parsed.content}
           </h2>
@@ -302,7 +334,7 @@ export function parseRangkuman(content: string): React.ReactNode {
           <h3
             key={i}
             data-tts-line={i}
-            className="font-heading text-lg font-semibold mt-4 mb-1.5 transition-colors duration-300"
+            className="font-heading text-lg font-semibold mt-7 mb-2 transition-colors duration-300"
           >
             {parsed.content}
           </h3>
@@ -313,7 +345,7 @@ export function parseRangkuman(content: string): React.ReactNode {
           <h4
             key={i}
             data-tts-line={i}
-            className="font-heading text-base font-medium mt-3 mb-1 transition-colors duration-300"
+            className="font-heading text-base font-semibold mt-5 mb-2 transition-colors duration-300"
           >
             {parsed.content}
           </h4>
@@ -324,10 +356,14 @@ export function parseRangkuman(content: string): React.ReactNode {
           <div
             key={i}
             data-tts-line={i}
-            className="flex gap-2 my-1 pl-2 transition-colors duration-300 rounded"
+            className="flex gap-2.5 my-1 pl-1 transition-colors duration-300 rounded"
           >
-            <span className="text-primary mt-1.5 shrink-0">•</span>
-            <span className="text-sm leading-relaxed">{parsed.content}</span>
+            {/* Dot in a line-height box so it centers on the first text line,
+                not floats below it. h-7 == leading-7. */}
+            <span className="flex h-7 shrink-0 items-center" aria-hidden="true">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+            <span className="text-base leading-7">{parsed.content}</span>
           </div>
         );
         break;
@@ -347,7 +383,7 @@ export function parseRangkuman(content: string): React.ReactNode {
           <p
             key={i}
             data-tts-line={i}
-            className="text-sm text-muted-foreground mt-3 italic transition-colors duration-300"
+            className="text-base text-muted-foreground mt-2 mb-5 italic leading-7 transition-colors duration-300"
           >
             {parsed.content}
           </p>
@@ -358,9 +394,9 @@ export function parseRangkuman(content: string): React.ReactNode {
           <div
             key={i}
             data-tts-line={i}
-            className="my-3 flex gap-2 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-3 py-2 transition-colors duration-300 dark:bg-amber-950/30"
+            className="my-4 flex gap-2 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-4 py-3 transition-colors duration-300 dark:bg-amber-950/30"
           >
-            <span className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">
+            <span className="text-base leading-7 text-amber-900 dark:text-amber-200">
               {parsed.content}
             </span>
           </div>
@@ -385,16 +421,60 @@ export function parseRangkuman(content: string): React.ReactNode {
           </div>
         );
         break;
-      default:
-        elements.push(
-          <p
-            key={i}
-            data-tts-line={i}
-            className="text-sm leading-relaxed my-1 transition-colors duration-300 rounded"
-          >
-            {parsed.content}
-          </p>
+      default: {
+        // Auto-render slide/example callouts (e.g. "Contoh dari slide (...)",
+        // "Contoh tambahan ...", "Latihan dari slide ...") as a COLLAPSED
+        // left-bordered <details> so dense example blocks don't fatigue the
+        // eye - the summary shows the bold lead-in label, expand to read it.
+        // Detected from the raw source prefix, so no content markup change is
+        // needed across existing rangkuman.
+        const src = source.trim();
+        const isCallout = /^<b>\s*(Contoh|Latihan)\s+(dari slide|tambahan)/i.test(
+          src
         );
+        if (isCallout) {
+          const split = src.match(/^<b>([\s\S]*?)<\/b>\s*([\s\S]*)$/);
+          const label = split ? split[1].replace(/:\s*$/, "") : "Contoh";
+          const body = split ? split[2] : src;
+          elements.push(
+            <details
+              key={i}
+              data-tts-line={i}
+              className="group my-4 overflow-hidden rounded-lg border-l-4 border-primary/40 bg-muted/40 transition-colors duration-300"
+            >
+              <summary className="flex cursor-pointer select-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-foreground/90">
+                <svg
+                  className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-open:rotate-90"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+                {parseInline(label)}
+              </summary>
+              {body ? (
+                <p className="px-4 pb-3 text-base leading-7 text-foreground/90">
+                  {parseInline(body)}
+                </p>
+              ) : null}
+            </details>
+          );
+        } else {
+          elements.push(
+            <p
+              key={i}
+              data-tts-line={i}
+              className="text-base leading-7 my-3 transition-colors duration-300 rounded"
+            >
+              {parsed.content}
+            </p>
+          );
+        }
+      }
     }
   }
 

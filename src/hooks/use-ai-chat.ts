@@ -11,6 +11,7 @@ export interface AiMessage {
   timestamp: number;
   image?: string; // base64 data URL for user-uploaded images
   reasoning?: string; // DeepSeek thinking trace (reasoning_content stream)
+  reference?: string; // selected materi snippet this question was grounded in
 }
 
 interface UseAiChatReturn {
@@ -124,6 +125,7 @@ export function useAiChat(): UseAiChatReturn {
         content: text.trim(),
         timestamp: Date.now(),
         ...(image ? { image } : {}),
+        ...(referenceText ? { reference: referenceText } : {}),
       };
 
       const updatedMessages = [...messagesRef.current, userMsg];

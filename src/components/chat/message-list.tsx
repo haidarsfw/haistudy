@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./message-bubble";
 import { APP_EVENTS } from "@/lib/events";
 import { useAvatars } from "@/hooks/use-avatars";
+import { useSession } from "@/components/providers/session-provider";
 import type { ChatMessage } from "@/types";
 
 interface MessageListProps {
@@ -38,6 +39,11 @@ export function MessageList({
   isLoadingMore,
   hasMore,
 }: MessageListProps) {
+  // Identify own messages by LICENSE KEY (the user's identity), not device id.
+  // Device id collides when two accounts share one browser - which mis-flagged
+  // other users (e.g. tester) as "own" and stripped their profile popover.
+  const { session } = useSession();
+  const myKey = session?.licenseKey?.toUpperCase() ?? null;
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
@@ -205,7 +211,11 @@ export function MessageList({
               <div key={msg.id} data-message-id={msg.id} className="transition-all duration-300">
                 <MessageBubble
                   message={msg}
-                  isOwn={msg.authorId === currentDeviceId}
+                  isOwn={
+                    myKey && msg.licenseKey
+                      ? msg.licenseKey.toUpperCase() === myKey
+                      : msg.authorId === currentDeviceId
+                  }
                   isAdmin={isAdmin}
                   isPinned={pinnedIds.includes(msg.id)}
                   onReply={onReply}

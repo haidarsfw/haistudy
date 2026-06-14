@@ -80,7 +80,11 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
   const scrollRef = useRef<HTMLDivElement>(null);
   const [aiModel, setAiModel] = useState<"fast" | "reasoning">("fast");
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isNearBottom, setIsNearBottom] = useState(true);
+  // Follow-the-stream lock. A ref (not state) so the scroll listener can flip
+  // it synchronously - the auto-scroll effect then always reads the freshest
+  // value and never yanks the view back while the user scrolls up mid-stream.
+  const stickRef = useRef(true);
+  const [showJump, setShowJump] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
@@ -114,27 +118,31 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
     };
   }, [isOpen]);
 
-  // Detect if user is "near the bottom" (< 80px) - only then we auto-follow streams
+  // Scroll listener: flip the follow-lock synchronously. Scrolling up past the
+  // threshold releases it (no fighting); returning to the bottom re-locks.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const handler = () => {
-      const threshold = 80;
-      const atBottom =
-        el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
-      setIsNearBottom(atBottom);
+      const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+      const atBottom = dist < 120;
+      stickRef.current = atBottom;
+      setShowJump(!atBottom);
     };
     el.addEventListener("scroll", handler, { passive: true });
     return () => el.removeEventListener("scroll", handler);
   }, [isOpen]);
 
-  // Auto-scroll to bottom ONLY if the user is already near the bottom
+  // Follow new content only while locked to the bottom. Reads stickRef (always
+  // fresh) inside a rAF, so streaming never overrides a manual scroll-up.
   useEffect(() => {
-    if (!scrollRef.current) return;
-    if (isNearBottom) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isNearBottom]);
+    if (!stickRef.current) return;
+    requestAnimationFrame(() => {
+      if (stickRef.current && scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    });
+  }, [messages]);
 
   // Snap to bottom when panel opens
   useEffect(() => {
@@ -142,7 +150,8 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
       requestAnimationFrame(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-          setIsNearBottom(true);
+          stickRef.current = true;
+          setShowJump(false);
         }
       });
     }
@@ -167,7 +176,8 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
       );
       if (ref) setActiveReference(null);
       // User just sent - pin to bottom regardless of prior scroll state
-      setIsNearBottom(true);
+      stickRef.current = true;
+      setShowJump(false);
       requestAnimationFrame(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -315,7 +325,8 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
   const jumpToBottom = useCallback(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      setIsNearBottom(true);
+      stickRef.current = true;
+      setShowJump(false);
     }
   }, []);
 
@@ -546,7 +557,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
             </div>
 
             {/* Jump-to-bottom pill - appears only when user scrolled up during streaming */}
-            {!isNearBottom && isStreaming && (
+            {showJump && isStreaming && (
               <button
                 onClick={jumpToBottom}
                 className="absolute bottom-24 right-4 z-10 flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-xs shadow-lg hover:opacity-90 transition-opacity"

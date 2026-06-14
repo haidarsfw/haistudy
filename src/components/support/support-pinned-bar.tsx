@@ -54,10 +54,18 @@ export function SupportPinnedBar({
                   ? `[${t("support.audio_label")}]`
                   : msg.content;
             return (
-              <button
+              <div
                 key={pin.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => onJump(pin.messageId)}
-                className="flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-[11px] transition-colors hover:bg-muted/50"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onJump(pin.messageId);
+                  }
+                }}
+                className="flex w-full cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-left text-[11px] transition-colors hover:bg-muted/50"
               >
                 <span className="truncate font-medium text-foreground/90">
                   {msg.senderName}:
@@ -77,7 +85,7 @@ export function SupportPinnedBar({
                     <X className="h-3 w-3" />
                   </button>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>

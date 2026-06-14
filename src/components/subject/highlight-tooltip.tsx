@@ -186,6 +186,10 @@ interface HighlightTooltipProps {
   onRemove: () => void;
   onRemoveSnippet?: () => void;
   onAskAI?: () => void;
+  // "floating" anchors above the selection (desktop). "bar" pins a full-width
+  // action bar to the bottom of the screen (mobile), so the native iOS
+  // selection menu can never cover the actions.
+  variant?: "floating" | "bar";
 }
 
 export function HighlightTooltip({
@@ -198,6 +202,7 @@ export function HighlightTooltip({
   onRemove,
   onRemoveSnippet,
   onAskAI,
+  variant = "floating",
 }: HighlightTooltipProps) {
   const { t } = useTranslation();
 
@@ -207,12 +212,8 @@ export function HighlightTooltip({
       ? Math.min(Math.max(x, 90), window.innerWidth - 90)
       : x;
 
-  return (
-    <div
-      className="fixed z-[120] flex -translate-x-1/2 -translate-y-full items-center gap-1 rounded-full border border-border bg-popover px-1.5 py-1 shadow-lg"
-      style={{ left: clampedX, top: Math.max(y - 8, 8) }}
-      onMouseDown={(e) => e.preventDefault()} // keep the text selection alive
-    >
+  const inner = (
+    <>
       {mode === "create" &&
         HIGHLIGHT_COLORS.map((color) => {
           const locked = !canVip && color !== "yellow";
@@ -283,6 +284,30 @@ export function HighlightTooltip({
           <span className="text-[11px] font-medium">{t("rangkuman.ask_ai")}</span>
         </button>
       )}
+    </>
+  );
+
+  // Mobile: a fixed bottom action bar. preventDefault on pointer-down keeps the
+  // selection alive when a control is tapped.
+  if (variant === "bar") {
+    return (
+      <div
+        className="fixed inset-x-0 bottom-0 z-[120] flex items-center justify-center gap-1.5 border-t border-border bg-popover px-3 py-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.12)]"
+        style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
+        onPointerDown={(e) => e.preventDefault()}
+      >
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed z-[120] flex -translate-x-1/2 -translate-y-full items-center gap-1 rounded-full border border-border bg-popover px-1.5 py-1 shadow-lg"
+      style={{ left: clampedX, top: Math.max(y - 8, 8) }}
+      onMouseDown={(e) => e.preventDefault()} // keep the text selection alive
+    >
+      {inner}
     </div>
   );
 }

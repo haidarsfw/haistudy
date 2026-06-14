@@ -368,6 +368,11 @@ export const AiMessageBubble = memo(function AiMessageBubble({
         {isUser ? (
           <div>
             {message.image && <ImagePreview src={message.image} />}
+            {message.reference && (
+              <div className="mb-1.5 rounded-md border-l-2 border-primary-foreground/40 bg-primary-foreground/10 px-2 py-1 text-[11px] leading-snug text-primary-foreground/80">
+                <p className="line-clamp-3">«{message.reference}»</p>
+              </div>
+            )}
             <p className="whitespace-pre-wrap">{message.content}</p>
           </div>
         ) : (

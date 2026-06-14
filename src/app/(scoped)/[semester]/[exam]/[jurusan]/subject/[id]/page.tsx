@@ -248,13 +248,13 @@ export default function SubjectPage() {
         </div>
       </div>
 
-      {/* Slide-based learning tip for specific subjects */}
-      {showTip && ["statistik", "akuntansi", "biseko"].includes(subjectId) && (
+      {/* Slide-based learning tip (all subjects) */}
+      {showTip && (
         <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2.5">
           <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
           <p className="flex-1 text-[11px] leading-relaxed text-muted-foreground">
             <span className="font-semibold text-foreground">Tips:</span>{" "}
-            Mata kuliah ini sangat disarankan untuk dipelajari sembari membuka slide materi asli dari BINUSMAYA. Gunakan fitur <span className="font-medium text-foreground">AI haistudy</span> untuk membantu memahami materi dengan lebih mudah - kamu juga bisa upload gambar slide yang kurang kamu pahami!
+            Mata kuliah ini sangat disarankan untuk dipelajari sembari membuka slide materi asli dari BINUSMAYA. Gunakan fitur <span className="font-medium text-foreground">AI haistudy</span> untuk membantu memahami materi dengan lebih mudah. Kamu juga bisa pilih (select) teks yang kurang kamu pahami lalu langsung tanya AI, tanpa perlu screenshot - dan kamu tetap bisa upload screenshot slide kalau mau.
           </p>
           <button
             onClick={() => setShowTip(false)}

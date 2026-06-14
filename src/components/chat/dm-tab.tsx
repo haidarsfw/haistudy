@@ -279,6 +279,8 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
             adapted.map((cm, i) => {
               const dm = messages[i];
               const mine = cm.authorId.toUpperCase() === myKey;
+              const prev = adapted[i - 1];
+              const grouped = !!prev && prev.authorId === cm.authorId;
               return (
                 <MessageBubble
                   key={cm.id}
@@ -292,6 +294,8 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
                   onUnpin={unpinMessage}
                   onImageClick={setPreviewImage}
                   avatarUrl={avatars.get(cm.licenseKey?.toUpperCase() ?? "")}
+                  variant="dm"
+                  grouped={grouped}
                 />
               );
             })

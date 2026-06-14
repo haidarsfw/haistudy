@@ -11,8 +11,11 @@ import { cn } from "@/lib/utils";
 export function PricingSection() {
   const [selectedPkg, setSelectedPkg] = useState("normal");
   // Multiple cards may be expanded at once so users can compare feature lists
-  // side by side — opening one no longer collapses the others.
-  const [openFeatures, setOpenFeatures] = useState<Set<string>>(new Set());
+  // side by side — opening one no longer collapses the others. Default: every
+  // card's features shown so visitors see what they get without a click.
+  const [openFeatures, setOpenFeatures] = useState<Set<string>>(
+    () => new Set(PACKAGES.map((p) => p.id))
+  );
   const { t } = useTranslation();
 
   return (

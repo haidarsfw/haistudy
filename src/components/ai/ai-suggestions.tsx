@@ -120,30 +120,33 @@ const SUBJECT_SUGGESTIONS_UTS: Record<string, string[]> = {
   ],
 };
 
+// s2-uas-bm subjects: akuntansi (managerial), opsmgmt, bizethics, foundai.
+// Each prompt maps to a topic that actually exists in the authored rangkuman
+// modules, so the AI answers from materi instead of replying "tidak tercakup".
 const SUBJECT_SUGGESTIONS_UAS: Record<string, string[]> = {
-  bizethics: [
-    "Apa saja prinsip utama etika bisnis?",
-    "Jelaskan teori utilitarianisme dalam konteks bisnis",
-    "Bagaimana CSR mempengaruhi reputasi perusahaan?",
-    "Apa itu dilema etika dalam pengambilan keputusan?",
+  akuntansi: [
+    "Apa beda managerial accounting dan financial accounting?",
+    "Jelaskan komponen biaya produk: direct material, direct labor, dan overhead",
+    "Bagaimana cara menghitung break-even point (CVP)?",
+    "Apa itu incremental analysis dalam pengambilan keputusan?",
   ],
   opsmgmt: [
-    "Jelaskan konsep supply chain management",
-    "Apa itu lean manufacturing?",
-    "Bagaimana cara menghitung capacity planning?",
-    "Jelaskan metode forecasting dalam operations",
+    "Faktor apa saja yang memengaruhi keputusan lokasi pabrik?",
+    "Bagaimana cara menghitung EOQ dan reorder point?",
+    "Jelaskan ABC analysis dalam manajemen persediaan",
+    "Apa itu MRP dan bagaimana cara kerjanya?",
   ],
-  akuntansi: [
-    "Jelaskan laporan arus kas dan komponennya",
-    "Bagaimana cara menganalisis rasio keuangan?",
-    "Apa perbedaan akuntansi biaya dan akuntansi keuangan?",
-    "Jelaskan konsep break-even analysis",
+  bizethics: [
+    "Jelaskan isu privasi dan teknologi di tempat kerja",
+    "Apa enam pertanyaan William Parent tentang privasi?",
+    "Jelaskan etika dalam marketing dan tanggung jawab ke konsumen",
+    "Apa itu COSO dan Sarbanes-Oxley dalam tata kelola perusahaan?",
   ],
   foundai: [
-    "Jelaskan arsitektur neural network secara detail",
-    "Apa itu reinforcement learning dan contohnya?",
-    "Bagaimana cara kerja convolutional neural network?",
-    "Jelaskan bias dan fairness dalam sistem AI",
+    "Apa itu AI dan IoT, dan bagaimana keduanya bekerja sama?",
+    "Bagaimana robot dipakai dalam kehidupan sehari-hari?",
+    "Jelaskan peran AI dalam entertainment dan gaming",
+    "Apa saja isu etika dalam penggunaan AI?",
   ],
 };
 

@@ -46,6 +46,11 @@ interface MessageBubbleProps {
   onImageClick?: (src: string) => void;
   userRoleMap?: Map<string, UserRole>;
   avatarUrl?: string | null;
+  // "dm" renders WhatsApp/IG-style bubbles: own right + accent, other left +
+  // muted, no per-message avatar/name (the thread header already shows who).
+  variant?: "default" | "dm";
+  // True when the previous message is from the same sender - tightens spacing.
+  grouped?: boolean;
 }
 
 export function MessageBubble({
@@ -60,6 +65,8 @@ export function MessageBubble({
   onImageClick,
   userRoleMap,
   avatarUrl,
+  variant = "default",
+  grouped = false,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -109,6 +116,148 @@ export function MessageBubble({
       )
     );
   };
+
+  // ─── DM bubble (WhatsApp/IG style) ───
+  if (variant === "dm") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springSmooth}
+        className={`group flex w-full px-3 ${grouped ? "mt-0.5" : "mt-2"} ${
+          isOwn ? "justify-end" : "justify-start"
+        }`}
+        onMouseEnter={() => setShowActions(true)}
+        onMouseLeave={() => setShowActions(false)}
+      >
+        <div
+          className={`flex max-w-[82%] items-end gap-1 ${
+            isOwn ? "flex-row-reverse" : "flex-row"
+          }`}
+        >
+          <div
+            className={`relative min-w-0 rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+              isOwn
+                ? "rounded-br-md bg-primary text-primary-foreground"
+                : "rounded-bl-md bg-muted text-foreground"
+            } ${isPinned ? "ring-1 ring-primary/40" : ""}`}
+          >
+            {/* Reply preview */}
+            {message.replyToId && message.replyToName && (
+              <div
+                className={`mb-1 flex items-center gap-1.5 rounded border-l-2 px-2 py-1 text-xs ${
+                  isOwn
+                    ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/80"
+                    : "border-muted-foreground/30 bg-background/40 text-muted-foreground"
+                }`}
+              >
+                <Reply className="h-3 w-3 shrink-0" />
+                <span className="font-medium">{message.replyToName}</span>
+                <span className="truncate">{message.replyToContent || "..."}</span>
+              </div>
+            )}
+
+            {message.type === "text" && (
+              <p className="whitespace-pre-wrap break-words">
+                {renderContent(message.content)}
+              </p>
+            )}
+
+            {message.type === "image" && message.mediaUrl && (
+              <div>
+                <button
+                  onClick={() => onImageClick?.(message.mediaUrl!)}
+                  className="block cursor-zoom-in"
+                >
+                  <img
+                    src={message.mediaUrl}
+                    alt="Shared image"
+                    className="max-h-60 max-w-[240px] rounded-lg object-cover"
+                    loading="lazy"
+                  />
+                </button>
+                {message.content && (
+                  <p className="mt-1 break-words">{renderContent(message.content)}</p>
+                )}
+              </div>
+            )}
+
+            {message.type === "audio" && message.mediaUrl && (
+              <div className="mt-0.5">
+                <AudioPlayer src={message.mediaUrl} />
+              </div>
+            )}
+
+            {/* Time + pin */}
+            <div
+              className={`mt-0.5 flex items-center gap-1 text-[10px] ${
+                isOwn
+                  ? "justify-end text-primary-foreground/70"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {isPinned && <Pin className="h-2.5 w-2.5" />}
+              <span>{time}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div
+            className={`flex shrink-0 items-center gap-0.5 self-center transition-opacity ${
+              showActions ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onReply(message)}
+            >
+              <Reply className="h-3.5 w-3.5" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="ghost" size="icon" className="h-6 w-6" />}
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                {isAdmin && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      isPinned ? onUnpin(message.id) : onPin(message.id)
+                    }
+                  >
+                    {isPinned ? (
+                      <>
+                        <PinOff className="mr-2 h-3.5 w-3.5" />
+                        Unpin
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="mr-2 h-3.5 w-3.5" />
+                        Pin
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                {(isAdmin || isOwn) && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => onDelete(message.id)}
+                    disabled={!isAdmin && !isOwn}
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Hapus
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

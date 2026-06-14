@@ -384,6 +384,31 @@
 }
 
 /* ============================================
+   Global thin scrollbars
+   Every scrollable surface (reading pane, AI chat, DM, modals) gets a slim
+   bar. The .scrollbar-hide utility keeps higher specificity, so explicitly
+   hidden bars stay hidden.
+   ============================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.6 0 0 / 0.3) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: oklch(0.6 0 0 / 0.3);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0 0 / 0.5);
+}
+
+/* ============================================
    Glassmorphism & Depth
    ============================================ */
 
