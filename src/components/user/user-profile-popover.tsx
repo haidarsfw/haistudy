@@ -231,7 +231,7 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
               id="profile-status"
               value={customStatus}
               onChange={(e) => setCustomStatus(e.target.value)}
-              placeholder="🙂 lagi belajar UAS..."
+              placeholder="lagi belajar UAS..."
               maxLength={80}
               className="h-8 text-sm"
             />
