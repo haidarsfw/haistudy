@@ -1,4 +1,12 @@
 import type { SubjectContent } from "@/types";
+import { akuntansiFlashcards } from "./akuntansi-flashcards";
+import { akuntansiQuiz } from "./akuntansi-quiz";
+import { opsmgmtFlashcards } from "./opsmgmt-flashcards";
+import { opsmgmtQuiz } from "./opsmgmt-quiz";
+import { bizethicsFlashcards } from "./bizethics-flashcards";
+import { bizethicsQuiz } from "./bizethics-quiz";
+import { foundaiFlashcards } from "./foundai-flashcards";
+import { foundaiQuiz } from "./foundai-quiz";
 
 /**
  * UAS S2 BM content. Official lecture slides only (materi[]) — sourced from the
@@ -17,8 +25,8 @@ export const content: Record<string, SubjectContent> = {
     ],
     kisiKisi: [],
     kisiKisiNote: "",
-    flashcards: [],
-    quiz: [],
+    flashcards: bizethicsFlashcards,
+    quiz: bizethicsQuiz,
   },
 
   opsmgmt: {
@@ -32,8 +40,8 @@ export const content: Record<string, SubjectContent> = {
     ],
     kisiKisi: [],
     kisiKisiNote: "",
-    flashcards: [],
-    quiz: [],
+    flashcards: opsmgmtFlashcards,
+    quiz: opsmgmtQuiz,
   },
 
   akuntansi: {
@@ -46,8 +54,8 @@ export const content: Record<string, SubjectContent> = {
     ],
     kisiKisi: [],
     kisiKisiNote: "",
-    flashcards: [],
-    quiz: [],
+    flashcards: akuntansiFlashcards,
+    quiz: akuntansiQuiz,
   },
 
   foundai: {
@@ -60,8 +68,8 @@ export const content: Record<string, SubjectContent> = {
     ],
     kisiKisi: [],
     kisiKisiNote: "",
-    flashcards: [],
-    quiz: [],
+    flashcards: foundaiFlashcards,
+    quiz: foundaiQuiz,
   },
 };
 
