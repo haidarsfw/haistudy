@@ -21,19 +21,45 @@ import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
 import { ChevronRight, Lightbulb, X } from "lucide-react";
 
+// YYYY-MM-DD in WIB (UTC+7). Gates the once-per-day tip dismissal.
+function tipTodayKey(): string {
+  return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
 export default function SubjectPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session } = useSession();
-  const { scopePath } = useScope();
+  const { scopePath, scopeKey } = useScope();
   const subjectId = params.id as string;
   const dashboardHref = `/${scopePath}/dashboard`;
   const subjectsHref = `/${scopePath}/subjects`;
 
   const initialTab = Number(searchParams.get("tab")) || 0;
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [showTip, setShowTip] = useState(true);
+  // Tip dismissal persists for the day (survives reload), resets at midnight WIB
+  // or on relogin (login clears the key). Init false to avoid an SSR/localStorage
+  // mismatch; an effect reveals it after mount when not dismissed today.
+  const [showTip, setShowTip] = useState(false);
+  useEffect(() => {
+    try {
+      setShowTip(localStorage.getItem("hs-tip-dismissed") !== tipTodayKey());
+    } catch {
+      setShowTip(true);
+    }
+  }, []);
+  const dismissTip = useCallback(() => {
+    try {
+      localStorage.setItem("hs-tip-dismissed", tipTodayKey());
+    } catch {}
+    setShowTip(false);
+  }, []);
+  // Tip only on the calc/slide-heavy s2-uas-bm subjects; other scopes unchanged.
+  const tipAllowed =
+    scopeKey === "s2-uas-bm"
+      ? ["opsmgmt", "akuntansi"].includes(subjectId)
+      : true;
   // Track which tabs have been visited. Once a tab mounts it stays mounted
   // to preserve scroll position, TTS state, and form drafts across switches.
   const [visited, setVisited] = useState<Set<number>>(() => new Set([initialTab]));
@@ -248,8 +274,8 @@ export default function SubjectPage() {
         </div>
       </div>
 
-      {/* Slide-based learning tip (all subjects) */}
-      {showTip && (
+      {/* Slide-based learning tip (gated per scope/subject) */}
+      {showTip && tipAllowed && (
         <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2.5">
           <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
           <p className="flex-1 text-[11px] leading-relaxed text-muted-foreground">
@@ -257,7 +283,7 @@ export default function SubjectPage() {
             Mata kuliah ini sangat disarankan untuk dipelajari sembari membuka slide materi asli dari BINUSMAYA. Gunakan fitur <span className="font-medium text-foreground">AI haistudy</span> untuk membantu memahami materi dengan lebih mudah. Kamu juga bisa pilih (select) teks yang kurang kamu pahami lalu langsung tanya AI, tanpa perlu screenshot - dan kamu tetap bisa upload screenshot slide kalau mau.
           </p>
           <button
-            onClick={() => setShowTip(false)}
+            onClick={dismissTip}
             className="shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <X className="h-3.5 w-3.5" />

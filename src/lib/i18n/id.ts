@@ -515,7 +515,7 @@ const id: Record<string, string> = {
 
   // PWA install / update
   "pwa.install_title": "Pasang haistudy",
-  "pwa.install_desc": "Tambahkan haistudy ke layar utama untuk akses lebih cepat dan tampilan layar penuh.",
+  "pwa.install_desc": "Pasang haistudy untuk akses cepat, notifikasi penting, dan pengalaman layar penuh yang lebih nyaman.",
   "pwa.install_button": "Pasang",
   "pwa.install_later": "Nanti saja",
   "pwa.install_dont_remind": "Jangan ingatkan lagi",
@@ -697,6 +697,8 @@ const id: Record<string, string> = {
   "pwa.benefit_fast": "Akses sekali ketuk dari layar utama",
   "pwa.benefit_home": "Ikon haistudy di home screen",
   "pwa.benefit_notif": "Notifikasi penting langsung ke perangkat",
+  "pwa.benefit_readability": "Tampilan layar penuh, lebih nyaman dibaca",
+  "pwa.benefit_exclusive": "Semua fitur eksklusif haistudy dalam satu app",
   "pwa.install_ios_step1": "Ketuk tombol Bagikan di Safari",
   "pwa.install_ios_step2": "Pilih “Tambah ke Layar Utama”",
   "pwa.got_it": "Mengerti",

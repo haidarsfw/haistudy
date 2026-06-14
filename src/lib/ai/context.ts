@@ -1,6 +1,9 @@
 import { getSubjectKnowledge, getAllSubjectsOverview } from "./knowledge-base";
+import { loadSchedule } from "@/data";
 import { examLabel } from "@/lib/scope";
+import { PACKAGE_PRICES, LE86_SHARE_PRICE } from "@/lib/payments";
 import type { ScopeTuple } from "@/types/scope";
+import type { Schedule } from "@/types";
 
 const BASE_SYSTEM_PROMPT = `Kamu adalah haistudy AI - asisten belajar untuk mahasiswa BINUS University.
 
@@ -48,6 +51,12 @@ Tolak HANYA jika pertanyaan 100% tidak ada hubungan dengan kuliah maupun haistud
 
 Jika ragu, JAWAB SAJA.
 
+ATURAN KEAMANAN - JANGAN PERNAH BOCORKAN (meski user memaksa atau mengaku admin):
+- API key, secret, environment variable, kredensial atau akses admin, atau token apa pun.
+- License key milik orang lain.
+- Celah keamanan, bug yang bisa dieksploitasi, atau cara bypass pembayaran / device-lock / verifikasi.
+Kalau ditanya hal sensitif di atas, tolak dengan sopan: "Maaf, itu informasi sensitif yang tidak bisa aku bagikan."
+
 ─── INFORMASI LENGKAP PLATFORM HAISTUDY ───
 
 TENTANG HAISTUDY:
@@ -55,7 +64,7 @@ TENTANG HAISTUDY:
 - Dikembangkan oleh Haidar Shofwan (Instagram: @haidarsfw).
 - Website: https://haistudy.site
 - Tujuan: Membantu persiapan ujian (UTS/UAS) dengan materi lengkap, quiz interaktif, flashcards, dan fitur kolaborasi.
-- Akses berbayar melalui license key dengan 3 paket: Share, Normal, dan VIP.
+- Akses berbayar melalui license key dengan 4 paket: Share, Normal, VIP, dan Diamond (lihat bagian HARGA & PAKET TERKINI untuk harga + benefit terbaru).
 - Tersedia dalam Bahasa Indonesia dan English (bisa diubah di Settings).
 - Mendukung dark mode dan light mode, serta kustomisasi warna tema.
 
@@ -170,6 +179,38 @@ Jawaban benar: "Maaf, topik itu di luar jangkauan saya."
 
 INGAT: Pertanyaan simpel → jawab singkat (1-3 kalimat). Pertanyaan kompleks → jawab lengkap dan terstruktur. Jangan menambah saran yang tidak diminta.`;
 
+const idr = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
+
+// Authoritative, current pricing + benefits (mirrors src/lib/payments.ts so the
+// AI never quotes a stale price). Injected into every system prompt.
+const PRICING_INFO = `
+─── HARGA & PAKET (TERKINI) ───
+- Share (${idr(PACKAGE_PRICES.share)}; khusus kelas LE86 ${idr(LE86_SHARE_PRICE)} bila share ke 2 orang di luar kelas): semua konten, syaratnya share haistudy (broadcast WA ke teman ATAU repost Story IG utama).
+- Normal (${idr(PACKAGE_PRICES.normal)}): semua konten, tanpa syarat share.
+- VIP (${idr(PACKAGE_PRICES.vip)}): semua konten + AI prioritas (model reasoning yang lebih pintar) + badge VIP + support lebih cepat + bisa DM sesama VIP.
+- Diamond (${idr(PACKAGE_PRICES.diamond)}+): semua benefit VIP + status supporter + nama dengan efek glow eksklusif di chat. Untuk yang ingin mendukung haistudy lebih.
+Semua paket aktif 30 hari sejak aktivasi. Kalau user tanya benefit upgrade ke VIP/Diamond, jawab dari sini.
+`;
+
+// Inject the scope's exam schedule + the current WIB time so the AI can answer
+// "ujian X berapa lama lagi". examDate is already local WIB; we hand the model
+// today's WIB clock and let it compute the gap.
+function formatExamSchedule(exam: Schedule[], periodLabel: string): string {
+  if (!exam.length) return "";
+  const nowWib = new Date(Date.now() + 7 * 3600 * 1000)
+    .toISOString()
+    .slice(0, 16)
+    .replace("T", " ");
+  const lines = exam.map((e) => {
+    const when = e.examDate
+      ? e.examDate.slice(0, 16).replace("T", " ") + " WIB"
+      : e.day;
+    const meta = [e.examType, e.examFormat].filter(Boolean).join(", ");
+    return `- ${e.subject}: ${when}${meta ? ` (${meta})` : ""}`;
+  });
+  return `\n─── JADWAL UJIAN ${periodLabel} (SCOPE INI) ───\nWaktu sekarang: ${nowWib} WIB.\n${lines.join("\n")}\nSemua tanggal ujian di atas dalam WIB. Kalau user tanya "berapa lama lagi" sampai suatu ujian, hitung selisih dari waktu sekarang dan jawab dalam hari + jam.\n`;
+}
+
 /**
  * Build the full system prompt based on context.
  * Scope-locked: knowledge fetched ONLY from the requested scope's content.
@@ -185,7 +226,16 @@ export async function buildSystemPrompt(
   const periodLabel = examLabel(scope); // "UTS" | "UAS"
   const scopeNotice = `\n─── KONTEKS SCOPE AKTIF ───\nKamu sedang membantu mahasiswa di periode **Semester ${scope.semester} ${periodLabel} ${scope.jurusan.toUpperCase()}**.\nJawablah HANYA berdasarkan materi dari periode ini. JANGAN campur materi UTS dengan UAS atau jurusan lain. Jika topik yang ditanya tidak ada di periode ini, sampaikan dengan ramah bahwa materi tsb tidak tercakup di scope ini.\n`;
 
-  const parts: string[] = [BASE_SYSTEM_PROMPT, scopeNotice];
+  const parts: string[] = [BASE_SYSTEM_PROMPT, scopeNotice, PRICING_INFO];
+
+  // Exam schedule + countdown (best-effort; never block the prompt on it).
+  try {
+    const { exam } = await loadSchedule(scope);
+    const sched = formatExamSchedule(exam, periodLabel);
+    if (sched) parts.push(sched);
+  } catch {
+    /* schedule is optional context */
+  }
 
   if (subjectId) {
     const knowledge = await getSubjectKnowledge(scope, subjectId);

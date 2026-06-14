@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { getDeviceId } from "@/lib/auth/device";
-import { LogOut, Save, Loader2 } from "lucide-react";
+import { LogOut, Save, Loader2, Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Popover,
@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { uploadToCloudinary } from "@/lib/cloudinary";
+import { APP_EVENTS } from "@/lib/events";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -42,6 +45,11 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
+  const [bio, setBio] = useState("");
+  const [customStatus, setCustomStatus] = useState("");
+  const [statusEmoji, setStatusEmoji] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync form state when popover opens
   useEffect(() => {
@@ -49,8 +57,40 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
       setEmail(profile.email || "");
       setPhone(profile.phone || "");
       setSelectedClass(session?.selectedClass || "");
+      setBio(profile.bio || "");
+      setCustomStatus(profile.customStatus || "");
+      setStatusEmoji(profile.customStatusEmoji || "");
     }
   }, [open, profile, session?.selectedClass]);
+
+  // Open from the chat self-preview "Edit profil" action (desktop sidebar).
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(APP_EVENTS.OPEN_PROFILE, onOpen);
+    return () => window.removeEventListener(APP_EVENTS.OPEN_PROFILE, onOpen);
+  }, []);
+
+  const handleAvatarPick = () => fileInputRef.current?.click();
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("File harus berupa gambar");
+      return;
+    }
+    setAvatarUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      await updateProfile({ avatarUrl: url });
+      toast.success("Foto profil diperbarui");
+    } catch {
+      toast.error("Gagal mengunggah foto");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -58,6 +98,9 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
         email: email || null,
         phone: phone || null,
         selectedClass,
+        bio: bio || null,
+        customStatus: customStatus || null,
+        customStatusEmoji: statusEmoji || null,
       });
 
       // Update session class if changed
@@ -94,13 +137,39 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
       <PopoverContent className="w-72 p-0" align="end" sideOffset={8}>
         {/* User header */}
         <div className="flex items-center gap-3 p-4">
-          <Image
-            src={profile.avatarUrl || generateDefaultAvatar(session.name, 80)}
-            alt={session.name}
-            width={40}
-            height={40}
-            unoptimized
-            className="h-10 w-10 rounded-full object-cover shrink-0 ring-1 ring-border"
+          <button
+            type="button"
+            onClick={handleAvatarPick}
+            disabled={avatarUploading}
+            aria-label="Ganti foto profil"
+            className="group relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-border"
+          >
+            <Image
+              src={profile.avatarUrl || generateDefaultAvatar(session.name, 80)}
+              alt={session.name}
+              width={40}
+              height={40}
+              unoptimized
+              className="h-10 w-10 rounded-full object-cover"
+            />
+            <span
+              className={`absolute inset-0 flex items-center justify-center bg-black/45 transition-opacity ${
+                avatarUploading ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              }`}
+            >
+              {avatarUploading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
+              ) : (
+                <Camera className="h-4 w-4 text-white" />
+              )}
+            </span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
           />
           <div className="min-w-0 flex-1">
             <p className={`text-sm font-semibold truncate ${getRoleNameClass(resolveRole({ isAdmin: session.isAdmin, isTester: session.isTester, packageTier: session.packageTier }))}`}>{session.name}</p>
@@ -188,11 +257,48 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
             </Select>
           </div>
 
+          <div className="space-y-1.5">
+            <Label className="text-xs">Status</Label>
+            <div className="flex gap-1.5">
+              <Input
+                value={statusEmoji}
+                onChange={(e) => setStatusEmoji(e.target.value)}
+                placeholder="🙂"
+                maxLength={8}
+                className="h-8 w-12 text-center text-sm"
+                aria-label="Emoji status"
+              />
+              <Input
+                value={customStatus}
+                onChange={(e) => setCustomStatus(e.target.value)}
+                placeholder="lagi belajar UAS..."
+                maxLength={80}
+                className="h-8 flex-1 text-sm"
+                aria-label="Status"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-bio" className="text-xs">
+              Bio
+            </Label>
+            <Textarea
+              id="profile-bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Ceritakan sedikit tentang dirimu"
+              maxLength={200}
+              rows={2}
+              className="resize-none text-sm"
+            />
+          </div>
+
           <Button
             size="sm"
             className="w-full"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || avatarUploading}
           >
             {saving ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />

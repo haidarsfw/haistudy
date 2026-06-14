@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, Share, PlusSquare, Zap, Home, BellRing } from "lucide-react";
+import { Download, Share, PlusSquare, Zap, BookOpen, BellRing, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -146,8 +146,9 @@ export function InstallBanner() {
 
   const benefits = [
     { icon: Zap, text: t("pwa.benefit_fast") },
-    { icon: Home, text: t("pwa.benefit_home") },
     { icon: BellRing, text: t("pwa.benefit_notif") },
+    { icon: BookOpen, text: t("pwa.benefit_readability") },
+    { icon: Sparkles, text: t("pwa.benefit_exclusive") },
   ];
 
   return (
@@ -167,13 +168,13 @@ export function InstallBanner() {
         </DialogHeader>
 
         {/* Benefits */}
-        <ul className="space-y-2">
+        <ul className="space-y-2.5">
           {benefits.map((b, i) => (
-            <li key={i} className="flex items-center gap-2.5 text-sm text-foreground">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <b.icon className="h-3.5 w-3.5" />
+            <li key={i} className="flex items-center gap-3 text-sm font-medium text-foreground">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                <b.icon className="h-4 w-4" />
               </span>
-              {b.text}
+              <span className="leading-snug">{b.text}</span>
             </li>
           ))}
         </ul>

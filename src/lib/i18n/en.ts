@@ -515,7 +515,7 @@ const en: Record<string, string> = {
 
   // PWA install + update
   "pwa.install_title": "Install haistudy",
-  "pwa.install_desc": "Add haistudy to your home screen for faster access and a full-screen experience.",
+  "pwa.install_desc": "Install haistudy for fast access, important notifications, and a smoother full-screen experience.",
   "pwa.install_button": "Install",
   "pwa.install_later": "Maybe later",
   "pwa.install_dont_remind": "Don't remind me again",
@@ -697,6 +697,8 @@ const en: Record<string, string> = {
   "pwa.benefit_fast": "One-tap access from your home screen",
   "pwa.benefit_home": "haistudy icon on your home screen",
   "pwa.benefit_notif": "Important notifications straight to your device",
+  "pwa.benefit_readability": "Full-screen view that's easier to read",
+  "pwa.benefit_exclusive": "All of haistudy's exclusive features in one app",
   "pwa.install_ios_step1": "Tap the Share button in Safari",
   "pwa.install_ios_step2": "Choose “Add to Home Screen”",
   "pwa.got_it": "Got it",

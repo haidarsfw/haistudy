@@ -309,6 +309,11 @@ function LicenseKeyLoginForm() {
           }
         }
 
+        // Fresh login: the slide-learning tip reappears (must be dismissed again).
+        try {
+          localStorage.removeItem("hs-tip-dismissed");
+        } catch {}
+
         login(sessionWithClass);
         sounds.loginSuccess();
 

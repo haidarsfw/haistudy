@@ -49,8 +49,12 @@ function renderMarkdown(text: string): ReactNode[] {
   const mathMap = new Map<string, { latex: string; display: boolean }>();
   let counter = 0;
 
+  // 0. Sanitize: the model still emits em/en dashes despite the system prompt.
+  // Replace them with " - " so no em-dash ever reaches the UI.
+  const sanitized = text.replace(/[—–]/g, " - ");
+
   // 1. Replace all math with placeholders (unchanged)
-  const processed = text
+  const processed = sanitized
     .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => {
       const id = `__MATH_${counter++}__`;
       mathMap.set(id, { latex, display: true });
@@ -185,33 +189,37 @@ function parseMarkdownInline(
   mathMap: Map<string, { latex: string; display: boolean }>
 ): ReactNode[] {
   const result: ReactNode[] = [];
-  // Matches: **bold**, *italic* (lookarounds reject `**` and word-inside), `code`, ~~strike~~
+  // Bold allows inner `*` so `**Hak (*left alone*):**` matches as one bold and
+  // the inner `*italic*` is parsed by recursion. Italic uses lookarounds to
+  // reject `**` and word-internal stars. code + strike unchanged.
   const regex =
-    /(\*\*([^*\n]+?)\*\*|(?<![*\w])\*([^*\n]+?)\*(?![*\w])|`([^`\n]+?)`|~~([^~\n]+?)~~)/g;
+    /(\*\*([^\n]+?)\*\*|(?<![*\w])\*([^*\n]+?)\*(?![*\w])|`([^`\n]+?)`|~~([^~\n]+?)~~)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let idx = 0;
 
+  // Math is already extracted to placeholders before this runs, so any leftover
+  // `*` in plain text is a stray markdown artifact - drop it so no literal star
+  // (and no broken `**`) ever leaks into the rendered answer.
+  const pushText = (raw: string, key: string) => {
+    const cleaned = raw.replace(/\*+/g, "");
+    if (cleaned) result.push(...expandMath(cleaned, mathMap, key));
+  };
+
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      result.push(
-        ...expandMath(
-          text.slice(lastIndex, match.index),
-          mathMap,
-          `${keyPrefix}-t${idx}`
-        )
-      );
+      pushText(text.slice(lastIndex, match.index), `${keyPrefix}-t${idx}`);
     }
     if (match[2]) {
       result.push(
         <strong key={`${keyPrefix}-b${idx}`} className="font-semibold">
-          {expandMath(match[2], mathMap, `${keyPrefix}-b${idx}`)}
+          {parseMarkdownInline(match[2], `${keyPrefix}-b${idx}`, mathMap)}
         </strong>
       );
     } else if (match[3]) {
       result.push(
         <em key={`${keyPrefix}-i${idx}`}>
-          {expandMath(match[3], mathMap, `${keyPrefix}-i${idx}`)}
+          {parseMarkdownInline(match[3], `${keyPrefix}-i${idx}`, mathMap)}
         </em>
       );
     } else if (match[4]) {
@@ -226,7 +234,7 @@ function parseMarkdownInline(
     } else if (match[5]) {
       result.push(
         <s key={`${keyPrefix}-s${idx}`}>
-          {expandMath(match[5], mathMap, `${keyPrefix}-s${idx}`)}
+          {parseMarkdownInline(match[5], `${keyPrefix}-s${idx}`, mathMap)}
         </s>
       );
     }
@@ -234,7 +242,7 @@ function parseMarkdownInline(
     idx++;
   }
   if (lastIndex < text.length) {
-    result.push(...expandMath(text.slice(lastIndex), mathMap, `${keyPrefix}-e`));
+    pushText(text.slice(lastIndex), `${keyPrefix}-e`);
   }
   return result;
 }

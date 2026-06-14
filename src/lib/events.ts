@@ -8,6 +8,7 @@ export const APP_EVENTS = {
   SCROLL_TO_MESSAGE: "app:scroll-to-message",
   OPEN_AI: "app:open-ai",
   OPEN_DM: "app:open-dm",
+  OPEN_PROFILE: "app:open-profile",
 } as const;
 
 /**
@@ -46,4 +47,12 @@ export function openDmTo(licenseKey: string) {
   window.dispatchEvent(
     new CustomEvent(APP_EVENTS.OPEN_DM, { detail: { licenseKey } })
   );
+}
+
+/**
+ * Open the editable profile popover (mounted in the desktop sidebar). Dispatched
+ * from the self profile-preview card's "Edit profil" action.
+ */
+export function openProfileEditor() {
+  window.dispatchEvent(new CustomEvent(APP_EVENTS.OPEN_PROFILE));
 }

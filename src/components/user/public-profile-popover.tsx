@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Pencil } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -15,7 +15,7 @@ import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { canUseVipFeatures } from "@/lib/tier";
 import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
-import { openDmTo } from "@/lib/events";
+import { openDmTo, openProfileEditor } from "@/lib/events";
 import type { PublicProfile } from "@/types";
 
 interface PublicProfilePopoverProps {
@@ -199,6 +199,25 @@ export function PublicProfilePopover({
               </button>
             </div>
           </>
+        )}
+
+        {isSelf && (
+          <div className="hidden sm:block">
+            <Separator />
+            <div className="p-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  openProfileEditor();
+                }}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit profil
+              </button>
+            </div>
+          </div>
         )}
 
         {!licenseKey && (

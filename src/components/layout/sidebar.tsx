@@ -27,7 +27,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Image from "next/image";
 import { UserProfilePopover } from "@/components/user/user-profile-popover";
+import { useProfile } from "@/hooks/use-profile";
+import { generateDefaultAvatar } from "@/lib/avatar";
 import { AdminScopeSwitcher } from "@/components/admin/admin-scope-switcher";
 import { sounds } from "@/lib/sounds";
 import { useOptionalScope } from "@/components/providers/scope-provider";
@@ -53,6 +56,10 @@ function buildNavItems(scopePath: string) {
 }
 
 const STORAGE_KEY = "hs-sidebar-collapsed";
+const WIDTH_KEY = "hs-sidebar-width";
+const MIN_W = 220;
+const MAX_W = 420;
+const DEFAULT_W = 256; // matches the old w-64
 
 // Module-scope memoized NavButton - identity is stable across Sidebar renders
 // (when inline-defined inside Sidebar, React treats it as a new component
@@ -121,7 +128,10 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
   const pathname = usePathname();
   const router = useRouter();
   const { session, logout } = useSession();
+  const { profile } = useProfile();
   const { t } = useTranslation();
+  const avatarSrc =
+    profile.avatarUrl || generateDefaultAvatar(session?.name || "?", 64);
   const { notifications } = useNotifications();
   const { totalUnread: forumUnread } = useForumUnread(notifications);
   const scopeCtx = useOptionalScope();
@@ -130,6 +140,8 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
   const dashboardHref = `/${scopePath}/dashboard`;
   const subjectsHref = `/${scopePath}/subjects`;
   const [collapsed, setCollapsed] = useState(false);
+  const [width, setWidth] = useState(DEFAULT_W);
+  const [dragging, setDragging] = useState(false);
   const [feedbackCount, setFeedbackCount] = useState(0);
   const { pendingCount: purchasePending } = useAdminPurchaseCount();
   const adminBadge = feedbackCount + purchasePending;
@@ -141,6 +153,40 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
       if (stored === "true") setCollapsed(true);
     } catch {}
   }, []);
+
+  // Load persisted sidebar width.
+  useEffect(() => {
+    try {
+      const w = parseInt(localStorage.getItem(WIDTH_KEY) || "", 10);
+      if (w >= MIN_W && w <= MAX_W) setWidth(w);
+    } catch {}
+  }, []);
+
+  // Drag-to-resize from the right edge (desktop). Width persists locally.
+  const startResize = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      setDragging(true);
+      const startX = e.clientX;
+      const startW = width;
+      let latest = startW;
+      const onMove = (ev: PointerEvent) => {
+        latest = Math.min(MAX_W, Math.max(MIN_W, startW + (ev.clientX - startX)));
+        setWidth(latest);
+      };
+      const onUp = () => {
+        setDragging(false);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        try {
+          localStorage.setItem(WIDTH_KEY, String(latest));
+        } catch {}
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [width]
+  );
 
   // Fetch unread feedback count for admin
   useEffect(() => {
@@ -193,10 +239,22 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
   return (
     <aside
       data-onboarding="sidebar"
-      className={`hidden sm:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-[100dvh] sticky top-0 transition-[width] duration-200 ${
-        collapsed ? "w-16" : "w-64"
-      }`}
+      style={collapsed ? undefined : { width }}
+      className={`hidden sm:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-[100dvh] sticky top-0 ${
+        dragging ? "" : "transition-[width] duration-200"
+      } ${collapsed ? "w-16" : ""}`}
     >
+      {/* Resize handle (desktop, expanded only) */}
+      {!collapsed && (
+        <div
+          onPointerDown={startResize}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Ubah lebar sidebar"
+          className="absolute right-0 top-0 z-20 h-full w-1.5 cursor-col-resize touch-none select-none transition-colors hover:bg-primary/30 active:bg-primary/50"
+        />
+      )}
+
       {/* Logo + collapse toggle */}
       <div
         className={`flex items-center border-b border-sidebar-border ${
@@ -318,9 +376,14 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
         {!collapsed ? (
           <UserProfilePopover>
             <button className="flex w-full items-center gap-3 rounded-lg px-1 py-1.5 hover:bg-sidebar-accent/50 transition-colors cursor-pointer">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
-                {session?.name?.charAt(0)?.toUpperCase() || "?"}
-              </div>
+              <Image
+                src={avatarSrc}
+                alt={session?.name || ""}
+                width={32}
+                height={32}
+                unoptimized
+                className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-sidebar-border"
+              />
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-sm font-medium truncate">{session?.name}</p>
                 {session?.selectedClass && (
@@ -337,9 +400,14 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
               aria-label={session?.name ? `Profil ${session.name}` : "Profil pengguna"}
               className="flex w-full justify-center rounded-lg py-1.5 hover:bg-sidebar-accent/50 transition-colors cursor-pointer"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                {session?.name?.charAt(0)?.toUpperCase() || "?"}
-              </div>
+              <Image
+                src={avatarSrc}
+                alt={session?.name || ""}
+                width={32}
+                height={32}
+                unoptimized
+                className="h-8 w-8 rounded-full object-cover ring-1 ring-sidebar-border"
+              />
             </button>
           </UserProfilePopover>
         )}

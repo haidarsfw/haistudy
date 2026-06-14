@@ -84,7 +84,26 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
   // it synchronously - the auto-scroll effect then always reads the freshest
   // value and never yanks the view back while the user scrolls up mid-stream.
   const stickRef = useRef(true);
+  const programmaticRef = useRef(false); // true while WE set scrollTop
   const [showJump, setShowJump] = useState(false);
+  const showJumpRef = useRef(false);
+  // Only re-render the pill when its visibility actually changes - scroll-driven
+  // setState on every frame itself causes the stream to stutter.
+  const setJump = useCallback((v: boolean) => {
+    if (showJumpRef.current === v) return;
+    showJumpRef.current = v;
+    setShowJump(v);
+  }, []);
+  // Programmatic scroll-to-bottom that won't trip the user-scroll detection.
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    programmaticRef.current = true;
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => {
+      programmaticRef.current = false;
+    });
+  }, []);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
@@ -118,44 +137,59 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
     };
   }, [isOpen]);
 
-  // Scroll listener: flip the follow-lock synchronously. Scrolling up past the
-  // threshold releases it (no fighting); returning to the bottom re-locks.
+  // Scroll detection. `scroll` re-locks at the bottom / unlocks away from it,
+  // but skips our own programmatic writes. `wheel`(up) + `touchmove` flip the
+  // lock the INSTANT the user takes control, before the next streamed token can
+  // yank the view - this is what makes scrolling up mid-stream smooth.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const handler = () => {
-      const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
-      const atBottom = dist < 120;
-      stickRef.current = atBottom;
-      setShowJump(!atBottom);
+    const atBottom = () =>
+      el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    const onScroll = () => {
+      if (programmaticRef.current) return; // ignore our own scrollTop writes
+      const bottom = atBottom();
+      stickRef.current = bottom;
+      setJump(!bottom);
     };
-    el.addEventListener("scroll", handler, { passive: true });
-    return () => el.removeEventListener("scroll", handler);
-  }, [isOpen]);
+    const onIntent = (e: Event) => {
+      // Wheel down is fine (re-locks at bottom via onScroll); wheel up or any
+      // touch drag means the user wants to leave the bottom - release now.
+      if (e.type === "wheel" && (e as WheelEvent).deltaY >= 0) return;
+      if (stickRef.current) {
+        stickRef.current = false;
+        setJump(true);
+      }
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("wheel", onIntent, { passive: true });
+    el.addEventListener("touchmove", onIntent, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("wheel", onIntent);
+      el.removeEventListener("touchmove", onIntent);
+    };
+  }, [isOpen, setJump]);
 
   // Follow new content only while locked to the bottom. Reads stickRef (always
   // fresh) inside a rAF, so streaming never overrides a manual scroll-up.
   useEffect(() => {
     if (!stickRef.current) return;
     requestAnimationFrame(() => {
-      if (stickRef.current && scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
+      if (stickRef.current) scrollToBottom();
     });
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   // Snap to bottom when panel opens
   useEffect(() => {
-    if (isOpen && scrollRef.current) {
+    if (isOpen) {
       requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-          stickRef.current = true;
-          setShowJump(false);
-        }
+        stickRef.current = true;
+        setJump(false);
+        scrollToBottom();
       });
     }
-  }, [isOpen]);
+  }, [isOpen, scrollToBottom, setJump]);
 
   const handleSend = useCallback(
     (text: string, image?: string | null) => {
@@ -177,14 +211,10 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
       if (ref) setActiveReference(null);
       // User just sent - pin to bottom regardless of prior scroll state
       stickRef.current = true;
-      setShowJump(false);
-      requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-      });
+      setJump(false);
+      requestAnimationFrame(() => scrollToBottom());
     },
-    [session, sendMessage, subjectId, aiModel, activeReference]
+    [session, sendMessage, subjectId, aiModel, activeReference, scrollToBottom, setJump]
   );
 
   const retryLastMessage = useCallback(() => {
@@ -323,12 +353,10 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
   );
 
   const jumpToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      stickRef.current = true;
-      setShowJump(false);
-    }
-  }, []);
+    stickRef.current = true;
+    setJump(false);
+    scrollToBottom();
+  }, [scrollToBottom, setJump]);
 
   if (!session) return null;
 

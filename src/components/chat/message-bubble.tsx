@@ -270,64 +270,51 @@ export function MessageBubble({
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Avatar - real PFP when set, initial fallback otherwise */}
-      {isOwn ? (
-        <Avatar className="mt-0.5 size-8">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt={message.authorName} />}
-          <AvatarFallback className="bg-secondary text-xs font-medium text-secondary-foreground">
-            {message.authorName.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      ) : (
-        <PublicProfilePopover
-          licenseKey={message.licenseKey}
-          fallbackName={message.authorName}
-          fallbackTier={message.packageTier}
-          fallbackIsAdmin={message.isAdmin}
+      {/* Avatar - clickable to preview the author's profile (self too) */}
+      <PublicProfilePopover
+        licenseKey={message.licenseKey}
+        fallbackName={message.authorName}
+        fallbackTier={message.packageTier}
+        fallbackIsAdmin={message.isAdmin}
+      >
+        <button
+          type="button"
+          className="mt-0.5 shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80"
         >
-          <button
-            type="button"
-            className="mt-0.5 shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-          >
-            <Avatar className="size-8">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt={message.authorName} />}
-              <AvatarFallback
-                className={`text-xs font-medium ${
-                  message.isAdmin
-                    ? "bg-primary/15 text-primary"
-                    : "bg-secondary text-secondary-foreground"
-                }`}
-              >
-                {message.authorName.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </button>
-        </PublicProfilePopover>
-      )}
+          <Avatar className="size-8">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={message.authorName} />}
+            <AvatarFallback
+              className={`text-xs font-medium ${
+                message.isAdmin
+                  ? "bg-primary/15 text-primary"
+                  : "bg-secondary text-secondary-foreground"
+              }`}
+            >
+              {message.authorName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </PublicProfilePopover>
 
       {/* Content */}
       <div className="min-w-0 flex-1">
         {/* Header */}
         <div className="flex items-center gap-2">
-          {isOwn ? (
-            <span className={`text-sm font-semibold text-primary ${getRoleNameClass(authorRole)}`}>
-              {message.authorName}
-            </span>
-          ) : (
-            <PublicProfilePopover
-              licenseKey={message.licenseKey}
-              fallbackName={message.authorName}
-              fallbackTier={message.packageTier}
-              fallbackIsAdmin={message.isAdmin}
+          <PublicProfilePopover
+            licenseKey={message.licenseKey}
+            fallbackName={message.authorName}
+            fallbackTier={message.packageTier}
+            fallbackIsAdmin={message.isAdmin}
+          >
+            <button
+              type="button"
+              className={`cursor-pointer text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${
+                isOwn ? "text-primary" : ROLE_COLORS[authorRole].text
+              } ${getRoleNameClass(authorRole)}`}
             >
-              <button
-                type="button"
-                className={`cursor-pointer text-sm font-semibold transition-opacity hover:opacity-80 hover:underline ${ROLE_COLORS[authorRole].text} ${getRoleNameClass(authorRole)}`}
-              >
-                {message.authorName}
-              </button>
-            </PublicProfilePopover>
-          )}
+              {message.authorName}
+            </button>
+          </PublicProfilePopover>
           {message.isAdmin && (
             <Badge
               variant="admin-outline"

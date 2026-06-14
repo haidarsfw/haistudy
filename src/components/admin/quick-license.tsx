@@ -50,17 +50,27 @@ export function QuickLicense() {
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
+  // The invoice counter is per-scope (shares the real purchase sequence). Null
+  // when "all periods" is active - the counter is per-scope only.
+  const counterScope =
+    hydrated && !isAllPeriods && adminScope !== "all" ? scopeKey(adminScope) : null;
 
-  // Fetch invoice counter on mount + poll every 10s for cross-device sync
+  // Read the resolved scope's counter; DISPLAY the upcoming number (value + 1).
+  // Re-fetches when the admin scope changes + polls for cross-device sync.
   useEffect(() => {
+    if (!counterScope) {
+      setInvoiceNumber(null);
+      return;
+    }
     const fetchCounter = () => {
       if (editingRef.current) return;
-      fetch(`/api/admin/invoice?t=${Date.now()}`)
+      fetch(`/api/admin/invoice-counter?scope=${counterScope}&t=${Date.now()}`)
         .then((r) => r.json())
         .then((data) => {
           if (typeof data.value === "number" && !editingRef.current) {
-            setInvoiceNumber(data.value);
-            if (!editingRef.current) setTempInvoice(String(data.value));
+            const next = data.value + 1;
+            setInvoiceNumber(next);
+            setTempInvoice(String(next));
           }
         })
         .catch(console.error);
@@ -69,7 +79,7 @@ export function QuickLicense() {
     fetchCounter();
     const interval = setInterval(fetchCounter, 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [counterScope]);
 
   const handleGenerate = useCallback(async () => {
     if (!name.trim()) {
@@ -100,8 +110,6 @@ export function QuickLicense() {
       year: "numeric",
     });
 
-    const currentInvoice = invoiceNumber ?? 1;
-
     try {
       const scopeKeyStr = scopeKey(adminScope);
       // Create license key via API
@@ -126,8 +134,21 @@ export function QuickLicense() {
 
       setGeneratedKey(newKey);
 
+      // Assign the real per-scope invoice number (same sequence as purchases).
+      let assigned = invoiceNumber ?? 1;
+      try {
+        const invRes = await fetch(
+          `/api/admin/invoice-counter/next?scope=${scopeKeyStr}`,
+          { method: "POST" }
+        );
+        const invData = await invRes.json();
+        if (typeof invData.value === "number") assigned = invData.value;
+      } catch {
+        /* fall back to the displayed number */
+      }
+
       // Build WhatsApp message
-      const message = `🧾 INVOICE #${String(currentInvoice).padStart(3, "0")}
+      const message = `🧾 INVOICE #${String(assigned).padStart(3, "0")}
 haistudy
 Halo ${name.trim()}, pembayaran kamu sudah kami terima.
 
@@ -158,11 +179,9 @@ Selamat belajar! 🚀`;
 
       setGeneratedMessage(message);
 
-      // Increment invoice counter
-      const invoiceRes = await fetch("/api/admin/invoice", { method: "POST" });
-      const invoiceData = await invoiceRes.json();
-      setInvoiceNumber(invoiceData.value);
-      setTempInvoice(String(invoiceData.value));
+      // Counter advanced server-side; show the next upcoming number.
+      setInvoiceNumber(assigned + 1);
+      setTempInvoice(String(assigned + 1));
 
       toast.success("License key berhasil dibuat!");
     } catch (e) {
@@ -173,22 +192,24 @@ Selamat belajar! 🚀`;
   }, [name, pkg, devices, freeReason, invoiceNumber, adminScope, isAllPeriods]);
 
   const handleSaveInvoice = useCallback(async () => {
-    const value = parseInt(tempInvoice) || 1;
+    if (!counterScope) return;
+    const display = parseInt(tempInvoice) || 1; // the upcoming invoice #
+    const counterValue = Math.max(0, display - 1); // stored = last issued
     try {
-      await fetch("/api/admin/invoice", {
+      await fetch(`/api/admin/invoice-counter?scope=${counterScope}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
+        body: JSON.stringify({ value: counterValue }),
       });
-      setInvoiceNumber(value);
-      setTempInvoice(String(value));
+      setInvoiceNumber(display);
+      setTempInvoice(String(display));
       editingRef.current = false;
       setEditingInvoice(false);
       toast.success("Invoice counter diperbarui");
     } catch {
       toast.error("Gagal menyimpan invoice counter");
     }
-  }, [tempInvoice]);
+  }, [tempInvoice, counterScope]);
 
   const copyToClipboard = useCallback(async (text: string) => {
     await navigator.clipboard.writeText(text);
