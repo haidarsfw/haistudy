@@ -45,6 +45,11 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Lock zoom (maximumScale:1 + userScalable:false). Stops iOS Safari from
+  // auto-zooming when a sub-16px input is focused (chat bars, AI chat, etc.)
+  // and the resulting "stuck zoomed-in" state. App behaves like a native app.
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export const metadata: Metadata = {

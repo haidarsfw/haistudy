@@ -24,14 +24,6 @@ export function OnboardingOverlay() {
   const [spotlight, setSpotlight] = useState<SpotlightRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Lock scroll during tutorial
-  useEffect(() => {
-    if (!shouldShow) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [shouldShow]);
-
   // Resolve the correct target selector based on mobile state
   const resolvedTarget = (() => {
     if (!step) return null;
@@ -39,35 +31,62 @@ export function OnboardingOverlay() {
     return step.target;
   })();
 
-  // Find and measure target element
+  // Find target, scroll it into view, then measure. The page scroller is the
+  // window on mobile and <main> on desktop; scrolling the target into the
+  // viewport center is REQUIRED so the spotlight hole is actually visible (a
+  // below-the-fold target previously left only a dark overlay + card, with
+  // nothing highlighted). Re-measure on scroll/resize so the hole + tooltip
+  // keep tracking the element.
   useEffect(() => {
     if (!shouldShow || !resolvedTarget) {
       setSpotlight(null);
       return;
     }
 
-    const findTarget = () => {
+    let raf = 0;
+    const measure = () => {
       const el = document.querySelector(resolvedTarget);
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        const padding = 8;
-        setSpotlight({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
-        });
-      } else {
+      if (!el) {
         setSpotlight(null);
+        return;
       }
+      const rect = el.getBoundingClientRect();
+      const padding = 8;
+      setSpotlight({
+        top: rect.top - padding,
+        left: rect.left - padding,
+        width: rect.width + padding * 2,
+        height: rect.height + padding * 2,
+      });
+    };
+    const remeasure = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
     };
 
-    const timer = setTimeout(findTarget, 100);
+    const el = document.querySelector(resolvedTarget);
+    if (el) {
+      try {
+        el.scrollIntoView({ block: "center", inline: "nearest" });
+      } catch {
+        el.scrollIntoView();
+      }
+    }
 
-    window.addEventListener("resize", findTarget);
+    // Measure after layout settles (covers instant + any smooth scroll).
+    const t1 = setTimeout(measure, 60);
+    const t2 = setTimeout(measure, 280);
+
+    window.addEventListener("resize", remeasure);
+    // Capture phase so scrolls in any container (window on mobile, <main> on
+    // desktop) re-align the spotlight.
+    window.addEventListener("scroll", remeasure, true);
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", findTarget);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", remeasure);
+      window.removeEventListener("scroll", remeasure, true);
     };
   }, [shouldShow, resolvedTarget]);
 

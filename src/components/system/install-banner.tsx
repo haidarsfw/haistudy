@@ -200,7 +200,7 @@ export function InstallBanner() {
     <Dialog open={open} onOpenChange={(o) => { if (!o) close(); }}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-sm bg-background/90 backdrop-blur-xl border-border/30 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-[0.96]"
+        className="max-w-sm rounded-2xl border-border/30 bg-background/90 shadow-2xl backdrop-blur-xl duration-200"
       >
         <DialogHeader>
           {/* App mark */}

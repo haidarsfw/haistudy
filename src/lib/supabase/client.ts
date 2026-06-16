@@ -41,11 +41,18 @@ export function createClient() {
  * Uses the default cookie storage so the PKCE code verifier is written for the
  * server callback (/auth/callback → createServerAuthClient) to exchange.
  * Returns null if Supabase is not configured (safe no-op pattern).
+ *
+ * `isSingleton: false` is REQUIRED: @supabase/ssr's createBrowserClient caches a
+ * single browser instance and returns it (ignoring options) on every later call.
+ * Since the realtime createClient() above is usually created first WITH
+ * accessToken, a default call here would hand back that same accessToken client
+ * and signInWithOAuth would throw. Forcing a non-singleton instance guarantees a
+ * clean, accessToken-free client regardless of call order.
  */
 export function createAuthClient() {
   if (!isSupabaseConfigured) {
     return null;
   }
 
-  return createBrowserClient(supabaseUrl!, supabaseAnonKey!);
+  return createBrowserClient(supabaseUrl!, supabaseAnonKey!, { isSingleton: false });
 }
