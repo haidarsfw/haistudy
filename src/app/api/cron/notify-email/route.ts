@@ -41,13 +41,12 @@ export async function GET(req: Request) {
   const { data: candidates, error: cErr } = await supabase
     .from("notifications")
     .select(
-      "id, license_key, sender_name, preview, thread_id, message_id, created_at, semester, exam_period, jurusan, activations!inner(expiry)"
+      "id, license_key, sender_name, preview, thread_id, message_id, created_at, semester, exam_period, jurusan"
     )
     .eq("type", "support_message")
     .eq("read", false)
     .lte("created_at", olderThan)
     .gte("created_at", newerThan)
-    .gt("activations.expiry", new Date(now).toISOString())
     .order("created_at", { ascending: true })
     .limit(200);
   if (cErr) {
@@ -62,7 +61,7 @@ export async function GET(req: Request) {
   );
 
   // 2) Bulk fetch related state
-  const [presenceRes, settingsRes, profilesRes, mutesRes, deliveriesRes, licensesRes] =
+  const [presenceRes, settingsRes, profilesRes, mutesRes, deliveriesRes, licensesRes, activationsRes] =
     await Promise.all([
       supabase
         .from("presence")
@@ -90,6 +89,10 @@ export async function GET(req: Request) {
         .from("license_keys")
         .select("key, name, is_admin")
         .in("key", recipientKeys),
+      supabase
+        .from("activations")
+        .select("license_key, expiry")
+        .in("license_key", recipientKeys),
     ]);
 
   // Recently online recipients (any device with last_seen >= offlineSince)
@@ -136,6 +139,17 @@ export async function GET(req: Request) {
     });
   }
 
+  // Active recipients only (skip expired licenses — they can't log in anyway).
+  // NULL expiry = lifetime/unlimited → treated as active.
+  const nowIso = new Date(now).toISOString();
+  const activeRecipients = new Set<string>();
+  for (const a of activationsRes.data ?? []) {
+    const exp = a.expiry as string | null;
+    if (exp === null || exp > nowIso) {
+      activeRecipients.add(a.license_key as string);
+    }
+  }
+
   // 3) De-duplicate per (recipient, conversation) - only the LATEST notification
   const byPair = new Map<
     string,
@@ -163,6 +177,10 @@ export async function GET(req: Request) {
   let skipped = 0;
   for (const item of byPair.values()) {
     const pairKey = `${item.recipientLk}::${item.conversationLk}`;
+    if (!activeRecipients.has(item.recipientLk)) {
+      skipped++;
+      continue;
+    }
     if (onlineRecent.has(item.recipientLk)) {
       skipped++;
       continue;
