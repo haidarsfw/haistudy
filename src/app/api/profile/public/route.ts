@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
+import { displayName } from "@/lib/name";
 import type { PublicProfile } from "@/types";
 
 type ProfileRow = {
@@ -18,6 +19,7 @@ type ProfileRow = {
 type KeyRow = {
   key: string;
   name: string | null;
+  short_name: string | null;
   package_tier: PublicProfile["packageTier"];
   is_admin: boolean | null;
 };
@@ -31,12 +33,14 @@ function build(
   const k = keys.get(key);
   return {
     licenseKey: key,
-    // Every profile field (name, photo, tier, admin badge, bio, status, class)
-    // is GLOBAL by license_key. user_profiles has no scope columns, so the same
+    // Every profile field (photo, tier, admin badge, bio, status, class) is
+    // GLOBAL by license_key. user_profiles has no scope columns, so the same
     // person renders identically in every scope. requireScope still guards the
     // route for auth; it does not narrow which fields are returned. This is what
     // lets all users (including admins viewing another scope) see avatar/status/bio.
-    name: k?.name ?? "Pengguna",
+    // NICKNAME ONLY — never expose the full legal name to other users. Falls back
+    // to firstWord(name) for the 140 legacy keys with no short_name.
+    name: displayName({ shortName: k?.short_name, name: k?.name }),
     avatarUrl: p?.avatar_url ?? null,
     bio: p?.bio ?? null,
     customStatus: p?.custom_status ?? null,
@@ -73,7 +77,7 @@ async function fetchProfiles(licenseKeys: string[]): Promise<PublicProfile[]> {
   // are the same person everywhere; there are no scope-private fields to gate.
   const { data: keyRows, error: keyErr } = await supabase
     .from("license_keys")
-    .select("key, name, package_tier, is_admin")
+    .select("key, name, short_name, package_tier, is_admin")
     .in("key", keys);
   if (keyErr) throw keyErr;
 

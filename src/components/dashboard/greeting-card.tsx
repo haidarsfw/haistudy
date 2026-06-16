@@ -103,10 +103,13 @@ export function GreetingCard() {
   const { t } = useTranslation();
   const { subjects, content } = useScopedData();
   const scopeCtx = useOptionalScope();
+  const licenseKey = session?.licenseKey ?? "";
+  const scopeKey = scopeCtx?.scopeKey ?? "";
   const [overallProgress, setOverallProgress] = useState(0);
 
   useEffect(() => {
-    const calc = () => calcOverall(getAllProgress(), subjects, content);
+    const calc = () =>
+      calcOverall(getAllProgress(licenseKey, scopeKey), subjects, content);
     setOverallProgress(calc());
 
     const handleSync = () => setOverallProgress(calc());
@@ -118,7 +121,7 @@ export function GreetingCard() {
       window.removeEventListener("hs-progress-updated", handleSync);
       window.removeEventListener("storage", handleSync);
     };
-  }, [subjects, content]);
+  }, [subjects, content, licenseKey, scopeKey]);
 
   // Scope-aware tips & fun facts - keyed by full scope-key (NOT examPeriod) so
   // each scope is isolated. Static per-scope so the tip is in first paint.

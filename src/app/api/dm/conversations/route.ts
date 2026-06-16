@@ -10,6 +10,7 @@ import {
   ScopeError,
 } from "@/lib/auth/scope-check";
 import { resolveSessionTier } from "@/lib/auth/session-tier";
+import { displayName } from "@/lib/name";
 import { canUseVip } from "@/lib/tier";
 import { orderedPair, otherParticipant } from "@/lib/dm";
 import type { DmConversation } from "@/types";
@@ -77,12 +78,13 @@ export async function GET(request: Request) {
     const { data: keyRows } = await scopeEq(scope)(
       supabase
         .from("license_keys")
-        .select("key, name, package_tier, is_admin")
+        .select("key, name, short_name, package_tier, is_admin")
         .in("key", otherKeys)
     );
     type KeyRow = {
       key: string;
       name: string | null;
+      short_name: string | null;
       package_tier: DmConversation["otherTier"];
       is_admin: boolean | null;
     };
@@ -128,7 +130,7 @@ export async function GET(request: Request) {
       const k = c.otherKey ? keyMap.get(c.otherKey) : undefined;
       return {
         ...c,
-        otherName: k?.name ?? "Pengguna",
+        otherName: displayName({ shortName: k?.short_name, name: k?.name }),
         otherTier: k?.package_tier ?? null,
         otherIsAdmin: k?.is_admin ?? false,
         otherOnline: c.otherKey ? onlineKeys.has(c.otherKey) : false,

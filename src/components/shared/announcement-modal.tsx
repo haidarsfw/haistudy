@@ -44,7 +44,11 @@ export function AnnouncementModal() {
         if (cancelled) return;
         const list = (data.announcements || []) as Announcement[];
         const seen = getSeenSet();
-        const next = list.find((a) => !seen.has(a.id)) ?? null;
+        // Never auto-pop "info" (welcome/general) announcements — those live in
+        // the header banner + notification bell only. Reserve the modal for
+        // higher-urgency warning/maintenance notices.
+        const next =
+          list.find((a) => a.type !== "info" && !seen.has(a.id)) ?? null;
         if (next) setAnnouncement(next);
       })
       .catch(() => {

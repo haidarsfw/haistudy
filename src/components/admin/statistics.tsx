@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 
 interface UserStat {
   licenseKey: string;
@@ -40,16 +42,20 @@ export function Statistics() {
   const { adminScope, adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
   const [users, setUsers] = useState<UserStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const [showAllQuiz, setShowAllQuiz] = useState(false);
   const [showAllActive, setShowAllActive] = useState(false);
 
   useEffect(() => {
     if (!hydrated) return;
     const fetchUsers = () => {
-      fetch(`/api/admin/users${scopeQuery()}`)
-        .then((r) => r.json())
-        .then((data) => setUsers(data.users || []))
-        .catch(console.error)
+      adminFetch<{ users?: UserStat[] }>(`/api/admin/users${scopeQuery()}`)
+        .then((data) => {
+          setUsers(data.users || []);
+          setError(null);
+        })
+        .catch((e) => setError(e))
         .finally(() => setLoading(false));
     };
 
@@ -88,7 +94,7 @@ export function Statistics() {
     // Fallback: poll every 30s
     const interval = setInterval(fetchUsers, 30_000);
     return () => clearInterval(interval);
-  }, [hydrated, adminScopeKey, adminScope, isAllPeriods, scopeQuery]);
+  }, [hydrated, adminScopeKey, adminScope, isAllPeriods, scopeQuery, reloadToken]);
 
   const regularUsers = users.filter((u) => !u.isAdmin && !u.isTester);
   const totalKeys = users.length;
@@ -132,6 +138,9 @@ export function Statistics() {
 
   return (
     <div className="space-y-4">
+      {error ? (
+        <AdminErrorBanner error={error} onRetry={() => setReloadToken((t) => t + 1)} />
+      ) : null}
       {/* Summary cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>

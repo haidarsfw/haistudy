@@ -131,7 +131,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
   const { profile } = useProfile();
   const { t } = useTranslation();
   const avatarSrc =
-    profile.avatarUrl || generateDefaultAvatar(session?.name || "?", 64);
+    profile.avatarUrl || generateDefaultAvatar(session?.shortName || "?", 64);
   const { notifications } = useNotifications();
   const { totalUnread: forumUnread } = useForumUnread(notifications);
   const scopeCtx = useOptionalScope();

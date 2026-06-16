@@ -9,6 +9,7 @@ import { parseMentions, hasMentions } from "@/lib/mentions";
 import type { ChatChannel, ChatMessage } from "@/types";
 import { CHAT_MAX_MESSAGES } from "@/lib/constants";
 import { requireScope, scopeColumns, scopeEq, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { capitalizeFirst } from "@/lib/name";
 import { canUseVip, type PackageTier } from "@/lib/tier";
 
 function normalizeChannel(raw: unknown): ChatChannel {
@@ -107,7 +108,7 @@ function mapRowToMessage(row: Record<string, unknown>): ChatMessage {
     type: row.type as ChatMessage["type"],
     mediaUrl: (row.media_url as string) || null,
     authorId: row.author_id as string,
-    authorName: row.author_name as string,
+    authorName: capitalizeFirst(row.author_name as string),
     authorClass: (row.author_class as string) || "",
     licenseKey: (row.license_key as string) || null,
     isAdmin: row.is_admin as boolean,

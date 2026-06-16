@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { capitalizeFirst } from "@/lib/name";
 import type { ForumPoll, PollOption } from "@/types";
 
 function scopeErrorResponse(error: unknown) {
@@ -110,7 +111,7 @@ export async function GET(request: Request) {
         options: row.options as PollOption[],
         totalVotes: row.total_votes as number,
         authorId: row.author_id as string,
-        authorName: row.author_name as string,
+        authorName: capitalizeFirst(row.author_name as string),
         active: row.active as boolean,
         createdAt: row.created_at as string,
         userVote: userVotes.get(row.id as string) ?? null,
@@ -215,7 +216,7 @@ export async function POST(request: Request) {
       options: data.options as PollOption[],
       totalVotes: data.total_votes,
       authorId: data.author_id,
-      authorName: data.author_name,
+      authorName: capitalizeFirst(data.author_name),
       active: data.active,
       createdAt: data.created_at,
       userVote: null,

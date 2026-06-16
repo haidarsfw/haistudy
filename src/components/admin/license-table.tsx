@@ -51,6 +51,8 @@ import { formatDistanceToNow, format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeKey } from "@/lib/scope";
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 
 type ScopedLicense = LicenseKey & {
   semester?: number;
@@ -454,6 +456,7 @@ export function LicenseTable() {
   const [oauthLinks, setOauthLinks] = useState<Record<string, { email: string; linkedAt: string; provider: string }>>({});
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingLicense, setEditingLicense] = useState<LicenseKey | null>(null);
   const [selectedLicenseKey, setSelectedLicenseKey] = useState<string | null>(null);
@@ -461,9 +464,15 @@ export function LicenseTable() {
   const fetchData = useCallback(async () => {
     if (!hydrated) return;
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/admin/licenses${scopeQuery()}`);
-      const data = await res.json();
+      const data = await adminFetch<{
+        licenses?: LicenseKey[];
+        activations?: Activation[];
+        devices?: Device[];
+        profiles?: Record<string, { email: string | null; phone: string | null }>;
+        oauthLinks?: Record<string, { email: string; linkedAt: string; provider: string }>;
+      }>(`/api/admin/licenses${scopeQuery()}`);
       setLicenses(
         ((data.licenses || []) as LicenseKey[]).map((l) => ({
           ...l,
@@ -474,8 +483,8 @@ export function LicenseTable() {
       setDevices(data.devices || []);
       setProfiles(data.profiles || {});
       setOauthLinks(data.oauthLinks || {});
-    } catch {
-      toast.error("Gagal memuat data lisensi");
+    } catch (e) {
+      setError(e);
     }
     setLoading(false);
   }, [hydrated, scopeQuery]);
@@ -531,6 +540,7 @@ export function LicenseTable() {
 
   return (
     <div className="space-y-4">
+      {error ? <AdminErrorBanner error={error} onRetry={fetchData} /> : null}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">

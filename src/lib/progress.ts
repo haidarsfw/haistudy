@@ -6,22 +6,51 @@ const defaultProgress: SubjectProgress = {
   quizScores: {},
 };
 
-const STORAGE_KEY = "hs-progress";
+// Progress is isolated per ACCOUNT and per SCOPE. The old single global
+// "hs-progress" key leaked one user's progress into another on a shared browser
+// and merged different scopes (UTS vs UAS) together. Key = account + scope.
+const LEGACY_STORAGE_KEY = "hs-progress";
 
-/** Read all progress from localStorage. */
-export function getAllProgress(): Record<string, SubjectProgress> {
-  if (typeof window === "undefined") return {};
+function storageKey(licenseKey: string, scopeKey: string): string {
+  return `hs-progress::${licenseKey}::${scopeKey}`;
+}
+
+/** Read this account's progress for one scope from localStorage. */
+export function getAllProgress(
+  licenseKey: string,
+  scopeKey: string
+): Record<string, SubjectProgress> {
+  if (typeof window === "undefined" || !licenseKey || !scopeKey) return {};
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(licenseKey, scopeKey));
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
   }
 }
 
-/** Write all progress to localStorage. */
-export function saveAllProgress(progress: Record<string, SubjectProgress>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+/** Write this account's progress for one scope to localStorage. */
+export function saveAllProgress(
+  licenseKey: string,
+  scopeKey: string,
+  progress: Record<string, SubjectProgress>
+) {
+  if (typeof window === "undefined" || !licenseKey || !scopeKey) return;
+  try {
+    localStorage.setItem(storageKey(licenseKey, scopeKey), JSON.stringify(progress));
+  } catch {
+    // ignore quota / serialization errors
+  }
+}
+
+/** One-time cleanup of the pre-isolation global key (account/scope-agnostic). */
+export function clearLegacyProgress() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 /** Calculate completion percentage for a single subject. */

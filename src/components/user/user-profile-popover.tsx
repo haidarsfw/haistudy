@@ -129,8 +129,8 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
             className="group relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-border"
           >
             <Image
-              src={profile.avatarUrl || generateDefaultAvatar(session.name, 80)}
-              alt={session.name}
+              src={profile.avatarUrl || generateDefaultAvatar(session.shortName, 80)}
+              alt={session.shortName}
               width={40}
               height={40}
               unoptimized
@@ -156,7 +156,7 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
             onChange={handleAvatarChange}
           />
           <div className="min-w-0 flex-1">
-            <p className={`text-sm font-semibold truncate ${getRoleNameClass(resolveRole({ isAdmin: session.isAdmin, isTester: session.isTester, packageTier: session.packageTier }))}`}>{session.name}</p>
+            <p className={`text-sm font-semibold truncate ${getRoleNameClass(resolveRole({ isAdmin: session.isAdmin, isTester: session.isTester, packageTier: session.packageTier }))}`}>{session.shortName}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <code className="text-[10px] text-muted-foreground font-mono">
                 {session.licenseKey.slice(0, 4)}***

@@ -5,19 +5,24 @@ import { Save, Loader2, Cloud, CloudOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 interface PersonalNotesTabProps {
   subjectId: string;
   licenseKey: string;
 }
 
-const STORAGE_PREFIX = "hs-notes-";
+// Notes are isolated per account + scope + subject.
+const notesKey = (licenseKey: string, scopeKey: string, subjectId: string) =>
+  `hs-notes::${licenseKey}::${scopeKey}::${subjectId}`;
 
 export function PersonalNotesTab({
   subjectId,
   licenseKey,
 }: PersonalNotesTabProps) {
   const { isPreview } = usePreviewGuard();
+  const scopeCtx = useOptionalScope();
+  const scopeKey = scopeCtx?.scopeKey ?? "";
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [synced, setSynced] = useState(false);
@@ -28,23 +33,24 @@ export function PersonalNotesTab({
   // Load notes - try server first, then localStorage fallback
   useEffect(() => {
     if (initialLoadDone.current) return;
+    if (!scopeKey) return;
     initialLoadDone.current = true;
 
-    const localKey = `${STORAGE_PREFIX}${licenseKey}-${subjectId}`;
+    const localKey = notesKey(licenseKey, scopeKey, subjectId);
     const localContent = localStorage.getItem(localKey) || "";
 
     // Start with local content immediately for fast paint
     if (localContent) setContent(localContent);
 
-    // Fetch from server and merge
+    // Fetch from server and merge (notes are nested by scope-key on the server)
     (async () => {
       try {
-        const res = await fetch(
-          `/api/settings?licenseKey=${encodeURIComponent(licenseKey)}`
-        );
+        const res = await fetch(`/api/settings`);
         const data = await res.json();
-        const serverNotes = (data.settings?.notes as Record<string, string>) || {};
-        const serverContent = serverNotes[subjectId] || "";
+        const serverNotes =
+          (data.settings?.notes as Record<string, Record<string, string>>) || {};
+        const scopeNotes = serverNotes[scopeKey] || {};
+        const serverContent = scopeNotes[subjectId] || "";
 
         if (serverContent && serverContent.length >= localContent.length) {
           // Server version is same or longer - use it
@@ -53,7 +59,7 @@ export function PersonalNotesTab({
           setSynced(true);
         } else if (localContent && !serverContent) {
           // Local exists but server doesn't - push local to server
-          syncToServer(localContent, data.settings?.notes || {});
+          syncToServer(localContent, scopeNotes);
           setSynced(true);
         } else {
           setSynced(true);
@@ -63,28 +69,30 @@ export function PersonalNotesTab({
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subjectId, licenseKey]);
+  }, [subjectId, licenseKey, scopeKey]);
 
   const syncToServer = useCallback(
-    async (text: string, existingNotes?: Record<string, string>) => {
+    async (text: string, existingScopeNotes?: Record<string, string>) => {
+      if (!scopeKey) return;
       try {
-        // Fetch current notes from server to avoid overwriting other subjects
-        let allNotes = existingNotes;
-        if (!allNotes) {
-          const res = await fetch(
-            `/api/settings?licenseKey=${encodeURIComponent(licenseKey)}`
-          );
+        // Current scope's notes map, so we don't overwrite other subjects.
+        let scopeNotes = existingScopeNotes;
+        if (!scopeNotes) {
+          const res = await fetch(`/api/settings`);
           const data = await res.json();
-          allNotes = (data.settings?.notes as Record<string, string>) || {};
+          const allNotes =
+            (data.settings?.notes as Record<string, Record<string, string>>) || {};
+          scopeNotes = allNotes[scopeKey] || {};
         }
 
-        const updatedNotes = { ...allNotes, [subjectId]: text };
+        const updatedNotes = { ...scopeNotes, [subjectId]: text };
 
+        // Server merges this under notes[scopeKey], leaving other scopes intact.
         await fetch("/api/settings", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            licenseKey,
+            scopeKey,
             settings: { notes: updatedNotes },
           }),
         });
@@ -93,13 +101,14 @@ export function PersonalNotesTab({
         setSynced(false);
       }
     },
-    [licenseKey, subjectId]
+    [licenseKey, subjectId, scopeKey]
   );
 
   // Auto-save with debounce
   const save = useCallback(
     (text: string) => {
-      const key = `${STORAGE_PREFIX}${licenseKey}-${subjectId}`;
+      if (!scopeKey) return;
+      const key = notesKey(licenseKey, scopeKey, subjectId);
       localStorage.setItem(key, text);
       setLastSaved(new Date());
 
@@ -109,7 +118,7 @@ export function PersonalNotesTab({
         syncToServer(text);
       }, 2000); // 2s debounce for server sync
     },
-    [subjectId, licenseKey, syncToServer]
+    [subjectId, licenseKey, scopeKey, syncToServer]
   );
 
   const handleChange = useCallback(
@@ -124,12 +133,13 @@ export function PersonalNotesTab({
   );
 
   const handleManualSave = useCallback(() => {
+    if (!scopeKey) return;
     setSaving(true);
-    const key = `${STORAGE_PREFIX}${licenseKey}-${subjectId}`;
+    const key = notesKey(licenseKey, scopeKey, subjectId);
     localStorage.setItem(key, content);
     setLastSaved(new Date());
     syncToServer(content).finally(() => setSaving(false));
-  }, [content, licenseKey, subjectId, syncToServer]);
+  }, [content, licenseKey, subjectId, scopeKey, syncToServer]);
 
   return (
     <div className="flex flex-col gap-3 py-4">

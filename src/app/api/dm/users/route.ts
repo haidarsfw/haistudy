@@ -6,6 +6,7 @@ import {
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 import { resolveSessionTier } from "@/lib/auth/session-tier";
 import { canUseVip } from "@/lib/tier";
+import { displayName } from "@/lib/name";
 import type { DmDirectoryUser } from "@/types";
 
 // ─── GET /api/dm/users ─── VIP/admin directory for the caller's scope.
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
     const { data: keyRows, error: keyErr } = await scopeEq(scope)(
       supabase
         .from("license_keys")
-        .select("key, name, package_tier, is_admin")
+        .select("key, name, short_name, package_tier, is_admin")
         .or("is_admin.eq.true,package_tier.in.(vip,diamond)")
     );
     if (keyErr) throw keyErr;
@@ -42,6 +43,7 @@ export async function GET(request: Request) {
     type KeyRow = {
       key: string;
       name: string | null;
+      short_name: string | null;
       package_tier: DmDirectoryUser["packageTier"];
       is_admin: boolean | null;
     };
@@ -68,7 +70,7 @@ export async function GET(request: Request) {
     const users: DmDirectoryUser[] = rows
       .map((r) => ({
         licenseKey: r.key,
-        name: r.name ?? "Pengguna",
+        name: displayName({ shortName: r.short_name, name: r.name }),
         packageTier: r.package_tier ?? null,
         isAdmin: r.is_admin ?? false,
         online: onlineKeys.has(r.key),

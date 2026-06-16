@@ -14,27 +14,32 @@ export async function validateAdmin(): Promise<{
 }> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("hs-session");
-  const adminCookie = cookieStore.get("hs-admin");
 
-  if (!sessionCookie?.value || adminCookie?.value !== "1") {
+  // hs-session is the only required cookie. If it's gone, proxy.ts already
+  // redirects /admin → /login, so this path is for API calls only.
+  if (!sessionCookie?.value) {
     return { authorized: false, licenseKey: null };
   }
+  const key = sessionCookie.value.trim().toUpperCase();
 
-  // Double-check against database when Supabase is configured
+  // DB is_admin is the source of truth — NOT the hs-admin cookie. A dropped /
+  // expired hs-admin cookie used to blank the whole panel even though the user
+  // was still a valid admin; relying on the DB flag here removes that failure
+  // mode. .maybeSingle() (not .single()) so a 0-row lookup returns cleanly.
   if (isSupabaseServerConfigured) {
     const supabase = createServerClient()!;
     const { data } = await supabase
       .from("license_keys")
       .select("is_admin")
-      .eq("key", sessionCookie.value)
-      .single();
+      .eq("key", key)
+      .maybeSingle();
 
-    if (!data?.is_admin) {
-      return { authorized: false, licenseKey: sessionCookie.value };
-    }
+    return { authorized: Boolean(data?.is_admin), licenseKey: key };
   }
 
-  return { authorized: true, licenseKey: sessionCookie.value };
+  // Dev/mock (no Supabase): fall back to the hs-admin cookie hint.
+  const adminCookie = cookieStore.get("hs-admin");
+  return { authorized: adminCookie?.value === "1", licenseKey: key };
 }
 
 /**

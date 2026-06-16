@@ -48,7 +48,7 @@ export function SessionInfo() {
         <div className="flex items-center gap-2">
           <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-muted-foreground">{t("settings.session_name")}</span>
-          <span>{session.name}</span>
+          <span>{session.shortName}</span>
         </div>
 
         {/* Class */}

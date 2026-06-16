@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useTranslation } from "@/components/providers/language-provider";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   ShoppingCart,
   Check,
@@ -32,6 +38,8 @@ import { buildApprovalWa } from "@/lib/wa-message";
 import { firstWord } from "@/lib/name";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { PurchaseSummary } from "@/components/admin/purchase-summary";
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 
 const PACKAGE_LABELS: Record<string, string> = {
   share: "Share (Rp25.000)",
@@ -68,6 +76,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
   const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
   const [purchases, setPurchases] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [view, setView] = useState<"queue" | "summary">("queue");
@@ -75,6 +84,8 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [sort, setSort] = useState<"newest" | "oldest" | "amount">("newest");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Delete confirmation target. Approved orders get an extra choice (revoke key).
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseRequest | null>(null);
 
   const exportFile = useCallback(
     (format: "csv" | "xlsx") => {
@@ -94,12 +105,14 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
   const fetchPurchases = useCallback(async () => {
     if (!hydrated) return;
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/admin/purchase${scopeQuery()}`);
-      const data = await res.json();
+      const data = await adminFetch<{ purchases?: PurchaseRequest[] }>(
+        `/api/admin/purchase${scopeQuery()}`
+      );
       setPurchases(data.purchases || []);
-    } catch {
-      toast.error("Gagal memuat purchase requests");
+    } catch (e) {
+      setError(e);
     }
     setLoading(false);
   }, [hydrated, scopeQuery]);
@@ -240,22 +253,38 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     setProcessingId(null);
   }, [scopeQuery]);
 
-  const handleDelete = useCallback(async (id: string) => {
+  const handleDelete = useCallback(async (id: string, revokeKey = false) => {
     setProcessingId(id);
     try {
       const res = await fetch(`/api/admin/purchase${scopeQuery()}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, revokeKey }),
       });
       if (!res.ok) throw new Error();
       setPurchases((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Order dihapus");
+      toast.success(revokeKey ? "Order dihapus & key dicabut" : "Order dihapus");
     } catch {
       toast.error("Gagal menghapus order");
     }
     setProcessingId(null);
   }, [scopeQuery]);
+
+  // Open the delete dialog for any status. Approved orders offer the revoke-key
+  // choice; pending/rejected get a plain confirm.
+  const requestDelete = useCallback((purchase: PurchaseRequest) => {
+    setDeleteTarget(purchase);
+  }, []);
+
+  const confirmDelete = useCallback(
+    (revokeKey: boolean) => {
+      if (!deleteTarget) return;
+      const id = deleteTarget.id;
+      setDeleteTarget(null);
+      void handleDelete(id, revokeKey);
+    },
+    [deleteTarget, handleDelete]
+  );
 
   // Client-side search + status filter + sort over the fetched list.
   const visible = useMemo(() => {
@@ -299,6 +328,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
 
   return (
     <>
+    {error && <AdminErrorBanner error={error} onRetry={fetchPurchases} />}
     {/* View toggle (Antrian | Ringkasan) + export */}
     <div className="mb-3 flex flex-wrap items-center gap-2">
       <div className="inline-flex rounded-lg border border-border p-0.5">
@@ -350,7 +380,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     </div>
 
     {view === "summary" ? (
-      <PurchaseSummary purchases={purchases} />
+      <PurchaseSummary purchases={purchases} onDelete={requestDelete} />
     ) : (
     <Card>
       <CardHeader className="pb-3">
@@ -425,7 +455,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                 Tidak ada hasil untuk filter ini
               </p>
             ) : (
-              <ScrollArea className="max-h-[560px]">
+              <div className="max-h-[70vh] space-y-2 overflow-y-auto pr-1">
                 <div className="space-y-2">
                   {visible.map((purchase) => {
                     const expanded = expandedId === purchase.id;
@@ -589,28 +619,22 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                             </Button>
                           )}
-                          {purchase.status === "rejected" && (
-                            <ConfirmDialog
-                              trigger={
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
-                                  disabled={processingId === purchase.id}
-                                >
-                                  <Trash2 className="h-3 w-3" /> Hapus
-                                </Button>
-                              }
-                              description={t("confirm.delete_purchase")}
-                              onConfirm={() => handleDelete(purchase.id)}
-                            />
-                          )}
+                          {/* Delete — available for ANY status (approved adds a revoke-key choice) */}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="ml-auto h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                            disabled={processingId === purchase.id}
+                            onClick={() => requestDelete(purchase)}
+                          >
+                            <Trash2 className="h-3 w-3" /> Hapus
+                          </Button>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </ScrollArea>
+              </div>
             )}
           </>
         )}
@@ -618,6 +642,51 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     </Card>
     )}
     <MediaPreviewer src={previewSrc} onClose={() => setPreviewSrc(null)} />
+
+    {/* Delete confirmation — approved orders can also revoke the issued key */}
+    <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {deleteTarget?.status === "approved" ? "Hapus order (approved)?" : "Hapus order?"}
+          </DialogTitle>
+          <DialogDescription>
+            {deleteTarget
+              ? `${deleteTarget.name} · ${PACKAGE_LABELS[deleteTarget.package] ?? deleteTarget.package}${
+                  deleteTarget.licenseKey ? ` · Key ${deleteTarget.licenseKey}` : ""
+                }`
+              : null}
+          </DialogDescription>
+        </DialogHeader>
+        {deleteTarget?.status === "approved" ? (
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Order ini sudah approved dan key sudah dikirim ke pembeli. Pilih tindakan:
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" onClick={() => confirmDelete(false)}>
+                Hapus order saja (key tetap aktif)
+              </Button>
+              <Button variant="destructive" onClick={() => confirmDelete(true)}>
+                Hapus order + cabut key (pembeli kehilangan akses)
+              </Button>
+              <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
+                Batal
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
+              Batal
+            </Button>
+            <Button variant="destructive" onClick={() => confirmDelete(false)}>
+              Hapus
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
     </>
   );
 }

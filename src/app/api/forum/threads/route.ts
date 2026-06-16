@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { capitalizeFirst } from "@/lib/name";
 import type { ForumThread, Attachment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
         title: row.title as string,
         content: row.content as string,
         authorId: row.author_id as string,
-        authorName: row.author_name as string,
+        authorName: capitalizeFirst(row.author_name as string),
         authorClass: (row.author_class as string) || "",
         isAdmin: row.is_admin as boolean,
         isTester: (row.is_tester as boolean) || false,
@@ -192,7 +193,7 @@ export async function POST(request: Request) {
       title: data.title,
       content: data.content,
       authorId: data.author_id,
-      authorName: data.author_name,
+      authorName: capitalizeFirst(data.author_name),
       authorClass: data.author_class,
       isAdmin: data.is_admin,
       isTester: data.is_tester || false,

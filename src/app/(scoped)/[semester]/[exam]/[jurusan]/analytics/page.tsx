@@ -8,33 +8,31 @@ import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useStudyStreak } from "@/hooks/use-study-streak";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { getAllProgress, calcSubjectPercent } from "@/lib/progress";
 import type { SubjectProgress } from "@/types";
 
-function getQuizScores(): Record<string, { score: number; total: number }> {
-  try {
-    const raw = localStorage.getItem("hs-progress");
-    if (!raw) return {};
-    const progress = JSON.parse(raw) as Record<string, SubjectProgress>;
-    const scores: Record<string, { score: number; total: number }> = {};
-    for (const [subjectId, p] of Object.entries(progress)) {
-      if (p.quizScores) {
-        const entries = Object.values(p.quizScores);
-        if (entries.length > 0) {
-          // Get BEST quiz score (not latest)
-          let best = entries[0];
-          for (const entry of entries) {
-            if (entry.score > best.score) best = entry;
-          }
-          scores[subjectId] = best;
+// Best quiz score per subject, derived from the (already scope+account isolated)
+// progress map passed in — NOT from the legacy global localStorage key.
+function getQuizScores(
+  progress: Record<string, SubjectProgress>
+): Record<string, { score: number; total: number }> {
+  const scores: Record<string, { score: number; total: number }> = {};
+  for (const [subjectId, p] of Object.entries(progress)) {
+    if (p.quizScores) {
+      const entries = Object.values(p.quizScores);
+      if (entries.length > 0) {
+        // Get BEST quiz score (not latest)
+        let best = entries[0];
+        for (const entry of entries) {
+          if (entry.score > best.score) best = entry;
         }
+        scores[subjectId] = best;
       }
     }
-    return scores;
-  } catch {
-    return {};
   }
+  return scores;
 }
 
 export default function AnalyticsPage() {
@@ -42,13 +40,17 @@ export default function AnalyticsPage() {
   const { t } = useTranslation();
   const { currentStreak, bestStreak, recordActivity } = useStudyStreak();
   const { subjects, content: scopedContent } = useScopedData();
+  const scopeCtx = useOptionalScope();
+  const licenseKey = session?.licenseKey ?? "";
+  const scopeKey = scopeCtx?.scopeKey ?? "";
   const [progress, setProgress] = useState<Record<string, SubjectProgress>>({});
   const [quizScores, setQuizScores] = useState<Record<string, { score: number; total: number }>>({});
 
   useEffect(() => {
     const refresh = () => {
-      setProgress(getAllProgress());
-      setQuizScores(getQuizScores());
+      const p = getAllProgress(licenseKey, scopeKey);
+      setProgress(p);
+      setQuizScores(getQuizScores(p));
     };
     refresh();
     recordActivity();
@@ -62,7 +64,7 @@ export default function AnalyticsPage() {
       window.removeEventListener("hs-progress-updated", refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [recordActivity]);
+  }, [recordActivity, licenseKey, scopeKey]);
 
   if (!session) return null;
 

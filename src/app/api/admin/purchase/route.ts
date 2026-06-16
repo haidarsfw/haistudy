@@ -329,7 +329,11 @@ export async function DELETE(request: Request) {
 
     const resolved = await resolveAdminScope(request);
     const body = await request.json().catch(() => ({}));
-    const { id, action } = body as { id?: string; action?: string };
+    const { id, action, revokeKey } = body as {
+      id?: string;
+      action?: string;
+      revokeKey?: boolean;
+    };
     const clearAll = action === "clearAll";
 
     if (!clearAll && !id) {
@@ -412,7 +416,7 @@ export async function DELETE(request: Request) {
     // Single delete — scoped guard so an admin can't reach another period's row.
     let selQ = supabase
       .from("purchase_requests")
-      .select("payment_proof_path, share_proof_path, share_proof_path_2")
+      .select("payment_proof_path, share_proof_path, share_proof_path_2, license_key")
       .eq("id", id);
     if (resolved.mode === "scoped") {
       selQ = selQ
@@ -434,6 +438,24 @@ export async function DELETE(request: Request) {
     }
     const { error: delErr } = await delQ;
     if (delErr) throw delErr;
+
+    // "Hapus order + cabut key": also remove the issued license so the buyer
+    // loses access (login → "key tidak valid"). Child→parent order so it works
+    // whether or not the FKs cascade; the missing key row is what locks them out.
+    const revokedKey = (row as Record<string, unknown>).license_key as string | null;
+    if (revokeKey && revokedKey) {
+      const { data: acts } = await supabase
+        .from("activations")
+        .select("id")
+        .eq("license_key", revokedKey);
+      const actIds = ((acts as { id: string }[]) || []).map((a) => a.id);
+      if (actIds.length) {
+        await supabase.from("devices").delete().in("activation_id", actIds);
+      }
+      await supabase.from("activations").delete().eq("license_key", revokedKey);
+      await supabase.from("oauth_links").delete().eq("license_key", revokedKey);
+      await supabase.from("license_keys").delete().eq("key", revokedKey);
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     const r = scopeErrorResponse(error);

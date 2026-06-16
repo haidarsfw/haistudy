@@ -83,9 +83,12 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { settings, updatedAt } = body as {
+    const { settings, updatedAt, scopeKey } = body as {
       settings: UserSettings;
       updatedAt?: string;
+      // When present, progress/notes are MERGED under this scope-key (nested
+      // JSONB) instead of replacing the whole column — keeps other scopes intact.
+      scopeKey?: string;
     };
 
     // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).
@@ -167,8 +170,31 @@ export async function PUT(request: Request) {
     if ("hideStatus" in settings) row.hide_status = settings.hideStatus;
     if ("hideStatusChangedAt" in settings) row.hide_status_changed_at = settings.hideStatusChangedAt;
     if ("darkModeSchedule" in settings) row.dark_mode_schedule = settings.darkModeSchedule;
-    if ("progress" in settings) row.progress = settings.progress;
-    if ("notes" in settings) row.notes = settings.notes ?? {};
+    // Progress & notes are nested by scope-key. With a scopeKey, merge ONLY that
+    // scope's subtree into the existing JSONB so other scopes (and other devices)
+    // are never clobbered. Without one (legacy callers), keep the old replace.
+    let mergedProgressNested: Record<string, unknown> | null = null;
+    if (scopeKey && (("progress" in settings) || ("notes" in settings))) {
+      const { data: cur } = await supabase
+        .from("user_settings")
+        .select("progress, notes")
+        .eq("license_key", licenseKey)
+        .maybeSingle();
+      if ("progress" in settings) {
+        const existing = ((cur?.progress as Record<string, unknown>) || {});
+        existing[scopeKey] = settings.progress ?? {};
+        row.progress = existing;
+        mergedProgressNested = existing;
+      }
+      if ("notes" in settings) {
+        const existingNotes = ((cur?.notes as Record<string, unknown>) || {});
+        existingNotes[scopeKey] = settings.notes ?? {};
+        row.notes = existingNotes;
+      }
+    } else {
+      if ("progress" in settings) row.progress = settings.progress;
+      if ("notes" in settings) row.notes = settings.notes ?? {};
+    }
     if ("recentSubjects" in settings) row.recent_subjects = settings.recentSubjects ?? [];
     if ("countdownDetailed" in settings) row.countdown_detailed = settings.countdownDetailed ?? true;
     if ("streak" in settings) row.streak = settings.streak ?? null;
@@ -186,18 +212,25 @@ export async function PUT(request: Request) {
 
     if (error) throw error;
 
-    // Recalculate total_quiz_score from progress data (sum of best per subject)
-    if (settings.progress && Object.keys(settings.progress).length > 0) {
+    // Recalculate total_quiz_score (sum of best per subject). With a scopeKey we
+    // sum across ALL scopes (nested object); legacy flat shape sums the one map.
+    const scoreMaps: Record<string, SubjectProgress>[] = mergedProgressNested
+      ? (Object.values(mergedProgressNested) as Record<string, SubjectProgress>[])
+      : settings.progress
+        ? [settings.progress]
+        : [];
+    if (scoreMaps.length > 0) {
       let totalScore = 0;
-      for (const subjectProgress of Object.values(settings.progress)) {
-        const sp = subjectProgress as SubjectProgress;
-        if (sp.quizScores && Object.keys(sp.quizScores).length > 0) {
-          // Find the best score for this subject
-          let bestScore = 0;
-          for (const entry of Object.values(sp.quizScores)) {
-            if (entry.score > bestScore) bestScore = entry.score;
+      for (const scopeMap of scoreMaps) {
+        for (const subjectProgress of Object.values(scopeMap || {})) {
+          const sp = subjectProgress as SubjectProgress;
+          if (sp?.quizScores && Object.keys(sp.quizScores).length > 0) {
+            let bestScore = 0;
+            for (const entry of Object.values(sp.quizScores)) {
+              if (entry.score > bestScore) bestScore = entry.score;
+            }
+            totalScore += Math.round(bestScore);
           }
-          totalScore += Math.round(bestScore);
         }
       }
       // Update license_keys.total_quiz_score (fire-and-forget)

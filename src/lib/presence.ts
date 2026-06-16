@@ -15,7 +15,9 @@ import {
   PRESENCE_HEARTBEAT_VISIBLE_MS,
   PRESENCE_HEARTBEAT_HIDDEN_MS,
 } from "@/lib/constants";
+import { capitalizeFirst } from "@/lib/name";
 import type { OnlineUser } from "@/types";
+import type { ScopeTuple } from "@/types/scope";
 
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let hasSentOffline = false;
@@ -132,18 +134,29 @@ export async function setupPresence(opts: {
 // Read online users (unchanged)
 // ════════════════════════════════════════════════════
 
-export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
+export async function fetchOnlineUsers(scope?: ScopeTuple): Promise<OnlineUser[]> {
   if (!isSupabaseConfigured) return getMockOnlineUsers();
 
   const supabase = createClient();
   if (!supabase) return [];
 
-  const { data } = await supabase
+  let q = supabase
     .from("presence")
     .select(
       "user_id, user_name, device_type, current_subject, hide_status, license_key, last_seen"
     )
-    .eq("online", true)
+    .eq("online", true);
+
+  // Only show people in the SAME scope (semester/exam/jurusan). Without this the
+  // online list bled users across every cohort.
+  if (scope) {
+    q = q
+      .eq("semester", scope.semester)
+      .eq("exam_period", scope.examPeriod)
+      .eq("jurusan", scope.jurusan);
+  }
+
+  const { data } = await q
     .order("last_seen", { ascending: false })
     .limit(200);
 
@@ -191,7 +204,7 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
     const role = roleMap.get(licenseKey);
     return {
       id: (row.user_id as string) || (row.id as string) || "",
-      userName: (row.user_name as string) || "Unknown",
+      userName: capitalizeFirst((row.user_name as string) || "Unknown"),
       deviceType: ((row.device_type as string) || "desktop") as
         | "desktop"
         | "mobile"
@@ -210,7 +223,9 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
   // Stack users with the same licenseKey (same person, multiple devices)
   const grouped = new Map<string, OnlineUser>();
   for (const user of rawUsers) {
-    const key = user.licenseKey || user.id;
+    // Same account = same (uppercased) license key → ONE merged entry. Fall back
+    // to device id only for legacy rows with no license key.
+    const key = user.licenseKey ? user.licenseKey.toUpperCase() : user.id;
     const existing = grouped.get(key);
     if (existing) {
       existing.deviceCount += 1;
@@ -218,8 +233,12 @@ export async function fetchOnlineUsers(): Promise<OnlineUser[]> {
         existing.deviceTypes = existing.deviceTypes || [existing.deviceType];
         existing.deviceTypes.push(user.deviceType);
       }
+      // Carry the freshest device's identity so the merged row stays in sync.
       if (user.lastSeen > existing.lastSeen) {
         existing.lastSeen = user.lastSeen;
+        existing.userName = user.userName;
+        existing.currentSubject = user.currentSubject;
+        existing.hideStatus = user.hideStatus;
       }
     } else {
       grouped.set(key, { ...user, deviceTypes: [user.deviceType] });

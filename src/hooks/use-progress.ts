@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { SubjectProgress } from "@/types";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 import {
   getAllProgress,
   saveAllProgress,
@@ -22,24 +23,28 @@ const defaultProgress: SubjectProgress = {
  */
 export function useProgress(subjectId: string) {
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const licenseKey = session?.licenseKey ?? "";
+  const scopeKey = scopeCtx?.scopeKey ?? "";
   const [progress, setProgress] = useState<SubjectProgress>(defaultProgress);
   const syncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load from localStorage on mount.
+  // Load from localStorage on mount (per account + scope).
   // NOTE: Server sync is handled globally by useProgressSync in AppShell.
   // We listen for the sync event to re-read localStorage when it completes.
   useEffect(() => {
-    const all = getAllProgress();
+    if (!licenseKey || !scopeKey) return;
+    const all = getAllProgress(licenseKey, scopeKey);
     setProgress(all[subjectId] || defaultProgress);
 
     // Re-read when AppShell's useProgressSync completes
     const onSynced = () => {
-      const refreshed = getAllProgress();
+      const refreshed = getAllProgress(licenseKey, scopeKey);
       setProgress(refreshed[subjectId] || defaultProgress);
     };
     window.addEventListener("hs-progress-synced", onSynced);
     return () => window.removeEventListener("hs-progress-synced", onSynced);
-  }, [subjectId]);
+  }, [subjectId, licenseKey, scopeKey]);
 
   // Cleanup sync timeout on unmount
   useEffect(() => {
@@ -50,44 +55,47 @@ export function useProgress(subjectId: string) {
 
   const update = useCallback(
     (updater: (prev: SubjectProgress) => SubjectProgress) => {
+      if (!licenseKey || !scopeKey) return;
       setProgress((prev) => {
         const next = updater(prev);
-        const all = getAllProgress();
+        const all = getAllProgress(licenseKey, scopeKey);
         all[subjectId] = next;
-        saveAllProgress(all);
+        saveAllProgress(licenseKey, scopeKey, all);
 
         // Notify other widgets in this tab that progress changed
         window.dispatchEvent(new Event("hs-progress-updated"));
 
-        // Debounced sync to Supabase
-        if (session?.licenseKey) {
-          if (syncRef.current) clearTimeout(syncRef.current);
-          syncRef.current = setTimeout(async () => {
-            try {
-              const res = await fetch("/api/settings", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  licenseKey: session.licenseKey,
-                  settings: { progress: getAllProgress() },
-                }),
-              });
-              const data = await res.json();
-              if (data.conflict && data.settings?.progress) {
-                // Server had newer data - merge and re-save
-                const local = getAllProgress();
-                const merged = mergeProgress(local, data.settings.progress);
-                saveAllProgress(merged);
-                window.dispatchEvent(new Event("hs-progress-synced"));
-              }
-            } catch {}
-          }, 2000);
-        }
+        // Debounced sync to Supabase — only THIS scope's subtree is sent; the
+        // server merges it under progress[scopeKey], never touching other scopes.
+        if (syncRef.current) clearTimeout(syncRef.current);
+        syncRef.current = setTimeout(async () => {
+          try {
+            const res = await fetch("/api/settings", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                scopeKey,
+                settings: { progress: getAllProgress(licenseKey, scopeKey) },
+              }),
+            });
+            const data = await res.json();
+            const serverScoped = data?.settings?.progress?.[scopeKey] as
+              | Record<string, SubjectProgress>
+              | undefined;
+            if (data?.conflict && serverScoped) {
+              // Server had newer data - merge this scope's subtree and re-save
+              const local = getAllProgress(licenseKey, scopeKey);
+              const merged = mergeProgress(local, serverScoped);
+              saveAllProgress(licenseKey, scopeKey, merged);
+              window.dispatchEvent(new Event("hs-progress-synced"));
+            }
+          } catch {}
+        }, 2000);
 
         return next;
       });
     },
-    [subjectId, session]
+    [subjectId, licenseKey, scopeKey]
   );
 
   const markMateriCompleted = useCallback(

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Wallet, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart3, Wallet, Search, Trash2 } from "lucide-react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -74,7 +75,13 @@ function tally(items: (string | undefined | null)[]): TallyEntry[] {
     .sort((a, b) => b.count - a.count);
 }
 
-export function PurchaseSummary({ purchases }: { purchases: PurchaseRequest[] }) {
+export function PurchaseSummary({
+  purchases,
+  onDelete,
+}: {
+  purchases: PurchaseRequest[];
+  onDelete?: (p: PurchaseRequest) => void;
+}) {
   const stats = useMemo(() => {
     const total = purchases.length;
     const approved = purchases.filter((p) => p.status === "approved");
@@ -248,6 +255,7 @@ export function PurchaseSummary({ purchases }: { purchases: PurchaseRequest[] })
                   <Th>Status</Th>
                   <Th>Key</Th>
                   <Th>Bukti</Th>
+                  {onDelete && <Th>Aksi</Th>}
                 </tr>
               </thead>
               <tbody>
@@ -285,6 +293,18 @@ export function PurchaseSummary({ purchases }: { purchases: PurchaseRequest[] })
                         {!p.paymentProofUrl && !p.shareProofUrl && !p.shareProofUrl2 && "—"}
                       </span>
                     </Td>
+                    {onDelete && (
+                      <Td className="whitespace-nowrap">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          className="gap-1 text-destructive hover:text-destructive"
+                          onClick={() => onDelete(p)}
+                        >
+                          <Trash2 className="h-3 w-3" /> Hapus
+                        </Button>
+                      </Td>
+                    )}
                   </tr>
                 ))}
               </tbody>

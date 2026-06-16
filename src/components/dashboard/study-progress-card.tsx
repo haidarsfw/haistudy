@@ -8,10 +8,16 @@ import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getAllProgress, calcSubjectPercent } from "@/lib/progress";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 export function StudyProgressCard() {
   const { t } = useTranslation();
   const { subjects, content } = useScopedData();
+  const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const licenseKey = session?.licenseKey ?? "";
+  const scopeKey = scopeCtx?.scopeKey ?? "";
   const [progressData, setProgressData] = useState<
     { id: string; name: string; icon: string; color: string; percent: number }[]
   >([]);
@@ -19,7 +25,7 @@ export function StudyProgressCard() {
 
   useEffect(() => {
     const recalculate = () => {
-      const allProgress = getAllProgress();
+      const allProgress = getAllProgress(licenseKey, scopeKey);
 
       const data = subjects.map((s) => {
         const subContent = content[s.id];
@@ -53,7 +59,7 @@ export function StudyProgressCard() {
       window.removeEventListener("hs-progress-updated", recalculate);
       window.removeEventListener("storage", recalculate);
     };
-  }, [subjects, content]);
+  }, [subjects, content, licenseKey, scopeKey]);
 
   return (
     <motion.div

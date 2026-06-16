@@ -5,6 +5,8 @@ import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progress";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 function ProgressRing({ percent }: { percent: number }) {
   const r = 22;
@@ -46,10 +48,15 @@ function ProgressRing({ percent }: { percent: number }) {
 export function StudyProgressMini() {
   const { t } = useTranslation();
   const { subjects, content } = useScopedData();
+  const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const licenseKey = session?.licenseKey ?? "";
+  const scopeKey = scopeCtx?.scopeKey ?? "";
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const calc = () => calcOverall(getAllProgress(), subjects, content);
+    const calc = () =>
+      calcOverall(getAllProgress(licenseKey, scopeKey), subjects, content);
     setProgress(calc());
     const handleSync = () => setProgress(calc());
     window.addEventListener("hs-progress-synced", handleSync);
@@ -60,7 +67,7 @@ export function StudyProgressMini() {
       window.removeEventListener("hs-progress-updated", handleSync);
       window.removeEventListener("storage", handleSync);
     };
-  }, [subjects, content]);
+  }, [subjects, content, licenseKey, scopeKey]);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow flex flex-col">

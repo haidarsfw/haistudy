@@ -73,7 +73,7 @@ export function ProfileEditor({ onSaved }: ProfileEditorProps) {
     };
   }, [pendingSrc]);
 
-  const shown = avatarUrl || generateDefaultAvatar(session?.name, 96);
+  const shown = avatarUrl || generateDefaultAvatar(session?.shortName, 96);
   const busy = uploading || converting;
 
   const handlePick = () => {

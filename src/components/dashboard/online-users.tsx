@@ -2,10 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Users, Monitor, Smartphone, Tablet, Lock } from "lucide-react";
+import { useMemo } from "react";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useAvatars } from "@/hooks/use-avatars";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
@@ -41,6 +43,14 @@ export function OnlineUsers() {
   const visibleUsers = users;
   const { subjects } = useScopedData();
   const subjectMap = new Map(subjects.map((s) => [s.id, s] as const));
+
+  // Real (synced) avatars by license key, so the merged single entry per account
+  // shows the user's actual photo everywhere.
+  const avatarKeys = useMemo(
+    () => users.map((u) => u.licenseKey).filter(Boolean) as string[],
+    [users]
+  );
+  const avatarMap = useAvatars(avatarKeys);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -102,14 +112,28 @@ export function OnlineUsers() {
               displayName = user.userName || "Anonymous";
             }
 
+            const avatarUrl =
+              !masked && user.licenseKey
+                ? avatarMap.get(user.licenseKey.toUpperCase()) ?? null
+                : null;
             return (
               <motion.div
                 key={`${user.id}:${user.licenseKey || "anon"}:${idx}`}
                 className="flex items-center gap-2 text-xs"
                 variants={staggerItem}
               >
-                {/* Online dot */}
-                <div className={`h-2 w-2 rounded-full shrink-0 ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
+                {/* Avatar (real synced photo if uploaded, else initial) + status dot */}
+                <div className="relative h-6 w-6 shrink-0">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt={displayName} className="h-6 w-6 rounded-full object-cover" />
+                  ) : (
+                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : "bg-primary/70"}`}>
+                      {masked ? "?" : (displayName.charAt(0) || "?").toUpperCase()}
+                    </div>
+                  )}
+                  <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-card ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
+                </div>
 
                 {/* Name + device count */}
                 <span

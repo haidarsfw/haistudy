@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { OnlineUser } from "@/types";
+import type { ScopeTuple } from "@/types/scope";
 import { fetchOnlineUsers } from "@/lib/presence";
 import { whenIdle } from "@/lib/defer";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 // Poll every 120s. Presence is driven by 60s-visible / 5m-hidden heartbeats,
 // so 120s is the natural freshness ceiling - faster polling just wastes DB IO
@@ -20,9 +22,15 @@ export function useOnlineUsers() {
   const [users, setUsers] = useState<OnlineUser[]>([]);
   const prevKeysRef = useRef<Set<string>>(new Set());
 
+  // Scope-filter the online list (read via ref so `refresh` stays stable).
+  const scopeCtx = useOptionalScope();
+  const scopeKey = scopeCtx?.scopeKey ?? "";
+  const scopeRef = useRef<ScopeTuple | null>(scopeCtx?.scope ?? null);
+  scopeRef.current = scopeCtx?.scope ?? null;
+
   const refresh = useCallback(async () => {
     try {
-      const data = await fetchOnlineUsers();
+      const data = await fetchOnlineUsers(scopeRef.current ?? undefined);
       setUsers(data);
 
       // Detect newly-online VIP/admin users and dispatch welcome event.
@@ -64,7 +72,8 @@ export function useOnlineUsers() {
       cancelIdle();
       clearInterval(interval);
     };
-  }, [refresh]);
+    // scopeKey in deps: re-fetch + reset the poll when the user switches scope.
+  }, [refresh, scopeKey]);
 
   return { users, refresh };
 }

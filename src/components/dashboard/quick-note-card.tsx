@@ -4,33 +4,38 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { StickyNote, Cloud, CloudOff } from "lucide-react";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 
 const STORAGE_KEY = "hs-quick-note";
 
 export function QuickNoteCard() {
   const { t } = useTranslation();
   const { session } = useSession();
+  const scopeCtx = useOptionalScope();
+  const scopeKey = scopeCtx?.scopeKey ?? "";
   const [note, setNote] = useState("");
   const [synced, setSynced] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const serverSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadedRef = useRef(false);
 
-  // Load from localStorage first, then merge server data
+  // Load from localStorage first, then merge server data (notes nested by scope)
   useEffect(() => {
-    if (loadedRef.current || !session) return;
+    if (loadedRef.current || !session || !scopeKey) return;
     loadedRef.current = true;
 
-    const localKey = `${STORAGE_KEY}-${session.licenseKey}`;
+    const localKey = `${STORAGE_KEY}::${session.licenseKey}::${scopeKey}`;
     const local = localStorage.getItem(localKey) || "";
     if (local) setNote(local);
 
     // Fetch from server
     (async () => {
       try {
-        const res = await fetch(`/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`);
+        const res = await fetch(`/api/settings`);
         const data = await res.json();
-        const serverNote = data.settings?.notes?.__quickNote || "";
+        const scopeMap =
+          (data.settings?.notes?.[scopeKey] as Record<string, string>) || {};
+        const serverNote = scopeMap.__quickNote || "";
         if (serverNote && serverNote.length >= local.length) {
           setNote(serverNote);
           localStorage.setItem(localKey, serverNote);
@@ -42,25 +47,27 @@ export function QuickNoteCard() {
       } catch {}
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  }, [session, scopeKey]);
 
   const syncToServer = useCallback(async (text: string) => {
-    if (!session) return;
+    if (!session || !scopeKey) return;
     try {
-      const res = await fetch(`/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`);
+      const res = await fetch(`/api/settings`);
       const data = await res.json();
-      const allNotes = data.settings?.notes || {};
-      const updated = { ...allNotes, __quickNote: text };
+      const scopeMap =
+        (data.settings?.notes?.[scopeKey] as Record<string, string>) || {};
+      const updated = { ...scopeMap, __quickNote: text };
+      // Server merges this under notes[scopeKey], leaving other scopes intact.
       await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ licenseKey: session.licenseKey, settings: { notes: updated } }),
+        body: JSON.stringify({ scopeKey, settings: { notes: updated } }),
       });
       setSynced(true);
     } catch {
       setSynced(false);
     }
-  }, [session]);
+  }, [session, scopeKey]);
 
   const handleChange = (value: string) => {
     setNote(value);
@@ -69,7 +76,8 @@ export function QuickNoteCard() {
     // Local save immediately with debounce
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      if (session) localStorage.setItem(`${STORAGE_KEY}-${session.licenseKey}`, value);
+      if (session && scopeKey)
+        localStorage.setItem(`${STORAGE_KEY}::${session.licenseKey}::${scopeKey}`, value);
     }, 300);
 
     // Server sync with longer debounce

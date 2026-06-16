@@ -13,23 +13,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 
 const GENERAL_NOTES_KEY = "hs-notes-general";
-const SUBJECT_NOTES_PREFIX = "hs-notes-";
 
 export default function NotesPage() {
   const { session } = useSession();
   const { t } = useTranslation();
   const { subjects } = useScopedData();
-  const { scopePath } = useScope();
+  const { scopePath, scopeKey } = useScope();
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [synced, setSynced] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  // This scope's notes map from the server (subjectId/__generalNote → text), used
+  // to mark which subjects have notes even on a fresh device.
+  const [scopeNotes, setScopeNotes] = useState<Record<string, string>>({});
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const serverSyncRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const loadedRef = useRef(false);
 
   const storageKey = session
-    ? `${GENERAL_NOTES_KEY}-${session.licenseKey}`
+    ? `${GENERAL_NOTES_KEY}::${session.licenseKey}::${scopeKey}`
     : GENERAL_NOTES_KEY;
 
   // Load notes - server first, then localStorage fallback
@@ -42,9 +44,13 @@ export default function NotesPage() {
 
     (async () => {
       try {
-        const res = await fetch(`/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`);
+        const res = await fetch(`/api/settings`);
         const data = await res.json();
-        const serverNote = data.settings?.notes?.__generalNote || "";
+        // notes are nested by scope-key; read only this scope's map.
+        const scopeMap =
+          (data.settings?.notes?.[scopeKey] as Record<string, string>) || {};
+        setScopeNotes(scopeMap);
+        const serverNote = scopeMap.__generalNote || "";
         if (serverNote && serverNote.length >= local.length) {
           setContent(serverNote);
           localStorage.setItem(storageKey, serverNote);
@@ -55,25 +61,28 @@ export default function NotesPage() {
       } catch {}
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, storageKey]);
+  }, [session, storageKey, scopeKey]);
 
   const syncToServer = useCallback(async (text: string) => {
-    if (!session) return;
+    if (!session || !scopeKey) return;
     try {
-      const res = await fetch(`/api/settings?licenseKey=${encodeURIComponent(session.licenseKey)}`);
+      const res = await fetch(`/api/settings`);
       const data = await res.json();
-      const allNotes = data.settings?.notes || {};
-      const updated = { ...allNotes, __generalNote: text };
+      const scopeMap =
+        (data.settings?.notes?.[scopeKey] as Record<string, string>) || {};
+      const updated = { ...scopeMap, __generalNote: text };
+      // Server merges this under notes[scopeKey], leaving other scopes intact.
       await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ licenseKey: session.licenseKey, settings: { notes: updated } }),
+        body: JSON.stringify({ scopeKey, settings: { notes: updated } }),
       });
+      setScopeNotes(updated);
       setSynced(true);
     } catch {
       setSynced(false);
     }
-  }, [session]);
+  }, [session, scopeKey]);
 
   // Auto-save with debounce
   const handleChange = useCallback(
@@ -99,14 +108,16 @@ export default function NotesPage() {
     [storageKey, syncToServer]
   );
 
-  // Check which subjects have notes
+  // Check which subjects have notes (localStorage for this device + server map).
   const subjectNoteCounts = subjects.map((subject) => {
-    const key = `${SUBJECT_NOTES_PREFIX}${session?.licenseKey || ""}-${subject.id}`;
+    const key = `hs-notes::${session?.licenseKey || ""}::${scopeKey}::${subject.id}`;
     let hasNotes = false;
     try {
       const val = localStorage.getItem(key);
       hasNotes = !!val && val.trim().length > 0;
     } catch {}
+    const serverVal = scopeNotes[subject.id];
+    if (!hasNotes && serverVal && serverVal.trim().length > 0) hasNotes = true;
     return { subject, hasNotes };
   });
 
