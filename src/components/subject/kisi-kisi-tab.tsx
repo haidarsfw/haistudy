@@ -103,11 +103,11 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
           Kisi-kisi belum tersedia untuk mata kuliah ini.
         </p>
         <div className="mx-auto mt-3 max-w-md rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-          Kebetulan punya kisi-kisi untuk mata kuliah ini? Boleh banget kamu
-          bagikan ke admin lewat{" "}
+          Apabila Anda memiliki kisi-kisi untuk mata kuliah ini, silakan hubungi
+          admin melalui{" "}
           <span className="font-medium text-foreground">WhatsApp</span> atau{" "}
           <span className="font-medium text-foreground">Contact Support</span>.
-          Ada reward kecil buat kamu sebagai ucapan terima kasih.
+          Tersedia reward sebagai bentuk apresiasi.
         </div>
         {note && (
           <div className="mx-auto mt-3 max-w-md rounded-lg bg-primary/5 border border-primary/20 px-4 py-2 text-xs text-primary">
