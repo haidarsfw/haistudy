@@ -7,7 +7,7 @@ import {
   validateScopeTuple,
 } from "@/lib/scope";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
-import { firstWord } from "@/lib/name";
+import { firstWord, capitalizeFirst } from "@/lib/name";
 
 export interface SessionPayload {
   licenseKey: string;
@@ -305,10 +305,11 @@ export async function activateLicense(
   const session: SessionPayload = {
     licenseKey: normalizedKey,
     name: activation.user_name || license.name,
-    shortName:
+    shortName: capitalizeFirst(
       activation.short_name ||
-      license.short_name ||
-      firstWord(activation.user_name || license.name),
+        license.short_name ||
+        firstWord(activation.user_name || license.name)
+    ),
     isAdmin: license.is_admin,
     isTester: license.is_tester,
     expiry: activation.expiry,

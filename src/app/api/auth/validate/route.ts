@@ -9,7 +9,7 @@ import {
   recordLoginAttempt,
 } from "@/lib/auth/server-rate-limit";
 import { scopeKey as toScopeKey, DEFAULT_SCOPE } from "@/lib/scope";
-import { firstWord } from "@/lib/name";
+import { firstWord, capitalizeFirst } from "@/lib/name";
 import {
   activateLicense,
   ActivationError,
@@ -165,7 +165,7 @@ function handleMockValidation(key: string, _deviceId: string) {
   const session: SessionPayload = {
     licenseKey: key,
     name: match?.name || `User ${key.slice(-4)}`,
-    shortName: firstWord(match?.name) || `User ${key.slice(-4)}`,
+    shortName: capitalizeFirst(firstWord(match?.name) || `User ${key.slice(-4)}`),
     isAdmin: match?.isAdmin || false,
     isTester: match?.isTester || false,
     expiry: null,

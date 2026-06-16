@@ -10,7 +10,7 @@ import { rateLimit } from "@/lib/support/server";
 import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, type PurchasablePackageId } from "@/lib/payments";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
-import { firstWord } from "@/lib/name";
+import { firstWord, capitalizeFirst } from "@/lib/name";
 
 // ─── POST /api/payments - on-site purchase submission (public, pre-login) ───
 // multipart/form-data. No requireScope: the buyer has no session cookie yet, so
@@ -221,7 +221,7 @@ export async function POST(request: Request) {
       waitUntil(
         sendPurchaseInvoiceEmail({
           to: email,
-          buyerName: nickname || firstWord(name),
+          buyerName: capitalizeFirst(nickname || firstWord(name)),
           scopeLabel: scopeFullLabel(scope),
           packageLabel: PACKAGE_LABELS[pkg] ?? pkg,
           amount: formatIDR(uniqueAmount),

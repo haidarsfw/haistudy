@@ -6,7 +6,7 @@
 
 import type { Session } from "@/types";
 import { DEFAULT_SCOPE, scopeKey, validateScopeTuple } from "@/lib/scope";
-import { firstWord } from "@/lib/name";
+import { firstWord, capitalizeFirst } from "@/lib/name";
 
 const SESSION_KEY = "hs-session-data";
 
@@ -22,11 +22,12 @@ export function getStoredSession(): Session | null {
       session.packageTier = "normal";
     }
 
-    // Backfill shortName (Round-14) for sessions stored before it existed:
-    // fall back to the first word of the full name.
-    if (!session.shortName) {
-      session.shortName = firstWord(session.name) || "Pengguna";
-    }
+    // Always capitalize the displayed nickname's first letter (even if the user
+    // typed it lowercase); backfill from the first word of the full name when a
+    // session was stored before shortName existed.
+    session.shortName = capitalizeFirst(
+      session.shortName || firstWord(session.name) || "Pengguna"
+    );
 
     // Backfill scope for pre-multi-scope sessions
     if (!session.scope || !validateScopeTuple(session.scope)) {

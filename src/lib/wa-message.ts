@@ -1,6 +1,9 @@
 // ============================================
 // WhatsApp activation message builder
 // ============================================
+
+import { capitalizeFirst } from "@/lib/name";
+
 // Shared by BOTH issue flows so the message stays identical:
 //   - admin Purchase Queue approval (purchase-queue.tsx)
 //   - admin Quick License generator (quick-license.tsx)
@@ -30,7 +33,8 @@ export interface ApprovalWaArgs {
 
 export function buildApprovalWa(o: ApprovalWaArgs): string {
   const inv = `#${String(o.invoiceNo).padStart(3, "0")}`;
-  const head = `🧾 INVOICE ${inv} · haistudy\nHalo ${o.nickname}, pesananmu sudah aktif ✅\n\n`;
+  const nick = capitalizeFirst(o.nickname);
+  const head = `🧾 INVOICE ${inv} · haistudy\nHalo ${nick}, pesananmu sudah aktif ✅\n\n`;
   const access =
     o.loginMethod === "email"
       ? `🌐 Buka https://haistudy.site → "Login dengan Google" → pilih ${o.gmail}\n`

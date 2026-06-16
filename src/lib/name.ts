@@ -12,9 +12,20 @@ export function firstWord(s: string | null | undefined): string {
 }
 
 /**
+ * Uppercase the first letter only, leaving the rest untouched ("andrew" →
+ * "Andrew", "mcD" → "McD"). Used so displayed nicknames are always capitalized
+ * even when the user typed them lowercase.
+ */
+export function capitalizeFirst(s: string | null | undefined): string {
+  const v = (s ?? "").trim();
+  return v ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+}
+
+/**
  * Resolve the name to display: explicit short name if set, else the first word
- * of the full name, else a neutral fallback. Never returns an empty string.
+ * of the full name, else a neutral fallback. First letter always capitalized.
+ * Never returns an empty string.
  */
 export function displayName(o: { shortName?: string | null; name?: string | null }): string {
-  return (o.shortName?.trim() || firstWord(o.name)) || "Pengguna";
+  return capitalizeFirst((o.shortName?.trim() || firstWord(o.name)) || "Pengguna");
 }
