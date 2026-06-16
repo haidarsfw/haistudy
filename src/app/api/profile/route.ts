@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { getCaller } from "@/lib/auth/session-license";
 import type { UserProfile } from "@/types";
 
 // ─── Mock store ───
@@ -30,17 +31,14 @@ function mapRow(data: Record<string, unknown>): UserProfile {
 }
 
 // ─── GET /api/profile?licenseKey=xxx ───
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const licenseKey = searchParams.get("licenseKey");
-
-    if (!licenseKey) {
-      return NextResponse.json(
-        { error: "licenseKey is required" },
-        { status: 400 }
-      );
+    // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const licenseKey = caller.licenseKey;
 
     if (!isSupabaseServerConfigured) {
       const stored = mockProfiles.get(licenseKey);
@@ -68,7 +66,6 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const {
-      licenseKey,
       email,
       phone,
       selectedClass,
@@ -77,7 +74,6 @@ export async function PUT(request: Request) {
       customStatus,
       customStatusEmoji,
     } = body as {
-      licenseKey: string;
       email?: string | null;
       phone?: string | null;
       selectedClass?: string;
@@ -87,12 +83,12 @@ export async function PUT(request: Request) {
       customStatusEmoji?: string | null;
     };
 
-    if (!licenseKey) {
-      return NextResponse.json(
-        { error: "licenseKey is required" },
-        { status: 400 }
-      );
+    // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const licenseKey = caller.licenseKey;
 
     // Shape validation - accept null/empty (clears the field) but reject garbage.
     // Length limits mirror the DB CHECK constraints (bio<=200, status<=80, emoji<=8).

@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { getCaller } from "@/lib/auth/session-license";
 
 // ─── Mock store ───
 const mockReferrals = new Map<
@@ -25,17 +26,14 @@ function generateReferralCode(): string {
 }
 
 // ─── GET /api/referral?licenseKey=xxx ───
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const licenseKey = searchParams.get("licenseKey");
-
-    if (!licenseKey) {
-      return NextResponse.json(
-        { error: "licenseKey is required" },
-        { status: 400 }
-      );
+    // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const licenseKey = caller.licenseKey;
 
     if (!isSupabaseServerConfigured) {
       const data = mockReferrals.get(licenseKey);
@@ -85,9 +83,16 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { licenseKey, referralCode } = body;
+    const { referralCode } = body;
 
-    if (!licenseKey || !referralCode) {
+    // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const licenseKey = caller.licenseKey;
+
+    if (!referralCode) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }

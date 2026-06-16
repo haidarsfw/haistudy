@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import type { UserSettings, SubjectProgress, ThemeId, FontId, CustomAccent, UserHighlight } from "@/types";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
+import { getCaller } from "@/lib/auth/session-license";
 
 function mapRowToSettings(data: Record<string, unknown>): UserSettings {
   return {
@@ -35,17 +36,14 @@ function mapRowToSettings(data: Record<string, unknown>): UserSettings {
 const mockSettings = new Map<string, UserSettings & { updatedAt: string }>();
 
 // ─── GET /api/settings?licenseKey=xxx ───
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const licenseKey = searchParams.get("licenseKey");
-
-    if (!licenseKey) {
-      return NextResponse.json(
-        { error: "licenseKey is required" },
-        { status: 400 }
-      );
+    // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const licenseKey = caller.licenseKey;
 
     if (!isSupabaseServerConfigured) {
       const stored = mockSettings.get(licenseKey);
@@ -85,13 +83,19 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { licenseKey, settings, updatedAt } = body as {
-      licenseKey: string;
+    const { settings, updatedAt } = body as {
       settings: UserSettings;
       updatedAt?: string;
     };
 
-    if (!licenseKey || !settings) {
+    // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const licenseKey = caller.licenseKey;
+
+    if (!settings) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
