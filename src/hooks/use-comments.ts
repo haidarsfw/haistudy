@@ -151,7 +151,7 @@ export function useComments(threadId: string | null) {
           content,
           imageUrl: imageUrl || null,
           authorId: deviceId,
-          authorName: session.name,
+          authorName: session.shortName,
           authorClass: session.selectedClass,
           isAdmin: session.isAdmin,
           parentCommentId: parentCommentId || null,

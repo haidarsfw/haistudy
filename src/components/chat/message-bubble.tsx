@@ -333,7 +333,7 @@ export function MessageBubble({
               Diamond
             </Badge>
           )}
-          {(message.packageTier === "vip" || message.packageTier === "diamond") && (
+          {message.packageTier === "vip" && (
             <Badge
               variant="vip-outline"
               className="h-4 gap-0.5 px-1 text-[9px]"

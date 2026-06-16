@@ -7,10 +7,13 @@ import {
   validateScopeTuple,
 } from "@/lib/scope";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
+import { firstWord } from "@/lib/name";
 
 export interface SessionPayload {
   licenseKey: string;
   name: string;
+  // Short name / nickname shown everywhere in-app (never empty).
+  shortName: string;
   isAdmin: boolean;
   isTester: boolean;
   expiry: string | null;
@@ -38,6 +41,7 @@ export interface ActivateResult {
 interface LicenseRow {
   key: string;
   name: string;
+  short_name: string | null;
   is_admin: boolean;
   is_tester: boolean;
   is_preview: boolean | null;
@@ -149,6 +153,7 @@ export async function activateLicense(
       .insert({
         license_key: normalizedKey,
         user_name: license.name,
+        short_name: license.short_name ?? null,
         expiry,
         referral_code: referralCodeGen,
         referred_by: options.referralCode || null,
@@ -300,6 +305,10 @@ export async function activateLicense(
   const session: SessionPayload = {
     licenseKey: normalizedKey,
     name: activation.user_name || license.name,
+    shortName:
+      activation.short_name ||
+      license.short_name ||
+      firstWord(activation.user_name || license.name),
     isAdmin: license.is_admin,
     isTester: license.is_tester,
     expiry: activation.expiry,

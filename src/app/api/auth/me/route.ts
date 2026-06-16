@@ -11,6 +11,7 @@ import {
   validateScopeTuple,
 } from "@/lib/scope";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
+import { firstWord } from "@/lib/name";
 
 /**
  * GET /api/auth/me
@@ -33,6 +34,7 @@ export async function GET() {
       session: {
         licenseKey: "PREVIEW",
         name: "Preview User",
+        shortName: "Preview",
         isAdmin: false,
         isTester: false,
         expiry: null,
@@ -59,6 +61,7 @@ export async function GET() {
       session: {
         licenseKey,
         name: match?.name || `User ${licenseKey.slice(-4)}`,
+        shortName: firstWord(match?.name) || `User ${licenseKey.slice(-4)}`,
         isAdmin: match?.isAdmin || false,
         isTester: match?.isTester || false,
         expiry: null,
@@ -108,6 +111,10 @@ export async function GET() {
   const session = {
     licenseKey,
     name: activation?.user_name || license.name,
+    shortName:
+      activation?.short_name ||
+      license.short_name ||
+      firstWord(activation?.user_name || license.name),
     isAdmin: license.is_admin,
     isTester: license.is_tester,
     expiry: activation?.expiry ?? null,

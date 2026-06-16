@@ -7,6 +7,9 @@ import type { ScopeTuple, ScopeKey, ExamPeriod } from "@/types/scope";
 export interface Session {
   licenseKey: string;
   name: string;
+  // Short name / nickname shown everywhere in-app. Resolved at session build:
+  // activation.short_name || license.short_name || firstWord(name). Never empty.
+  shortName: string;
   isAdmin: boolean;
   isTester: boolean;
   expiry: string | null;
@@ -343,8 +346,11 @@ export interface PurchaseMeta {
   loginEmail?: string;
   // How the buyer fulfilled the Share requirement (Items 4/6).
   shareMethod?: "broadcast" | "story";
-  // Per-period invoice/order number, computed at submission (Item 10).
+  // Per-period invoice/order number, assigned at APPROVE (not at submit), so
+  // unverified / rejected orders never burn a number.
   orderNo?: number;
+  // Short name / nickname supplied in the order form (shown everywhere in-app).
+  nickname?: string;
 }
 
 export interface PurchaseRequest {
@@ -444,6 +450,7 @@ export interface PollOption {
 export interface LicenseKey {
   key: string;
   name: string;
+  shortName?: string | null;
   daysActive: number;
   isAdmin: boolean;
   isTester: boolean;
@@ -466,6 +473,7 @@ export interface Activation {
   id: string;
   licenseKey: string;
   userName: string;
+  shortName?: string | null;
   email: string | null;
   expiry: string | null;
   referralCode: string | null;

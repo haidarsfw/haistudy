@@ -235,19 +235,21 @@ function ToastCard({ item }: { item: ToastItem }) {
             {item.description}
           </div>
         )}
-        {item.action && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              item.action!.onClick();
-              close();
-            }}
-            className="mt-2 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            {item.action.label}
-          </button>
-        )}
       </div>
+
+      {/* Action CTA: inline on the right (keeps the card compact, not tall). */}
+      {item.action && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            item.action!.onClick();
+            close();
+          }}
+          className="shrink-0 self-center rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          {item.action.label}
+        </button>
+      )}
     </motion.div>
   );
 }

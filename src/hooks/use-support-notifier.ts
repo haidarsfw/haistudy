@@ -92,10 +92,13 @@ export function useSupportNotifier() {
     }
     bcRef.current?.postMessage({ type: "seen", messageId: raw.id });
 
-    // 2) Skip own messages
+    // 2) Skip own messages. Primary check is by license key; sender_name is a
+    // fallback that tolerates both the full name (legacy rows) and the short
+    // name (denormalized sends now use session.shortName).
     if (
       raw.author_license_key === sess.licenseKey ||
-      raw.sender_name === sess.name
+      raw.sender_name === sess.name ||
+      raw.sender_name === sess.shortName
     ) {
       return;
     }

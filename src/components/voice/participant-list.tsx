@@ -109,7 +109,7 @@ export function ParticipantList({
                     Diamond
                   </Badge>
                 )}
-                {(p.packageTier === "vip" || p.packageTier === "diamond") && (
+                {p.packageTier === "vip" && (
                   <Badge variant="vip-outline" className="gap-0.5 text-[9px] px-1 py-0">
                     <Crown className="h-2 w-2" />
                     VIP

@@ -160,7 +160,7 @@ export function useThreads(subjectId: string) {
           title: data.title,
           content: data.content,
           authorId: deviceId,
-          authorName: session.name,
+          authorName: session.shortName,
           authorClass: session.selectedClass,
           isAdmin: session.isAdmin,
           imageUrl: data.imageUrl || null,

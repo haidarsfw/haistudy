@@ -28,3 +28,24 @@ export function createClient() {
     accessToken: async () => (await getRealtimeToken()) ?? supabaseAnonKey!,
   });
 }
+
+/**
+ * Browser-side Supabase client for AUTH ONLY (Google OAuth sign-in).
+ *
+ * MUST NOT set the `accessToken` option: supabase-js disables every `auth.*`
+ * method (including `signInWithOAuth`) when `accessToken` is provided (it
+ * throws "Supabase Client is configured with the accessToken option..."). It
+ * also avoids the realtime-token fetch (the `accessToken` callback), so the
+ * logged-out login page never hits /api/auth/realtime-token (401).
+ *
+ * Uses the default cookie storage so the PKCE code verifier is written for the
+ * server callback (/auth/callback → createServerAuthClient) to exchange.
+ * Returns null if Supabase is not configured (safe no-op pattern).
+ */
+export function createAuthClient() {
+  if (!isSupabaseConfigured) {
+    return null;
+  }
+
+  return createBrowserClient(supabaseUrl!, supabaseAnonKey!);
+}

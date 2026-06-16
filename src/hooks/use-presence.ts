@@ -45,7 +45,7 @@ export function usePresence(currentSubject: string | null = null) {
 
       setupPresence({
         userId: deviceId,
-        userName: session.name,
+        userName: session.shortName,
         licenseKey: session.licenseKey,
         deviceType,
         hideStatus: settings?.hideStatus ?? false,

@@ -24,8 +24,9 @@ import {
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
-import { scopeKey } from "@/lib/scope";
+import { scopeKey, scopeFullLabel } from "@/lib/scope";
 import { scopeCompact } from "@/components/admin/scope-dropdown-content";
+import { buildApprovalWa } from "@/lib/wa-message";
 
 const PACKAGE_OPTIONS = [
   { id: "share", label: "Share (Rp25.000)", tier: "share" as const },
@@ -38,6 +39,7 @@ const PACKAGE_OPTIONS = [
 export function QuickLicense() {
   const { adminScope, isAllPeriods, hydrated } = useAdminScope();
   const [name, setName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [pkg, setPkg] = useState<string>("share");
   const [devices, setDevices] = useState(2);
@@ -86,6 +88,10 @@ export function QuickLicense() {
       toast.error("Nama harus diisi");
       return;
     }
+    if (!nickname.trim()) {
+      toast.error("Nama panggilan harus diisi");
+      return;
+    }
     if (isAllPeriods || adminScope === "all") {
       toast.error("Pilih scope spesifik dulu di admin header sebelum create license.");
       return;
@@ -98,17 +104,15 @@ export function QuickLicense() {
 
     const selectedPackage = PACKAGE_OPTIONS.find((p) => p.id === pkg);
     const derivedTier = selectedPackage?.tier || "normal";
-    const packageLabel =
+    // Clean package name + amount for the shared WhatsApp message.
+    const pkgName =
       pkg === "free"
-        ? `${freeReason || "Free"} (Free)`
-        : selectedPackage?.label || "";
-
-    const today = new Date();
-    const dateStr = today.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+        ? freeReason || "Free"
+        : ({ share: "Share", normal: "Normal", vip: "VIP", diamond: "Diamond" } as Record<string, string>)[pkg] ??
+          pkg;
+    const priceMatch = selectedPackage?.label.match(/\((Rp[\d.]+\+?)\)/);
+    const amount = pkg === "free" ? "Gratis" : priceMatch?.[1] ?? "—";
+    const periode = scopeFullLabel(adminScope);
 
     try {
       const scopeKeyStr = scopeKey(adminScope);
@@ -119,6 +123,7 @@ export function QuickLicense() {
         body: JSON.stringify({
           key: newKey,
           name: name.trim(),
+          shortName: nickname.trim(),
           isAdmin: false,
           isTester: false,
           maxDevices: devices,
@@ -147,35 +152,17 @@ export function QuickLicense() {
         /* fall back to the displayed number */
       }
 
-      // Build WhatsApp message
-      const message = `🧾 INVOICE #${String(assigned).padStart(3, "0")}
-haistudy
-Halo ${name.trim()}, pembayaran kamu sudah kami terima.
-
-Berikut detail pesananmu:
-📅 Tanggal: ${dateStr}
-👤 ID: ${name.trim()}
-📦 Paket: ${packageLabel}
-✅ Status: LUNAS
-
-🔐 YOUR LICENSE KEY:
-${newKey}
-(Copy kode di atas)
-
-🌍 AKSES WEBSITE:
-https://haistudy.site
-
-⚠️ LANGKAH AKTIVASI (PENTING!):
-Agar akunmu terverifikasi dan tidak kena banned, lakukan ini sekarang:
-1. Buka website & masukkan License Key di atas.
-2. Login menggunakan Device utama kamu (HP/Laptop).
-3. Screenshot halaman utama (Dashboard) setelah berhasil masuk.
-4. Kirim Screenshot-nya ke chat ini sebagai bukti validasi device.
-
-Note: Sistem akan mengunci ID device sesuai screenshot yang dikirim.
-
-Jangan share key ini ke orang lain ya!
-Selamat belajar! 🚀`;
+      // Build WhatsApp message (shared with the Purchase Queue approval flow).
+      // Quick-gen is always key-login.
+      const message = buildApprovalWa({
+        nickname: nickname.trim(),
+        invoiceNo: assigned,
+        loginMethod: "key",
+        licenseKey: newKey,
+        pkgLabel: pkgName,
+        amount,
+        periode,
+      });
 
       setGeneratedMessage(message);
 
@@ -189,7 +176,7 @@ Selamat belajar! 🚀`;
     }
 
     setSaving(false);
-  }, [name, pkg, devices, freeReason, invoiceNumber, adminScope, isAllPeriods]);
+  }, [name, nickname, pkg, devices, freeReason, invoiceNumber, adminScope, isAllPeriods]);
 
   const handleSaveInvoice = useCallback(async () => {
     if (!counterScope) return;
@@ -311,6 +298,16 @@ Selamat belajar! 🚀`;
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="quick-nickname">Nama panggilan</Label>
+            <Input
+              id="quick-nickname"
+              placeholder="Nama asli (1 kata), tampil di seluruh situs"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+            />
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label>Paket</Label>
@@ -353,7 +350,7 @@ Selamat belajar! 🚀`;
 
           <Button
             onClick={handleGenerate}
-            disabled={saving || !name.trim() || invoiceNumber === null || lockedAllPeriods}
+            disabled={saving || !name.trim() || !nickname.trim() || invoiceNumber === null || lockedAllPeriods}
             className="w-full"
           >
             {saving ? (

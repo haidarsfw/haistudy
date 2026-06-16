@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, Share, PlusSquare, Zap, BookOpen, BellRing, Sparkles } from "lucide-react";
+import {
+  Download,
+  Share,
+  PlusSquare,
+  Zap,
+  BookOpen,
+  BellRing,
+  Sparkles,
+  MoreVertical,
+  Smartphone,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +20,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { sounds } from "@/lib/sounds";
@@ -30,13 +39,25 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+declare global {
+  interface Window {
+    // Captured globally + early in layout.tsx (before hydration) so a
+    // beforeinstallprompt that fires pre-mount is never lost.
+    __hsBIP?: BeforeInstallPromptEvent | null;
+  }
+}
+
 export function InstallBanner() {
   const { t } = useTranslation();
   const { session } = useSession();
   const [open, setOpen] = useState(false);
   // Pure client check; lazy init avoids a setState-in-effect.
   const [isIos] = useState(() => isIosSafari());
-  const [dontRemind, setDontRemind] = useState(false);
+  // Whether a native install prompt is available (drives the Pasang button).
+  const [hasPrompt, setHasPrompt] = useState(false);
+  // Android/desktop with no native prompt: tapping "Pasang" reveals the manual
+  // steps inline instead of silently closing (Item 10 fix).
+  const [manualOpen, setManualOpen] = useState(false);
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
   const licenseKey = session?.licenseKey;
 
@@ -55,6 +76,13 @@ export function InstallBanner() {
         sessionStorage.setItem(k, v);
       } catch {}
     };
+
+    // Seed from the global early-capture (layout.tsx) so a prompt fired before
+    // this component mounted (e.g. before login) is still usable.
+    if (typeof window !== "undefined" && window.__hsBIP) {
+      deferredPrompt.current = window.__hsBIP;
+      setHasPrompt(true);
+    }
 
     // First login = onboarding has never completed for this license key. On a
     // first login the prompt is DEFERRED until the tutorial + post-tutorial
@@ -80,6 +108,8 @@ export function InstallBanner() {
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
       deferredPrompt.current = e as BeforeInstallPromptEvent;
+      if (typeof window !== "undefined") window.__hsBIP = e as BeforeInstallPromptEvent;
+      setHasPrompt(true);
       maybeShow();
     };
 
@@ -92,6 +122,8 @@ export function InstallBanner() {
     const onInstalled = () => {
       clearInstallDismiss();
       deferredPrompt.current = null;
+      if (typeof window !== "undefined") window.__hsBIP = null;
+      setHasPrompt(false);
       setOpen(false);
     };
 
@@ -122,26 +154,33 @@ export function InstallBanner() {
     };
   }, [isIos, licenseKey]);
 
+  // "Nanti saja" - silent until the next SW_VERSION bump.
   const close = () => {
-    if (dontRemind) dismissInstallUntilNextVersion();
+    dismissInstallUntilNextVersion();
     setOpen(false);
   };
 
   const handleInstall = async () => {
     sounds.click();
-    const dp = deferredPrompt.current;
-    if (!dp) {
-      close();
+    const dp =
+      deferredPrompt.current ??
+      (typeof window !== "undefined" ? window.__hsBIP ?? null : null);
+    if (dp) {
+      try {
+        await dp.prompt();
+        await dp.userChoice;
+      } catch {
+        // user dismissed the native sheet - ignore
+      }
+      deferredPrompt.current = null;
+      if (typeof window !== "undefined") window.__hsBIP = null;
+      setHasPrompt(false);
+      setOpen(false);
       return;
     }
-    try {
-      await dp.prompt();
-      await dp.userChoice;
-    } catch {
-      // user dismissed native sheet - ignore
-    }
-    deferredPrompt.current = null;
-    setOpen(false);
+    // No native prompt and not iOS: reveal the manual steps inline instead of
+    // silently closing (the old bug). The user installs via the browser menu.
+    setManualOpen(true);
   };
 
   const benefits = [
@@ -151,9 +190,18 @@ export function InstallBanner() {
     { icon: Sparkles, text: t("pwa.benefit_exclusive") },
   ];
 
+  // Android steps appear after the user taps "Pasang" with no native prompt.
+  const showAndroidSteps = !isIos && manualOpen;
+  // On iOS the button is an instruction acknowledgement; same once Android
+  // manual steps are revealed.
+  const showGotIt = isIos || manualOpen;
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) close(); }}>
-      <DialogContent className="max-w-sm">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-sm bg-background/90 backdrop-blur-xl border-border/30 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-[0.96]"
+      >
         <DialogHeader>
           {/* App mark */}
           <div className="mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
@@ -179,7 +227,12 @@ export function InstallBanner() {
           ))}
         </ul>
 
-        {isIos ? (
+        {/* Reassurance note */}
+        <p className="rounded-lg bg-primary/5 px-3 py-2 text-center text-xs font-medium text-primary ring-1 ring-primary/10">
+          {t("pwa.install_note")}
+        </p>
+
+        {isIos && (
           /* iOS: manual Add-to-Home-Screen steps */
           <div className="space-y-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
             <p className="flex items-center gap-2">
@@ -191,24 +244,32 @@ export function InstallBanner() {
               {t("pwa.install_ios_step2")}
             </p>
           </div>
-        ) : null}
+        )}
 
-        <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-          <label htmlFor="pwa-dont-remind" className="text-xs text-muted-foreground">
-            {t("pwa.install_dont_remind")}
-          </label>
-          <Switch
-            id="pwa-dont-remind"
-            checked={dontRemind}
-            onCheckedChange={setDontRemind}
-          />
-        </div>
+        {showAndroidSteps && (
+          /* Android / desktop fallback when no native prompt is available */
+          <div className="space-y-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground">{t("pwa.install_android_title")}</p>
+            <p className="flex items-center gap-2">
+              <MoreVertical className="h-4 w-4 shrink-0 text-primary" />
+              {t("pwa.install_android_step1")}
+            </p>
+            <p className="flex items-center gap-2">
+              <Smartphone className="h-4 w-4 shrink-0 text-primary" />
+              {t("pwa.install_android_step2")}
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-2">
           <Button variant="outline" className="flex-1" onClick={close}>
-            {isIos ? t("pwa.got_it") : t("pwa.install_later")}
+            {t("pwa.install_later")}
           </Button>
-          {!isIos && (
+          {showGotIt ? (
+            <Button className="flex-1" onClick={close}>
+              {t("pwa.got_it")}
+            </Button>
+          ) : (
             <Button className="flex-1" onClick={handleInstall}>
               <Download className="mr-1.5 h-4 w-4" />
               {t("pwa.install_button")}

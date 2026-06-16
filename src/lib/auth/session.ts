@@ -6,6 +6,7 @@
 
 import type { Session } from "@/types";
 import { DEFAULT_SCOPE, scopeKey, validateScopeTuple } from "@/lib/scope";
+import { firstWord } from "@/lib/name";
 
 const SESSION_KEY = "hs-session-data";
 
@@ -19,6 +20,12 @@ export function getStoredSession(): Session | null {
     // Backfill packageTier for sessions stored before this field existed
     if (!session.packageTier) {
       session.packageTier = "normal";
+    }
+
+    // Backfill shortName (Round-14) for sessions stored before it existed:
+    // fall back to the first word of the full name.
+    if (!session.shortName) {
+      session.shortName = firstWord(session.name) || "Pengguna";
     }
 
     // Backfill scope for pre-multi-scope sessions

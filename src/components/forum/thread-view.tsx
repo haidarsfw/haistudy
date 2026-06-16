@@ -138,7 +138,7 @@ export function ThreadView({
               Diamond
             </Badge>
           )}
-          {(thread.packageTier === "vip" || thread.packageTier === "diamond") && (
+          {thread.packageTier === "vip" && (
             <Badge variant="vip-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
               <Crown className="h-2.5 w-2.5" />
               VIP

@@ -153,7 +153,7 @@ export function useDmChat() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...payload,
-            senderName: session.name,
+            senderName: session.shortName,
           }),
         }
       );

@@ -211,7 +211,7 @@ export interface PurchaseInvoiceEmailOpts {
 }
 
 /**
- * Email the buyer a "we received your order, verifying within 1×12 jam"
+ * Email the buyer a "we received your order, verifying within 1×24 jam"
  * invoice. No-op when Resend is unconfigured or `to` is empty. Never throws
  * to the caller's await (errors are returned, not raised).
  */
@@ -294,7 +294,7 @@ function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
       </table>
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px">
         <tr><td style="border-left:3px solid #22c55e;padding:3px 0 3px 12px;font-size:13px;line-height:1.6;color:#cbd5e1">
-          <strong style="color:#e2e8f0">Maks 1&times;12 jam</strong> — license key / akses login dikirim ke WhatsApp-mu <strong style="color:#e2e8f0">${safe(a.whatsapp)}</strong>.
+          <strong style="color:#e2e8f0">Maks 1&times;24 jam</strong> — license key / akses login dikirim ke WhatsApp-mu <strong style="color:#e2e8f0">${safe(a.whatsapp)}</strong>.
         </td></tr>
       </table>
       <a href="${website}" style="display:inline-block;background:#22c55e;color:#0f172a;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:9px;font-size:14px;letter-spacing:0.2px">
@@ -323,7 +323,7 @@ function renderPurchaseInvoiceText(a: InvoiceRenderArgs): string {
     `Periode: ${a.scopeLabel}\n` +
     `Metode login: ${loginLabel}\n` +
     `Status: Menunggu verifikasi\n\n` +
-    `Maks 1x12 jam — license key / akses login dikirim ke WhatsApp-mu (${a.whatsapp}).\n\n` +
+    `Maks 1x24 jam — license key / akses login dikirim ke WhatsApp-mu (${a.whatsapp}).\n\n` +
     `Buka haistudy: ${website}\n` +
     `Hubungi admin: https://wa.me/${WA_ADMIN}\n\n` +
     `- haistudy\n`

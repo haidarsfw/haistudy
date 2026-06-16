@@ -5,7 +5,7 @@
 // "don't remind" choice scoped to this version, so bumping SW_VERSION
 // re-surfaces the install prompt to users who previously dismissed it.
 
-export const SW_VERSION = "v1";
+export const SW_VERSION = "v3";
 
 export const PWA_EVENTS = {
   // Settings "Install app" button → install-banner shows the prompt.
@@ -50,6 +50,11 @@ export function clearInstallDismiss(): void {
   } catch {
     // ignore
   }
+}
+
+/** Detect Android — used to show manual install steps when no native prompt. */
+export function isAndroid(): boolean {
+  return typeof navigator !== "undefined" && /Android/.test(navigator.userAgent);
 }
 
 /** Detect iOS Safari, which has no beforeinstallprompt - needs manual hint. */

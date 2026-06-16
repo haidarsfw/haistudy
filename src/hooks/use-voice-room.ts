@@ -150,7 +150,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
             body: JSON.stringify({
               action: "join",
               roomId,
-              userName: session.name,
+              userName: session.shortName,
               licenseKey: session.licenseKey,
             }),
             signal: abortController.signal,
@@ -186,7 +186,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               roomId,
-              userName: session.name,
+              userName: session.shortName,
               licenseKey: session.licenseKey,
             }),
           });
@@ -253,7 +253,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
           name,
           maxParticipants,
           creatorId: session.licenseKey,
-          creatorName: session.name,
+          creatorName: session.shortName,
         }),
       });
       if (!res.ok) {

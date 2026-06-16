@@ -54,7 +54,7 @@ export function PollWidget({ poll, isAdmin, onVote, onDelete }: PollWidgetProps)
                 Diamond
               </Badge>
             )}
-            {(poll.packageTier === "vip" || poll.packageTier === "diamond") && (
+            {poll.packageTier === "vip" && (
               <Badge variant="vip-outline" className="gap-0.5 text-[10px] px-1.5 py-0">
                 <Crown className="h-2.5 w-2.5" />
                 VIP

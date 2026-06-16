@@ -88,7 +88,7 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
   const endRef = useRef<HTMLDivElement>(null);
 
   const activeConv = conversations.find((c) => c.id === activeId);
-  const myName = session?.name ?? t("dm.you");
+  const myName = session?.shortName ?? t("dm.you");
 
   // Resolve real PFPs for me + every conversation partner (list + open thread).
   const avatarKeys = useMemo(

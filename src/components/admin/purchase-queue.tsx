@@ -28,6 +28,8 @@ import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeKey, scopeFullLabel } from "@/lib/scope";
+import { buildApprovalWa } from "@/lib/wa-message";
+import { firstWord } from "@/lib/name";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { PurchaseSummary } from "@/components/admin/purchase-summary";
 
@@ -135,8 +137,6 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       jurusan: purchase.jurusan,
     });
 
-    const orderNo = purchase.meta?.orderNo;
-    const invoiceTag = orderNo ? `Invoice #${String(orderNo).padStart(3, "0")}\n` : "";
     const pkgName =
       ({ share: "Share", normal: "Normal", vip: "VIP", diamond: "Diamond" } as Record<string, string>)[
         purchase.package
@@ -145,6 +145,8 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       typeof purchase.meta?.uniqueAmount === "number"
         ? `Rp ${purchase.meta.uniqueAmount.toLocaleString("id-ID")}`
         : "—";
+    // Short name / nickname: shown in the WA greeting + saved onto the license.
+    const nickname = purchase.meta?.nickname || firstWord(purchase.name);
 
     // Email-login buyer with no Gmail on file would mint a locked-out key. Stop here.
     if (loginMethod === "email" && !gmail) {
@@ -161,6 +163,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
         body: JSON.stringify({
           key: newKey,
           name: purchase.name,
+          shortName: nickname,
           packageTier,
           maxDevices,
           scope: purchaseScopeKey,
@@ -187,25 +190,24 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
         prev.map((p) => (p.id === purchase.id ? updated : p))
       );
 
-      // Open WhatsApp with a clean, copy-friendly activation message,
-      // branched by the buyer's login method.
+      // Invoice number is assigned server-side at approve and returned in the
+      // PATCH response — use it for the WhatsApp message.
+      const orderNo = updated?.meta?.orderNo ?? 1;
+
+      // Open WhatsApp with the shared, copy-friendly activation message. The
+      // bare https://haistudy.site URL renders the homepage embed card in WA.
       let phone = purchase.whatsapp.replace(/\D/g, "");
       if (phone.startsWith("0")) phone = "62" + phone.slice(1);
-      const message =
-        loginMethod === "email"
-          ? `Halo ${purchase.name}, pesanan kamu sudah aktif ✅\n\n` +
-            `Login: haistudy.site/login → "Login dengan Google" → pilih ${gmail}.\n` +
-            `Setelah masuk, kirim screenshot Dashboard ke chat ini untuk validasi device.\n\n` +
-            `Paket ${pkgName} · ${amount} · ${periode}\n` +
-            `${invoiceTag.trim()}\n` +
-            `Ada kendala? Balas chat ini.`
-          : `Halo ${purchase.name}, pesanan kamu sudah aktif ✅\n\n` +
-            `License key: ${newKey}\n` +
-            `Login: haistudy.site/login → tempel key.\n` +
-            `Setelah masuk, kirim screenshot Dashboard ke chat ini untuk validasi device.\n\n` +
-            `Paket ${pkgName} · ${amount} · ${periode}\n` +
-            `${invoiceTag.trim()}\n` +
-            `Jangan bagikan key-mu. Ada kendala? Balas chat ini.`;
+      const message = buildApprovalWa({
+        nickname,
+        invoiceNo: orderNo,
+        loginMethod,
+        licenseKey: newKey,
+        gmail,
+        pkgLabel: pkgName,
+        amount,
+        periode,
+      });
       window.open(
         `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`,
         "_blank"

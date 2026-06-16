@@ -159,7 +159,7 @@ export function GreetingCard() {
                 Diamond
               </Badge>
             )}
-            {(session?.packageTier === "vip" || session?.packageTier === "diamond") && (
+            {session?.packageTier === "vip" && (
               <Badge variant="vip-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
                 <Crown className="h-2.5 w-2.5" />
                 {t("badge.vip")}
@@ -183,7 +183,7 @@ export function GreetingCard() {
                 })
               )}
             >
-              {session?.name || "Student"}
+              {session?.shortName || "Student"}
             </span>
             !
           </h2>

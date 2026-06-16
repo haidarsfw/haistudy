@@ -71,7 +71,7 @@ export function useSupportChatThread({
 }: UseSupportChatThreadOptions): UseSupportChatThreadResult {
   const { session } = useSession();
   const myKind: SupportReaderKind = mode === "admin" ? "admin" : "user";
-  const myName = session?.name ?? (mode === "admin" ? "Admin" : "User");
+  const myName = session?.shortName ?? (mode === "admin" ? "Admin" : "User");
 
   const messagesHook = useSupportMessages(
     licenseKey,

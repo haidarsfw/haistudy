@@ -125,6 +125,15 @@ export default function RootLayout({
             from next/Script after that primitive measurably hurt mobile
             PageSpeed scores in commit 538c302. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Capture the PWA install prompt globally and early (before hydration),
+            so it is never lost when `beforeinstallprompt` fires before the
+            InstallBanner mounts post-login. InstallBanner seeds from window.__hsBIP. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__hsBIP=e;});window.addEventListener('appinstalled',function(){window.__hsBIP=null;});",
+          }}
+        />
         <JsonLd />
       </head>
       <body className="min-h-full flex flex-col font-sans">

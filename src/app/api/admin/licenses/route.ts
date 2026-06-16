@@ -127,6 +127,7 @@ function mapLicenseRow(row: Record<string, unknown>): LicenseKey & { semester: n
   return {
     key: row.key as string,
     name: row.name as string,
+    shortName: (row.short_name as string) || null,
     daysActive: row.days_active as number,
     isAdmin: row.is_admin as boolean,
     isTester: row.is_tester as boolean,
@@ -151,6 +152,7 @@ function mapActivationRow(row: Record<string, unknown>): Activation {
     id: row.id as string,
     licenseKey: row.license_key as string,
     userName: row.user_name as string,
+    shortName: (row.short_name as string) || null,
     email: (row.email as string) || null,
     expiry: (row.expiry as string) || null,
     referralCode: (row.referral_code as string) || null,
@@ -294,7 +296,10 @@ export async function POST(request: Request) {
 
     const resolved = await resolveAdminScope(request);
     const body = await request.json();
-    const { key: rawKey, name, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier, linkedEmail, loginMethod: loginMethodRaw } = body;
+    const { key: rawKey, name, shortName, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier, linkedEmail, loginMethod: loginMethodRaw } = body;
+    // Short name / nickname (shown in-app); falls back to the first word of the
+    // full name at read time when null.
+    const shortNameNorm = typeof shortName === "string" && shortName.trim() ? shortName.trim().slice(0, 24) : null;
     // 'key' | 'email' | null (null = legacy, both login paths allowed).
     const loginMethod =
       loginMethodRaw === "key" || loginMethodRaw === "email" ? loginMethodRaw : null;
@@ -347,6 +352,7 @@ export async function POST(request: Request) {
       const license = {
         key,
         name: name.trim(),
+        shortName: shortNameNorm,
         daysActive: daysActive || 0,
         isAdmin: isAdmin || false,
         isTester: isTester || false,
@@ -392,6 +398,7 @@ export async function POST(request: Request) {
       .insert({
         key,
         name: name.trim(),
+        short_name: shortNameNorm,
         days_active: daysActive || 0,
         is_admin: isAdmin || false,
         is_tester: isTester || false,

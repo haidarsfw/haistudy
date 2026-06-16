@@ -10,6 +10,7 @@ import { rateLimit } from "@/lib/support/server";
 import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, type PurchasablePackageId } from "@/lib/payments";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
+import { firstWord } from "@/lib/name";
 
 // ─── POST /api/payments - on-site purchase submission (public, pre-login) ───
 // multipart/form-data. No requireScope: the buyer has no session cookie yet, so
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
     const fd = await request.formData();
 
     const name = getStr(fd, "name", 100);
+    const nickname = getStr(fd, "nickname", 24);
     const whatsapp = getStr(fd, "whatsapp", 30);
     const email = getStr(fd, "email", 120);
     const pkg = getStr(fd, "package", 20) as PurchasablePackageId;
@@ -74,6 +76,10 @@ export async function POST(request: Request) {
     // ── Validation ──
     if (!name || whatsapp.replace(/\D/g, "").length < 8) {
       return NextResponse.json({ error: "Nama dan WhatsApp wajib diisi." }, { status: 400 });
+    }
+    // Short name / nickname: required, 1-24 chars (shown everywhere in-app).
+    if (!nickname || nickname.length < 1 || nickname.length > 24) {
+      return NextResponse.json({ error: "Nama panggilan wajib diisi (maks 24 karakter)." }, { status: 400 });
     }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return NextResponse.json({ error: "Email tidak valid." }, { status: 400 });
@@ -159,17 +165,9 @@ export async function POST(request: Request) {
     const sharePath = shareProof ? await uploadOne(shareProof, "share") : null;
     const sharePath2 = shareProof2 ? await uploadOne(shareProof2, "share2") : null;
 
-    // Per-scope invoice number (atomic). next_scope_invoice() hands out a
-    // gap-free sequence per scope (migration 041) so two concurrent submissions
-    // never collide — unlike the old count(*) + 1. Seeded to each scope's
-    // existing order count, so live numbering continues seamlessly.
-    const { data: nextNo, error: ctrErr } = await supabase.rpc("next_scope_invoice", {
-      p_sem: scope.semester,
-      p_exam: scope.examPeriod,
-      p_jur: scope.jurusan,
-    });
-    if (ctrErr) throw ctrErr;
-    const orderNo = (nextNo as number) ?? 1;
+    // Invoice number is assigned at APPROVE (admin Purchase Queue), not here, so
+    // unverified / rejected submissions never burn a number. See the PATCH
+    // handler in /api/admin/purchase (calls next_scope_invoice → meta.orderNo).
 
     const meta = {
       classCode,
@@ -183,7 +181,7 @@ export async function POST(request: Request) {
       loginMethod,
       ...(loginMethod === "email" ? { loginEmail: loginEmail.toLowerCase() } : {}),
       scopeKey: sk,
-      orderNo,
+      nickname,
       ...(pkg === "share" ? { shareMethod } : {}),
     };
 
@@ -223,8 +221,7 @@ export async function POST(request: Request) {
       waitUntil(
         sendPurchaseInvoiceEmail({
           to: email,
-          buyerName: name,
-          orderNo,
+          buyerName: nickname || firstWord(name),
           scopeLabel: scopeFullLabel(scope),
           packageLabel: PACKAGE_LABELS[pkg] ?? pkg,
           amount: formatIDR(uniqueAmount),

@@ -57,7 +57,7 @@ export function usePolls(subjectId: string) {
           question,
           options,
           authorId: deviceIdRef.current,
-          authorName: session.name,
+          authorName: session.shortName,
         }),
       });
 

@@ -385,7 +385,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
                 className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-sidebar-border"
               />
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium truncate">{session?.name}</p>
+                <p className="text-sm font-medium truncate">{session?.shortName}</p>
                 {session?.selectedClass && (
                   <p className="text-xs text-muted-foreground">
                     {session.selectedClass}
@@ -397,7 +397,7 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
         ) : (
           <UserProfilePopover>
             <button
-              aria-label={session?.name ? `Profil ${session.name}` : "Profil pengguna"}
+              aria-label={session?.shortName ? `Profil ${session.shortName}` : "Profil pengguna"}
               className="flex w-full justify-center rounded-lg py-1.5 hover:bg-sidebar-accent/50 transition-colors cursor-pointer"
             >
               <Image

@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Headphones,
   Eraser,
+  Sparkles,
 } from "lucide-react";
 import { parseRangkuman } from "@/lib/content-parser";
 import { loadRangkuman } from "@/data";
@@ -69,6 +70,30 @@ export function RangkumanTab({
   const { session } = useSession();
   const canVip = canUseVipFeatures(session);
   const isAdmin = session?.isAdmin ?? false;
+
+  // One-time "Highlight & Tanya AI" hint on first open of a Rangkuman, per
+  // license key. Dismissal persists in localStorage.
+  const [showHint, setShowHint] = useState(false);
+  useEffect(() => {
+    if (!session?.licenseKey) return;
+    try {
+      if (!localStorage.getItem(`hs-rangkuman-hint-${session.licenseKey}`)) {
+        setShowHint(true);
+      }
+    } catch {
+      // localStorage unavailable - skip the hint
+    }
+  }, [session?.licenseKey]);
+  const dismissHint = useCallback(() => {
+    setShowHint(false);
+    try {
+      if (session?.licenseKey) {
+        localStorage.setItem(`hs-rangkuman-hint-${session.licenseKey}`, "1");
+      }
+    } catch {
+      // ignore
+    }
+  }, [session?.licenseKey]);
 
   // Highlight state
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
@@ -598,6 +623,28 @@ export function RangkumanTab({
           )}
         </div>
       </div>
+
+      {/* First-open hint: highlight & Tanya AI from selected text */}
+      {showHint && selectedModule && rangkumanData[selectedModule] && (
+        <div className="relative flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 p-3 pr-9">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">
+              {t("rangkuman.hint_title")}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {t("rangkuman.hint_body")}
+            </p>
+          </div>
+          <button
+            onClick={dismissHint}
+            aria-label="Tutup"
+            className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Content */}
       {selectedModule && rangkumanData[selectedModule] ? (

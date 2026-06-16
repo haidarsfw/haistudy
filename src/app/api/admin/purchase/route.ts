@@ -258,6 +258,32 @@ export async function PATCH(request: Request) {
 
     if (error) throw error;
 
+    // Assign the per-scope invoice number at APPROVAL (not at submit), so
+    // unverified / rejected orders never burn a number. Idempotent: only assign
+    // when meta.orderNo is missing, so re-approving keeps the same invoice #.
+    // next_scope_invoice() does value+1 RETURNING value (gap-free per scope).
+    if (status === "approved" && data) {
+      const existingMeta = (data.meta as PurchaseMeta) ?? {};
+      if (existingMeta.orderNo == null) {
+        const { data: nextNo, error: ctrErr } = await supabase.rpc("next_scope_invoice", {
+          p_sem: data.semester,
+          p_exam: data.exam_period,
+          p_jur: data.jurusan,
+        });
+        if (ctrErr) throw ctrErr;
+        const orderNo = (nextNo as number) ?? 1;
+        const newMeta = { ...existingMeta, orderNo };
+        const { data: metaRow, error: metaErr } = await supabase
+          .from("purchase_requests")
+          .update({ meta: newMeta })
+          .eq("id", id)
+          .select()
+          .single();
+        if (metaErr) throw metaErr;
+        if (metaRow) Object.assign(data, metaRow);
+      }
+    }
+
     // On approval, propagate the buyer's contact info to their account so the
     // post-tutorial "Stay Connected" modal can auto-fill (and skip). Only fill
     // fields not already set — never clobber a value the user chose themselves.

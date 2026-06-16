@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { createAuthClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { toast } from "@/components/ui/toast";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -38,7 +38,7 @@ export function GoogleLoginButton() {
   const onClick = async () => {
     setLoading(true);
     try {
-      const supabase = createClient();
+      const supabase = createAuthClient();
       if (!supabase) {
         toast.error("Supabase belum terkonfigurasi");
         setLoading(false);

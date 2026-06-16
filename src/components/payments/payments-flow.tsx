@@ -51,6 +51,7 @@ type LoginMethod = "key" | "email";
 
 interface FormState {
   name: string;
+  nickname: string;
   classCode: string;
   classOther: string;
   campus: string;
@@ -92,6 +93,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
 
   const [form, setForm] = useState<FormState>({
     name: "",
+    nickname: "",
     classCode: "",
     classOther: "",
     campus: "",
@@ -161,6 +163,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
     const e: Record<string, string> = {};
     if (s === 0) {
       if (!form.name.trim()) e.name = t("payments.err_required");
+      if (!form.nickname.trim()) e.nickname = t("payments.err_required");
       if (!form.classCode) e.classCode = t("payments.err_required");
       else if (form.classCode === "Other" && !form.classOther.trim())
         e.classOther = t("payments.err_required");
@@ -239,6 +242,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
     try {
       const fd = new FormData();
       fd.set("name", form.name.trim());
+      fd.set("nickname", form.nickname.trim());
       fd.set("whatsapp", form.whatsapp.trim());
       fd.set("email", form.email.trim());
       fd.set("loginMethod", form.loginMethod);
@@ -391,6 +395,10 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
               <>
                 <FieldShell label={t("payments.name_label")} description={t("payments.name_desc")} required error={errors.name} htmlFor="pf-name">
                   <ShortAnswer id="pf-name" value={form.name} onChange={(v) => set("name", v)} placeholder={t("payments.name_ph")} invalid={!!errors.name} autoComplete="name" />
+                </FieldShell>
+
+                <FieldShell label={t("payments.nickname_label")} description={t("payments.nickname_desc")} required error={errors.nickname} htmlFor="pf-nickname">
+                  <ShortAnswer id="pf-nickname" value={form.nickname} onChange={(v) => set("nickname", v)} placeholder={t("payments.nickname_ph")} invalid={!!errors.nickname} autoComplete="nickname" />
                 </FieldShell>
 
                 <FieldShell label={t("payments.class_label")} required error={errors.classCode || errors.classOther} htmlFor="pf-class">

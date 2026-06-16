@@ -153,7 +153,7 @@ export function PublicProfilePopover({
                   Diamond
                 </Badge>
               )}
-              {(tier === "vip" || tier === "diamond") && (
+              {tier === "vip" && (
                 <Badge variant="vip-outline" className="px-1 py-0 text-[9px]">
                   VIP
                 </Badge>

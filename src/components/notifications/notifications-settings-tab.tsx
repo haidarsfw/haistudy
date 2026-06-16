@@ -21,6 +21,7 @@ import { useWebPush } from "@/hooks/use-web-push";
 import { useSession } from "@/components/providers/session-provider";
 import { sounds, getSoundMuted, setSoundMuted } from "@/lib/sounds";
 import { toast } from "@/components/ui/toast";
+import { isAndroid, isStandalone } from "@/lib/pwa-version";
 
 function PermissionBadge({ state }: { state: string }) {
   if (state === "granted") {
@@ -101,6 +102,10 @@ export function NotificationsSettingsTab() {
 
   const [soundOn, setSoundOn] = useState<boolean>(() => !getSoundMuted());
   const [testing, setTesting] = useState(false);
+  // Android (not yet installed) gets a manual install hint, mirroring the iOS
+  // panel. Push notifications on Android Chrome are far more reliable once the
+  // PWA is installed to the home screen.
+  const [androidNeedsInstall] = useState(() => isAndroid() && !isStandalone());
 
   const sound = settings.notifSoundEnabled ?? true;
   const browser = settings.notifBrowserEnabled ?? true;
@@ -272,6 +277,29 @@ export function NotificationsSettingsTab() {
                 (kotak dengan panah).<br />
                 3. Pilih <span className="font-semibold">Add to Home Screen</span>.<br />
                 4. Buka haistudy dari home screen lalu aktifkan push di sini.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {androidNeedsInstall && (
+        <motion.div
+          variants={staggerItem}
+          className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-[11px] leading-relaxed"
+        >
+          <div className="flex items-start gap-2">
+            <Smartphone className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+            <div>
+              <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+                Pasang di Android
+              </p>
+              <p className="text-muted-foreground mt-1">
+                1. Tap menu <span className="font-semibold">⋮</span> (kanan atas
+                Chrome), lalu &quot;Install app&quot; / &quot;Tambah ke Layar
+                Utama&quot;.<br />
+                2. Buka haistudy dari layar utama.<br />
+                3. Aktifkan notifikasi di sini.
               </p>
             </div>
           </div>
