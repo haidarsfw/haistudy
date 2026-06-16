@@ -85,24 +85,17 @@ export const content: Record<string, SubjectContent> = {
       { id: 5, title: "Ethics of AI", driveId: "1hTtuc_5JWd5hbQ2VVz3iszpDHDEug_mI", type: "drive-pptx", session: "12", xp: 10 },
     ],
     kisiKisi: [
-      { topic: "Multiple Choice with Reasoning (25%)", items: [
-        "Soal pilihan ganda (termasuk True/False) seputar terminologi dan teknis AI",
-        "Topik: ML, DL, Neural Networks, NLP, Computer Vision",
-        "Wajib menyertakan argumen atau alasan pemilihan jawaban",
+      { topic: "Multiple Choice with Reasoning (Nilai: 25%)", items: [
+        "Soal true or false menjadi pilihan ganda, beserta alasannya",
       ] },
-      { topic: "AI Solution Recommendation (60%)", items: [
-        "Menganalisis studi kasus untuk merancang solusi",
-        "Jawaban harus mencakup solusi yang ditawarkan",
-        "Teknologi spesifik yang dipakai",
-        "Manfaat dari solusi tersebut",
+      { topic: "Studi Kasus: AI Solution Recommendation (Nilai: 60%)", items: [
+        "Mencakup solusi, teknologi yang dipakai, dan manfaatnya",
       ] },
-      { topic: "Ethical Reflection (15%)", items: [
-        "Menganalisis studi kasus terkait implikasi etis penggunaan AI",
-        "Implikasi sosial dari penggunaan AI",
-        "Implikasi legal dari penggunaan AI",
+      { topic: "Studi Kasus: Ethical Consideration (Nilai: 15%)", items: [
+        "Etika dalam menggunakan AI",
       ] },
     ],
-    kisiKisiNote: "Rangkuman kisi-kisi UAS Foundations of AI.",
+    kisiKisiNote: "Ujian lebih fokus ke studi kasus.",
     flashcards: foundaiFlashcards,
     quiz: foundaiQuiz,
   },
