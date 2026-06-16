@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
+import { useScope } from "@/components/providers/scope-provider";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { Textarea } from "@/components/ui/textarea";
 import { staggerContainer, staggerItem } from "@/lib/motion";
@@ -18,6 +19,7 @@ export default function NotesPage() {
   const { session } = useSession();
   const { t } = useTranslation();
   const { subjects } = useScopedData();
+  const { scopePath } = useScope();
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [synced, setSynced] = useState(false);
@@ -170,7 +172,7 @@ export default function NotesPage() {
           {subjectNoteCounts.map(({ subject, hasNotes }) => (
             <Link
               key={subject.id}
-              href={`/subject/${subject.id}?tab=6`}
+              href={`/${scopePath}/subject/${subject.id}?tab=6`}
               className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/20 hover:shadow-warm-lg"
             >
               <SubjectIcon
