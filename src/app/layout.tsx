@@ -52,8 +52,24 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+// Search-engine ownership verification tokens. Set whichever you have as
+// environment variables in Vercel (Production) — each renders its meta tag only
+// when present, so unset ones emit nothing:
+//   GOOGLE_SITE_VERIFICATION  → <meta name="google-site-verification">
+//   BING_SITE_VERIFICATION    → <meta name="msvalidate.01">
+//   YANDEX_VERIFICATION       → <meta name="yandex-verification">
+const googleSV = process.env.GOOGLE_SITE_VERIFICATION;
+const bingSV = process.env.BING_SITE_VERIFICATION;
+const yandexSV = process.env.YANDEX_VERIFICATION;
+const verification: NonNullable<Metadata["verification"]> = {
+  ...(googleSV ? { google: googleSV } : {}),
+  ...(yandexSV ? { yandex: yandexSV } : {}),
+  ...(bingSV ? { other: { "msvalidate.01": bingSV } } : {}),
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  verification,
   title: {
     default: "haistudy | Platform belajar all-in-one untuk mahasiswa BINUS",
     template: "%s | haistudy",
