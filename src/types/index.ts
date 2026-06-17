@@ -233,6 +233,10 @@ export interface DmConversation {
   otherOnline?: boolean;
   lastBody?: string | null;
   unreadCount?: number;
+  // Last message is from the other person and arrived after my last-read pointer.
+  unread?: boolean;
+  // The other participant's last-read timestamp (for read receipts on my sends).
+  otherLastReadAt?: string | null;
 }
 
 export interface DmMessage {

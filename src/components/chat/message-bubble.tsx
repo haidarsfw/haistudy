@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Crown,
   Gem,
+  CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -51,6 +52,10 @@ interface MessageBubbleProps {
   variant?: "default" | "dm";
   // True when the previous message is from the same sender - tightens spacing.
   grouped?: boolean;
+  // DM read receipt (own messages only): grey ticks = sent, blue = read.
+  dmReadState?: "sent" | "read";
+  // When read, the other participant's read time (shown on hover/tap).
+  dmReadAt?: string | null;
 }
 
 export function MessageBubble({
@@ -67,6 +72,8 @@ export function MessageBubble({
   avatarUrl,
   variant = "default",
   grouped = false,
+  dmReadState,
+  dmReadAt,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -198,6 +205,25 @@ export function MessageBubble({
             >
               {isPinned && <Pin className="h-2.5 w-2.5" />}
               <span>{time}</span>
+              {isOwn && dmReadState && (
+                <span
+                  className="inline-flex"
+                  aria-label={dmReadState === "read" ? "Dibaca" : "Terkirim"}
+                  title={
+                    dmReadState === "read" && dmReadAt
+                      ? `Dibaca ${format(new Date(dmReadAt), "HH:mm", { locale: idLocale })}`
+                      : "Terkirim"
+                  }
+                >
+                  <CheckCheck
+                    className={`h-3 w-3 ${
+                      dmReadState === "read"
+                        ? "text-sky-300"
+                        : "text-primary-foreground/50"
+                    }`}
+                  />
+                </span>
+              )}
             </div>
           </div>
 

@@ -108,33 +108,72 @@ export async function GET(request: Request) {
         .map((p) => p.license_key)
     );
 
-    // Last message body per conversation (most recent row each).
+    // Last message per conversation (most recent row each: body + sender + time).
+    const convIds = convs.map((c) => c.id);
     const { data: lastMsgs } = await scopeEq(scope)(
       supabase
         .from("dm_messages")
-        .select("conversation_id, body, created_at")
-        .in(
-          "conversation_id",
-          convs.map((c) => c.id)
-        )
+        .select("conversation_id, body, created_at, sender_key")
+        .in("conversation_id", convIds)
         .order("created_at", { ascending: false })
     );
-    const lastBodyMap = new Map<string, string>();
-    for (const m of (lastMsgs as { conversation_id: string; body: string }[]) ?? []) {
-      if (!lastBodyMap.has(m.conversation_id)) {
-        lastBodyMap.set(m.conversation_id, m.body);
+    const lastMsgMap = new Map<
+      string,
+      { body: string; created_at: string; sender_key: string }
+    >();
+    for (const m of (lastMsgs as {
+      conversation_id: string;
+      body: string;
+      created_at: string;
+      sender_key: string;
+    }[]) ?? []) {
+      if (!lastMsgMap.has(m.conversation_id)) {
+        lastMsgMap.set(m.conversation_id, {
+          body: m.body,
+          created_at: m.created_at,
+          sender_key: m.sender_key,
+        });
       }
     }
 
+    // Last-read pointers for all participants of my conversations (1 query).
+    // Drives unread flags (mine) + read receipts (the other side's pointer).
+    const { data: readRows } = await supabase
+      .from("dm_reads")
+      .select("conversation_id, license_key, last_read_at")
+      .in("conversation_id", convIds);
+    const readsMap = new Map<string, Record<string, string>>();
+    for (const r of (readRows as {
+      conversation_id: string;
+      license_key: string;
+      last_read_at: string;
+    }[]) ?? []) {
+      const m = readsMap.get(r.conversation_id) ?? {};
+      m[r.license_key] = r.last_read_at;
+      readsMap.set(r.conversation_id, m);
+    }
+
+    const meUpper = licenseKey.toUpperCase();
     const enriched = convs.map((c) => {
       const k = c.otherKey ? keyMap.get(c.otherKey) : undefined;
+      const reads = readsMap.get(c.id) ?? {};
+      const myLastRead = reads[licenseKey] ?? null;
+      const otherLastReadAt = c.otherKey ? reads[c.otherKey] ?? null : null;
+      const last = lastMsgMap.get(c.id) ?? null;
+      // Unread = last message is from the other person and arrived after my pointer.
+      const unread =
+        !!last &&
+        last.sender_key.toUpperCase() !== meUpper &&
+        (!myLastRead || last.created_at > myLastRead);
       return {
         ...c,
         otherName: displayName({ shortName: k?.short_name, name: k?.name }),
         otherTier: k?.package_tier ?? null,
         otherIsAdmin: k?.is_admin ?? false,
         otherOnline: c.otherKey ? onlineKeys.has(c.otherKey) : false,
-        lastBody: lastBodyMap.get(c.id) ?? null,
+        lastBody: last?.body ?? null,
+        unread,
+        otherLastReadAt,
       };
     });
 

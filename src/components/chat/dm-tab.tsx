@@ -69,6 +69,7 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
     activeId,
     setActiveId,
     messages,
+    otherLastReadAt,
     isLoadingDirectory,
     isLoadingMessages,
     isSending,
@@ -281,6 +282,13 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
               const mine = cm.authorId.toUpperCase() === myKey;
               const prev = adapted[i - 1];
               const grouped = !!prev && prev.authorId === cm.authorId;
+              // Read receipt for my own sent messages: blue once the other
+              // participant's last-read pointer is at/after this message's time.
+              const readState = mine
+                ? otherLastReadAt && cm.createdAt <= otherLastReadAt
+                  ? "read"
+                  : "sent"
+                : undefined;
               return (
                 <MessageBubble
                   key={cm.id}
@@ -296,6 +304,8 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
                   avatarUrl={avatars.get(cm.licenseKey?.toUpperCase() ?? "")}
                   variant="dm"
                   grouped={grouped}
+                  dmReadState={readState}
+                  dmReadAt={otherLastReadAt}
                 />
               );
             })
@@ -366,15 +376,21 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className={`truncate text-sm font-medium ${getRoleNameClass(resolveRole({ isAdmin: c.otherIsAdmin, packageTier: c.otherTier ?? null }))}`}>
+                    <span className={`truncate text-sm ${c.unread ? "font-bold" : "font-medium"} ${getRoleNameClass(resolveRole({ isAdmin: c.otherIsAdmin, packageTier: c.otherTier ?? null }))}`}>
                       {c.otherName ?? t("dm.you")}
                     </span>
                     {c.lastBody && (
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className={`truncate text-[11px] ${c.unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
                         {c.lastBody}
                       </p>
                     )}
                   </div>
+                  {c.unread && (
+                    <span
+                      className="ml-auto h-2.5 w-2.5 shrink-0 rounded-full bg-primary"
+                      aria-label="Belum dibaca"
+                    />
+                  )}
                 </button>
               </li>
             ))}

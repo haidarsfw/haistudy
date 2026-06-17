@@ -110,7 +110,24 @@ export async function GET(
     if (error) throw error;
 
     const messages = ((data as MsgRow[]) ?? []).map(mapMsg).reverse();
-    return NextResponse.json({ messages });
+
+    // The other participant's last-read pointer → read receipts on my sent
+    // messages (blue once otherLastReadAt >= the message's time).
+    const meUpper = licenseKey.toUpperCase();
+    const otherKey =
+      conv.participants.find((p) => p.toUpperCase() !== meUpper) ?? null;
+    let otherLastReadAt: string | null = null;
+    if (otherKey) {
+      const { data: rd } = await supabase
+        .from("dm_reads")
+        .select("last_read_at")
+        .eq("conversation_id", id)
+        .eq("license_key", otherKey)
+        .maybeSingle();
+      otherLastReadAt =
+        (rd as { last_read_at: string } | null)?.last_read_at ?? null;
+    }
+    return NextResponse.json({ messages, otherLastReadAt });
   } catch (error) {
     if (error instanceof ScopeError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

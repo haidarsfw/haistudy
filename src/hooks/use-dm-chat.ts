@@ -44,6 +44,7 @@ export function useDmChat() {
   const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [otherLastReadAt, setOtherLastReadAt] = useState<string | null>(null);
   const lastSendTime = useRef(0);
 
   // activeId in a ref so the realtime handler always sees the current value.
@@ -86,13 +87,39 @@ export function useDmChat() {
       );
       const data = await res.json();
       setMessages(Array.isArray(data.messages) ? data.messages : []);
+      setOtherLastReadAt(
+        typeof data.otherLastReadAt === "string" ? data.otherLastReadAt : null
+      );
     } catch (error) {
       console.error("Failed to fetch DM messages:", error);
       setMessages([]);
+      setOtherLastReadAt(null);
     } finally {
       setIsLoadingMessages(false);
     }
   }, []);
+
+  // Mark a conversation read (last-read pointer) — called on open/focus + when a
+  // message arrives in the open thread. Optimistically clears the list unread.
+  const markRead = useCallback(async (conversationId: string) => {
+    try {
+      await fetch(
+        `/api/dm/conversations/${encodeURIComponent(conversationId)}/read`,
+        { method: "POST" }
+      );
+    } catch {
+      /* best-effort */
+    }
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, unread: false } : c))
+    );
+    // Let the shell clear any DM notifications for this thread (red-dot sync).
+    window.dispatchEvent(
+      new CustomEvent("hs:dm-read", { detail: { conversationId } })
+    );
+  }, []);
+  const markReadRef = useRef(markRead);
+  markReadRef.current = markRead;
 
   useEffect(() => {
     if (!session) return;
@@ -100,9 +127,33 @@ export function useDmChat() {
   }, [session, fetchConversations]);
 
   useEffect(() => {
-    if (activeId) fetchMessages(activeId);
-    else setMessages([]);
-  }, [activeId, fetchMessages]);
+    if (activeId) {
+      fetchMessages(activeId);
+      markRead(activeId);
+    } else {
+      setMessages([]);
+      setOtherLastReadAt(null);
+    }
+  }, [activeId, fetchMessages, markRead]);
+
+  // Sync the active thread's read-receipt pointer from the (realtime-refreshed)
+  // conversation list, and poll lightly while a thread is open + visible — there
+  // is no realtime on dm_reads (keeps Disk IO down).
+  useEffect(() => {
+    if (!activeId) return;
+    const c = conversations.find((x) => x.id === activeId);
+    if (c && c.otherLastReadAt !== undefined) {
+      setOtherLastReadAt(c.otherLastReadAt ?? null);
+    }
+  }, [conversations, activeId]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    const iv = setInterval(() => {
+      if (!document.hidden) fetchConversations();
+    }, 20000);
+    return () => clearInterval(iv);
+  }, [activeId, fetchConversations]);
 
   // ── Open or create a 1:1 with a directory user ──
   const openConversationWith = useCallback(
@@ -314,6 +365,10 @@ export function useDmChat() {
             setMessages((prev) =>
               prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
             );
+            // Thread is open → immediately mark the incoming message as read.
+            if (msg.senderKey.toUpperCase() !== myKey) {
+              markReadRef.current?.(row.conversation_id as string);
+            }
           }
           // Keep the conversation list fresh (ordering + previews + unread).
           fetchConversations();
@@ -348,6 +403,8 @@ export function useDmChat() {
     };
   }, [scope, session, fetchConversations]);
 
+  const dmUnreadTotal = conversations.filter((c) => c.unread).length;
+
   return {
     myKey,
     directory,
@@ -355,6 +412,9 @@ export function useDmChat() {
     activeId,
     setActiveId,
     messages,
+    otherLastReadAt,
+    markRead,
+    dmUnreadTotal,
     isLoadingDirectory,
     isLoadingMessages,
     isSending,
