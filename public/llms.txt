@@ -1,110 +1,233 @@
 # haistudy
 
-> haistudy (haistudy.site) is an all-in-one smart study platform for BINUS University students in Indonesia. It bundles complete per-course study material, interactive quizzes, 3D flashcards, an AI study assistant, real-time chat/forum, voice study rooms, and progress tracking into a single web app, organized per exam period (UTS / UAS). Built by a BINUS student, independent and not affiliated with BINUS University. The interface and content are in Indonesian (id-ID). Aliases people search for: "hai study", "haistudy app", "platform belajar BINUS", "platform belajar anak Binus", "platform belajar mahasiswa", "aplikasi belajar mahasiswa Binus", "website belajar Binus".
+> ID: haistudy (haistudy.site) adalah platform belajar pintar all-in-one untuk mahasiswa BINUS University di Indonesia. Satu aplikasi web berisi materi lengkap tiap mata kuliah, quiz interaktif, flashcards 3D, AI study assistant, chat & forum real-time, voice room belajar bareng, dan progress tracking — diorganisir per periode ujian (UTS / UAS). Dibuat oleh mahasiswa BINUS, independen dan tidak terafiliasi dengan BINUS University. Antarmuka & konten berbahasa Indonesia (id-ID).
+> EN: haistudy (haistudy.site) is an all-in-one smart study platform for BINUS University students in Indonesia. A single web app with complete per-course material, interactive quizzes, 3D flashcards, an AI study assistant, real-time chat & forum, voice study rooms, and progress tracking — organized per exam period (UTS / UAS). Built by a BINUS student, independent and not affiliated with BINUS University. Interface and content are in Indonesian (id-ID).
+> Search aliases / kata kunci pencarian: "haistudy", "hai study", "haistudy app", "haistudy.site", "platform belajar BINUS", "platform belajar anak Binus", "platform belajar mahasiswa", "aplikasi belajar mahasiswa Binus", "website belajar Binus", "belajar persiapan ujian Binus", "rangkuman kuliah Binus", "kisi-kisi ujian Binus", "BINUS study platform", "Binus exam prep", "study app for university students Indonesia".
 
-## What is haistudy
+## About haistudy / Tentang haistudy
 
-haistudy is a paid web platform (also installable as a PWA on Android, iOS, and desktop) that helps BINUS University students prepare for their exams. Instead of scattered notes and group chats, everything a student needs for a given exam period lives in one place: curated summaries (rangkuman), exam grids (kisi-kisi), per-module material, quizzes, flashcards, an AI tutor trained on the course material, and a study community (chat, forum, voice rooms).
+ID: haistudy adalah platform belajar berbayar (juga bisa dipasang sebagai aplikasi/PWA di Android, iOS, dan desktop) yang membantu mahasiswa BINUS University mempersiapkan ujian. Daripada catatan tersebar dan grup chat yang berantakan, semua kebutuhan belajar untuk satu periode ujian ada di satu tempat: rangkuman, kisi-kisi, materi per modul, quiz, flashcards, AI tutor yang dilatih dari materi kuliah, dan komunitas belajar (chat, forum, voice room). Konten dipisah per periode ujian dan jurusan, sehingga tiap angkatan melihat materi yang tepat untuk periodenya. Saat ini fokus pada mahasiswa BINUS jurusan Business Management. Tagline: "Study Smarter, Not Harder."
 
-Content is namespaced by exam period and major, so each cohort sees exactly the material for their current period (e.g. Semester 2 UTS or Semester 2 UAS, Business Management). The platform is currently focused on BINUS Business Management students.
+EN: haistudy is a paid web platform (also installable as a PWA on Android, iOS, and desktop) that helps BINUS University students prepare for exams. Instead of scattered notes and messy group chats, everything needed for one exam period lives in one place: summaries (rangkuman), exam topic grids (kisi-kisi), per-module material, quizzes, flashcards, an AI tutor trained on the course material, and a study community (chat, forum, voice rooms). Content is namespaced per exam period and major, so each cohort sees exactly the right material for its period. Currently focused on BINUS Business Management students. Tagline: "Study Smarter, Not Harder."
 
-Tagline: "Study Smarter, Not Harder."
+## Who it's for / Untuk siapa
 
-## Who it's for
+ID:
+- Mahasiswa BINUS University (Bina Nusantara), terutama jurusan Business Management (Manajemen).
+- Mahasiswa yang sedang menyiapkan ujian tengah semester (UTS) dan ujian akhir semester (UAS).
+- Siapa pun yang mencari sumber belajar BINUS yang lengkap dan rapi, dengan AI assistant dan komunitas belajar.
 
-- BINUS University (Bina Nusantara) students, primarily the Business Management (Management) major.
+EN:
+- BINUS University (Bina Nusantara) students, primarily the Business Management major.
 - Students preparing for mid-term exams (UTS) and final exams (UAS).
 - Anyone looking for a complete, organized BINUS exam-prep resource with an AI assistant and a study community.
 
-## Subjects covered
+## Subjects & topics / Mata kuliah & topik
 
-Material is authored per exam period for BINUS Business Management, Semester 2:
+ID: Materi disusun per periode ujian untuk BINUS Business Management, Semester 2. Tiap mata kuliah mencakup materi per modul, rangkuman, kisi-kisi, flashcards, dan quiz per kategori. Daftar topik di bawah adalah garis besar pembahasan (bukan materi berbayar itu sendiri).
 
-- Semester 2 — UTS: Statistics I, Business Economics, Character Building: Kewarganegaraan, Accounting for Business, Foundations of Artificial Intelligence.
-- Semester 2 — UAS: Business Ethics, Operations Management, Accounting for Business, Foundations of Artificial Intelligence.
+EN: Material is authored per exam period for BINUS Business Management, Semester 2. Each subject includes per-module material, summaries (rangkuman), exam topic grids (kisi-kisi), flashcards, and category quizzes. The topic lists below are the high-level outline (not the paid material itself).
 
-Each subject includes per-module material, summaries (rangkuman), exam topic grids (kisi-kisi), flashcards, and category-based quizzes.
+### Semester 2 — UTS (mid-term)
 
-## Features
+- Statistics I: Introduction to Statistics; Describing Data (frequency tables, frequency distributions, graphic presentation); Describing Data — numerical measures; Introduction to Probability; Continuous Probability Distributions; Discrete Probability Distributions.
+- Business Economics: The Economics and Business Environment; Business Organisations; The Consumer and Demand; Price Elasticity; Costs of Production; Revenue and Profit; Profit Maximisation under Perfect Competition and Monopoly; Business in a Competitive Market; Digital Marketing using AI; Profit Maximisation under Imperfect Competition; Multinational Corporations in a Global Economy; Business Strategy in a Global Economy.
+- Character Building: Kewarganegaraan (Civics): Introduction to Civics Education; Values and Social Norms; State and Constitution; Rights and Obligations of the State and Its Citizens; Law Enforcement in Indonesia; The Dynamics of Democracy in Indonesia; Wawasan Nusantara.
+- Accounting for Business: Introduction to Financial Statements; The Accounting Information System; Accrual Accounting Concepts; Merchandising Operations and the Multiple-Step Income Statement; Fraud, Internal Control, and Cash; Statement of Cash Flows; Financial Analysis — the big picture.
+- Foundations of Artificial Intelligence: Introduction to AI; Machine Learning Fundamentals; AI and Data; Natural Language Processing; Speech Recognition; Computer Vision; Video Processing.
 
-- Complete material (Materi Lengkap): per-module material, summaries (rangkuman), and exam topic grids (kisi-kisi) for every course in the active exam period.
+### Semester 2 — UAS (final)
+
+- Business Ethics: Ethical Decision Making — Technology & Privacy in the Workplace; Ethical Decision Making — case study discussion; Ethics and Marketing; Business and Environmental Sustainability; Ethical Decision Making — Corporate Governance, Accounting & Finance.
+- Operations Management: Location Strategies; Inventory Management; Aggregate Planning and S&OP; Material Requirements Planning (MRP) and ERP; Short-Term Scheduling; Maintenance and Reliability.
+- Accounting for Business: Managerial Accounting; Cost-Volume-Profit Analysis; Incremental Analysis; Budgetary Planning; Budgetary Control & Responsibility Accounting.
+- Foundations of Artificial Intelligence: AI with IoT; AI and Robots in Our Lives; AI in Entertainment and Gaming; AI and Society — Shaping the Future; Ethics of AI.
+
+## Features / Fitur
+
+ID:
+- Materi Lengkap: materi per modul, rangkuman, dan kisi-kisi untuk setiap mata kuliah di periode ujian aktif.
+- Flashcards Interaktif: kartu bolak-balik 3D dengan shuffle dan progress tracking.
+- Quiz Berbobot: soal per kategori dengan scoring otomatis dan leaderboard.
+- AI Study Assistant: tanya materi kapan saja; AI menjawab berdasarkan materi di platform untuk periode ujian aktif.
+- Live Support: chat langsung dengan admin dari dalam aplikasi, atau via WhatsApp / Instagram.
+- Komunitas: global chat real-time, forum diskusi, @mention, reply, voice message, dan notifikasi instan.
+- Voice Room: belajar bareng lewat panggilan suara langsung dari browser (buat room, lock, share screen).
+- Catatan pribadi dengan Markdown + rumus matematika (KaTeX), bookmark, dan progress tracking per akun yang tersinkron antar perangkat.
+- PWA: pasang ke layar utama untuk pengalaman fullscreen seperti aplikasi native + notifikasi.
+
+EN:
+- Complete material: per-module material, summaries, and exam topic grids for every course in the active exam period.
 - Interactive flashcards: 3D flip cards with shuffle and progress tracking.
 - Weighted quizzes: questions per category with automatic scoring and a leaderboard.
-- AI study assistant: ask about the course material anytime; the AI answers strictly from the in-platform material for the active exam period (summaries, flashcards, kisi-kisi). Text runs on DeepSeek V4 (Pro model for VIP/Diamond, Flash for others); images are read by Google Gemini. Always verify against the lecturer's material.
-- Live support: chat directly with the admin from inside the app, or reach out via WhatsApp / Instagram.
-- Community: real-time global chat, forum threads, @mentions, replies, voice messages, and instant notifications.
-- Voice rooms: study together over a live voice call straight from the browser, with the ability to create rooms, lock them, and share screen.
+- AI study assistant: ask about the material anytime; the AI answers from the in-platform material for the active exam period.
+- Live support: chat directly with the admin from inside the app, or via WhatsApp / Instagram.
+- Community: real-time global chat, discussion forum, @mentions, replies, voice messages, and instant notifications.
+- Voice rooms: study together over a live browser voice call (create rooms, lock them, share screen).
 - Personal notes with Markdown + math (KaTeX), bookmarks, and per-account progress tracking that syncs across devices.
-- Installable PWA: add to home screen for a full-screen, app-like experience with push notifications.
+- PWA: add to home screen for a full-screen, native-app-like experience with push notifications.
 
-## Packages & pricing
+## AI study assistant / AI Study Assistant
 
-Access is sold per exam period (one-time, per UTS or per UAS period). All paid packages unlock the same study content (all subjects, quizzes, flashcards, AI assistant, forum/chat, and voice rooms). Prices are in Indonesian Rupiah (IDR):
+ID: AI menjawab secara ketat berdasarkan materi yang ada di platform untuk periode ujian aktif (rangkuman, flashcards, kisi-kisi) serta informasi fitur haistudy — AI tidak membahas materi periode lain. Teks ditenagai DeepSeek V4 (model Pro untuk VIP/Diamond, Flash untuk lainnya, dengan mode reasoning/berpikir opsional); gambar yang di-upload dibaca oleh Google Gemini. Mendukung "Tanya AI" pada teks materi yang disorot. Jawaban AI bisa tidak selalu akurat — selalu verifikasi dengan materi dosen.
 
-- Share — Rp 25.000: full content; requires sharing the haistudy link to friends. (LE86 class promo: Rp 20.000 for sharing to 2 friends outside the class.) Up to 2 devices.
-- Normal — Rp 30.000 (most popular): full content, no sharing requirement. Up to 2 devices.
-- VIP — Rp 35.000 (best price-to-value): everything in Normal, plus the exclusive AI model (DeepSeek V4 Pro) with priority and higher chat limits, VIP Lounge, Direct Messages (DM) between members, Snippet Library, custom accent/highlight colors, premium fonts, voice-room perks, a VIP badge, and faster support. Up to 3 devices.
-- Diamond — Rp 50.000: everything in VIP, plus an exclusive glowing name effect shown across the whole app (global chat, forum, DM, voice room, profile), a Diamond badge, and supporter status that directly funds haistudy's development. Up to 3 devices.
+EN: The AI answers strictly from the in-platform material for the active exam period (summaries, flashcards, kisi-kisi) plus haistudy feature info — it does not cover other periods' material. Text runs on DeepSeek V4 (Pro model for VIP/Diamond, Flash for others, with an optional reasoning/thinking mode); uploaded images are read by Google Gemini. Supports "Ask AI" on highlighted material text. AI answers may not always be accurate — always verify against the lecturer's material.
 
-There is a free preview (no login) at /preview to try the platform before buying.
+## Community & collaboration / Komunitas & kolaborasi
 
-## How to get access
+ID: Pengguna di periode ujian yang sama berbagi ruang yang sama: global chat real-time (dengan @mention, reply, voice message, gambar, polling), forum diskusi per mata kuliah, voice room untuk belajar bareng, dan Direct Message antar anggota (fitur VIP/Diamond). Notifikasi instan untuk mention, reply, pengumuman, dan polling.
 
+EN: Users in the same exam period share the same spaces: real-time global chat (with @mentions, replies, voice messages, images, polls), per-course discussion forum, voice rooms for studying together, and Direct Messages between members (VIP/Diamond feature). Instant notifications for mentions, replies, announcements, and polls.
+
+## Packages & pricing / Paket & harga
+
+ID: Akses dijual per periode ujian (sekali bayar, per UTS atau per UAS). Semua paket berbayar membuka konten belajar yang sama (semua mata kuliah, quiz, flashcards, AI assistant, forum/chat, voice room). Harga dalam Rupiah (IDR):
+
+- Share — Rp 25.000: konten penuh, dengan syarat membagikan link haistudy ke teman. (Promo kelas LE86: Rp 20.000 untuk share ke 2 teman di luar kelas.) Maks. 2 perangkat.
+- Normal — Rp 30.000 (paling populer): konten penuh, tanpa syarat share. Maks. 2 perangkat.
+- VIP — Rp 35.000 (best price-to-value): semua fitur Normal, plus model AI eksklusif (DeepSeek V4 Pro) dengan prioritas & limit chat lebih tinggi, VIP Lounge, Direct Message (DM), Snippet Library, warna aksen/highlight kustom, font premium, perks voice room, badge VIP, dan support lebih cepat. Maks. 3 perangkat.
+- Diamond — Rp 50.000: semua fitur VIP, plus efek nama "glow" eksklusif di seluruh aplikasi (chat global, forum, DM, voice room, profil), badge Diamond, dan status supporter yang langsung mendukung pengembangan haistudy. Maks. 3 perangkat.
+
+Tersedia Preview Gratis (tanpa login) di /preview untuk mencoba sebelum membeli.
+
+EN: Access is sold per exam period (one-time, per UTS or per UAS). All paid packages unlock the same study content (all subjects, quizzes, flashcards, AI assistant, forum/chat, voice rooms). Prices in Indonesian Rupiah (IDR):
+
+- Share — Rp 25,000: full content, requires sharing the haistudy link to friends. (LE86 class promo: Rp 20,000 for sharing to 2 friends outside the class.) Up to 2 devices.
+- Normal — Rp 30,000 (most popular): full content, no sharing requirement. Up to 2 devices.
+- VIP — Rp 35,000 (best price-to-value): everything in Normal, plus the exclusive AI model (DeepSeek V4 Pro) with priority & higher chat limits, VIP Lounge, Direct Messages (DM), Snippet Library, custom accent/highlight colors, premium fonts, voice-room perks, a VIP badge, and faster support. Up to 3 devices.
+- Diamond — Rp 50,000: everything in VIP, plus an exclusive glowing name effect across the whole app (global chat, forum, DM, voice room, profile), a Diamond badge, and supporter status that directly funds haistudy's development. Up to 3 devices.
+
+A free preview (no login) is available at /preview to try before buying.
+
+## How to get access / Cara mendapatkan akses
+
+ID:
+1. Buka haistudy.site dan pilih paket (Share, Normal, VIP, atau Diamond).
+2. Isi formulir pembelian di website.
+3. Bayar via transfer bank, e-wallet, atau QRIS.
+4. Unggah bukti bayar di formulir.
+5. Admin memverifikasi pembayaran dan mengirim license key via WhatsApp.
+6. Masukkan license key di halaman login untuk mulai belajar.
+
+Login memakai license key (platform tidak memakai akun email/password). Sign-in Google juga didukung untuk menautkan sesi.
+
+EN:
 1. Open haistudy.site and pick a package (Share, Normal, VIP, or Diamond).
 2. Fill in the purchase form on the website.
-3. Pay via bank transfer, e-wallet, or QRIS (see payment methods).
+3. Pay via bank transfer, e-wallet, or QRIS.
 4. Upload the payment proof in the form.
 5. The admin verifies the payment and sends a license key via WhatsApp.
 6. Enter the license key on the login page to start studying.
 
-Login is by license key (the platform does not use email/password accounts). Google sign-in is also supported for linking a session.
+Login is by license key (no email/password accounts). Google sign-in is also supported for linking a session.
 
-## Payment methods
+## Payment methods / Metode pembayaran
 
-- Bank transfer: BCA.
-- E-wallet: GoPay, ShopeePay, DANA, OVO.
-- QRIS.
+ID: Transfer bank (BCA), e-wallet (GoPay, ShopeePay, DANA, OVO), dan QRIS. Sejumlah angka unik kecil ditambahkan ke harga agar admin bisa mencocokkan transfer masuk dengan pembeli yang tepat.
 
-A small unique amount is added to the price so the admin can match each incoming transfer to the right buyer.
+EN: Bank transfer (BCA), e-wallet (GoPay, ShopeePay, DANA, OVO), and QRIS. A small unique amount is added to the price so the admin can match each incoming transfer to the right buyer.
 
-## Platform & access
+## Platform & access / Platform & akses
 
-- Web app at https://haistudy.site, also installable as a PWA on Android, iOS, and desktop.
+ID:
+- Aplikasi web di https://haistudy.site, bisa dipasang sebagai PWA di Android, iOS, dan desktop.
+- Bahasa: Indonesia (id-ID).
+- Perangkat: maks. 2 per akun (Share/Normal) atau maks. 3 (VIP/Diamond), diverifikasi via device fingerprint.
+- License key berlaku 30 hari sejak aktivasi.
+- Preview Gratis tanpa login di /preview.
+
+EN:
+- Web app at https://haistudy.site, installable as a PWA on Android, iOS, and desktop.
 - Language: Indonesian (id-ID).
-- Devices: up to 2 per account (Share/Normal) or up to 3 (VIP/Diamond).
-- Free preview available without login at /preview.
+- Devices: up to 2 per account (Share/Normal) or up to 3 (VIP/Diamond), verified via device fingerprint.
+- A license key is valid for 30 days from activation.
+- Free preview without login at /preview.
 
-## Policies
+## Privacy summary / Ringkasan privasi
 
-- Independent platform built by students; NOT affiliated with, endorsed by, or approved by BINUS University. All course material, trademarks, and copyrights belong to their respective owners.
-- No refunds after a license key is issued — preview first to be sure.
-- No account sharing: usage is tracked in real time by device; sharing or logging in on an unregistered device gets the account banned and the license key permanently revoked.
+ID: haistudy menyimpan: license key, nama & kelas (ditampilkan di chat/forum/voice room), device ID (fingerprint untuk batas perangkat), kontak opsional, pengaturan, progress belajar, pesan chat/forum/support, percakapan AI, notifikasi, catatan, bookmark, presence, serta activity & error logs. Data dipakai untuk autentikasi, fitur belajar/komunitas, sinkronisasi antar perangkat, support, dan perbaikan platform. Data server di Supabase (PostgreSQL + Row Level Security), media di Cloudinary, voice via LiveKit, hosting di Vercel; gambar ke AI dikirim langsung ke provider tanpa disimpan. Pengguna bisa minta hapus/ekspor data dan menyembunyikan status online. Teks lengkap di /privacy.
 
-## Contact & support
+EN: haistudy stores: license key, name & class (shown in chat/forum/voice rooms), device ID (fingerprint for the device limit), optional contact, settings, study progress, chat/forum/support messages, AI conversations, notifications, notes, bookmarks, presence, and activity & error logs. Data is used for authentication, study/community features, cross-device sync, support, and platform improvement. Server data on Supabase (PostgreSQL + Row Level Security), media on Cloudinary, voice via LiveKit, hosting on Vercel; images sent to the AI go straight to the provider without being stored. Users can request data deletion/export and hide their online status. Full text at /privacy.
+
+## Terms summary / Ringkasan ketentuan
+
+ID: License key bersifat personal dan tidak boleh dibagikan; maks. 2 perangkat per key (verifikasi fingerprint); berlaku 30 hari sejak aktivasi. Penyalahgunaan (berbagi, menjual ulang, meminjamkan) → blokir permanen tanpa refund. Dilarang: berbagi key, kecurangan akademik, konten ilegal/spam/SARA, menyalahgunakan @mention/@all, meretas/mendecompile, mendistribusikan ulang konten tanpa izin, memakai bot. Materi bersifat edukatif dan rangkuman — bukan pengganti materi resmi dosen (selalu rujuk BINUSMAYA). Layanan disediakan "sebagaimana adanya" tanpa jaminan hasil ujian. Teks lengkap di /terms.
+
+EN: A license key is personal and must not be shared; up to 2 devices per key (fingerprint verification); valid 30 days from activation. Misuse (sharing, reselling, lending) → permanent ban, no refund. Prohibited: sharing keys, academic cheating, illegal/spam/hateful content, abusing @mention/@all, hacking/decompiling, redistributing content without permission, using bots. Material is educational and summarized — not a replacement for official lecturer material (always refer to BINUSMAYA). The service is provided "as is" with no guarantee of exam results. Full text at /terms.
+
+## Policies / Kebijakan utama
+
+ID:
+- Independen: dibuat oleh mahasiswa; TIDAK terafiliasi, didukung, atau disetujui oleh BINUS University. Seluruh materi kuliah, merek, dan hak cipta milik pemiliknya masing-masing.
+- Tanpa refund setelah license key diterbitkan — coba Preview Gratis dulu.
+- Tanpa berbagi akun: pemakaian dilacak real-time per perangkat; berbagi atau login di perangkat tak terdaftar membuat akun dibanned dan key hangus permanen.
+
+EN:
+- Independent: built by students; NOT affiliated with, endorsed by, or approved by BINUS University. All course material, trademarks, and copyrights belong to their respective owners.
+- No refunds after a license key is issued — try the free preview first.
+- No account sharing: usage is tracked in real time per device; sharing or logging in on an unregistered device gets the account banned and the key permanently revoked.
+
+## What students say / Kata mahasiswa (anonim)
+
+ID (testimoni dari mahasiswa Business Management, anonim, rating 5/5):
+- "Sangat terbantu dengan kelengkapan materi di aplikasi ini. Materinya gampang dimengerti dan nggak bikin pusing. Worth it."
+- "Webnya ngebantu banget kalau lagi mau baca-baca materi di waktu senggang; materi mudah dimengerti dan ada catatan mentor yang mempermudah pemahaman."
+- "The only source I used for study, dan materinya lengkap banget. Info tentang materi penting & wajib dipelajari sangat membantu."
+- "Ngebantu banget buat persiapan ujian; materi lengkap dan mudah dipahami, kisi-kisi yang dikasih juga banyak yang keluar pas ujian."
+
+EN: Anonymized 5/5 testimonials from Business Management students report that the material is complete and easy to understand, the mentor notes aid comprehension, it was their only study source, and the provided exam topic grids (kisi-kisi) closely matched what appeared on the exam.
+
+## FAQ
+
+ID:
+- Apa itu haistudy? Platform belajar pintar all-in-one untuk mahasiswa BINUS: materi tiap mata kuliah, quiz interaktif, flashcards, AI assistant, voice room, dan komunitas, diorganisir per periode ujian.
+- Apakah resmi / terafiliasi BINUS? Tidak. Platform independen buatan mahasiswa BINUS, tidak terafiliasi atau didukung BINUS University.
+- Universitas & jurusan apa? BINUS University, fokus Business Management (Semester 2), untuk periode UTS dan UAS.
+- Bagaimana cara akses? Pilih paket → isi formulir → bayar (transfer/e-wallet/QRIS) → unggah bukti → admin kirim license key via WhatsApp → masukkan key di halaman login.
+- Beda paket Share dan Normal? Konten sama persis. Share lebih murah tapi wajib share link ke teman; Normal langsung akses tanpa syarat share.
+- Keuntungan VIP? Model AI eksklusif (DeepSeek V4 Pro) dengan prioritas & limit lebih tinggi, VIP Lounge, DM, Snippet Library, warna aksen kustom, font premium, perks voice room, badge VIP, dan support lebih cepat.
+- Apa itu Diamond? Semua fitur VIP plus efek nama "glow" eksklusif di seluruh haistudy, badge Diamond, dan bentuk dukungan langsung untuk pengembangan haistudy.
+- Berapa device? Maks. 2 (Share/Normal) atau 3 (VIP/Diamond). Butuh lebih → hubungi admin.
+- Bisa preview dulu? Bisa, gratis tanpa login di /preview.
+- Mata kuliah apa saja? Tergantung periode ujian aktif untuk Business Management Semester 2 (UTS: Statistics I, Business Economics, CB Kewarganegaraan, Accounting for Business, Foundations of AI; UAS: Business Ethics, Operations Management, Accounting for Business, Foundations of AI).
+- Apakah AI-nya akurat? AI menjawab berdasarkan materi periode ujian aktif di platform; selalu cek dengan materi dosen.
+- Apa fitur voice room? Belajar bareng via panggilan suara dari browser; bisa buat room, lock room, dan share screen.
+- Cara hubungi admin? Menu Layanan Pelanggan di sidebar → tab Chat untuk live chat; atau via WhatsApp/Instagram.
+- Boleh sharing akun? Tidak. Sistem keamanan melacak pola pemakaian device real-time; aktivitas sharing → akun dibanned dan key hangus permanen tanpa peringatan.
+- Ada refund? Tidak ada refund setelah License Key diterbitkan; pastikan sudah lihat Preview Gratis sebelum membeli.
+
+EN:
+- What is haistudy? An all-in-one smart study platform for BINUS students: per-course material, interactive quizzes, flashcards, an AI assistant, voice rooms, and a community, organized per exam period.
+- Is it official / affiliated with BINUS? No. Independent, made by a BINUS student, not affiliated with or endorsed by BINUS University.
+- Which university & major? BINUS University, focused on Business Management (Semester 2), for UTS and UAS exam periods.
+- How do I get access? Pick a package → fill the form → pay (transfer/e-wallet/QRIS) → upload proof → admin sends a license key via WhatsApp → enter the key on the login page.
+- Share vs Normal? Identical content. Share is cheaper but requires sharing the link to friends; Normal gives instant access with no sharing requirement.
+- VIP benefits? Exclusive AI model (DeepSeek V4 Pro) with priority & higher limits, VIP Lounge, DM, Snippet Library, custom accent colors, premium fonts, voice-room perks, a VIP badge, and faster support.
+- What is Diamond? All VIP features plus an exclusive glowing name effect across haistudy, a Diamond badge, and a way to directly support haistudy's development.
+- How many devices? Up to 2 (Share/Normal) or 3 (VIP/Diamond). Need more → contact the admin.
+- Can I preview first? Yes, free and login-free at /preview.
+- Which subjects? Depends on the active exam period for Business Management Semester 2 (UTS: Statistics I, Business Economics, CB Kewarganegaraan, Accounting for Business, Foundations of AI; UAS: Business Ethics, Operations Management, Accounting for Business, Foundations of AI).
+- Is the AI accurate? It answers from the active exam period's in-platform material; always cross-check with the lecturer's material.
+- What are voice rooms? Study together over a browser voice call; create rooms, lock them, and share screen.
+- How do I contact the admin? Customer Service menu in the sidebar → Chat tab for live chat; or via WhatsApp/Instagram.
+- Can I share my account? No. Security tracks device usage patterns in real time; sharing gets the account banned and the key permanently revoked without warning.
+- Are there refunds? No refunds after a license key is issued; be sure via the free preview before buying.
+
+## Contact & support / Kontak & dukungan
 
 - WhatsApp (admin): +62 878-3925-6171
 - Instagram: @haidarsfw (creator: haidarsb, BINUS class LE86)
-- In-app: open "Layanan Pelanggan" (Customer Service) in the sidebar and use the Chat tab to message the admin live.
+- In-app / Di aplikasi: open "Layanan Pelanggan" (Customer Service) in the sidebar → Chat tab to message the admin live.
 
-## Common questions (FAQ)
-
-- What is haistudy? A smart all-in-one study platform for BINUS University students: per-course material, interactive quizzes, flashcards, an AI assistant, voice rooms, and a study community, organized per exam period.
-- Is it official / affiliated with BINUS? No. It is an independent platform made by a BINUS student and is not affiliated with or endorsed by BINUS University.
-- Which university and major? BINUS University, focused on Business Management (Semester 2), for UTS and UAS exam periods.
-- How much does it cost? From Rp 20.000–50.000 per exam period depending on the package (Share / Normal / VIP / Diamond).
-- Can I try it before buying? Yes, there is a free preview at /preview with no login required.
-- How do I buy and log in? Pick a package on the site, fill the form, pay, upload proof; the admin sends a license key via WhatsApp; enter the key on the login page.
-- Is the AI accurate? The AI answers based on the platform's course material for the active exam period; always cross-check with the lecturer's material.
-
-## Pages
+## Pages / Halaman
 
 - [Home / landing](https://haistudy.site/): overview, features, pricing, testimonials, and FAQ.
 - [Login](https://haistudy.site/login): enter a license key or sign in to access the app.
-- [Free preview](https://haistudy.site/preview): try a demo of the platform without logging in.
-- [Pricing](https://haistudy.site/#pricing): compare the Share, Normal, VIP, and Diamond packages.
+- [Free preview / Preview Gratis](https://haistudy.site/preview): try a demo of the platform without logging in.
+- [Pricing / Harga](https://haistudy.site/#pricing): compare the Share, Normal, VIP, and Diamond packages.
 - [FAQ](https://haistudy.site/#faq): frequently asked questions.
 
 ## Optional
 
-- [Privacy Policy](https://haistudy.site/privacy)
-- [Terms of Service](https://haistudy.site/terms)
+- [Privacy Policy](https://haistudy.site/privacy): full privacy policy.
+- [Terms of Service](https://haistudy.site/terms): full terms of service.
