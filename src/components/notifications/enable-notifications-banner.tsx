@@ -8,7 +8,7 @@ import { useWebPush } from "@/hooks/use-web-push";
 import { useSession } from "@/components/providers/session-provider";
 import { sounds } from "@/lib/sounds";
 import { toast } from "@/components/ui/toast";
-import { INSTALL_SHOWN_KEY } from "@/lib/pwa-version";
+import { INSTALL_SHOWN_KEY, isInstallDismissed } from "@/lib/pwa-version";
 
 const DISMISSED_AT_KEY = "hs-notif-banner-dismissed-at";
 const REPROMPT_AFTER_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -57,26 +57,27 @@ export function EnableNotificationsBanner() {
     // permission granted but no subscription - show "Enable" so user can subscribe
   }
 
-  // The iOS "Add to Home Screen" hint duplicates the InstallBanner popup. Keep it
-  // RARE so mobile first-login isn't cluttered: never on first login (onboarding
-  // not done yet) and not in a session where the install popup already showed.
-  // Returning users still see it occasionally (7-day dismiss cooldown above).
+  // The iOS "Add to Home Screen" hint duplicates the InstallBanner POPUP, so the
+  // popup is primary. This header reminder only appears AFTER the popup has been
+  // shown & dismissed once, and never in the same session the popup showed —
+  // so mobile first-login stays clean (only the welcome banner there). Returning
+  // users see it occasionally (7-day dismiss cooldown above).
   if (iosNeedsInstall) {
-    const onboarded = (() => {
+    const popupDismissed = (() => {
       try {
-        return !!localStorage.getItem(`hs-onboarding-${session.licenseKey}`);
+        return isInstallDismissed();
       } catch {
         return false;
       }
     })();
-    const installPopupShownThisSession = (() => {
+    const popupShownThisSession = (() => {
       try {
         return sessionStorage.getItem(INSTALL_SHOWN_KEY) === "1";
       } catch {
         return false;
       }
     })();
-    if (!onboarded || installPopupShownThisSession) return null;
+    if (!popupDismissed || popupShownThisSession) return null;
   }
 
   const handleDismiss = () => {
@@ -122,8 +123,9 @@ export function EnableNotificationsBanner() {
         <p className="min-w-0 flex-1 leading-snug">
           {iosNeedsInstall ? (
             <>
-              Tap <span className="font-semibold">Share → Add to Home Screen</span>{" "}
-              di Safari untuk mengaktifkan notifikasi push di iPhone.
+              Pasang ke layar utama: fullscreen, baca lebih nyaman, & notifikasi
+              langsung ke HP.{" "}
+              <span className="font-semibold">Share → Add to Home Screen</span>.
             </>
           ) : (
             <>

@@ -35,6 +35,40 @@ function getExternalUrl(driveId: string, type: string): string {
   return `https://drive.google.com/file/d/${driveId}/view`;
 }
 
+// "Info Ujian" panel — structured exam info (format, rules) + optional note.
+// Rendered both when kisi-kisi exists AND in the empty state (so subjects with
+// no kisi-kisi but with exam info, e.g. Business Ethics, still show it like OM).
+function InfoUjianPanel({
+  info,
+  note,
+}: {
+  info?: { label: string; value: string }[];
+  note?: string;
+}) {
+  if (!(info && info.length > 0) && !note) return null;
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b border-border">
+        <ClipboardList className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-heading text-sm font-semibold">Info Ujian</span>
+      </div>
+      <div className="px-4 py-2.5 space-y-1.5">
+        {info?.map((item, idx) => (
+          <div key={idx} className="flex items-start gap-2 text-sm">
+            <span className="font-medium text-foreground whitespace-nowrap">{item.label}:</span>
+            <span className="text-foreground/80">{item.value}</span>
+          </div>
+        ))}
+        {note && (
+          <p className="text-xs text-primary/80 pt-1 border-t border-border mt-2">
+            {note}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiKisiTabProps) {
   const [expanded, setExpanded] = useState<Set<string>>(
     new Set(items.map((i) => i.topic))
@@ -98,23 +132,22 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
 
   if (items.length === 0) {
     return (
-      <div className="py-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Kisi-kisi belum tersedia untuk mata kuliah ini.
-        </p>
-        <div className="mx-auto mt-3 max-w-md rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-          Sesuai regulasi kampus terbaru, dosen tidak diizinkan memberikan
-          kisi-kisi ujian. Apabila kamu menemukan kisi-kisi untuk mata kuliah
-          ini, silakan hubungi admin lewat{" "}
-          <span className="font-medium text-foreground">WhatsApp</span> atau{" "}
-          <span className="font-medium text-foreground">Contact Support</span>{" "}
-          untuk diverifikasi — tersedia reward sebagai bentuk apresiasi.
-        </div>
-        {note && (
-          <div className="mx-auto mt-3 max-w-md rounded-lg bg-primary/5 border border-primary/20 px-4 py-2 text-xs text-primary">
-            {note}
+      <div className="flex flex-col gap-3 py-4">
+        {/* Exam info (format/rules) shows like OM's "Info Ujian", even without kisi-kisi. */}
+        <InfoUjianPanel info={info} note={note} />
+        <div className="py-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Kisi-kisi belum tersedia untuk mata kuliah ini.
+          </p>
+          <div className="mx-auto mt-3 max-w-md rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+            Sesuai regulasi kampus terbaru, dosen tidak diizinkan memberikan
+            kisi-kisi ujian. Apabila kamu menemukan kisi-kisi untuk mata kuliah
+            ini, silakan hubungi admin lewat{" "}
+            <span className="font-medium text-foreground">WhatsApp</span> atau{" "}
+            <span className="font-medium text-foreground">Contact Support</span>{" "}
+            untuk diverifikasi — tersedia reward sebagai bentuk apresiasi.
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -136,27 +169,7 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
           </div>
         )}
         {/* Structured exam info + note combined */}
-        {(info && info.length > 0 || note) && (
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b border-border">
-              <ClipboardList className="h-4 w-4 text-primary shrink-0" />
-              <span className="font-heading text-sm font-semibold">Info Ujian</span>
-            </div>
-            <div className="px-4 py-2.5 space-y-1.5">
-              {info?.map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2 text-sm">
-                  <span className="font-medium text-foreground whitespace-nowrap">{item.label}:</span>
-                  <span className="text-foreground/80">{item.value}</span>
-                </div>
-              ))}
-              {note && (
-                <p className="text-xs text-primary/80 pt-1 border-t border-border mt-2">
-                  {note}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+        <InfoUjianPanel info={info} note={note} />
 
         {items.map((item, idx) => {
           const isExpanded = expanded.has(item.topic);

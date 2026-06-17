@@ -24,7 +24,11 @@ export const content: Record<string, SubjectContent> = {
       { id: 5, title: "Ethical Decision Making: Corporate Governance, Accounting & Finance", driveId: "12BVjBX-ipUVmzoMjune65nsDkIhyEj67", type: "drive-pptx", session: "12", xp: 10 },
     ],
     kisiKisi: [],
-    kisiKisiNote: "Format UAS: Essay 40% + Case Study 60%. Semua soal wajib dijawab dengan teori.",
+    kisiKisiInfo: [
+      { label: "Format Soal", value: "Essay 40% + Case Study 60%" },
+      { label: "Cara Menjawab", value: "Semua soal wajib dijawab dengan teori" },
+    ],
+    kisiKisiNote: "",
     flashcards: bizethicsFlashcards,
     quiz: bizethicsQuiz,
   },
