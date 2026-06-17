@@ -278,22 +278,24 @@ export function HighlightTooltip({
           onClick={onAskAI}
           title={t("rangkuman.ask_ai")}
           aria-label={t("rangkuman.ask_ai")}
-          className="flex h-6 items-center justify-center gap-1 rounded-full px-2 text-primary hover:bg-primary/10"
+          className="flex h-7 items-center justify-center gap-1 rounded-full bg-primary px-2.5 text-primary-foreground transition-opacity hover:opacity-90"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span className="text-[11px] font-medium">{t("rangkuman.ask_ai")}</span>
+          <span className="text-[11px] font-semibold">{t("rangkuman.ask_ai")}</span>
         </button>
       )}
     </>
   );
 
-  // Mobile: a fixed bottom action bar. preventDefault on pointer-down keeps the
-  // selection alive when a control is tapped.
+  // Mobile: a centered floating pill ABOVE the bottom nav + AI FAB, so the
+  // actions (esp. "Tanya AI") are easy to see and reach. Was previously pinned to
+  // the very bottom edge where the dock/FAB covered it. preventDefault on
+  // pointer-down keeps the text selection alive when a control is tapped.
   if (variant === "bar") {
     return (
       <div
-        className="fixed inset-x-0 bottom-0 z-[120] flex items-center justify-center gap-1.5 border-t border-border bg-popover px-3 py-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.12)]"
-        style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
+        className="fixed left-1/2 z-[120] flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-popover px-2.5 py-2 shadow-xl"
+        style={{ bottom: "calc(var(--hs-mobile-nav) + env(safe-area-inset-bottom) + 0.5rem)" }}
         onPointerDown={(e) => e.preventDefault()}
       >
         {inner}
