@@ -278,7 +278,8 @@ export interface Notification {
     | "poll_vote"
     | "poll_result"
     | "comment_reply"
-    | "support_message";
+    | "support_message"
+    | "dm_message";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";

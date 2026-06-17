@@ -15,6 +15,8 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { sendWebPush, type PushSubLite } from "@/lib/push/send";
+import { scopeColumns } from "@/lib/auth/scope-check";
+import type { ScopeTuple } from "@/types/scope";
 import type { SupportMessage } from "@/types";
 
 interface Recipient {
@@ -224,4 +226,104 @@ export async function notifyOnSupportMessage(opts: FanOutOpts): Promise<void> {
   });
 
   await Promise.allSettled(tasks);
+}
+
+// ─── DM fan-out ───
+// One recipient (the other participant). Inserts a scoped in-app notification
+// (drives the recipient's realtime bell + toast + chat-FAB red dot) and, if the
+// recipient has push enabled + subscriptions, a coalesced Web Push to their
+// device. Runs via waitUntil from the DM POST route (non-blocking).
+export async function notifyOnDmMessage(opts: {
+  conversationId: string;
+  recipientKey: string;
+  senderKey: string;
+  senderName: string;
+  type: "text" | "image" | "audio";
+  body: string;
+  messageId: string;
+  scope: ScopeTuple;
+}): Promise<void> {
+  if (!isSupabaseServerConfigured) return;
+  const supabase = createServerClient();
+  if (!supabase) return;
+
+  const { conversationId, recipientKey, senderKey, senderName, type, body, messageId, scope } = opts;
+  if (recipientKey.toUpperCase() === senderKey.toUpperCase()) return;
+
+  const preview =
+    type === "image" ? "📷 Foto" : type === "audio" ? "🎤 Pesan suara" : (body || "").slice(0, 100);
+
+  const [settingsRes, subsRes] = await Promise.all([
+    supabase
+      .from("user_settings")
+      .select("notif_push_enabled")
+      .eq("license_key", recipientKey)
+      .maybeSingle(),
+    supabase
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth")
+      .eq("license_key", recipientKey)
+      .is("revoked_at", null),
+  ]);
+
+  // In-app notification — scoped so the recipient's (scope-filtered) realtime
+  // subscription + bell query deliver it. context = sender key (opens the DM).
+  await supabase.from("notifications").insert({
+    license_key: recipientKey,
+    type: "dm_message",
+    sender_name: senderName,
+    preview,
+    context: senderKey,
+    thread_id: conversationId,
+    message_id: messageId,
+    thread_title: `Pesan dari ${senderName}`,
+    ...scopeColumns(scope),
+  });
+
+  const settings = settingsRes.data as { notif_push_enabled: boolean | null } | null;
+  if (settings?.notif_push_enabled === false) return;
+  const subs: PushSubLite[] = (subsRes.data ?? []).map((s) => ({
+    endpoint: s.endpoint as string,
+    p256dh: s.p256dh as string,
+    auth: s.auth as string,
+  }));
+  if (subs.length === 0) return;
+  if (!withinSoftCap(recipientKey)) return;
+
+  // Coalesce per (recipient, conversation) within 30s (channel "webpush_dm").
+  const sinceIso = new Date(Date.now() - COALESCE_WINDOW_MS).toISOString();
+  const { data: recent } = await supabase
+    .from("notification_deliveries")
+    .select("batch_count, last_pushed_at")
+    .eq("recipient_lk", recipientKey)
+    .eq("conversation_lk", conversationId)
+    .eq("channel", "webpush_dm")
+    .gte("last_pushed_at", sinceIso)
+    .maybeSingle();
+  const batchCount = (recent?.batch_count ?? 0) + 1;
+  const pushBody = batchCount > 1 ? `${batchCount} pesan baru dari ${senderName}` : preview;
+  const deepLink = `/s${scope.semester}/${scope.examPeriod}/${scope.jurusan}/dashboard`;
+
+  await Promise.allSettled(
+    subs.map((s) =>
+      sendWebPush(s, {
+        title: `Pesan baru: ${senderName}`,
+        body: pushBody,
+        tag: `dm:${conversationId}`,
+        data: { deepLink, conversationId, senderKey, kind: "dm_message" },
+      })
+    )
+  );
+
+  await supabase.from("notification_deliveries").upsert(
+    {
+      recipient_lk: recipientKey,
+      conversation_lk: conversationId,
+      channel: "webpush_dm",
+      last_message_id: messageId,
+      batch_count: batchCount,
+      last_pushed_at: new Date().toISOString(),
+    },
+    { onConflict: "recipient_lk,conversation_lk,channel" }
+  );
 }

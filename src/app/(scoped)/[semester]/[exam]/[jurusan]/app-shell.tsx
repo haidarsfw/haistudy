@@ -119,6 +119,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     (pathname ? pathname.replace(/^\//, "").split("/")[0] || null : null);
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
   const { notifications, dismissNotification, markAsRead } = useNotifications();
+  // DM unread for the chat-FAB / mobile-nav red dot, derived from dm_message
+  // notifications (no extra polling — reuses the notifications realtime + state).
+  const dmNotifUnread = notifications.filter(
+    (n) => n.type === "dm_message" && !n.read
+  ).length;
+  const chatBadge = chatUnread + dmNotifUnread;
   const { settings, isLoading: settingsLoading } = useSettings();
   const voiceRoom = useVoice();
 
@@ -173,6 +179,21 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       sounds.notification();
     }
   }, [notifications]);
+
+  // When a DM thread is opened/read (hs:dm-read), clear its dm_message
+  // notifications so the chat red dot + bell stay in sync.
+  useEffect(() => {
+    const onDmRead = (e: Event) => {
+      const cid = (e as CustomEvent).detail?.conversationId as string | undefined;
+      if (!cid) return;
+      const ids = notifications
+        .filter((n) => n.type === "dm_message" && n.threadId === cid && !n.read)
+        .map((n) => n.id);
+      if (ids.length) markAsRead(ids);
+    };
+    window.addEventListener("hs:dm-read", onDmRead);
+    return () => window.removeEventListener("hs:dm-read", onDmRead);
+  }, [notifications, markAsRead]);
 
   // Global ESC handler - closes panels in priority order, then navigates back
   useEffect(() => {
@@ -345,13 +366,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           if (session?.isAdmin) { router.push("/admin?tab=7"); } else { markSupportRead(); setIsSupportOpen(true); }
         }}
         onSettingsOpen={handleSettingsOpen}
-        chatUnread={chatUnread}
+        chatUnread={chatBadge}
       />
 
       {/* FABs (hidden on mobile - mobile uses bottom nav) */}
       <div className="hidden sm:block">
         <AiTrigger onClick={handleAiToggle} />
-        <ChatTrigger onClick={handleChatToggle} unreadCount={chatUnread} />
+        <ChatTrigger onClick={handleChatToggle} unreadCount={chatBadge} />
       </div>
 
       {/* Chat panel - mount on first open, then stay mounted for exit anim */}

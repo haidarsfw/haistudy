@@ -11,6 +11,8 @@ import {
 } from "@/lib/auth/scope-check";
 import { resolveSessionTier } from "@/lib/auth/session-tier";
 import { canUseVip } from "@/lib/tier";
+import { waitUntil } from "@vercel/functions";
+import { notifyOnDmMessage } from "@/lib/notifications/fan-out";
 import type { DmMessage } from "@/types";
 
 type MsgRow = {
@@ -106,27 +108,29 @@ export async function GET(
     query = scopeEq(scope)(query);
     if (before) query = query.lt("created_at", before);
 
-    const { data, error } = await query;
-    if (error) throw error;
-
-    const messages = ((data as MsgRow[]) ?? []).map(mapMsg).reverse();
-
     // The other participant's last-read pointer → read receipts on my sent
-    // messages (blue once otherLastReadAt >= the message's time).
+    // messages. Fetch it IN PARALLEL with the messages (one fewer round-trip on
+    // history open — addresses the slow load).
     const meUpper = licenseKey.toUpperCase();
     const otherKey =
       conv.participants.find((p) => p.toUpperCase() !== meUpper) ?? null;
-    let otherLastReadAt: string | null = null;
-    if (otherKey) {
-      const { data: rd } = await supabase
-        .from("dm_reads")
-        .select("last_read_at")
-        .eq("conversation_id", id)
-        .eq("license_key", otherKey)
-        .maybeSingle();
-      otherLastReadAt =
-        (rd as { last_read_at: string } | null)?.last_read_at ?? null;
-    }
+
+    const [{ data, error }, readRes] = await Promise.all([
+      query,
+      otherKey
+        ? supabase
+            .from("dm_reads")
+            .select("last_read_at")
+            .eq("conversation_id", id)
+            .eq("license_key", otherKey)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    if (error) throw error;
+
+    const messages = ((data as MsgRow[]) ?? []).map(mapMsg).reverse();
+    const otherLastReadAt =
+      (readRes.data as { last_read_at: string } | null)?.last_read_at ?? null;
     return NextResponse.json({ messages, otherLastReadAt });
   } catch (error) {
     if (error instanceof ScopeError) {
@@ -240,6 +244,24 @@ export async function POST(
       .from("dm_conversations")
       .update({ last_message_at: new Date().toISOString() })
       .eq("id", id);
+
+    // Notify the other participant (in-app bell/toast + Web Push) — background.
+    const meUpper = licenseKey.toUpperCase();
+    const recipientKey = conv.participants.find((p) => p.toUpperCase() !== meUpper);
+    if (recipientKey) {
+      waitUntil(
+        notifyOnDmMessage({
+          conversationId: id,
+          recipientKey,
+          senderKey: licenseKey,
+          senderName: senderName ?? "",
+          type,
+          body,
+          messageId: (data as MsgRow).id,
+          scope,
+        }).catch((e) => console.error("[dm] notify failed", e))
+      );
+    }
 
     return NextResponse.json({ message: mapMsg(data as MsgRow) });
   } catch (error) {

@@ -10,7 +10,7 @@ import {
   BarChart,
   type LucideIcon,
 } from "lucide-react";
-import { openChatToMessage } from "@/lib/events";
+import { openChatToMessage, openDmTo } from "@/lib/events";
 import type { Notification } from "@/types";
 
 // ─── Single source of truth for notification presentation + behavior ───
@@ -26,6 +26,8 @@ export function isInteractiveNotification(n: Notification): boolean {
   ) {
     return true;
   }
+  // DM notifications open the chat DM with the sender (context = sender key).
+  if (n.type === "dm_message" && n.context) return true;
   // Forum-context notifications navigate to the thread/subject.
   if (n.context === "forum" && (n.subjectId || n.threadId)) {
     return (
@@ -54,6 +56,8 @@ export function notificationIcon(n: Notification): LucideIcon {
     case "poll_vote":
     case "poll_result":
       return BarChart;
+    case "dm_message":
+      return MessageCircle;
     default:
       return Bell;
   }
@@ -93,6 +97,8 @@ export function notificationLabel(
       return t("notification.poll_result");
     case "comment_reply":
       return `${n.senderName} ${t("notification.replied_comment")}`;
+    case "dm_message":
+      return n.senderName ? `${n.senderName} mengirim pesan` : "Pesan baru";
     default:
       return t("notification.default");
   }
@@ -152,6 +158,10 @@ export function routeToNotification(
   }
   if (n.context === "forum" && (n.subjectId || n.threadId)) {
     navigateForum?.(n);
+    return true;
+  }
+  if (n.type === "dm_message" && n.context) {
+    openDmTo(n.context);
     return true;
   }
   return false;
