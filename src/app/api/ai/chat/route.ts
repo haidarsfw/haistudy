@@ -74,12 +74,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (history.length > MAX_HISTORY) {
-      return NextResponse.json(
-        { error: "History too long" },
-        { status: 400 }
-      );
-    }
+    // No hard cap on conversation length — users continue a chat indefinitely,
+    // anytime. Only the most recent MAX_HISTORY turns are sent to the model (see
+    // the slice below); the full transcript stays in the client + storage.
 
     // Scope context - drives knowledge-base loading + ai_conversations storage.
     // License identity is scope-agnostic (admin can switch session scope freely),
