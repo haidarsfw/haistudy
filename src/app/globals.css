@@ -14,6 +14,10 @@
        nothing overlaps the dock. Bar is h-16 (4rem) + mb 0.5rem + breathing
        room. */
     --hs-mobile-nav: 5.25rem;
+    /* Live desktop sidebar width (Sidebar publishes the resized/collapsed value).
+       Fixed bars on the right of the sidebar (TTS) use this so they start at the
+       sidebar's right edge instead of overlapping it. Default = DEFAULT_W (256px). */
+    --hs-sidebar-w: 16rem;
   }
 
   img, video, iframe {

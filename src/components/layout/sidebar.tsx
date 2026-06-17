@@ -162,6 +162,15 @@ export function Sidebar({ onSettingsOpen, onSupportOpen, supportUnread = 0 }: Si
     } catch {}
   }, []);
 
+  // Publish the effective width as a CSS var so fixed desktop bars (TTS) align to
+  // the sidebar's right edge. Tracks both resize and collapse (collapsed = 64px).
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--hs-sidebar-w",
+      `${collapsed ? 64 : width}px`
+    );
+  }, [collapsed, width]);
+
   // Drag-to-resize from the right edge (desktop). Width persists locally.
   const startResize = useCallback(
     (e: React.PointerEvent) => {
