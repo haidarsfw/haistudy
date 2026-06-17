@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Shuffle,
   RotateCcw,
@@ -36,6 +36,7 @@ export function FlashcardsTab({ items, onComplete, subjectId }: FlashcardsTabPro
   const [currentIdx, setCurrentIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const current = cards[currentIdx];
   const total = cards.length;
@@ -83,6 +84,20 @@ export function FlashcardsTab({ items, onComplete, subjectId }: FlashcardsTabPro
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // All subject tabs stay mounted (hidden), and this listener is on document.
+      // Only act when the Flashcards tab is actually visible AND the user isn't
+      // typing in a field — otherwise we'd swallow Space (scroll + the Catatan
+      // textarea, where it looked like spaces "didn't work").
+      if (!rootRef.current || rootRef.current.offsetParent === null) return;
+      const tgt = e.target as HTMLElement | null;
+      if (
+        tgt &&
+        (tgt.tagName === "INPUT" ||
+          tgt.tagName === "TEXTAREA" ||
+          tgt.isContentEditable)
+      ) {
+        return;
+      }
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
         flip();
@@ -114,7 +129,7 @@ export function FlashcardsTab({ items, onComplete, subjectId }: FlashcardsTabPro
   const allDone = completed.size === total && total > 0;
 
   return (
-    <div className="flex flex-col items-center gap-4 py-6">
+    <div ref={rootRef} className="flex flex-col items-center gap-4 py-6">
       {subjectId === "cbkwn" && (
         <div className="flex items-start gap-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 w-full max-w-md">
           <Monitor className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />

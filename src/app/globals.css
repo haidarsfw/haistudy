@@ -20,6 +20,14 @@
     --hs-sidebar-w: 16rem;
   }
 
+  /* Mobile: when the TTS player bar is active it's fixed under the header, so
+     shift <main> down by its height instead of covering the content. */
+  @media (max-width: 639px) {
+    .hs-tts-active main {
+      padding-top: 3.5rem;
+    }
+  }
+
   img, video, iframe {
     max-width: 100%;
     height: auto;

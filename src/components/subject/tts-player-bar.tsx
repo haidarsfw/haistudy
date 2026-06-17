@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   Play,
   Pause,
@@ -40,6 +41,16 @@ export function TTSPlayerBar({ tts, onClose, inline }: TTSPlayerBarProps) {
     setSpeed,
     setVoice,
   } = tts;
+
+  // While the floating bar is mounted, flag <html> so the mobile layout adds
+  // top padding to <main> (the bar is fixed under the header) — content shifts
+  // down instead of being covered. Inline (fullscreen) variant doesn't overlay.
+  useEffect(() => {
+    if (inline) return;
+    const el = document.documentElement;
+    el.classList.add("hs-tts-active");
+    return () => el.classList.remove("hs-tts-active");
+  }, [inline]);
 
   const handlePlayPause = () => {
     if (isPaused) {
