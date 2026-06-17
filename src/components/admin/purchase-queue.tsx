@@ -71,6 +71,44 @@ const STATUS_FILTER_LABELS: Record<string, string> = {
   rejected: "Ditolak",
 };
 
+// Rebuild the EXACT approval/invoice WhatsApp message from an approved purchase
+// row (key, invoice no, package, amount, login method, scope). Used by BOTH the
+// approve flow and the resend button so a lost WA message can be re-sent in full.
+function waMessageForApprovedPurchase(purchase: PurchaseRequest): string {
+  const loginMethod = purchase.meta?.loginMethod === "email" ? "email" : "key";
+  const gmail = (purchase.meta?.loginEmail || purchase.email || "").trim();
+  const periode = scopeFullLabel({
+    semester: purchase.semester,
+    examPeriod: purchase.examPeriod,
+    jurusan: purchase.jurusan,
+  });
+  const pkgName =
+    ({ share: "Share", normal: "Normal", vip: "VIP", diamond: "Diamond" } as Record<string, string>)[
+      purchase.package
+    ] ?? purchase.package;
+  const amount =
+    typeof purchase.meta?.uniqueAmount === "number"
+      ? `Rp ${purchase.meta.uniqueAmount.toLocaleString("id-ID")}`
+      : "—";
+  return buildApprovalWa({
+    nickname: purchase.meta?.nickname || firstWord(purchase.name),
+    invoiceNo: purchase.meta?.orderNo ?? 1,
+    loginMethod,
+    licenseKey: purchase.licenseKey ?? "",
+    gmail,
+    pkgLabel: pkgName,
+    amount,
+    periode,
+  });
+}
+
+// Normalize a WhatsApp number to the wa.me format (leading 0 → 62).
+function waPhone(whatsapp: string): string {
+  let phone = whatsapp.replace(/\D/g, "");
+  if (phone.startsWith("0")) phone = "62" + phone.slice(1);
+  return phone;
+}
+
 export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
   const { t } = useTranslation();
   const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
@@ -144,21 +182,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     // the oauth_links row is created); 'key' buyers log in with the license key.
     const loginMethod = purchase.meta?.loginMethod === "email" ? "email" : "key";
     const gmail = (purchase.meta?.loginEmail || purchase.email || "").trim();
-    const periode = scopeFullLabel({
-      semester: purchase.semester,
-      examPeriod: purchase.examPeriod,
-      jurusan: purchase.jurusan,
-    });
-
-    const pkgName =
-      ({ share: "Share", normal: "Normal", vip: "VIP", diamond: "Diamond" } as Record<string, string>)[
-        purchase.package
-      ] ?? purchase.package;
-    const amount =
-      typeof purchase.meta?.uniqueAmount === "number"
-        ? `Rp ${purchase.meta.uniqueAmount.toLocaleString("id-ID")}`
-        : "—";
-    // Short name / nickname: shown in the WA greeting + saved onto the license.
+    // Short name / nickname: saved onto the license + used in the WA greeting.
     const nickname = purchase.meta?.nickname || firstWord(purchase.name);
 
     // Email-login buyer with no Gmail on file would mint a locked-out key. Stop here.
@@ -203,26 +227,13 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
         prev.map((p) => (p.id === purchase.id ? updated : p))
       );
 
-      // Invoice number is assigned server-side at approve and returned in the
-      // PATCH response — use it for the WhatsApp message.
-      const orderNo = updated?.meta?.orderNo ?? 1;
-
-      // Open WhatsApp with the shared, copy-friendly activation message. The
-      // bare https://haistudy.site URL renders the homepage embed card in WA.
-      let phone = purchase.whatsapp.replace(/\D/g, "");
-      if (phone.startsWith("0")) phone = "62" + phone.slice(1);
-      const message = buildApprovalWa({
-        nickname,
-        invoiceNo: orderNo,
-        loginMethod,
-        licenseKey: newKey,
-        gmail,
-        pkgLabel: pkgName,
-        amount,
-        periode,
-      });
+      // Open WhatsApp with the shared invoice message. Built from the freshly
+      // approved row (carries the server-assigned invoice no + key) so it is
+      // byte-identical to what the resend button reproduces later.
       window.open(
-        `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`,
+        `https://api.whatsapp.com/send?phone=${waPhone(purchase.whatsapp)}&text=${encodeURIComponent(
+          waMessageForApprovedPurchase(updated as PurchaseRequest)
+        )}`,
         "_blank"
       );
 
@@ -610,10 +621,16 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                               size="sm"
                               variant="ghost"
                               className="h-7 gap-1 text-xs"
+                              title="Kirim ulang invoice lengkap via WhatsApp"
                               onClick={() => {
-                                let phone = purchase.whatsapp.replace(/\D/g, "");
-                                if (phone.startsWith("0")) phone = "62" + phone.slice(1);
-                                window.open(`https://api.whatsapp.com/send?phone=${phone}`, "_blank");
+                                // Resend the FULL invoice (key, login steps, package,
+                                // amount, periode) — same message as at approve time.
+                                window.open(
+                                  `https://api.whatsapp.com/send?phone=${waPhone(purchase.whatsapp)}&text=${encodeURIComponent(
+                                    waMessageForApprovedPurchase(purchase)
+                                  )}`,
+                                  "_blank"
+                                );
                               }}
                             >
                               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
