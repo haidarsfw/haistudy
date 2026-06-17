@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Save, Loader2, Cloud, CloudOff } from "lucide-react";
+import { Save, Loader2, Cloud, CloudOff, Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
 import { useOptionalScope } from "@/components/providers/scope-provider";
+import { NoteMarkdown } from "@/components/shared/note-markdown";
 
 interface PersonalNotesTabProps {
   subjectId: string;
@@ -23,6 +24,7 @@ export function PersonalNotesTab({
   const { isPreview } = usePreviewGuard();
   const scopeCtx = useOptionalScope();
   const scopeKey = scopeCtx?.scopeKey ?? "";
+  const [showPreview, setShowPreview] = useState(false);
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [synced, setSynced] = useState(false);
@@ -143,10 +145,10 @@ export function PersonalNotesTab({
 
   return (
     <div className="flex flex-col gap-3 py-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <p className="text-xs text-muted-foreground">
-            Catatan pribadi kamu untuk mata kuliah ini. Tersimpan otomatis.
+            Catatan pribadi kamu. Mendukung Markdown &amp; LaTeX ($x^2$). Tersimpan otomatis.
           </p>
           {synced ? (
             <Cloud className="h-3.5 w-3.5 text-green-500" />
@@ -154,28 +156,57 @@ export function PersonalNotesTab({
             <CloudOff className="h-3.5 w-3.5 text-muted-foreground" />
           )}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleManualSave}
-          disabled={saving || isPreview}
-        >
-          {saving ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Save className="h-3.5 w-3.5" />
-          )}
-          <span className="ml-1">Simpan</span>
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {/* Tulis | Pratinjau toggle — renders bold/italic/lists/LaTeX. */}
+          <div className="inline-flex rounded-lg border border-border p-0.5">
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                !showPreview ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Pencil className="h-3 w-3" /> Tulis
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                showPreview ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Eye className="h-3 w-3" /> Pratinjau
+            </button>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleManualSave}
+            disabled={saving || isPreview}
+          >
+            {saving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
+            <span className="ml-1">Simpan</span>
+          </Button>
+        </div>
       </div>
 
-      <Textarea
-        value={content}
-        onChange={handleChange}
-        disabled={isPreview}
-        placeholder={isPreview ? "Beli akses untuk menulis catatan" : "Tulis catatan di sini... (Markdown didukung)"}
-        className="min-h-[300px] resize-y font-mono text-sm"
-      />
+      {showPreview ? (
+        <div className="min-h-[300px] rounded-md border border-input bg-background px-3.5 py-3">
+          <NoteMarkdown content={content} />
+        </div>
+      ) : (
+        <Textarea
+          value={content}
+          onChange={handleChange}
+          disabled={isPreview}
+          placeholder={isPreview ? "Beli akses untuk menulis catatan" : "Tulis catatan di sini... Markdown & LaTeX didukung ($x^2$)"}
+          className="min-h-[300px] resize-y font-mono text-sm"
+        />
+      )}
 
       {lastSaved && (
         <p className="text-[10px] text-muted-foreground text-right">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { StickyNote, BookOpen, Save, Loader2, Cloud, CloudOff } from "lucide-react";
+import { StickyNote, BookOpen, Save, Loader2, Cloud, CloudOff, Eye, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -10,6 +10,7 @@ import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useScope } from "@/components/providers/scope-provider";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { Textarea } from "@/components/ui/textarea";
+import { NoteMarkdown } from "@/components/shared/note-markdown";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 
 const GENERAL_NOTES_KEY = "hs-notes-general";
@@ -26,6 +27,7 @@ export default function NotesPage() {
   // This scope's notes map from the server (subjectId/__generalNote → text), used
   // to mark which subjects have notes even on a fresh device.
   const [scopeNotes, setScopeNotes] = useState<Record<string, string>>({});
+  const [showPreview, setShowPreview] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const serverSyncRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const loadedRef = useRef(false);
@@ -165,12 +167,41 @@ export default function NotesPage() {
             )}
           </div>
         </div>
-        <Textarea
-          value={content}
-          onChange={(e) => handleChange(e.target.value)}
-          placeholder={t("notes.general_placeholder")}
-          className="min-h-[200px] resize-y"
-        />
+        {/* Tulis | Pratinjau — renders Markdown & LaTeX. */}
+        <div className="flex justify-end">
+          <div className="inline-flex rounded-lg border border-border p-0.5">
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                !showPreview ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Pencil className="h-3 w-3" /> Tulis
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                showPreview ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Eye className="h-3 w-3" /> Pratinjau
+            </button>
+          </div>
+        </div>
+        {showPreview ? (
+          <div className="min-h-[200px] rounded-md border border-input bg-background px-3.5 py-3">
+            <NoteMarkdown content={content} />
+          </div>
+        ) : (
+          <Textarea
+            value={content}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder={t("notes.general_placeholder")}
+            className="min-h-[200px] resize-y"
+          />
+        )}
       </motion.section>
 
       {/* Per-subject notes links */}
