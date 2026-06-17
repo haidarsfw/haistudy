@@ -1,0 +1,26 @@
+# haistudy — robots.txt
+# Public marketing pages are open to all crawlers and AI agents.
+# The authenticated app (scoped tree, admin, API) carries no public SEO value
+# and is disallowed below.
+#
+# AI agents / generative engines: a machine-readable site summary lives at
+#   https://haistudy.site/llms.txt
+# (see https://llmstxt.org/). Crawlers that understand it are welcome.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /s1/
+Disallow: /s2/
+Disallow: /s3/
+Disallow: /s4/
+Disallow: /s5/
+Disallow: /s6/
+Disallow: /s7/
+Disallow: /s8/
+Disallow: /dashboard
+Disallow: /subject
+
+Sitemap: https://haistudy.site/sitemap.xml
+Host: https://haistudy.site

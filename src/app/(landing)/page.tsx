@@ -190,6 +190,22 @@ function DeviceMockup() {
 export default function LandingPage() {
   return (
     <div className="landing-noise flex min-h-screen flex-col bg-background overflow-x-hidden">
+      {/* FAQPage structured data — drives Google rich results + feeds AI/GEO
+          engines the Q&A verbatim. Reuses the FAQ array above (single source). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQ.map((item) => ({
+              "@type": "Question",
+              name: item.q,
+              acceptedAnswer: { "@type": "Answer", text: item.a },
+            })),
+          }),
+        }}
+      />
       <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 flex items-center gap-3 rounded-full bg-card/60 backdrop-blur-md border border-border/50 px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg">
         <LandingColorPicker />
         <div className="h-4 w-px bg-border/50" />
