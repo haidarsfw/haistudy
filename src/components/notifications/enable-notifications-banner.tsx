@@ -8,6 +8,7 @@ import { useWebPush } from "@/hooks/use-web-push";
 import { useSession } from "@/components/providers/session-provider";
 import { sounds } from "@/lib/sounds";
 import { toast } from "@/components/ui/toast";
+import { INSTALL_SHOWN_KEY } from "@/lib/pwa-version";
 
 const DISMISSED_AT_KEY = "hs-notif-banner-dismissed-at";
 const REPROMPT_AFTER_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -56,6 +57,28 @@ export function EnableNotificationsBanner() {
     // permission granted but no subscription - show "Enable" so user can subscribe
   }
 
+  // The iOS "Add to Home Screen" hint duplicates the InstallBanner popup. Keep it
+  // RARE so mobile first-login isn't cluttered: never on first login (onboarding
+  // not done yet) and not in a session where the install popup already showed.
+  // Returning users still see it occasionally (7-day dismiss cooldown above).
+  if (iosNeedsInstall) {
+    const onboarded = (() => {
+      try {
+        return !!localStorage.getItem(`hs-onboarding-${session.licenseKey}`);
+      } catch {
+        return false;
+      }
+    })();
+    const installPopupShownThisSession = (() => {
+      try {
+        return sessionStorage.getItem(INSTALL_SHOWN_KEY) === "1";
+      } catch {
+        return false;
+      }
+    })();
+    if (!onboarded || installPopupShownThisSession) return null;
+  }
+
   const handleDismiss = () => {
     try {
       localStorage.setItem(DISMISSED_AT_KEY, String(Date.now()));
@@ -89,7 +112,7 @@ export function EnableNotificationsBanner() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -20, opacity: 0 }}
         transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="sticky top-0 z-30 mx-auto flex w-full max-w-3xl items-center gap-3 rounded-none border-b border-primary/20 bg-primary/5 px-3 py-2 text-xs sm:rounded-lg sm:border sm:px-4 sm:py-2.5"
+        className="mx-auto flex w-full max-w-3xl items-center gap-3 border-b border-primary/20 bg-primary/5 px-3 py-2 text-xs sm:rounded-lg sm:border sm:px-4 sm:py-2.5"
       >
         {iosNeedsInstall ? (
           <Smartphone className="h-4 w-4 shrink-0 text-primary" />

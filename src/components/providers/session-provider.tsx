@@ -29,16 +29,69 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session from localStorage on mount. If empty, hydrate from the
-  // server via /api/auth/me - the hs-session cookie is httpOnly so JS can't
-  // detect it directly; let the endpoint decide. Returns 401 if no cookie.
+  // Restore session from localStorage on mount for instant paint, then ALWAYS
+  // reconcile against /api/auth/me. The hs-session cookie is httpOnly (JS can't
+  // read it) and is the source of truth: after a Google login the OAuth callback
+  // sets the real cookie but cannot touch localStorage, so a stale PREVIEW (or
+  // any other) session left here would otherwise win and trap the user in
+  // preview mode. If empty, hydrate from the server (401 = no cookie).
   useEffect(() => {
     let cancelled = false;
+
+    const applyEmbeddedSettings = (
+      settings:
+        | { darkMode?: boolean; theme?: string; font?: string; darkModeSchedule?: unknown }
+        | null
+        | undefined
+    ) => {
+      if (!settings) return;
+      try {
+        if (settings.darkMode !== undefined) {
+          localStorage.setItem("dark", JSON.stringify(settings.darkMode));
+        }
+        if (settings.theme) localStorage.setItem("theme", JSON.stringify(settings.theme));
+        if (settings.font) localStorage.setItem("font", JSON.stringify(settings.font));
+        if (settings.darkModeSchedule) {
+          localStorage.setItem(
+            "darkModeSchedule",
+            JSON.stringify(settings.darkModeSchedule)
+          );
+        }
+      } catch {
+        /* localStorage unavailable */
+      }
+    };
+
     const stored = getStoredSession();
     if (stored) {
       setSession(stored);
       setIsLoading(false);
-      return;
+      // Background reconcile: if the cookie names a different account / preview
+      // flag / scope than localStorage, the server wins (fixes "stuck in preview"
+      // after Google login without needing a logout).
+      (async () => {
+        try {
+          const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+          if (!res.ok || cancelled) return;
+          const data = await res.json();
+          const srv = data.session as Session | undefined;
+          if (!srv || cancelled) return;
+          if (
+            srv.licenseKey !== stored.licenseKey ||
+            !!srv.isPreview !== !!stored.isPreview ||
+            srv.scopeKey !== stored.scopeKey
+          ) {
+            applyEmbeddedSettings(data.settings);
+            setSession(srv);
+            storeSession(srv);
+          }
+        } catch {
+          /* keep stored session on network error */
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
     }
 
     (async () => {
@@ -51,28 +104,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         if (cancelled) return;
         if (data.session) {
-          // Apply embedded settings if present (mirror license-key login)
-          if (data.settings) {
-            try {
-              if (data.settings.darkMode !== undefined) {
-                localStorage.setItem("dark", JSON.stringify(data.settings.darkMode));
-              }
-              if (data.settings.theme) {
-                localStorage.setItem("theme", JSON.stringify(data.settings.theme));
-              }
-              if (data.settings.font) {
-                localStorage.setItem("font", JSON.stringify(data.settings.font));
-              }
-              if (data.settings.darkModeSchedule) {
-                localStorage.setItem(
-                  "darkModeSchedule",
-                  JSON.stringify(data.settings.darkModeSchedule)
-                );
-              }
-            } catch {
-              /* localStorage unavailable */
-            }
-          }
+          applyEmbeddedSettings(data.settings);
           setSession(data.session);
           storeSession(data.session);
         }

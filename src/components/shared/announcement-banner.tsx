@@ -48,7 +48,9 @@ export function AnnouncementBanner() {
   if (visible.length === 0) return null;
 
   return (
-    <div className="space-y-1 px-4 pt-2">
+    // Compact: tight padding + smaller text + leading so the welcome notice
+    // doesn't eat vertical space, while keeping all of its content.
+    <div className="space-y-1 px-4 pt-1.5">
       {visible.map((ann) => {
         const config = TYPE_CONFIG[ann.type];
         const Icon = config.icon;
@@ -57,14 +59,14 @@ export function AnnouncementBanner() {
         return (
           <div
             key={ann.id}
-            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${config.bg} ${config.text}`}
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] leading-snug ${config.bg} ${config.text}`}
           >
-            <Icon className={`h-3.5 w-3.5 shrink-0 ${config.iconColor}`} />
+            <Icon className={`h-3 w-3 shrink-0 ${config.iconColor}`} />
             <span className="flex-1 overflow-hidden break-words">{message}</span>
             {cta && (
               <Link
                 href={cta.url}
-                className="inline-flex shrink-0 items-center gap-1 rounded-md bg-black/10 px-2 py-0.5 text-[11px] font-medium hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
+                className="inline-flex shrink-0 items-center gap-1 rounded-md bg-black/10 px-2 py-0.5 text-[10px] font-medium hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors"
               >
                 {cta.label}
                 <ArrowRight className="h-3 w-3" />
@@ -74,9 +76,10 @@ export function AnnouncementBanner() {
               onClick={() =>
                 setDismissed((prev) => new Set([...prev, ann.id]))
               }
-              className="shrink-0 rounded-full p-1 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+              className="shrink-0 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+              aria-label="Tutup pengumuman"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3 w-3" />
             </button>
           </div>
         );

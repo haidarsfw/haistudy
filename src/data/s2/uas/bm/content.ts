@@ -54,9 +54,11 @@ export const content: Record<string, SubjectContent> = {
     ],
     kisiKisiNote: "Rangkuman kisi-kisi dan aturan UAS Operations Management.",
     kisiKisiInfo: [
+      { label: "Jumlah Soal", value: "5 soal — 3 soal hitungan + 2 soal teori" },
       { label: "Cheating Note", value: "Diperbolehkan, maksimal 5 lembar kertas A4 bolak-balik" },
       { label: "Aturan Penulisan", value: "Wajib ditulis tangan dengan tinta selain warna hitam" },
       { label: "Kalkulator", value: "Diperbolehkan" },
+      { label: "Penggaris", value: "Diperbolehkan" },
     ],
     flashcards: opsmgmtFlashcards,
     quiz: opsmgmtQuiz,

@@ -18,7 +18,6 @@ import { PomodoroTimer } from "@/components/shared/pomodoro-timer";
 import { MusicPlayer } from "@/components/layout/music-player";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { sounds } from "@/lib/sounds";
-import { useHideOnScroll } from "@/hooks/use-hide-on-scroll";
 
 interface HeaderProps {
   onSettingsOpen?: () => void;
@@ -32,9 +31,6 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
   const { t } = useTranslation();
   const { dark, toggleDark } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
-  // Hide on scroll-down, reveal on scroll-up (mobile only — see hook). Forced
-  // visible while the mobile search overlay is open so the field stays put.
-  const hidden = useHideOnScroll() && !searchOpen;
 
   // Cmd/Ctrl+K shortcut
   useEffect(() => {
@@ -54,10 +50,9 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
 
   return (
     <>
+    {/* Top header stays pinned on scroll (only the bottom mobile nav hides). */}
     <header
-      className={`sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md transition-transform duration-300 ease-out will-change-transform ${
-        hidden ? "-translate-y-full" : "translate-y-0"
-      }`}
+      className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md"
     >
       {/* Left: Logo on mobile, back button on sub-pages */}
       {isHome ? (
