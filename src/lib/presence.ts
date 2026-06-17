@@ -160,8 +160,10 @@ export async function fetchOnlineUsers(scope?: ScopeTuple): Promise<OnlineUser[]
     .order("last_seen", { ascending: false })
     .limit(200);
 
-  // Filter stale entries (last_seen older than 4 minutes - heartbeats are every 60s)
-  const STALE_MS = 150_000; // 2.5 minutes (2.5 missed 60s heartbeats)
+  // Filter stale entries. Heartbeats are every 120s (visible); 270s tolerates
+  // one fully-missed beat before a user drops off (tab-close fires an instant
+  // offline beacon, so this only covers crashes / lost network).
+  const STALE_MS = 270_000; // 4.5 minutes
   const now = Date.now();
   const freshData = (data || []).filter((row: Record<string, unknown>) => {
     const lastSeen = new Date(row.last_seen as string).getTime();

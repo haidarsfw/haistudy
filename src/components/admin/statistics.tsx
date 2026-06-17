@@ -20,7 +20,6 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { adminFetch } from "@/lib/admin/admin-fetch";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
@@ -62,36 +61,10 @@ export function Statistics() {
     setLoading(true);
     fetchUsers();
 
-    // Supabase Realtime - scope-aware channel name keyed by adminScopeKey so a
-    // switch tears down the prior subscription before starting a new one.
-    if (isSupabaseConfigured) {
-      const supabase = createClient();
-      if (supabase) {
-        const channelName = isAllPeriods
-          ? "admin-stats:all"
-          : `admin-stats:${adminScopeKey}`;
-
-        const buildFilter = (): { filter?: string } => {
-          if (isAllPeriods || adminScope === "all") return {};
-          return { filter: `semester=eq.${adminScope.semester}` };
-        };
-
-        const channel = supabase
-          .channel(channelName)
-          .on("postgres_changes", { event: "*", schema: "public", table: "license_keys", ...buildFilter() }, () => fetchUsers())
-          .on("postgres_changes", { event: "*", schema: "public", table: "activations" }, () => fetchUsers())
-          .subscribe();
-
-        // Polling fallback every 30s (Realtime covers live updates)
-        const interval = setInterval(fetchUsers, 30_000);
-        return () => {
-          clearInterval(interval);
-          supabase.removeChannel(channel);
-        };
-      }
-    }
-
-    // Fallback: poll every 30s
+    // Poll every 30s. (Dropped the postgres_changes subscription on
+    // license_keys/activations — neither is in the realtime publication, so it
+    // never fired; it only churned realtime.subscription. Admin stats is a
+    // low-traffic page, polling is plenty.)
     const interval = setInterval(fetchUsers, 30_000);
     return () => clearInterval(interval);
   }, [hydrated, adminScopeKey, adminScope, isAllPeriods, scopeQuery, reloadToken]);

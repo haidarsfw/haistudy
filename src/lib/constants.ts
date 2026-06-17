@@ -63,8 +63,10 @@ export const RATE_LIMITS = {
 // Session
 export const SESSION_TIMEOUT_MS = 1_800_000; // 30 minutes
 export const SESSION_WARNING_MS = 1_500_000; // 25 minutes (5 min before timeout)
-export const PRESENCE_HEARTBEAT_VISIBLE_MS = 60_000; // 60 seconds
-export const PRESENCE_HEARTBEAT_HIDDEN_MS = 300_000; // 5 minutes
+// Heartbeat cadence — widened to cut presence write/WAL churn (top Disk IO
+// source). Online-list poll is 120s, so a 120s visible beat keeps it accurate.
+export const PRESENCE_HEARTBEAT_VISIBLE_MS = 120_000; // 120 seconds (was 60s)
+export const PRESENCE_HEARTBEAT_HIDDEN_MS = 600_000; // 10 minutes (was 5m)
 export const MAX_DEVICES = 2;
 
 // Chat
