@@ -3,21 +3,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KilatCard, KilatProgress, SubjectKilat } from "@/types";
 import { sounds } from "@/lib/sounds";
+import { isGated, isGraded, POINTS_PER_CARD, type KilatResponse } from "./kilat-types";
 
-export interface KilatResponse {
-  /** Chosen option index for single-choice cards; -1 for match/resumed. */
-  selected: number;
-  correct: boolean;
+export type CardStatus = "correct" | "wrong" | "skipped" | "done" | "todo" | "locked";
+
+function gradedPoints(
+  responses: Record<string, KilatResponse>,
+  cards: KilatCard[]
+): number {
+  let p = 0;
+  for (const card of cards) {
+    if (isGraded(card) && responses[card.id]?.correct) p += POINTS_PER_CARD;
+  }
+  return p;
 }
 
-// XP awarded per interaction. Explain/quote/intro give none so XP stays meaningful.
-const XP: Partial<Record<KilatCard["kind"], { right: number; wrong: number }>> = {
-  check: { right: 10, wrong: 2 },
-  scenario: { right: 15, wrong: 3 },
-  fill: { right: 10, wrong: 2 },
-  match: { right: 15, wrong: 0 },
-  checkpoint: { right: 20, wrong: 0 },
-};
+function gradedAnswered(
+  responses: Record<string, KilatResponse>,
+  cards: KilatCard[]
+): Record<string, boolean> {
+  const m: Record<string, boolean> = {};
+  for (const card of cards) {
+    if (isGraded(card) && responses[card.id]) m[card.id] = responses[card.id].correct;
+  }
+  return m;
+}
 
 interface Args {
   feed: SubjectKilat;
@@ -29,14 +39,20 @@ export function useKilat({ feed, initial, onPersist }: Args) {
   const cards = feed.cards;
   const total = cards.length;
 
-  // Resume: seed answered cards so XP isn't re-awarded on re-answer. The exact
-  // option isn't stored (only correctness), so selected is -1 in review.
+  const gradedTotal = useMemo(
+    () => cards.filter(isGraded).length * POINTS_PER_CARD,
+    [cards]
+  );
+
+  // Resume: rebuild responses from persisted graded answers + skips. (Ungraded
+  // completions like match aren't persisted - they just replay, harmless.)
   const seedResponses = useMemo<Record<string, KilatResponse>>(() => {
     const r: Record<string, KilatResponse> = {};
     if (initial?.answered) {
-      for (const [id, correct] of Object.entries(initial.answered)) {
-        r[id] = { selected: -1, correct };
-      }
+      for (const [id, correct] of Object.entries(initial.answered)) r[id] = { correct };
+    }
+    if (initial?.skipped) {
+      for (const id of initial.skipped) if (!r[id]) r[id] = { correct: false, data: { skipped: true } };
     }
     return r;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -46,10 +62,11 @@ export function useKilat({ feed, initial, onPersist }: Args) {
   const [index, setIndex] = useState(startIndex);
   const [reached, setReached] = useState(startIndex);
   const [responses, setResponses] = useState<Record<string, KilatResponse>>(seedResponses);
-  const [xp, setXp] = useState(initial?.xp ?? 0);
-  const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(initial?.bestStreak ?? 0);
+  // Points are derived from answered (migration-safe: ignores any legacy xp).
+  const [points, setPoints] = useState(() => gradedPoints(seedResponses, cards));
+  const [skipped, setSkipped] = useState<string[]>(initial?.skipped ?? []);
   const [chaptersDone, setChaptersDone] = useState<number[]>(initial?.chaptersDone ?? []);
+  const [pendingSkip, setPendingSkip] = useState(false);
 
   const completed = useMemo(
     () => feed.chapters.every((c) => chaptersDone.includes(c.n)),
@@ -57,89 +74,127 @@ export function useKilat({ feed, initial, onPersist }: Args) {
   );
 
   const current: KilatCard | undefined = cards[index];
-  const canAdvance =
-    current?.kind !== "checkpoint" || responses[current.id]?.correct === true;
+  const isDone = (card: KilatCard) => !!responses[card.id];
+  const canAdvance = !current || !isGated(current) || isDone(current);
 
-  // Keep bestStreak in sync without nesting setState calls.
+  const scorePct = gradedTotal > 0 ? Math.round((points / gradedTotal) * 100) : 100;
+  const passed = scorePct >= 90;
+
+  // Reset the skip "arm" whenever the card changes.
   useEffect(() => {
-    setBestStreak((b) => Math.max(b, streak));
-  }, [streak]);
+    setPendingSkip(false);
+  }, [index]);
 
-  // Persist on every meaningful change (skip the initial mount). Downstream
-  // saveKilatState writes localStorage now + debounces the server sync.
+  // Persist on meaningful change (skip first mount).
   const firstRun = useRef(true);
   useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
       return;
     }
-    const answered: Record<string, boolean> = {};
-    for (const [id, r] of Object.entries(responses)) answered[id] = r.correct;
-    onPersist({ reached, xp, bestStreak, answered, chaptersDone, completed });
-  }, [responses, xp, bestStreak, chaptersDone, reached, completed, onPersist]);
+    onPersist({
+      reached,
+      points,
+      answered: gradedAnswered(responses, cards),
+      skipped,
+      chaptersDone,
+      completed,
+    });
+  }, [responses, points, skipped, reached, chaptersDone, completed, cards, onPersist]);
 
+  // Lock on first answer (anti-cheat). data carries the card-specific response.
   const answer = useCallback(
-    (card: KilatCard, selected: number, correct: boolean) => {
-      const alreadyCorrect = responses[card.id]?.correct === true;
-      setResponses((prev) => ({ ...prev, [card.id]: { selected, correct } }));
-      if (alreadyCorrect) return; // never double-award or re-trigger sounds
-
-      const rule = XP[card.kind];
-      if (rule) setXp((x) => x + (correct ? rule.right : rule.wrong));
-      if (correct) {
-        sounds.correct();
-        setStreak((s) => s + 1);
-        if (card.kind === "checkpoint") {
-          setChaptersDone((d) =>
-            d.includes(card.chapter) ? d : [...d, card.chapter]
-          );
-        }
+    (card: KilatCard, correct: boolean, data?: unknown) => {
+      if (responses[card.id]) return; // already locked
+      setResponses((prev) => ({ ...prev, [card.id]: { correct, data } }));
+      setPendingSkip(false);
+      const graded = isGraded(card);
+      if (graded && correct) setPoints((p) => p + POINTS_PER_CARD);
+      if (card.kind === "checkpoint" && correct) {
+        setChaptersDone((d) => (d.includes(card.chapter) ? d : [...d, card.chapter]));
+      }
+      if (graded) {
+        if (correct) sounds.correct();
+        else sounds.wrong();
       } else {
-        sounds.wrong();
-        setStreak(0);
+        sounds.toggle();
       }
     },
     [responses]
   );
 
-  const completeMatch = useCallback(
+  const markSkipped = useCallback(
     (card: KilatCard) => {
-      if (responses[card.id]?.correct === true) return;
-      setResponses((prev) => ({ ...prev, [card.id]: { selected: -1, correct: true } }));
-      setXp((x) => x + (XP.match?.right ?? 0));
-      sounds.correct();
-      setStreak((s) => s + 1);
+      if (responses[card.id]) return;
+      setResponses((prev) => ({ ...prev, [card.id]: { correct: false, data: { skipped: true } } }));
+      setSkipped((s) => (s.includes(card.id) ? s : [...s, card.id]));
     },
     [responses]
   );
 
-  const goNext = useCallback(() => {
+  const advance = useCallback(() => {
     setIndex((i) => {
-      const card = cards[i];
-      // Checkpoint gates the feed until cleared correctly.
-      if (card?.kind === "checkpoint" && responses[card.id]?.correct !== true) {
-        return i;
-      }
       const next = Math.min(i + 1, total - 1);
       setReached((r) => Math.max(r, next));
       return next;
     });
-  }, [cards, responses, total]);
+  }, [total]);
+
+  // First press on a gated card arms the skip + shows a hint; second press skips.
+  const goNext = useCallback(() => {
+    const card = cards[index];
+    const gated = !!card && isGated(card) && !responses[card.id];
+    if (gated && !pendingSkip) {
+      setPendingSkip(true);
+      return;
+    }
+    if (gated && pendingSkip) markSkipped(card);
+    setPendingSkip(false);
+    advance();
+  }, [cards, index, responses, pendingSkip, markSkipped, advance]);
 
   const goPrev = useCallback(() => {
+    setPendingSkip(false);
     setIndex((i) => Math.max(i - 1, 0));
   }, []);
 
+  const jumpTo = useCallback(
+    (i: number) => {
+      if (i < 0 || i > reached) return; // only revisit reached cards
+      setPendingSkip(false);
+      setIndex(i);
+    },
+    [reached]
+  );
+
   const reset = useCallback(() => {
     setResponses({});
-    setXp(0);
-    setStreak(0);
-    setBestStreak(0);
+    setPoints(0);
+    setSkipped([]);
     setChaptersDone([]);
     setIndex(0);
     setReached(0);
-    firstRun.current = false; // force a persist of the cleared state
+    setPendingSkip(false);
+    firstRun.current = false; // persist the cleared state
   }, []);
+
+  const cardStatus = useCallback(
+    (i: number): CardStatus => {
+      const card = cards[i];
+      if (!card) return "locked";
+      if (skipped.includes(card.id)) return "skipped";
+      const r = responses[card.id];
+      if (r) return isGraded(card) ? (r.correct ? "correct" : "wrong") : "done";
+      if (i > reached) return "locked";
+      return "todo";
+    },
+    [cards, responses, skipped, reached]
+  );
+
+  const firstIndexOfChapter = useCallback(
+    (n: number) => cards.findIndex((c) => c.chapter === n),
+    [cards]
+  );
 
   return {
     cards,
@@ -147,19 +202,23 @@ export function useKilat({ feed, initial, onPersist }: Args) {
     index,
     current,
     responses,
-    xp,
-    streak,
-    bestStreak,
+    points,
+    gradedTotal,
+    scorePct,
+    passed,
+    skipped,
     chaptersDone,
     reached,
     completed,
     canAdvance,
+    pendingSkip,
     answer,
-    completeMatch,
     goNext,
     goPrev,
+    jumpTo,
     reset,
-    setIndex,
+    cardStatus,
+    firstIndexOfChapter,
   };
 }
 

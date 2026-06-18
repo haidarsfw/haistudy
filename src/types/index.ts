@@ -117,19 +117,69 @@ export interface KilatMatchPair {
   def: string;
 }
 
+export interface KilatSwipeStatement {
+  text: string;
+  isTrue: boolean;
+  note?: string;
+}
+
+export interface KilatCategorizeItem {
+  text: string;
+  bucket: number; // index into the card's buckets[]
+}
+
+export interface KilatHotspot {
+  // Percent-based box on the image (0-100), so it scales with any render size.
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  correct: boolean;
+  label?: string;
+}
+
+export interface KilatPromptOption {
+  text: string;
+  better: boolean;
+}
+
 /**
  * One beat in the Belajar Kilat feed. `chapter` is 1-based and maps to a module
  * (used for the Stories-style segmented progress bar).
+ *
+ * Graded cards (count toward the score): check, scenario, fill, checkpoint, multi,
+ * order, categorize, swipe, calc, table(mode "fill"), hotspot, prompt.
+ * Ungraded: intro, explain, quote, match, table(mode "walkthrough").
  */
 export type KilatCard =
   | { kind: "intro"; id: string; chapter: number; title: string; subtitle?: string }
   | { kind: "explain"; id: string; chapter: number; heading: string; body: string; icon?: string; tag?: string }
   | { kind: "quote"; id: string; chapter: number; text: string; source?: string }
-  | { kind: "check"; id: string; chapter: number; question: string; options: string[]; answer: number; explain: string }
-  | { kind: "scenario"; id: string; chapter: number; situation: string; tag?: string; choices: KilatScenarioChoice[] }
+  | { kind: "check"; id: string; chapter: number; question: string; options: string[]; answer: number; explain: string; tag?: string }
+  | {
+      kind: "scenario";
+      id: string;
+      chapter: number;
+      situation: string;
+      tag?: string;
+      choices: KilatScenarioChoice[];
+      // Optional one-step branch: after answering, a follow-up dilemma appears.
+      follow?: { situation: string; choices: KilatScenarioChoice[] };
+    }
   | { kind: "match"; id: string; chapter: number; prompt?: string; pairs: KilatMatchPair[] }
   | { kind: "fill"; id: string; chapter: number; before: string; after: string; options: string[]; answer: number; explain?: string }
-  | { kind: "checkpoint"; id: string; chapter: number; title: string; question: string; options: string[]; answer: number; explain: string };
+  | { kind: "checkpoint"; id: string; chapter: number; title: string; question: string; options: string[]; answer: number; explain: string }
+  // ---- v2 minigames ----
+  | { kind: "multi"; id: string; chapter: number; question: string; options: string[]; answers: number[]; explain: string; tag?: string }
+  | { kind: "order"; id: string; chapter: number; prompt: string; steps: string[]; explain?: string; tag?: string }
+  | { kind: "categorize"; id: string; chapter: number; prompt: string; buckets: string[]; items: KilatCategorizeItem[]; explain?: string; tag?: string }
+  | { kind: "swipe"; id: string; chapter: number; prompt?: string; statements: KilatSwipeStatement[]; tag?: string }
+  | { kind: "calc"; id: string; chapter: number; question: string; formula?: string; mode: "pick"; options: string[]; answer: number; unit?: string; steps?: string[]; explain: string; tag?: string }
+  | { kind: "calc"; id: string; chapter: number; question: string; formula?: string; mode: "type"; answer: string; unit?: string; steps?: string[]; explain: string; tag?: string }
+  | { kind: "table"; id: string; chapter: number; title?: string; columns?: string[]; rows: (string | number)[][]; mode: "walkthrough"; notes?: string[]; explain?: string; tag?: string }
+  | { kind: "table"; id: string; chapter: number; title?: string; columns?: string[]; rows: (string | number)[][]; mode: "fill"; blank: [number, number]; options: string[]; answer: number; explain: string; tag?: string }
+  | { kind: "hotspot"; id: string; chapter: number; question: string; image: string; spots: KilatHotspot[]; explain: string; tag?: string }
+  | { kind: "prompt"; id: string; chapter: number; goal: string; options: KilatPromptOption[]; explain: string; tag?: string };
 
 export interface KilatChapter {
   /** 1-based chapter number; matches the `chapter` on its cards. */
@@ -148,9 +198,9 @@ export interface SubjectKilat {
 /** Per-subject Belajar Kilat progress, nested under SubjectProgress.kilat. */
 export interface KilatProgress {
   reached: number; // highest card index reached
-  xp: number;
-  bestStreak: number;
-  answered: Record<string, boolean>; // cardId -> answered correctly?
+  points: number; // points earned from graded cards
+  answered: Record<string, boolean>; // graded cardId -> answered correctly?
+  skipped: string[]; // force-skipped graded cardIds (count as 0, still in total)
   chaptersDone: number[]; // chapter numbers whose checkpoint was cleared
   completed: boolean;
 }

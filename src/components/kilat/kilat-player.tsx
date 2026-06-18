@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUp, ChevronUp, Trophy } from "lucide-react";
+import { ArrowUp, ChevronUp, Trophy, SkipForward } from "lucide-react";
 import type { KilatProgress, SubjectKilat } from "@/types";
 import { useKilat } from "./use-kilat";
-import { KilatCardView } from "./kilat-cards";
+import { isGated } from "./kilat-types";
+import { KilatCardView } from "./cards";
 import { KilatProgressBar } from "./kilat-progress-bar";
 import { KilatComplete } from "./kilat-complete";
+import { KilatOutline } from "./kilat-outline";
+import { KilatTutorial } from "./kilat-tutorial";
 import { sounds } from "@/lib/sounds";
 import { springSmooth } from "@/lib/motion";
 
@@ -18,8 +21,9 @@ interface Props {
   onClose: () => void;
 }
 
-const SWIPE = 56; // px threshold for a deliberate swipe
-const LOCK_MS = 520; // debounce between gesture-driven nav
+const TUT_KEY = "hs-kilat-tutorial-seen";
+const SWIPE = 56;
+const LOCK_MS = 450;
 
 const cardVariants = {
   enter: (d: number) => ({ y: d > 0 ? 64 : -64, opacity: 0 }),
@@ -31,48 +35,110 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
   const k = useKilat({ feed, initial, onPersist });
   const [dir, setDir] = useState(1);
   const [showComplete, setShowComplete] = useState(false);
+  const [showOutline, setShowOutline] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef(false);
   const touchY = useRef<number | null>(null);
   const prevCompleted = useRef(k.completed);
 
-  const next = useCallback(() => { setDir(1); sounds.click(); k.goNext(); }, [k]);
-  const prev = useCallback(() => { setDir(-1); sounds.click(); k.goPrev(); }, [k]);
+  const overlayOpen = showComplete || showOutline || showTutorial;
 
-  // Pop the summary the moment the feed is freshly completed.
+  // One-time swipe tutorial (lifetime, across courses).
+  useEffect(() => {
+    try {
+      setShowTutorial(localStorage.getItem(TUT_KEY) !== "1");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const dismissTutorial = useCallback(() => {
+    try {
+      localStorage.setItem(TUT_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    setShowTutorial(false);
+  }, []);
+
+  const doAdvance = useCallback(() => {
+    setDir(1);
+    sounds.click();
+    k.goNext();
+  }, [k]);
+  const prev = useCallback(() => {
+    setDir(-1);
+    sounds.click();
+    k.goPrev();
+  }, [k]);
+
+  // Advance with force-skip support: a gated card's first advance just arms the
+  // skip (no debounce so a quick 2nd press/swipe skips); real moves are debounced.
+  const tryAdvance = useCallback(() => {
+    const card = k.current;
+    const gatedNow = !!card && isGated(card) && !k.responses[card.id];
+    if (gatedNow && !k.pendingSkip) {
+      doAdvance();
+      return;
+    }
+    if (lockRef.current) return;
+    lockRef.current = true;
+    doAdvance();
+    setTimeout(() => { lockRef.current = false; }, LOCK_MS);
+  }, [k, doAdvance]);
+
+  const tryPrev = useCallback(() => {
+    if (lockRef.current) return;
+    lockRef.current = true;
+    prev();
+    setTimeout(() => { lockRef.current = false; }, LOCK_MS);
+  }, [prev]);
+
+  const jump = useCallback(
+    (i: number) => {
+      setDir(i >= k.index ? 1 : -1);
+      k.jumpTo(i);
+      setShowOutline(false);
+    },
+    [k]
+  );
+
   useEffect(() => {
     if (k.completed && !prevCompleted.current) setShowComplete(true);
     prevCompleted.current = k.completed;
   }, [k.completed]);
 
-  // Reset inner scroll whenever the card changes.
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [k.index]);
 
-  // Keyboard navigation.
+  // Keyboard.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (showComplete) {
-        if (e.key === "Escape") onClose();
+      if (overlayOpen) {
+        if (e.key === "Escape") {
+          if (showOutline) setShowOutline(false);
+          else if (showTutorial) dismissTutorial();
+          else onClose();
+        }
         return;
       }
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
       if (e.key === "ArrowDown" || e.key === " " || e.key === "Enter") {
         e.preventDefault();
-        next();
+        tryAdvance();
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        prev();
+        tryPrev();
       } else if (e.key === "Escape") {
         onClose();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev, onClose, showComplete]);
+  }, [tryAdvance, tryPrev, onClose, overlayOpen, showOutline, showTutorial, dismissTutorial]);
 
-  // Only navigate by gesture once the inner content is scrolled to its edge,
-  // so long cards can scroll naturally before snapping to the next card.
   const atBoundary = (down: boolean) => {
     const el = scrollRef.current;
     if (!el) return true;
@@ -81,32 +147,34 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
       : el.scrollTop <= 2;
   };
 
-  const navLock = (fn: () => void) => {
-    if (lockRef.current) return;
-    lockRef.current = true;
-    fn();
-    setTimeout(() => { lockRef.current = false; }, LOCK_MS);
-  };
-
   const onWheel = (e: React.WheelEvent) => {
-    if (showComplete) return;
-    if (e.deltaY > 24 && atBoundary(true)) navLock(next);
-    else if (e.deltaY < -24 && atBoundary(false)) navLock(prev);
+    if (overlayOpen) return;
+    if (e.deltaY > 24 && atBoundary(true)) tryAdvance();
+    else if (e.deltaY < -24 && atBoundary(false)) tryPrev();
   };
   const onTouchStart = (e: React.TouchEvent) => {
     touchY.current = e.touches[0].clientY;
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (showComplete || touchY.current === null) return;
+    if (overlayOpen || touchY.current === null) return;
     const dy = touchY.current - e.changedTouches[0].clientY;
-    if (dy > SWIPE && atBoundary(true)) navLock(next);
-    else if (dy < -SWIPE && atBoundary(false)) navLock(prev);
+    if (dy > SWIPE && atBoundary(true)) tryAdvance();
+    else if (dy < -SWIPE && atBoundary(false)) tryPrev();
     touchY.current = null;
   };
 
   const current = k.current;
   const isLast = k.index === k.total - 1;
-  const gated = !k.canAdvance; // checkpoint not yet cleared
+  const gated = !k.canAdvance;
+
+  let btnLabel: React.ReactNode = (
+    <>
+      <ArrowUp className="h-4 w-4" /> Lanjut
+    </>
+  );
+  if (isLast && k.completed) btnLabel = (<><Trophy className="h-4 w-4" /> Lihat hasil</>);
+  else if (gated && k.pendingSkip) btnLabel = (<><SkipForward className="h-4 w-4" /> Lewatin (dihitung 0)</>);
+  else if (gated) btnLabel = <span>Jawab dulu</span>;
 
   return (
     <div className="fixed inset-0 z-[90] flex flex-col bg-background">
@@ -115,12 +183,13 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
         cards={k.cards}
         index={k.index}
         reached={k.reached}
-        xp={k.xp}
-        streak={k.streak}
+        points={k.points}
+        gradedTotal={k.gradedTotal}
         onClose={onClose}
+        onOpenOutline={() => setShowOutline(true)}
+        onJumpChapter={(n) => jump(k.firstIndexOfChapter(n))}
       />
 
-      {/* Card area */}
       <div
         className="relative flex-1 overflow-hidden"
         onWheel={onWheel}
@@ -137,17 +206,13 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
             exit="exit"
             className="absolute inset-0"
           >
-            <div
-              ref={scrollRef}
-              className="h-full overflow-y-auto overscroll-contain px-5 py-6"
-            >
+            <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain px-5 py-6">
               <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center">
                 {current && (
                   <KilatCardView
                     card={current}
                     response={k.responses[current.id]}
-                    onAnswer={(s, c) => k.answer(current, s, c)}
-                    onMatchComplete={() => k.completeMatch(current)}
+                    onAnswer={(correct, data) => k.answer(current, correct, data)}
                   />
                 )}
               </div>
@@ -158,11 +223,16 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
 
       {/* Bottom control */}
       <div className="px-5 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-2">
+        {gated && k.pendingSkip && (
+          <p className="mb-1.5 text-center text-xs text-amber-600 dark:text-amber-400">
+            Belum dijawab. Pencet atau geser sekali lagi buat lewatin.
+          </p>
+        )}
         <div className="mx-auto flex max-w-lg items-center gap-2.5">
           {k.index > 0 && (
             <button
               type="button"
-              onClick={prev}
+              onClick={tryPrev}
               aria-label="Kartu sebelumnya"
               className="hs-press flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground"
             >
@@ -176,28 +246,35 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
                 setShowComplete(true);
                 return;
               }
-              if (gated) return;
-              next();
+              tryAdvance();
             }}
-            disabled={gated && !(isLast && k.completed)}
-            className="hs-press flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-40"
+            className="hs-press flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground"
           >
-            {isLast && k.completed ? (
-              <>
-                <Trophy className="h-4 w-4" /> Lihat hasil
-              </>
-            ) : gated ? (
-              <span className="kilat-pulse">Jawab dulu buat lanjut</span>
-            ) : (
-              <>
-                <ArrowUp className="h-4 w-4" /> Lanjut
-              </>
-            )}
+            {btnLabel}
           </button>
         </div>
       </div>
 
-      {/* Completion overlay */}
+      {/* Outline (jump) */}
+      <AnimatePresence>
+        {showOutline && (
+          <KilatOutline
+            chapters={feed.chapters}
+            cards={k.cards}
+            index={k.index}
+            cardStatus={k.cardStatus}
+            onJump={jump}
+            onClose={() => setShowOutline(false)}
+            onRestart={() => {
+              k.reset();
+              setShowOutline(false);
+              setShowComplete(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Completion */}
       <AnimatePresence>
         {showComplete && (
           <motion.div
@@ -208,10 +285,10 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
             className="absolute inset-0 z-10 overflow-y-auto bg-background"
           >
             <KilatComplete
-              xp={k.xp}
-              bestStreak={k.bestStreak}
-              chaptersDone={k.chaptersDone.length}
-              totalChapters={feed.chapters.length}
+              scorePct={k.scorePct}
+              points={k.points}
+              gradedTotal={k.gradedTotal}
+              passed={k.passed}
               onRestart={() => {
                 k.reset();
                 setShowComplete(false);
@@ -220,6 +297,11 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
             />
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* One-time tutorial */}
+      <AnimatePresence>
+        {showTutorial && <KilatTutorial onDismiss={dismissTutorial} />}
       </AnimatePresence>
     </div>
   );

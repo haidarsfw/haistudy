@@ -4,13 +4,14 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  Zap, Flame, Play, RotateCcw, Check, Sparkles, Layers, Hand, Trophy,
+  Zap, Star, Target, Play, RotateCcw, Check, Sparkles, Layers, Hand, BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScope } from "@/components/providers/scope-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { staggerContainer, staggerItem, fadeInUp } from "@/lib/motion";
+import { isGraded } from "./kilat-types";
 
 export function KilatLaunch({ subjectId }: { subjectId: string }) {
   const router = useRouter();
@@ -26,6 +27,10 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
   const completed = kp?.completed ?? false;
   const reachedCards = kp ? Math.min(kp.reached + 1, total) : 0;
   const pct = total > 0 ? Math.round((reachedCards / total) * 100) : 0;
+  const gradedTotal = feed ? feed.cards.filter(isGraded).length * 10 : 0;
+  const points = kp?.points ?? 0;
+  const scorePct = gradedTotal > 0 ? Math.round((points / gradedTotal) * 100) : 0;
+  const passed = started && scorePct >= 90;
 
   const perChapter = useMemo(() => {
     if (!feed) return [];
@@ -91,21 +96,28 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
       {started && (
         <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="mt-4 rounded-2xl border border-border bg-card p-4 shadow-warm">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{completed ? "Selesai" : "Progress kamu"}</span>
-            <span className="tabular-nums">{pct}%</span>
+            <span className="inline-flex items-center gap-2">
+              {completed ? "Selesai" : "Progress kamu"}
+              {passed && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                  <BadgeCheck className="h-3 w-3" /> Lulus
+                </span>
+              )}
+            </span>
+            <span className="tabular-nums">{pct}% dijelajahi</span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${pct}%` }} />
           </div>
-          <div className="mt-3 flex items-center gap-4 text-xs">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
             <span className="inline-flex items-center gap-1 font-semibold text-primary">
-              <Zap className="h-3.5 w-3.5 fill-primary" /> {kp?.xp ?? 0} XP
+              <Target className="h-3.5 w-3.5" /> Skor {scorePct}%
             </span>
-            <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
-              <Flame className="h-3.5 w-3.5 fill-amber-500" /> {kp?.bestStreak ?? 0}
+            <span className="inline-flex items-center gap-1 font-semibold text-primary">
+              <Star className="h-3.5 w-3.5 fill-primary" /> {points}/{gradedTotal} poin
             </span>
             <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground">
-              <Trophy className="h-3.5 w-3.5" /> {kp?.chaptersDone.length ?? 0}/{feed.chapters.length} bab
+              <Check className="h-3.5 w-3.5" /> {kp?.chaptersDone.length ?? 0}/{feed.chapters.length} bab
             </span>
           </div>
         </motion.div>

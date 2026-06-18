@@ -124,12 +124,12 @@ function mergeKilat(
   if (!local) return server;
   if (!server) return local;
   return {
-    reached: Math.max(local.reached, server.reached),
-    xp: Math.max(local.xp, server.xp),
-    bestStreak: Math.max(local.bestStreak, server.bestStreak),
+    reached: Math.max(local.reached ?? 0, server.reached ?? 0),
+    points: Math.max(local.points ?? 0, server.points ?? 0),
     answered: { ...server.answered, ...local.answered },
+    skipped: Array.from(new Set([...(local.skipped ?? []), ...(server.skipped ?? [])])),
     chaptersDone: Array.from(
-      new Set([...local.chaptersDone, ...server.chaptersDone])
+      new Set([...(local.chaptersDone ?? []), ...(server.chaptersDone ?? [])])
     ),
     completed: local.completed || server.completed,
   };
