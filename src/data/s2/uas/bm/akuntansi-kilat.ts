@@ -185,6 +185,31 @@ export const akuntansiKilat: SubjectKilat = {
       body: "Jarak antara penjualan aktual dan break-even. Makin gede, makin aman dari rugi. Ratio = (penjualan aktual - break-even) / penjualan aktual.",
     },
     {
+      kind: "explain", id: "a2-oplev", chapter: 2, icon: "Gauge",
+      heading: "Operating leverage",
+      body: "Operating leverage nunjukin seberapa peka laba ke perubahan penjualan. Makin gede porsi fixed cost, makin tinggi leverage: pas penjualan naik laba meroket, pas turun bisa anjlok. Degree of Operating Leverage = Contribution Margin dibagi Net Income.",
+    },
+    {
+      kind: "calc", id: "a2-dol", chapter: 2, mode: "pick", tag: "Hitung",
+      question: "Contribution margin $600.000, net income $200.000. Degree of operating leverage?",
+      formula: "$\\text{DOL} = \\dfrac{\\text{Contribution Margin}}{\\text{Net Income}}$",
+      options: ["3,0", "1,5", "0,33", "$800.000"],
+      answer: 0,
+      steps: ["600.000 / 200.000 = 3,0."],
+      explain: "DOL 3 artinya tiap penjualan naik 1%, laba naik sekitar 3%. Leverage tinggi = peka: untung gede pas naik, bahaya pas turun.",
+    },
+    {
+      kind: "check", id: "a2-mix", chapter: 2,
+      question: "Pas jual lebih dari satu produk, break-even dihitung pakai...",
+      options: [
+        "Weighted-average contribution margin (CM rata-rata tertimbang sales mix)",
+        "Cuma CM produk yang termahal",
+        "Gak bisa dihitung kalau lebih dari satu produk",
+      ],
+      answer: 0,
+      explain: "Tiap produk beda CM, jadi pakai weighted-average unit CM dulu, baru fixed cost dibagi angka itu buat dapet break-even total.",
+    },
+    {
       kind: "swipe", id: "a2-swipe", chapter: 2, prompt: "Bener atau salah?",
       statements: [
         { text: "Di break-even, contribution margin total = fixed costs.", isTrue: true },
@@ -272,6 +297,28 @@ export const akuntansiKilat: SubjectKilat = {
       ],
       answers: [0, 1, 3],
       explain: "ROI = margin dibagi aset, naik kalau margin naik atau aset lebih efisien, dan dipakai buat investment center. Tapi ROI gak selalu unggul dari residual income.",
+    },
+    {
+      kind: "check", id: "a3-special", chapter: 3,
+      question: "Ada pesanan khusus (special order) di bawah harga normal, dan kapasitas lagi nganggur. Yang dipertimbangin?",
+      options: [
+        "Bandingin harga tawaran sama biaya incremental (variable); fixed yang tetap jalan diabaikan",
+        "Tolak, karena di bawah harga normal pasti rugi",
+        "Hitung pakai total biaya termasuk semua fixed",
+      ],
+      answer: 0,
+      explain: "Kalau kapasitas nganggur dan harga tawaran masih di atas biaya variable per unit, pesanan itu nambah laba. Fixed cost yang tetap jalan gak relevan.",
+    },
+    {
+      kind: "check", id: "a3-respcenter", chapter: 3,
+      question: "Investment center (divisi yang punya aset & investasi sendiri) dinilai pakai...",
+      options: [
+        "ROI atau residual income",
+        "Cuma total biaya",
+        "Jumlah karyawan",
+      ],
+      answer: 0,
+      explain: "Cost center dinilai dari kontrol biaya, profit center dari laba, investment center dari ROI/residual income (laba relatif ke aset yang dipakai).",
     },
     {
       kind: "swipe", id: "a3-swipe", chapter: 3, prompt: "Bener atau salah?",

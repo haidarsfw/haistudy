@@ -216,6 +216,22 @@ export const opsmgmtKilat: SubjectKilat = {
       explain: "Pilihan kapasitas = atur sisi produksi (lembur, hiring, subkontrak). Pilihan permintaan = geser/atur permintaan (promo, backorder).",
     },
     {
+      kind: "explain", id: "o3-strategy", chapter: 3, icon: "Gauge",
+      heading: "Chase vs Level",
+      body: "Dua strategi aggregate planning. Chase: produksi ngikutin permintaan tiap periode (atur lewat hiring/firing, lembur). Level: produksi dijaga stabil, naik-turun permintaan diserap inventory atau backorder.",
+    },
+    {
+      kind: "check", id: "o3-level", chapter: 3,
+      question: "Strategi 'level' dalam aggregate planning artinya...",
+      options: [
+        "Produksi dijaga stabil, fluktuasi permintaan diserap stok/backorder",
+        "Produksi ngikutin permintaan persis tiap periode",
+        "Berhenti produksi pas permintaan turun",
+      ],
+      answer: 0,
+      explain: "Level = laju produksi rata (enak buat tenaga kerja & mesin), selisihnya ditampung inventory/backorder. Yang ngikutin permintaan itu chase.",
+    },
+    {
       kind: "explain", id: "o3-mrp", chapter: 3, icon: "Factory",
       heading: "MRP: kebutuhan bahan",
       body: "Material Requirements Planning ngitung kebutuhan bahan buat dependent demand (permintaan yang gantung ke produk lain). Inputnya: jadwal produksi induk (MPS), daftar komponen (BOM), dan catatan persediaan.",
@@ -251,6 +267,23 @@ export const opsmgmtKilat: SubjectKilat = {
       kind: "explain", id: "o3-lean", chapter: 3, icon: "Recycle",
       heading: "Lean: buang yang sia-sia",
       body: "Lean operations fokus ngilangin waste dan variability biar throughput naik. JIT (Just-in-Time) datengin bahan pas dibutuhin aja, dan kanban ngatur aliran pakai sinyal tarik (pull).",
+    },
+    {
+      kind: "explain", id: "o3-seq", chapter: 3, icon: "ListChecks",
+      heading: "Aturan urutan kerja (sequencing)",
+      body: "Pas banyak job antri di satu mesin: FCFS (urut kedatangan), SPT (terpendek dikerjain dulu), EDD (deadline terdekat dulu), LPT (terpanjang dulu). Tiap aturan punya kelebihan beda.",
+    },
+    {
+      kind: "check", id: "o3-spt", chapter: 3,
+      question: "Mau minimalin rata-rata waktu penyelesaian (flow time) semua job. Aturan mana?",
+      options: ["SPT (Shortest Processing Time)", "LPT (Longest Processing Time)", "Acak aja"],
+      answer: 0,
+      explain: "SPT (kerjain yang terpendek dulu) biasanya ngasih rata-rata flow time dan jumlah job nunggu paling kecil.",
+    },
+    {
+      kind: "explain", id: "o3-maint", chapter: 3, icon: "Wrench",
+      heading: "Maintenance & reliability",
+      body: "Breakdown maintenance = benerin pas udah rusak (mahal + ganggu). Preventive maintenance = servis terjadwal sebelum rusak. Reliability = peluang sistem jalan tanpa gagal; nambah komponen cadangan (redundancy) naikin keandalan.",
     },
     {
       kind: "swipe", id: "o3-swipe", chapter: 3, prompt: "Bener atau salah?",
