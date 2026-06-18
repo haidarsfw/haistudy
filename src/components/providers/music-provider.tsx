@@ -77,6 +77,7 @@ interface SCWidget {
   getCurrentSoundIndex: (callback: (index: number) => void) => void;
   getSounds: (callback: (sounds: unknown[]) => void) => void;
   getDuration: (callback: (durationMs: number) => void) => void;
+  getPosition: (callback: (positionMs: number) => void) => void;
   setVolume: (volume: number) => void;
   getVolume: (callback: (volume: number) => void) => void;
 }
@@ -88,7 +89,6 @@ interface SCWidgetConstructor {
     PLAY: string;
     PAUSE: string;
     FINISH: string;
-    PLAY_PROGRESS: string;
   };
 }
 
@@ -177,10 +177,14 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const isSkippingRef = useRef(false);
   const isPlayingRef = useRef(false);
   const volumeRef = useRef(volume);
+  const positionRef = useRef(0);
+  const durationRef = useRef(0);
   loopEnabledRef.current = loopEnabled;
   shuffleEnabledRef.current = shuffleEnabled;
   isPlayingRef.current = isPlaying;
   volumeRef.current = volume;
+  positionRef.current = position;
+  durationRef.current = duration;
 
   // Restore a previously saved custom playlist (per device).
   useEffect(() => {
@@ -194,6 +198,22 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
   }, []);
+
+  // Poll position/duration once a second while playing. Much lighter than the
+  // SoundCloud PLAY_PROGRESS event (which fired ~10x/s and destabilized the
+  // widget, causing tracks to skip after a few seconds).
+  useEffect(() => {
+    if (!isPlaying) return;
+    const id = setInterval(() => {
+      const w = widgetRef.current;
+      if (!w) return;
+      w.getPosition((p) => setPosition(typeof p === "number" ? p : 0));
+      w.getDuration((d) => {
+        if (typeof d === "number" && d > 0) setDuration(d);
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [isPlaying]);
 
   const arm = useCallback(() => {
     if (armedRef.current) return;
@@ -239,14 +259,6 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         widget.getDuration((d) => setDuration(d || 0));
       });
 
-      // Live position for the seek bar (fires while playing).
-      widget.bind(window.SC.Widget.Events.PLAY_PROGRESS, (...args: unknown[]) => {
-        const data = args[0] as { currentPosition?: number } | undefined;
-        if (data && typeof data.currentPosition === "number") {
-          setPosition(data.currentPosition);
-        }
-      });
-
       widget.bind(window.SC.Widget.Events.PAUSE, () => {
         if (!isSkippingRef.current) {
           isPlayingRef.current = false;
@@ -255,6 +267,15 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       });
 
       widget.bind(window.SC.Widget.Events.FINISH, () => {
+        // Guard against spurious early FINISH (the bug that skipped tracks after
+        // ~10-30s). Only advance when we're genuinely near the end, or when the
+        // track length is still unknown.
+        if (
+          durationRef.current > 5000 &&
+          positionRef.current < durationRef.current - 5000
+        ) {
+          return;
+        }
         isSkippingRef.current = true;
         if (loopEnabledRef.current) {
           widget.seekTo(0);

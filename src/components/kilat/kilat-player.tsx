@@ -11,7 +11,7 @@ import { KilatProgressBar } from "./kilat-progress-bar";
 import { KilatComplete } from "./kilat-complete";
 import { KilatOutline } from "./kilat-outline";
 import { KilatTutorial } from "./kilat-tutorial";
-import { KilatAiDock } from "./kilat-ai-dock";
+import { KilatAiDock, type KilatAiGeom } from "./kilat-ai-dock";
 import { sounds } from "@/lib/sounds";
 import { springSmooth } from "@/lib/motion";
 
@@ -40,6 +40,10 @@ export function KilatPlayer({ feed, subjectId, initial, onPersist, onClose }: Pr
   const [showComplete, setShowComplete] = useState(false);
   const [showOutline, setShowOutline] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  // HiStudy AI dock: open/minimized + desktop window geometry. Minimize keeps
+  // the geometry; close (X) resets it to null so it re-centers next time.
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiGeom, setAiGeom] = useState<KilatAiGeom | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef(false);
   const touchY = useRef<number | null>(null);
@@ -220,6 +224,8 @@ export function KilatPlayer({ feed, subjectId, initial, onPersist, onClose }: Pr
         onOpenOutline={() => setShowOutline(true)}
         onJumpChapter={(n) => jump(k.firstIndexOfChapter(n))}
         onRestart={doRestart}
+        aiActive={aiOpen}
+        onToggleAi={() => setAiOpen((o) => !o)}
       />
 
       <div
@@ -332,9 +338,22 @@ export function KilatPlayer({ feed, subjectId, initial, onPersist, onClose }: Pr
         {showTutorial && <KilatTutorial onDismiss={dismissTutorial} />}
       </AnimatePresence>
 
-      {/* HiStudy AI helper - minimized by default, grounded to the active card */}
-      {current && !overlayOpen && (
-        <KilatAiDock subjectId={subjectId} card={current} />
+      {/* HiStudy AI helper - opened from the top-bar button, grounded to the
+          active card. Hidden while another overlay is up; minimize keeps its
+          window position, close (X) resets it. */}
+      {current && (
+        <KilatAiDock
+          open={aiOpen && !overlayOpen}
+          subjectId={subjectId}
+          card={current}
+          geom={aiGeom}
+          onGeom={setAiGeom}
+          onMinimize={() => setAiOpen(false)}
+          onClose={() => {
+            setAiOpen(false);
+            setAiGeom(null);
+          }}
+        />
       )}
     </motion.div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, X, ListTree, RotateCcw } from "lucide-react";
+import { Star, X, ListTree, RotateCcw, Bot } from "lucide-react";
 import type { KilatCard, KilatChapter } from "@/types";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -17,6 +17,8 @@ interface Props {
   onOpenOutline: () => void;
   onJumpChapter: (n: number) => void;
   onRestart: () => void;
+  aiActive: boolean;
+  onToggleAi: () => void;
 }
 
 export function KilatProgressBar({
@@ -29,6 +31,8 @@ export function KilatProgressBar({
   onOpenOutline,
   onJumpChapter,
   onRestart,
+  aiActive,
+  onToggleAi,
 }: Props) {
   const activeChapter = cards[index]?.chapter ?? 1;
 
@@ -100,6 +104,21 @@ export function KilatProgressBar({
         <Star className="h-3.5 w-3.5 fill-primary" />
         {points}
       </motion.div>
+
+      {/* Tanya AI - anchored here instead of floating over the card */}
+      <button
+        type="button"
+        onClick={onToggleAi}
+        aria-label="Tanya haistudy AI soal kartu ini"
+        className={cn(
+          "hs-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+          aiActive
+            ? "bg-primary/15 text-primary"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}
+      >
+        <Bot className="h-4 w-4" />
+      </button>
 
       <button
         type="button"
