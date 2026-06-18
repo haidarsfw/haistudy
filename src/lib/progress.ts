@@ -1,4 +1,4 @@
-import type { SubjectProgress } from "@/types";
+import type { SubjectProgress, KilatProgress } from "@/types";
 
 const defaultProgress: SubjectProgress = {
   materi: [],
@@ -58,7 +58,9 @@ export function calcSubjectPercent(
   progress: SubjectProgress | undefined,
   totalMateri: number,
   hasFlashcards: boolean,
-  hasQuiz: boolean
+  hasQuiz: boolean,
+  // Only subjects that ship a Belajar Kilat feed pass true; others are unaffected.
+  hasKilat = false
 ): number {
   const p = progress || defaultProgress;
   let sections = 0;
@@ -75,6 +77,10 @@ export function calcSubjectPercent(
   if (hasQuiz) {
     sections++;
     if (Object.keys(p.quizScores).length > 0) completed += 1;
+  }
+  if (hasKilat) {
+    sections++;
+    if (p.kilat?.completed) completed += 1;
   }
 
   return sections > 0 ? Math.round((completed / sections) * 100) : 0;
@@ -109,6 +115,26 @@ export function calcOverallProgress(
   return total > 0 ? Math.round(sum / total) : 0;
 }
 
+/** Merge two Kilat states - keeps the furthest progress; local wins on answers. */
+function mergeKilat(
+  local?: KilatProgress,
+  server?: KilatProgress
+): KilatProgress | undefined {
+  if (!local && !server) return undefined;
+  if (!local) return server;
+  if (!server) return local;
+  return {
+    reached: Math.max(local.reached, server.reached),
+    xp: Math.max(local.xp, server.xp),
+    bestStreak: Math.max(local.bestStreak, server.bestStreak),
+    answered: { ...server.answered, ...local.answered },
+    chaptersDone: Array.from(
+      new Set([...local.chaptersDone, ...server.chaptersDone])
+    ),
+    completed: local.completed || server.completed,
+  };
+}
+
 /**
  * Merge server progress with local progress.
  * Union of materi IDs, logical OR for flashcards, local wins for quiz scores.
@@ -129,6 +155,7 @@ export function mergeProgress(
         ...serverSub.quizScores,
         ...localSub.quizScores,
       },
+      kilat: mergeKilat(localSub.kilat, serverSub.kilat),
     };
   }
 

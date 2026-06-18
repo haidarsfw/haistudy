@@ -102,10 +102,65 @@ export interface SubjectContent {
   quiz: QuizQuestion[];
 }
 
+// ============================================
+// Belajar Kilat - swipe-feed learning mode
+// ============================================
+
+export interface KilatScenarioChoice {
+  text: string;
+  correct: boolean;
+  feedback: string;
+}
+
+export interface KilatMatchPair {
+  term: string;
+  def: string;
+}
+
+/**
+ * One beat in the Belajar Kilat feed. `chapter` is 1-based and maps to a module
+ * (used for the Stories-style segmented progress bar).
+ */
+export type KilatCard =
+  | { kind: "intro"; id: string; chapter: number; title: string; subtitle?: string }
+  | { kind: "explain"; id: string; chapter: number; heading: string; body: string; icon?: string; tag?: string }
+  | { kind: "quote"; id: string; chapter: number; text: string; source?: string }
+  | { kind: "check"; id: string; chapter: number; question: string; options: string[]; answer: number; explain: string }
+  | { kind: "scenario"; id: string; chapter: number; situation: string; tag?: string; choices: KilatScenarioChoice[] }
+  | { kind: "match"; id: string; chapter: number; prompt?: string; pairs: KilatMatchPair[] }
+  | { kind: "fill"; id: string; chapter: number; before: string; after: string; options: string[]; answer: number; explain?: string }
+  | { kind: "checkpoint"; id: string; chapter: number; title: string; question: string; options: string[]; answer: number; explain: string };
+
+export interface KilatChapter {
+  /** 1-based chapter number; matches the `chapter` on its cards. */
+  n: number;
+  title: string;
+  subtitle?: string;
+}
+
+export interface SubjectKilat {
+  subjectId: string;
+  title: string;
+  chapters: KilatChapter[];
+  cards: KilatCard[];
+}
+
+/** Per-subject Belajar Kilat progress, nested under SubjectProgress.kilat. */
+export interface KilatProgress {
+  reached: number; // highest card index reached
+  xp: number;
+  bestStreak: number;
+  answered: Record<string, boolean>; // cardId -> answered correctly?
+  chaptersDone: number[]; // chapter numbers whose checkpoint was cleared
+  completed: boolean;
+}
+
 export interface SubjectProgress {
   materi: number[]; // completed materi IDs
   flashcardsCompleted: boolean;
   quizScores: Record<string, { score: number; total: number }>;
+  /** Belajar Kilat feed progress. Optional - only present once the user starts. */
+  kilat?: KilatProgress;
 }
 
 export interface UserSettings {

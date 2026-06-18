@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { SubjectProgress } from "@/types";
+import type { SubjectProgress, KilatProgress } from "@/types";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import {
@@ -142,9 +142,30 @@ export function useProgress(subjectId: string) {
     [update]
   );
 
+  // Belajar Kilat: persist the whole feed state. The player accumulates state
+  // in memory and calls this on meaningful events (answer, chapter clear, exit);
+  // the existing 2s debounce + server merge handles sync.
+  const saveKilatState = useCallback(
+    (kilat: KilatProgress) => {
+      update((prev) => ({ ...prev, kilat }));
+    },
+    [update]
+  );
+
   const getCompletionPercent = useCallback(
-    (totalMateri: number, hasFlashcards: boolean, hasQuiz: boolean) =>
-      calcSubjectPercent(progress, totalMateri, hasFlashcards, hasQuiz),
+    (
+      totalMateri: number,
+      hasFlashcards: boolean,
+      hasQuiz: boolean,
+      hasKilat = false
+    ) =>
+      calcSubjectPercent(
+        progress,
+        totalMateri,
+        hasFlashcards,
+        hasQuiz,
+        hasKilat
+      ),
     [progress]
   );
 
@@ -154,6 +175,7 @@ export function useProgress(subjectId: string) {
     markMateriIncomplete,
     setFlashcardsCompleted,
     saveQuizScore,
+    saveKilatState,
     getCompletionPercent,
   };
 }

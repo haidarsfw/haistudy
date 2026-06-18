@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import type { Subject, SubjectContent, Schedule } from "@/types";
+import type { Subject, SubjectContent, Schedule, SubjectKilat } from "@/types";
 import { useScope, useOptionalScope } from "@/components/providers/scope-provider";
-import { loadCourses, loadContent, loadSchedule, loadRangkuman } from "@/data";
+import { loadCourses, loadContent, loadSchedule, loadRangkuman, loadKilat } from "@/data";
 
 interface ScopedDataValue {
   subjects: Subject[];
@@ -14,6 +14,9 @@ interface ScopedDataValue {
   /** subjectId -> { moduleTitle: html }. Used for tab visibility (empty = hide). */
   rangkuman: Record<string, Record<string, string>>;
   rangkumanLoaded: boolean;
+  /** subjectId -> Belajar Kilat feed. Used for tab visibility + the player. */
+  kilat: Record<string, SubjectKilat>;
+  kilatLoaded: boolean;
 }
 
 const EMPTY: ScopedDataValue = {
@@ -24,6 +27,8 @@ const EMPTY: ScopedDataValue = {
   loaded: false,
   rangkuman: {},
   rangkumanLoaded: false,
+  kilat: {},
+  kilatLoaded: false,
 };
 
 const ScopedDataContext = createContext<ScopedDataValue>(EMPTY);
@@ -63,6 +68,12 @@ export function ScopedDataProvider({ children }: { children: React.ReactNode }) 
         setValue((v) => ({ ...v, rangkuman, rangkumanLoaded: true }));
       }
     );
+    // Belajar Kilat feed - same non-blocking pattern. Resolves to {} for scopes
+    // without a feed registered (loader is optional).
+    (loadKilat(scope) as Promise<Record<string, SubjectKilat>>).then((kilat) => {
+      if (cancelled) return;
+      setValue((v) => ({ ...v, kilat, kilatLoaded: true }));
+    });
     return () => {
       cancelled = true;
     };

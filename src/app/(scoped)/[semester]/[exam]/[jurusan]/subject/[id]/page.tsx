@@ -19,6 +19,7 @@ import { QuizTab } from "@/components/subject/quiz-tab";
 import { PersonalNotesTab } from "@/components/subject/personal-notes-tab";
 import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
+import { KilatLaunch } from "@/components/kilat/kilat-launch";
 import { ChevronRight, Lightbulb, X } from "lucide-react";
 
 // YYYY-MM-DD in WIB (UTC+7). Gates the once-per-day tip dismissal.
@@ -74,7 +75,10 @@ export default function SubjectPage() {
     loaded: scopedLoaded,
     rangkuman,
     rangkumanLoaded,
+    kilat,
+    kilatLoaded,
   } = useScopedData();
+  const hasKilat = kilatLoaded && !!kilat[subjectId];
   const subject = useMemo(() => subjects.find((s) => s.id === subjectId), [subjects, subjectId]);
   const content = scopedContent[subjectId] ?? null;
   const loaded = scopedLoaded;
@@ -162,14 +166,19 @@ export default function SubjectPage() {
     }
     if (content.materi.every((m) => m.tab !== "diktat")) h.add(7);
     if (content.materi.every((m) => m.tab !== "soal")) h.add(8);
+    // Belajar Kilat (9) only shows once we've confirmed a feed exists.
+    if (!hasKilat) h.add(9);
     return h;
-  }, [content, rangkuman, rangkumanLoaded, subjectId]);
+  }, [content, rangkuman, rangkumanLoaded, subjectId, hasKilat]);
 
   // If the active tab is hidden (e.g. a deep-link to an empty tab), fall back
-  // to Materi.
+  // to Materi. Don't bounce off the Belajar Kilat tab (9) while the feed is
+  // still loading - a cold deep-link to ?tab=9 must wait until we know whether
+  // a feed exists before deciding.
   useEffect(() => {
+    if (activeTab === 9 && !kilatLoaded) return;
     if (hiddenTabs.has(activeTab)) setActiveTab(0);
-  }, [hiddenTabs, activeTab]);
+  }, [hiddenTabs, activeTab, kilatLoaded]);
 
   if (!loaded) {
     return (
@@ -198,7 +207,8 @@ export default function SubjectPage() {
   const percent = getCompletionPercent(
     content.materi.length,
     content.flashcards.length > 0,
-    content.quiz.length > 0
+    content.quiz.length > 0,
+    hasKilat
   );
 
   // Progress ring values
@@ -314,6 +324,14 @@ export default function SubjectPage() {
                 subjectId={subjectId}
                 highlightTitle={searchParams.get("highlight") || undefined}
               />
+            </PreviewLock>
+          )}
+        </div>
+
+        <div className="tab-panel" hidden={activeTab !== 9}>
+          {visited.has(9) && (
+            <PreviewLock title="Belajar Kilat">
+              <KilatLaunch subjectId={subjectId} />
             </PreviewLock>
           )}
         </div>

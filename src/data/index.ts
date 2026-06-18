@@ -12,7 +12,7 @@
 // When you add a scope, also seed scope_feature_flags rows.
 
 import type { ScopeTuple, ScopeKey } from "@/types/scope";
-import type { Subject, SubjectContent, Schedule, ForumThread } from "@/types";
+import type { Subject, SubjectContent, Schedule, ForumThread, SubjectKilat } from "@/types";
 import { scopeKey } from "@/lib/scope";
 
 // Authoritative - must match AVAILABLE_SCOPES in src/lib/scope.ts.
@@ -29,6 +29,8 @@ interface ScopeLoaders {
   schedule: () => Promise<{ weekly: Schedule[]; exam: Schedule[] }>;
   rangkuman: () => Promise<Record<string, Record<string, string>>>;
   pinnedThreads: () => Promise<Record<string, ForumThread[]>>;
+  // Optional - only scopes that have authored a Belajar Kilat feed register this.
+  kilat?: () => Promise<Record<string, SubjectKilat>>;
 }
 
 const loaders: Record<ScopeKey, ScopeLoaders> = {
@@ -59,6 +61,7 @@ const loaders: Record<ScopeKey, ScopeLoaders> = {
     schedule:  () => import("./s2/uas/bm/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
     rangkuman: () => import("./s2/uas/bm/rangkuman").then((m) => m.rangkumanContent),
     pinnedThreads: () => import("./s2/uas/bm/pinned-threads").then((m) => m.PINNED_THREADS),
+    kilat:     () => import("./s2/uas/bm/kilat").then((m) => m.kilat),
   },
 };
 
@@ -101,6 +104,17 @@ export async function loadPinnedThreads(
 ): Promise<ForumThread[] | Record<string, ForumThread[]>> {
   const map = await getLoaders(s).pinnedThreads();
   if (subjectId) return map[subjectId] ?? [];
+  return map;
+}
+
+export async function loadKilat(
+  s: ScopeTuple,
+  subjectId?: string
+): Promise<SubjectKilat | Record<string, SubjectKilat> | null> {
+  const load = getLoaders(s).kilat;
+  if (!load) return subjectId ? null : {};
+  const map = await load();
+  if (subjectId) return map[subjectId] ?? null;
   return map;
 }
 
