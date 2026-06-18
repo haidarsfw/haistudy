@@ -186,18 +186,34 @@ export async function fetchOnlineUsers(scope?: ScopeTuple): Promise<OnlineUser[]
       packageTier: "share" | "normal" | "vip" | "diamond" | null;
     }
   >();
+  // Resolve ranks server-side. license_keys is locked from the anon client
+  // (migrations 043/044) so a direct query here 403s; /api/presence/roles does
+  // the lookup behind the service_role key. Non-fatal: a failure just means no
+  // badges this refresh.
   if (licenseKeys.length > 0) {
-    const { data: licenses } = await supabase
-      .from("license_keys")
-      .select("key, is_admin, is_tester, package_tier")
-      .in("key", licenseKeys);
-    for (const l of licenses || []) {
-      roleMap.set(l.key as string, {
-        isAdmin: Boolean(l.is_admin),
-        isTester: Boolean(l.is_tester),
-        packageTier:
-          (l.package_tier as "share" | "normal" | "vip" | "diamond" | null) ?? null,
+    try {
+      const res = await fetch("/api/presence/roles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keys: licenseKeys }),
       });
+      if (res.ok) {
+        const { roles } = (await res.json()) as {
+          roles: Record<
+            string,
+            {
+              isAdmin: boolean;
+              isTester: boolean;
+              packageTier: "share" | "normal" | "vip" | "diamond" | null;
+            }
+          >;
+        };
+        for (const [key, role] of Object.entries(roles || {})) {
+          roleMap.set(key, role);
+        }
+      }
+    } catch {
+      // Network error - badges simply won't show this refresh.
     }
   }
 

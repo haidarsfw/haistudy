@@ -1,14 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import { Music, Play, Pause, SkipForward, Shuffle, Repeat, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMusic } from "@/components/providers/music-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { toast } from "@/components/ui/toast";
 
 export function MusicPlayer() {
-  const { isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, setVolume, toggle, next, toggleShuffle, toggleLoop } = useMusic();
+  const { isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, isCustomPlaylist, setVolume, toggle, next, toggleShuffle, toggleLoop, setPlaylistUrl, resetPlaylist } = useMusic();
   const { t } = useTranslation();
+  const [urlInput, setUrlInput] = useState("");
+
+  const applyUrl = () => {
+    const raw = urlInput.trim();
+    if (!raw) return;
+    if (setPlaylistUrl(raw)) {
+      toast.success("Playlist diganti. Lagi nyetel punyamu sekarang.");
+      setUrlInput("");
+    } else {
+      toast.error("Link SoundCloud nggak valid. Pastikan dari soundcloud.com ya.");
+    }
+  };
 
   return (
     <Popover>
@@ -112,6 +126,45 @@ export function MusicPlayer() {
               </Button>
             </div>
           )}
+
+          {/* Custom playlist - paste your own SoundCloud link */}
+          <div className="space-y-1.5 border-t border-border pt-3">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Playlist sendiri
+            </p>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="url"
+                inputMode="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    applyUrl();
+                  }
+                }}
+                placeholder="Tempel link playlist SoundCloud..."
+                className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] outline-none transition-colors focus:border-primary"
+              />
+              <Button
+                size="sm"
+                className="h-7 shrink-0 px-2.5 text-[11px]"
+                onClick={applyUrl}
+                disabled={!urlInput.trim()}
+              >
+                Pakai
+              </Button>
+            </div>
+            {isCustomPlaylist && (
+              <button
+                onClick={resetPlaylist}
+                className="text-[10px] text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+              >
+                Balikin ke lofi default
+              </button>
+            )}
+          </div>
         </div>
       </PopoverContent>
     </Popover>

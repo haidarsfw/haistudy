@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       model = "fast",
       image = null,
       referenceText = null,
+      userName = null,
     } = body as {
       message: string;
       history: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }>;
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       model?: "fast" | "reasoning";
       image?: string | null; // base64 data URL
       referenceText?: string | null; // selected materi text to anchor the answer
+      userName?: string | null; // in-app nickname so the AI can address the user
     };
 
     if (!message || !licenseKey) {
@@ -103,8 +105,8 @@ export async function POST(request: Request) {
       validatedAdmin = await isAdminFromCookies();
     }
 
-    // Build system prompt with scope-locked subject context.
-    const systemPrompt = await buildSystemPrompt(scope, subjectId);
+    // Build system prompt with scope-locked subject context + the user's nickname.
+    const systemPrompt = await buildSystemPrompt(scope, subjectId, userName);
 
     // Issue 10: when the user selected materi text ("Tanya AI"), anchor the
     // answer to that snippet as the primary focus while keeping full-subject

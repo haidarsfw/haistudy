@@ -18,6 +18,7 @@ import { useChat } from "@/hooks/use-chat";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { getDeviceId } from "@/lib/auth/device";
 import { canUseVipFeatures } from "@/lib/tier";
+import { resolveRole } from "@/lib/role-colors";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { PinnedMessages } from "./pinned-messages";
@@ -179,7 +180,10 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
     .filter((u) => !u.hideStatus)
     .map((u) => u.userName);
 
-  // Build role map from messages for mention coloring
+  // Build role map for mention coloring. Messages cover everyone who has posted
+  // (including people currently offline); online users then override with fresh
+  // ranks resolved server-side (/api/presence/roles), so someone who is online
+  // but hasn't sent a message yet still shows their rank color in the @ list.
   const userRoleMap = useMemo(() => {
     const map = new Map<string, "admin" | "diamond" | "vip" | "tester" | "normal">();
     for (const m of messages) {
@@ -191,8 +195,18 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
       else if (m.isTester) map.set(name, "tester");
       else map.set(name, "normal");
     }
+    for (const u of users) {
+      map.set(
+        u.userName.toLowerCase(),
+        resolveRole({
+          isAdmin: u.isAdmin,
+          isTester: u.isTester,
+          packageTier: u.packageTier,
+        })
+      );
+    }
     return map;
-  }, [messages]);
+  }, [messages, users]);
 
   if (!session) return null;
 

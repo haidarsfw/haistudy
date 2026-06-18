@@ -5,7 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
-import { requireScope, scopeEq, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { requireScope, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import { scopeKey } from "@/lib/scope";
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
@@ -44,16 +44,20 @@ export async function POST(request: Request) {
     const scope = await requireScope(request);
     await assertNotPreview();
 
-    // Validate license key against DB (prevents random-string JWT issuance)
+    // Validate license key against DB (prevents random-string JWT issuance).
+    // Identity lookup is scope-agnostic: a key's (semester, exam_period, jurusan)
+    // columns bind it to ONE scope, but admins (and anyone) can switch session
+    // scope freely, so filtering by scope here would 401 a valid user in a scope
+    // their key wasn't created in. Scope is still enforced by requireScope
+    // (cookie) and the LiveKit room is scope-prefixed via scopedRoomId. Mirrors
+    // the AI route + the create/join handlers, which validate without scope.
     if (isSupabaseServerConfigured) {
       const supabase = createServerClient()!;
-      const { data: license } = await scopeEq(scope)(
-        supabase
-          .from("license_keys")
-          .select("key, suspended_until")
-          .eq("key", licenseKey)
-          .single()
-      );
+      const { data: license } = await supabase
+        .from("license_keys")
+        .select("key, suspended_until")
+        .eq("key", licenseKey)
+        .single();
       if (!license) {
         return NextResponse.json({ error: "Invalid license" }, { status: 401 });
       }

@@ -50,6 +50,7 @@ export default function KilatPage() {
   return (
     <KilatPlayer
       feed={feed}
+      subjectId={subjectId}
       initial={progress.kilat}
       onPersist={saveKilatState}
       onClose={() => router.push(subjectHref)}

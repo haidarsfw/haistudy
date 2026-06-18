@@ -5,6 +5,7 @@ import { Check, X, SkipForward, Lock, Circle, Link2, RotateCcw, ListTree } from 
 import type { KilatCard, KilatChapter } from "@/types";
 import { cn } from "@/lib/utils";
 import { springSmooth } from "@/lib/motion";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { CardStatus } from "./use-kilat";
 
 function cardLabel(card: KilatCard): string {
@@ -118,13 +119,20 @@ export function KilatOutline({ chapters, cards, index, cardStatus, onJump, onClo
         </div>
 
         <div className="border-t border-border p-3">
-          <button
-            type="button"
-            onClick={onRestart}
-            className="hs-press flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground"
-          >
-            <RotateCcw className="h-4 w-4" /> Ulang dari awal
-          </button>
+          <ConfirmDialog
+            className="flex w-full"
+            title="Ulang dari awal?"
+            description="Semua jawaban dan poin di sesi ini bakal direset, dan kamu mulai lagi dari kartu pertama."
+            onConfirm={onRestart}
+            trigger={
+              <button
+                type="button"
+                className="hs-press flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="h-4 w-4" /> Ulang dari awal
+              </button>
+            }
+          />
         </div>
       </motion.div>
     </motion.div>

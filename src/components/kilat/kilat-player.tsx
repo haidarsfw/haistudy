@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, ChevronUp, Trophy, SkipForward } from "lucide-react";
 import type { KilatProgress, SubjectKilat } from "@/types";
 import { useKilat } from "./use-kilat";
@@ -11,11 +11,13 @@ import { KilatProgressBar } from "./kilat-progress-bar";
 import { KilatComplete } from "./kilat-complete";
 import { KilatOutline } from "./kilat-outline";
 import { KilatTutorial } from "./kilat-tutorial";
+import { KilatAiDock } from "./kilat-ai-dock";
 import { sounds } from "@/lib/sounds";
 import { springSmooth } from "@/lib/motion";
 
 interface Props {
   feed: SubjectKilat;
+  subjectId: string;
   initial?: KilatProgress;
   onPersist: (s: KilatProgress) => void;
   onClose: () => void;
@@ -31,8 +33,9 @@ const cardVariants = {
   exit: (d: number) => ({ y: d > 0 ? -48 : 48, opacity: 0, transition: { duration: 0.16 } }),
 };
 
-export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
+export function KilatPlayer({ feed, subjectId, initial, onPersist, onClose }: Props) {
   const k = useKilat({ feed, initial, onPersist });
+  const reduce = useReducedMotion();
   const [dir, setDir] = useState(1);
   const [showComplete, setShowComplete] = useState(false);
   const [showOutline, setShowOutline] = useState(false);
@@ -105,6 +108,14 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
     },
     [k]
   );
+
+  // Restart from scratch. Shared by the top-bar button and the outline sheet;
+  // both wrap their trigger in a confirmation dialog before calling this.
+  const doRestart = useCallback(() => {
+    k.reset();
+    setShowOutline(false);
+    setShowComplete(false);
+  }, [k]);
 
   useEffect(() => {
     if (k.completed && !prevCompleted.current) setShowComplete(true);
@@ -192,7 +203,12 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
   else if (gated) btnLabel = <span>Jawab dulu</span>;
 
   return (
-    <div className="fixed inset-0 z-[90] flex flex-col bg-background">
+    <motion.div
+      initial={reduce ? false : { opacity: 0, scale: 0.985, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed inset-0 z-[90] flex flex-col bg-background"
+    >
       <KilatProgressBar
         chapters={feed.chapters}
         cards={k.cards}
@@ -203,6 +219,7 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
         onClose={onClose}
         onOpenOutline={() => setShowOutline(true)}
         onJumpChapter={(n) => jump(k.firstIndexOfChapter(n))}
+        onRestart={doRestart}
       />
 
       <div
@@ -280,11 +297,7 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
             cardStatus={k.cardStatus}
             onJump={jump}
             onClose={() => setShowOutline(false)}
-            onRestart={() => {
-              k.reset();
-              setShowOutline(false);
-              setShowComplete(false);
-            }}
+            onRestart={doRestart}
           />
         )}
       </AnimatePresence>
@@ -318,6 +331,11 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
       <AnimatePresence>
         {showTutorial && <KilatTutorial onDismiss={dismissTutorial} />}
       </AnimatePresence>
-    </div>
+
+      {/* HiStudy AI helper - minimized by default, grounded to the active card */}
+      {current && !overlayOpen && (
+        <KilatAiDock subjectId={subjectId} card={current} />
+      )}
+    </motion.div>
   );
 }

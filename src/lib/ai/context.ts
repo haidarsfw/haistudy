@@ -221,12 +221,20 @@ function formatExamSchedule(exam: Schedule[], periodLabel: string): string {
  */
 export async function buildSystemPrompt(
   scope: ScopeTuple,
-  subjectId?: string | null
+  subjectId?: string | null,
+  userName?: string | null
 ): Promise<string> {
   const periodLabel = examLabel(scope); // "UTS" | "UAS"
   const scopeNotice = `\n─── KONTEKS SCOPE AKTIF ───\nKamu sedang membantu mahasiswa di periode **Semester ${scope.semester} ${periodLabel} ${scope.jurusan.toUpperCase()}**.\nJawablah HANYA berdasarkan materi dari periode ini. JANGAN campur materi UTS dengan UAS atau jurusan lain. Jika topik yang ditanya tidak ada di periode ini, sampaikan dengan ramah bahwa materi tsb tidak tercakup di scope ini.\n`;
 
-  const parts: string[] = [BASE_SYSTEM_PROMPT, scopeNotice, PRICING_INFO];
+  // Personalize: the AI should address the user by their in-app nickname and
+  // never guess or use another user's name.
+  const cleanName = (userName ?? "").trim().slice(0, 40);
+  const userNotice = cleanName
+    ? `\n─── USER YANG SEDANG KAMU AJAK NGOBROL ───\nNama panggilan user ini: **${cleanName}**. Sapa dan panggil dia "${cleanName}" dengan natural (tidak perlu di setiap kalimat, secukupnya saja). JANGAN PERNAH memanggil dia dengan nama lain, dan jangan mengarang nama. Kalau user minta dipanggil nama lain, ikuti permintaannya.\n`
+    : "";
+
+  const parts: string[] = [BASE_SYSTEM_PROMPT, scopeNotice, userNotice, PRICING_INFO];
 
   // Exam schedule + countdown (best-effort; never block the prompt on it).
   try {

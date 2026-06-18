@@ -19,6 +19,8 @@ interface ConfirmDialogProps {
   description: string;
   onConfirm: () => void | Promise<void>;
   destructive?: boolean;
+  /** Wrapper class for the trigger. Defaults to "inline-flex". */
+  className?: string;
 }
 
 export function ConfirmDialog({
@@ -27,6 +29,7 @@ export function ConfirmDialog({
   description,
   onConfirm,
   destructive = true,
+  className,
 }: ConfirmDialogProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -39,7 +42,7 @@ export function ConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <div
-        className="inline-flex"
+        className={className ?? "inline-flex"}
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
       >
         {trigger}

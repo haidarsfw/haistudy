@@ -26,7 +26,8 @@ interface UseAiChatReturn {
     model?: "fast" | "reasoning",
     isAdmin?: boolean,
     image?: string | null,
-    referenceText?: string | null
+    referenceText?: string | null,
+    userName?: string | null
   ) => Promise<void>;
   stopStreaming: () => void;
   clearHistory: () => void;
@@ -103,7 +104,8 @@ export function useAiChat(): UseAiChatReturn {
       model?: "fast" | "reasoning",
       isAdmin?: boolean,
       image?: string | null,
-      referenceText?: string | null
+      referenceText?: string | null,
+      userName?: string | null
     ) => {
       if (!text.trim() || isStreaming) return;
 
@@ -163,6 +165,7 @@ export function useAiChat(): UseAiChatReturn {
             isAdmin: isAdmin || false,
             ...(image ? { image } : {}),
             ...(referenceText ? { referenceText } : {}),
+            ...(userName ? { userName } : {}),
           }),
           signal: controller.signal,
         });

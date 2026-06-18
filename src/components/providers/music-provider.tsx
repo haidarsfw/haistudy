@@ -19,11 +19,15 @@ interface MusicContextValue {
   shuffleEnabled: boolean;
   loopEnabled: boolean;
   volume: number;
+  isCustomPlaylist: boolean;
   setVolume: (v: number) => void;
   toggle: () => void;
   next: () => void;
   toggleShuffle: () => void;
   toggleLoop: () => void;
+  // Returns false when the URL is not a valid SoundCloud link (caller toasts).
+  setPlaylistUrl: (raw: string) => boolean;
+  resetPlaylist: () => void;
 }
 
 const MusicContext = createContext<MusicContextValue>({
@@ -33,11 +37,14 @@ const MusicContext = createContext<MusicContextValue>({
   shuffleEnabled: true,
   loopEnabled: false,
   volume: 80,
+  isCustomPlaylist: false,
   setVolume: () => {},
   toggle: () => {},
   next: () => {},
   toggleShuffle: () => {},
   toggleLoop: () => {},
+  setPlaylistUrl: () => false,
+  resetPlaylist: () => {},
 });
 
 export function useMusic() {
@@ -53,6 +60,10 @@ interface SCWidget {
   pause: () => void;
   seekTo: (ms: number) => void;
   skip: (index: number) => void;
+  load: (
+    url: string,
+    options?: { auto_play?: boolean; callback?: () => void; [key: string]: unknown }
+  ) => void;
   getCurrentSound: (callback: (sound: { title?: string }) => void) => void;
   getCurrentSoundIndex: (callback: (index: number) => void) => void;
   getSounds: (callback: (sounds: unknown[]) => void) => void;
@@ -85,6 +96,39 @@ function buildShuffledOrder(count: number): number[] {
   return arr;
 }
 
+// ─── Custom playlist support ───
+// The default lofi list, by its underlying SoundCloud URL. The default iframe
+// src (SOUNDCLOUD_PLAYLIST_URL) already wraps this; toEmbedSrc() reproduces the
+// same widget params for any user-supplied link.
+const DEFAULT_PLAYLIST_RAW = "https://api.soundcloud.com/playlists/545610837";
+const MUSIC_URL_KEY = "hs-music-url";
+const SC_WIDGET_PARAMS =
+  "color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&show_playcount=false";
+
+function isSoundCloudUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw.trim());
+    return (
+      (u.protocol === "https:" || u.protocol === "http:") &&
+      /(^|\.)soundcloud\.com$/.test(u.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function toEmbedSrc(raw: string): string {
+  return `https://w.soundcloud.com/player/?url=${encodeURIComponent(
+    raw.trim()
+  )}&${SC_WIDGET_PARAMS}`;
+}
+
+// Keep the default playlist on its exact original embed URL; only custom links
+// get rebuilt via toEmbedSrc.
+function srcFor(raw: string): string {
+  return raw === DEFAULT_PLAYLIST_RAW ? SOUNDCLOUD_PLAYLIST_URL : toEmbedSrc(raw);
+}
+
 export function MusicProvider({ children }: { children: ReactNode }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const widgetRef = useRef<SCWidget | null>(null);
@@ -102,6 +146,12 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [shuffleEnabled, setShuffleEnabled] = useState(true);
   const [loopEnabled, setLoopEnabled] = useState(false);
   const [volume, setVolumeState] = useState(80);
+  // Active playlist: rawUrl is the SoundCloud link, armedSrc is the iframe src
+  // captured when the player first arms (swaps after that go via widget.load).
+  const [rawUrl, setRawUrl] = useState(DEFAULT_PLAYLIST_RAW);
+  const [armedSrc, setArmedSrc] = useState(SOUNDCLOUD_PLAYLIST_URL);
+  const rawUrlRef = useRef(DEFAULT_PLAYLIST_RAW);
+  rawUrlRef.current = rawUrl;
 
   const trackCountRef = useRef(0);
   const shuffledOrderRef = useRef<number[]>([]);
@@ -112,13 +162,29 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const shuffleEnabledRef = useRef(shuffleEnabled);
   const isSkippingRef = useRef(false);
   const isPlayingRef = useRef(false);
+  const volumeRef = useRef(volume);
   loopEnabledRef.current = loopEnabled;
   shuffleEnabledRef.current = shuffleEnabled;
   isPlayingRef.current = isPlaying;
+  volumeRef.current = volume;
+
+  // Restore a previously saved custom playlist (per device).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(MUSIC_URL_KEY);
+      if (saved && isSoundCloudUrl(saved)) {
+        setRawUrl(saved);
+        setArmedSrc(srcFor(saved));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const arm = useCallback(() => {
     if (armedRef.current) return;
     armedRef.current = true;
+    setArmedSrc(srcFor(rawUrlRef.current));
     setArmed(true);
   }, []);
 
@@ -130,7 +196,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
 
       widget.bind(window.SC.Widget.Events.READY, () => {
         setIsReady(true);
-        widget.setVolume(80);
+        widget.setVolume(volumeRef.current);
         widget.getSounds((sounds) => {
           const count = sounds?.length || 0;
           trackCountRef.current = count;
@@ -291,6 +357,72 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     setLoopEnabled((prev) => !prev);
   }, [arm]);
 
+  // Re-read the track list + rebuild the shuffle order after a live playlist
+  // swap (mirrors the READY handler so shuffle/next/loop stay correct).
+  const applyLoaded = useCallback((widget: SCWidget) => {
+    setIsReady(true);
+    widget.setVolume(volumeRef.current);
+    widget.getSounds((sounds) => {
+      const count = sounds?.length || 0;
+      trackCountRef.current = count;
+      if (count > 0) {
+        shuffledOrderRef.current = buildShuffledOrder(count);
+        shuffledPositionRef.current = 0;
+      }
+      if (pendingPlayRef.current) {
+        pendingPlayRef.current = false;
+        widget.play();
+      }
+    });
+  }, []);
+
+  const switchTo = useCallback(
+    (raw: string, play: boolean) => {
+      rawUrlRef.current = raw;
+      setRawUrl(raw);
+      const widget = widgetRef.current;
+      if (widget && armedRef.current) {
+        // Live swap in place - no iframe remount, controls keep working.
+        setIsReady(false);
+        pendingPlayRef.current = false; // auto_play below handles playback
+        widget.load(raw, { auto_play: play, callback: () => applyLoaded(widget) });
+      } else {
+        // Not armed yet: mount the iframe on the new src; READY will play if asked.
+        pendingPlayRef.current = play;
+        setArmedSrc(srcFor(raw));
+        arm();
+      }
+    },
+    [applyLoaded, arm]
+  );
+
+  // Returns false for non-SoundCloud links so the caller can show a toast.
+  const setPlaylistUrl = useCallback(
+    (raw: string): boolean => {
+      const trimmed = raw.trim();
+      if (!isSoundCloudUrl(trimmed)) return false;
+      try {
+        localStorage.setItem(MUSIC_URL_KEY, trimmed);
+      } catch {
+        /* ignore */
+      }
+      switchTo(trimmed, true);
+      return true;
+    },
+    [switchTo]
+  );
+
+  const resetPlaylist = useCallback(() => {
+    try {
+      localStorage.removeItem(MUSIC_URL_KEY);
+    } catch {
+      /* ignore */
+    }
+    switchTo(DEFAULT_PLAYLIST_RAW, isPlayingRef.current);
+  }, [switchTo]);
+
+  const isCustomPlaylist = rawUrl !== DEFAULT_PLAYLIST_RAW;
+
   const value = useMemo<MusicContextValue>(
     () => ({
       isPlaying,
@@ -299,13 +431,16 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       shuffleEnabled,
       loopEnabled,
       volume,
+      isCustomPlaylist,
       setVolume: handleSetVolume,
       toggle,
       next,
       toggleShuffle,
       toggleLoop,
+      setPlaylistUrl,
+      resetPlaylist,
     }),
-    [isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, handleSetVolume, toggle, next, toggleShuffle, toggleLoop]
+    [isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, isCustomPlaylist, handleSetVolume, toggle, next, toggleShuffle, toggleLoop, setPlaylistUrl, resetPlaylist]
   );
 
   return (
@@ -315,7 +450,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
           ref={iframeRef}
           style={{ position: 'fixed', bottom: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', overflow: 'hidden', border: 0 }}
           allow="autoplay"
-          src={SOUNDCLOUD_PLAYLIST_URL}
+          src={armedSrc}
         />
       )}
       {children}

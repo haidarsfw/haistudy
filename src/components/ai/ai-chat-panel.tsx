@@ -36,6 +36,7 @@ import { AiInput } from "./ai-input";
 import { AiSuggestions } from "./ai-suggestions";
 import { AI_ENABLED, AI_DISABLED_MESSAGE } from "@/lib/feature-flags";
 import { useOptionalScope } from "@/components/providers/scope-provider";
+import { stripMarkdown } from "@/lib/strip-markdown";
 
 interface AiChatPanelProps {
   isOpen: boolean;
@@ -206,7 +207,8 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
         aiModel,
         session.isAdmin,
         image,
-        ref?.text ?? null
+        ref?.text ?? null,
+        session.shortName
       );
       if (ref) setActiveReference(null);
       // User just sent - pin to bottom regardless of prior scroll state
@@ -304,11 +306,12 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
           }
           downloadBlob(lines.join("\n"), "md", "text/markdown;charset=utf-8");
         } else if (format === "txt") {
+          // Plain text: strip Markdown so the file reads cleanly, keep spacing.
           const lines: string[] = [title, "=".repeat(title.length), ""];
           for (const m of activeConv.messages) {
             const who = m.role === "user" ? "Kamu" : "haistudy AI";
             const when = fmtWhen(m.timestamp);
-            lines.push(`${who}${when ? ` (${when})` : ""}:`, m.content || "", "");
+            lines.push(`${who}${when ? ` (${when})` : ""}:`, stripMarkdown(m.content || ""), "");
           }
           downloadBlob(lines.join("\n"), "txt", "text/plain;charset=utf-8");
         } else {
@@ -339,7 +342,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
             const who = m.role === "user" ? "Kamu" : "haistudy AI";
             const when = fmtWhen(m.timestamp);
             writeBlock(`${who}${when ? ` (${when})` : ""}`, 11, true);
-            writeBlock(m.content || "", 10, false);
+            writeBlock(stripMarkdown(m.content || ""), 10, false);
             y += 8;
           }
           downloadBlob(doc.output("blob"), "pdf", "application/pdf");
