@@ -41,6 +41,9 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
   const lockRef = useRef(false);
   const touchY = useRef<number | null>(null);
   const prevCompleted = useRef(k.completed);
+  // One physical scroll gesture (incl. trackpad momentum) = at most one action.
+  const wheelActedRef = useRef(false);
+  const wheelEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const overlayOpen = showComplete || showOutline || showTutorial;
 
@@ -149,8 +152,20 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
 
   const onWheel = (e: React.WheelEvent) => {
     if (overlayOpen) return;
-    if (e.deltaY > 24 && atBoundary(true)) tryAdvance();
-    else if (e.deltaY < -24 && atBoundary(false)) tryPrev();
+    // Keep the gesture "open" while wheel events keep arriving (momentum), and
+    // only act on the FIRST event of each gesture. A second, deliberate scroll
+    // (after the wheel goes quiet ~170ms) is needed to move again or force-skip.
+    if (wheelEndRef.current) clearTimeout(wheelEndRef.current);
+    wheelEndRef.current = setTimeout(() => { wheelActedRef.current = false; }, 170);
+    if (wheelActedRef.current) return;
+    if (Math.abs(e.deltaY) < 16) return;
+    if (e.deltaY > 0 && atBoundary(true)) {
+      wheelActedRef.current = true;
+      tryAdvance();
+    } else if (e.deltaY < 0 && atBoundary(false)) {
+      wheelActedRef.current = true;
+      tryPrev();
+    }
   };
   const onTouchStart = (e: React.TouchEvent) => {
     touchY.current = e.touches[0].clientY;
@@ -172,7 +187,7 @@ export function KilatPlayer({ feed, initial, onPersist, onClose }: Props) {
       <ArrowUp className="h-4 w-4" /> Lanjut
     </>
   );
-  if (isLast && k.completed) btnLabel = (<><Trophy className="h-4 w-4" /> Lihat hasil</>);
+  if (isLast && k.completed) btnLabel = (<><Trophy className="h-4 w-4" /> Lihat Skor</>);
   else if (gated && k.pendingSkip) btnLabel = (<><SkipForward className="h-4 w-4" /> Lewatin (dihitung 0)</>);
   else if (gated) btnLabel = <span>Jawab dulu</span>;
 

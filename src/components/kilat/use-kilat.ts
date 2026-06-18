@@ -68,10 +68,14 @@ export function useKilat({ feed, initial, onPersist }: Args) {
   const [chaptersDone, setChaptersDone] = useState<number[]>(initial?.chaptersDone ?? []);
   const [pendingSkip, setPendingSkip] = useState(false);
 
-  const completed = useMemo(
-    () => feed.chapters.every((c) => chaptersDone.includes(c.n)),
-    [feed.chapters, chaptersDone]
-  );
+  // "Finished the feed" = reached the last card and that card is done/ungated.
+  // (Pass/fail is separate, judged by scorePct vs the 90% KKM.)
+  const lastIdx = total - 1;
+  const completed = useMemo(() => {
+    if (reached < lastIdx) return false;
+    const last = cards[lastIdx];
+    return !!last && (!isGated(last) || !!responses[last.id]);
+  }, [reached, lastIdx, cards, responses]);
 
   const current: KilatCard | undefined = cards[index];
   const isDone = (card: KilatCard) => !!responses[card.id];

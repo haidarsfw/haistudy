@@ -748,7 +748,7 @@ export const bizethicsKilat: SubjectKilat = {
     },
     {
       kind: "categorize",
-      id: "c3-coi",
+      id: "c3-coi-cat",
       chapter: 3,
       prompt: "Mana yang termasuk benturan kepentingan (conflict of interest)?",
       buckets: ["Benturan", "Bukan"],

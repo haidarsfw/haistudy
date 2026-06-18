@@ -32,14 +32,24 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
   const scorePct = gradedTotal > 0 ? Math.round((points / gradedTotal) * 100) : 0;
   const passed = started && scorePct >= 90;
 
+  // A chapter is "done" once every card in it has been reached (explored), so
+  // the checkmarks stay in sync with the % explored and the player's bar.
+  const reachedIdx = kp?.reached ?? -1;
   const perChapter = useMemo(() => {
     if (!feed) return [];
-    return feed.chapters.map((ch) => ({
-      ...ch,
-      count: feed.cards.filter((c) => c.chapter === ch.n).length,
-      done: kp?.chaptersDone.includes(ch.n) ?? false,
-    }));
-  }, [feed, kp]);
+    return feed.chapters.map((ch) => {
+      const idxs = feed.cards
+        .map((c, i) => (c.chapter === ch.n ? i : -1))
+        .filter((i) => i >= 0);
+      const maxIdx = idxs.length ? Math.max(...idxs) : -1;
+      return {
+        ...ch,
+        count: idxs.length,
+        done: started && maxIdx >= 0 && reachedIdx >= maxIdx,
+      };
+    });
+  }, [feed, reachedIdx, started]);
+  const babDone = perChapter.filter((c) => c.done).length;
 
   if (!kilatLoaded) {
     return (
@@ -117,7 +127,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
               <Star className="h-3.5 w-3.5 fill-primary" /> {points}/{gradedTotal} poin
             </span>
             <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground">
-              <Check className="h-3.5 w-3.5" /> {kp?.chaptersDone.length ?? 0}/{feed.chapters.length} bab
+              <Check className="h-3.5 w-3.5" /> {babDone}/{feed.chapters.length} bab
             </span>
           </div>
         </motion.div>

@@ -55,7 +55,7 @@ export const akuntansiKilat: SubjectKilat = {
     {
       kind: "calc", id: "a1-totmfg", chapter: 1, mode: "pick",
       tag: "Hitung", question: "Material $300.000 + Labor $400.000 + Overhead $146.000. Total manufacturing costs?",
-      formula: "DM + DL + Overhead",
+      formula: "$\\text{DM} + \\text{DL} + \\text{Overhead}$",
       options: ["$846.000", "$926.000", "$700.000", "$446.000"],
       answer: 0,
       steps: ["300.000 + 400.000 + 146.000 = 846.000.", "Iklan, komisi, ongkos kirim TIDAK masuk (itu period cost)."],
@@ -133,7 +133,7 @@ export const akuntansiKilat: SubjectKilat = {
     {
       kind: "explain", id: "a2-cm", chapter: 2, icon: "DollarSign",
       heading: "Contribution margin",
-      body: "Contribution margin = Sales - Variable costs. Ini 'sisa' yang dipakai buat nutup fixed cost, baru sisanya jadi laba. Per unit: harga jual dikurangi variable cost per unit.",
+      body: "$\\text{Contribution margin} = \\text{Sales} - \\text{Variable costs}$. Ini 'sisa' yang dipakai buat nutup fixed cost, baru sisanya jadi laba. Per unit: harga jual dikurangi variable cost per unit.",
     },
     {
       kind: "table", id: "a2-cvp-fill", chapter: 2, mode: "fill",
@@ -154,19 +154,19 @@ export const akuntansiKilat: SubjectKilat = {
     {
       kind: "calc", id: "a2-cmratio", chapter: 2, mode: "type",
       tag: "Hitung", question: "Harga jual $500, variable cost $300 per unit. Contribution margin ratio? (persen, angka aja)",
-      formula: "CM ratio = (harga - variable) / harga", answer: "40", unit: "%",
+      formula: "$\\text{CM ratio} = \\dfrac{\\text{harga} - \\text{variable}}{\\text{harga}}$", answer: "40", unit: "%",
       steps: ["CM per unit = 500 - 300 = 200", "200 / 500 = 0,40 = 40%."],
       explain: "Tiap $1 penjualan, 40 sen nyumbang buat nutup fixed cost dan laba.",
     },
     {
       kind: "explain", id: "a2-be", chapter: 2, icon: "Target",
       heading: "Break-even point",
-      body: "Titik di mana total revenue = total cost (laba nol). Break-even (unit) = Fixed costs / unit contribution margin. Break-even (dollar) = Fixed costs / CM ratio.",
+      body: "Titik di mana total revenue = total cost (laba nol). $\\text{BEP unit} = \\dfrac{\\text{Fixed}}{\\text{CM per unit}}$, dan $\\text{BEP rupiah} = \\dfrac{\\text{Fixed}}{\\text{CM ratio}}$.",
     },
     {
       kind: "calc", id: "a2-be-calc", chapter: 2, mode: "pick",
       tag: "Hitung", question: "Lombardi: harga $400, variable $240, fixed $180.000. Break-even berapa unit?",
-      formula: "BEP unit = Fixed / (harga - variable)",
+      formula: "$\\text{BEP unit} = \\dfrac{\\text{Fixed}}{\\text{harga} - \\text{variable}}$",
       options: ["1.125 unit", "750 unit", "450 unit", "1.500 unit"],
       answer: 0,
       steps: ["Unit CM = 400 - 240 = 160", "180.000 / 160 = 1.125 unit."],
@@ -175,7 +175,7 @@ export const akuntansiKilat: SubjectKilat = {
     {
       kind: "calc", id: "a2-highlow", chapter: 2, mode: "type",
       tag: "Hitung", question: "High-low: biaya $63.000 di 50.000 mil, $30.000 di 20.000 mil. Variable cost per mil? (angka aja)",
-      formula: "(biaya high - low) / (kegiatan high - low)", answer: "1.10", unit: "USD/mil",
+      formula: "$\\dfrac{\\text{biaya high} - \\text{biaya low}}{\\text{kegiatan high} - \\text{kegiatan low}}$", answer: "1.10", unit: "USD/mil",
       steps: ["(63.000 - 30.000) / (50.000 - 20.000)", "33.000 / 30.000 = 1,10 per mil."],
       explain: "Selisih biaya dibagi selisih kegiatan = bagian variable-nya, yaitu $1,10 per mil.",
     },
@@ -196,7 +196,7 @@ export const akuntansiKilat: SubjectKilat = {
       kind: "checkpoint", id: "a2-cp", chapter: 2, title: "Checkpoint Bab 2",
       question: "Rumus inti CVP:",
       options: [
-        "Break-even (unit) = Fixed costs / unit contribution margin",
+        "Break-even (unit) $= \\dfrac{\\text{Fixed}}{\\text{CM per unit}}$",
         "Break-even (unit) = Fixed costs x harga jual",
         "Contribution margin = Sales + Variable costs",
       ],

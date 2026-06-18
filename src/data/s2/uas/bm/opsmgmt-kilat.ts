@@ -45,7 +45,7 @@ export const opsmgmtKilat: SubjectKilat = {
     {
       kind: "calc", id: "o1-calc-sc", chapter: 1, mode: "pick",
       tag: "Hitung", question: "South Carolina: upah USD 70/hari, hasil 60 unit/hari. Biaya tenaga kerja per unit?",
-      formula: "biaya/hari ÷ unit/hari",
+      formula: "$\\dfrac{\\text{biaya per hari}}{\\text{unit per hari}}$",
       options: ["USD 1,17", "USD 0,86", "USD 70", "USD 4.200"],
       answer: 0,
       steps: ["70 ÷ 60 = 1,17 per unit."],
@@ -54,7 +54,7 @@ export const opsmgmtKilat: SubjectKilat = {
     {
       kind: "calc", id: "o1-calc-mx", chapter: 1, mode: "type",
       tag: "Hitung", question: "Mexico: upah USD 25/hari, tapi cuma 20 unit/hari. Biaya tenaga kerja per unit? (angka aja)",
-      formula: "biaya/hari ÷ unit/hari", answer: "1.25", unit: "USD",
+      formula: "$\\dfrac{\\text{biaya per hari}}{\\text{unit per hari}}$", answer: "1.25", unit: "USD",
       steps: ["25 ÷ 20 = 1,25 per unit."],
       explain: "USD 25 dibagi 20 = USD 1,25. Walau upahnya jauh lebih murah dari SC, per unitnya malah lebih mahal karena produktivitas rendah.",
     },
@@ -75,7 +75,7 @@ export const opsmgmtKilat: SubjectKilat = {
     {
       kind: "calc", id: "o1-calc-cross", chapter: 1, mode: "pick",
       tag: "Hitung", question: "Athens: 30.000 + 75x. Brussels: 60.000 + 45x. Di volume (x) berapa biayanya sama?",
-      formula: "30.000 + 75x = 60.000 + 45x",
+      formula: "$30000 + 75x = 60000 + 45x$",
       options: ["1.000 unit", "2.500 unit", "750 unit", "30.000 unit"],
       answer: 0,
       steps: ["30.000 + 75x = 60.000 + 45x", "30x = 30.000", "x = 1.000 unit."],
@@ -138,12 +138,12 @@ export const opsmgmtKilat: SubjectKilat = {
     {
       kind: "explain", id: "o2-eoq", chapter: 2, icon: "Calculator",
       heading: "EOQ: berapa banyak pesan",
-      body: "Economic Order Quantity nyari jumlah pesan paling hemat, pas holding cost = setup cost. Rumusnya Q* = akar dari (2DS/H).",
+      body: "Economic Order Quantity nyari jumlah pesan paling hemat, pas holding cost = setup cost. Rumusnya $Q^* = \\sqrt{2DS/H}$.",
     },
     {
       kind: "calc", id: "o2-eoq-calc", chapter: 2, mode: "pick",
       tag: "Hitung", question: "D = 1.000, S = USD 10/order, H = USD 0,50/unit/th. Berapa EOQ (Q*)?",
-      formula: "Q* = akar(2DS / H)",
+      formula: "$Q^* = \\sqrt{\\dfrac{2DS}{H}}$",
       options: ["200 unit", "400 unit", "100 unit", "40.000 unit"],
       answer: 0,
       steps: ["2 x 1.000 x 10 / 0,50 = 40.000", "akar 40.000 = 200 unit."],
@@ -152,19 +152,19 @@ export const opsmgmtKilat: SubjectKilat = {
     {
       kind: "calc", id: "o2-avg", chapter: 2, mode: "type",
       tag: "Hitung", question: "Kalau EOQ-nya 200 unit, rata-rata stok (Q/2) berapa? (angka aja)",
-      formula: "rata-rata stok = Q / 2", answer: "100",
+      formula: "$\\text{rata-rata stok} = \\dfrac{Q}{2}$", answer: "100",
       steps: ["200 ÷ 2 = 100 unit."],
       explain: "Stok turun dari Q ke 0 berulang, jadi rata-ratanya Q/2 = 100 unit.",
     },
     {
       kind: "explain", id: "o2-rop", chapter: 2, icon: "Clock",
       heading: "ROP: kapan pesan lagi",
-      body: "Reorder Point jawab 'kapan'. ROP = d x L, dengan d = permintaan per hari dan L = lead time (hari nunggu barang datang).",
+      body: "Reorder Point jawab 'kapan'. $ROP = d \\times L$, dengan d = permintaan per hari dan L = lead time (hari nunggu barang datang).",
     },
     {
       kind: "calc", id: "o2-rop-calc", chapter: 2, mode: "pick",
       tag: "Hitung", question: "8.000 unit/tahun, 250 hari kerja, lead time 3 hari. ROP?",
-      formula: "d = D / hari kerja, lalu ROP = d x L",
+      formula: "$d = \\dfrac{D}{\\text{hari kerja}}, \\quad ROP = d \\times L$",
       options: ["96 unit", "128 unit", "32 unit", "24.000 unit"],
       answer: 0,
       steps: ["d = 8.000 / 250 = 32 per hari", "ROP = 32 x 3 = 96 unit."],
@@ -187,7 +187,7 @@ export const opsmgmtKilat: SubjectKilat = {
       kind: "checkpoint", id: "o2-cp", chapter: 2, title: "Checkpoint Bab 2",
       question: "Dua angka kunci manajemen persediaan:",
       options: [
-        "EOQ = akar(2DS/H) buat 'berapa', ROP = d x L buat 'kapan'",
+        "EOQ $=\\sqrt{2DS/H}$ buat 'berapa', ROP $= d \\times L$ buat 'kapan'",
         "EOQ buat 'kapan', ROP buat 'berapa'",
         "Pesan sebanyak-banyaknya biar gak kehabisan",
       ],
