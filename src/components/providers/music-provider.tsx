@@ -20,9 +20,13 @@ interface MusicContextValue {
   loopEnabled: boolean;
   volume: number;
   isCustomPlaylist: boolean;
+  position: number; // current position in ms
+  duration: number; // track length in ms
   setVolume: (v: number) => void;
   toggle: () => void;
   next: () => void;
+  previous: () => void;
+  seek: (ms: number) => void;
   toggleShuffle: () => void;
   toggleLoop: () => void;
   // Returns false when the URL is not a valid SoundCloud link (caller toasts).
@@ -38,9 +42,13 @@ const MusicContext = createContext<MusicContextValue>({
   loopEnabled: false,
   volume: 80,
   isCustomPlaylist: false,
+  position: 0,
+  duration: 0,
   setVolume: () => {},
   toggle: () => {},
   next: () => {},
+  previous: () => {},
+  seek: () => {},
   toggleShuffle: () => {},
   toggleLoop: () => {},
   setPlaylistUrl: () => false,
@@ -56,6 +64,7 @@ interface SCWidget {
   bind: (event: string, callback: (...args: unknown[]) => void) => void;
   toggle: () => void;
   next: () => void;
+  prev: () => void;
   play: () => void;
   pause: () => void;
   seekTo: (ms: number) => void;
@@ -67,6 +76,7 @@ interface SCWidget {
   getCurrentSound: (callback: (sound: { title?: string }) => void) => void;
   getCurrentSoundIndex: (callback: (index: number) => void) => void;
   getSounds: (callback: (sounds: unknown[]) => void) => void;
+  getDuration: (callback: (durationMs: number) => void) => void;
   setVolume: (volume: number) => void;
   getVolume: (callback: (volume: number) => void) => void;
 }
@@ -78,6 +88,7 @@ interface SCWidgetConstructor {
     PLAY: string;
     PAUSE: string;
     FINISH: string;
+    PLAY_PROGRESS: string;
   };
 }
 
@@ -152,6 +163,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [armedSrc, setArmedSrc] = useState(SOUNDCLOUD_PLAYLIST_URL);
   const rawUrlRef = useRef(DEFAULT_PLAYLIST_RAW);
   rawUrlRef.current = rawUrl;
+  // Seek bar state: current position + track length, both in ms.
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   const trackCountRef = useRef(0);
   const shuffledOrderRef = useRef<number[]>([]);
@@ -222,6 +236,15 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         widget.getCurrentSoundIndex((index) => {
           currentTrackIndexRef.current = index;
         });
+        widget.getDuration((d) => setDuration(d || 0));
+      });
+
+      // Live position for the seek bar (fires while playing).
+      widget.bind(window.SC.Widget.Events.PLAY_PROGRESS, (...args: unknown[]) => {
+        const data = args[0] as { currentPosition?: number } | undefined;
+        if (data && typeof data.currentPosition === "number") {
+          setPosition(data.currentPosition);
+        }
       });
 
       widget.bind(window.SC.Widget.Events.PAUSE, () => {
@@ -321,6 +344,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     }
 
     isSkippingRef.current = true;
+    setPosition(0);
     if (shuffleEnabled && shuffledOrderRef.current.length > 0) {
       shuffledPositionRef.current =
         (shuffledPositionRef.current + 1) % shuffledOrderRef.current.length;
@@ -332,6 +356,36 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       setTimeout(() => widget.play(), 300);
     }
   }, [arm, shuffleEnabled]);
+
+  const previous = useCallback(() => {
+    arm();
+    const widget = widgetRef.current;
+    if (!widget) {
+      pendingPlayRef.current = true;
+      return;
+    }
+
+    isSkippingRef.current = true;
+    setPosition(0);
+    if (shuffleEnabled && shuffledOrderRef.current.length > 0) {
+      const len = shuffledOrderRef.current.length;
+      shuffledPositionRef.current = (shuffledPositionRef.current - 1 + len) % len;
+      const prevIndex = shuffledOrderRef.current[shuffledPositionRef.current];
+      widget.skip(prevIndex);
+      setTimeout(() => widget.play(), 300);
+    } else {
+      widget.prev();
+      setTimeout(() => widget.play(), 300);
+    }
+  }, [arm, shuffleEnabled]);
+
+  const seek = useCallback((ms: number) => {
+    const widget = widgetRef.current;
+    if (!widget) return;
+    const clamped = Math.max(0, ms);
+    widget.seekTo(clamped);
+    setPosition(clamped);
+  }, []);
 
   const handleSetVolume = useCallback((v: number) => {
     arm();
@@ -361,7 +415,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   // swap (mirrors the READY handler so shuffle/next/loop stay correct).
   const applyLoaded = useCallback((widget: SCWidget) => {
     setIsReady(true);
+    setPosition(0);
     widget.setVolume(volumeRef.current);
+    widget.getDuration((d) => setDuration(d || 0));
     widget.getSounds((sounds) => {
       const count = sounds?.length || 0;
       trackCountRef.current = count;
@@ -432,15 +488,19 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       loopEnabled,
       volume,
       isCustomPlaylist,
+      position,
+      duration,
       setVolume: handleSetVolume,
       toggle,
       next,
+      previous,
+      seek,
       toggleShuffle,
       toggleLoop,
       setPlaylistUrl,
       resetPlaylist,
     }),
-    [isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, isCustomPlaylist, handleSetVolume, toggle, next, toggleShuffle, toggleLoop, setPlaylistUrl, resetPlaylist]
+    [isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, isCustomPlaylist, position, duration, handleSetVolume, toggle, next, previous, seek, toggleShuffle, toggleLoop, setPlaylistUrl, resetPlaylist]
   );
 
   return (

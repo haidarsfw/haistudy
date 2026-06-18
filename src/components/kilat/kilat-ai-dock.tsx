@@ -25,6 +25,8 @@ const TEMPLATES = [
   "Jelaskan lebih mudah",
   "Kasih contoh",
   "Kenapa ini penting?",
+  "Ringkas poin pentingnya",
+  "Kasih analogi sederhana",
 ];
 
 interface Props {
@@ -104,17 +106,18 @@ export function KilatAiDock({ subjectId, card }: Props) {
   // ─── Minimized trigger ───
   if (!open) {
     if (isMobile) {
+      // Bottom-right + semi-transparent so it doesn't sit on top of the centered
+      // "Belum dijawab..." hint above the bottom control.
       return (
-        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+80px)] z-[96] flex justify-center">
-          <button
-            type="button"
-            onClick={openDock}
-            className="hs-press pointer-events-auto flex items-center gap-1.5 rounded-full border border-primary/30 bg-card/95 px-3.5 py-2 text-xs font-semibold text-primary shadow-lg backdrop-blur-sm"
-          >
-            <Bot className="h-4 w-4" />
-            Tanya AI soal ini
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={openDock}
+          aria-label="Tanya haistudy AI soal kartu ini"
+          className="hs-press fixed bottom-[calc(env(safe-area-inset-bottom)+110px)] right-3 z-[96] flex items-center gap-1.5 rounded-full border border-primary/25 bg-card/60 px-3 py-1.5 text-[11px] font-semibold text-primary shadow-md backdrop-blur-sm"
+        >
+          <Bot className="h-3.5 w-3.5" />
+          Tanya AI
+        </button>
       );
     }
     return (
@@ -122,36 +125,44 @@ export function KilatAiDock({ subjectId, card }: Props) {
         type="button"
         onClick={openDock}
         aria-label="Tanya haistudy AI soal kartu ini"
-        className="hs-press group fixed bottom-28 right-5 z-[96] flex h-12 items-center gap-2 rounded-full border border-primary/30 bg-card px-3.5 text-primary shadow-lg hover:bg-primary hover:text-primary-foreground"
+        className="hs-press fixed bottom-28 right-5 z-[96] flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-card text-primary shadow-lg hover:bg-primary hover:text-primary-foreground"
       >
         <Bot className="h-5 w-5" />
-        <span className="max-w-0 overflow-hidden text-sm font-semibold opacity-0 transition-all duration-300 group-hover:max-w-[110px] group-hover:opacity-100">
-          Tanya AI
-        </span>
       </button>
     );
   }
 
   // ─── Shared inner content ───
+  const hasMsgs = messages.length > 0;
   const body = (
     <>
-      {/* Grounding banner - what the AI is answering about */}
-      <div className="flex items-center gap-2 border-b border-border bg-primary/5 px-3 py-2 text-[11px]">
-        <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
-        <span className="min-w-0 flex-1 truncate text-muted-foreground">
-          Lagi bahas: <span className="font-medium text-foreground">{ctx.label}</span>
-        </span>
-      </div>
+      {/* Grounding banner - persistent context once the chat has started */}
+      {hasMsgs && (
+        <div className="flex items-center gap-2 border-b border-border bg-primary/5 px-3 py-2 text-[11px]">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+          <span className="min-w-0 flex-1 truncate text-muted-foreground">
+            Lagi bahas: <span className="font-medium text-foreground">{ctx.label}</span>
+          </span>
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto overscroll-contain p-3">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 pt-4 text-center">
+        {!hasMsgs ? (
+          <div className="flex flex-col items-center gap-3 px-2 pt-6 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
               <Bot className="h-6 w-6 text-primary" />
             </div>
+            <div>
+              <p className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-primary">
+                <Sparkles className="h-3 w-3" /> Lagi bahas
+              </p>
+              <p className="mt-1 text-sm font-semibold leading-snug text-foreground">
+                {ctx.label}
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Bingung sama kartu ini? Tanya aku, atau pilih salah satu di bawah.
+              Tanya apa aja soal materi ini, atau pilih salah satu di bawah.
             </p>
           </div>
         ) : (
@@ -170,15 +181,15 @@ export function KilatAiDock({ subjectId, card }: Props) {
         )}
       </div>
 
-      {/* Template quick-questions */}
-      <div className="flex flex-wrap gap-1.5 border-t border-border px-3 py-2">
+      {/* Template quick-questions - 2-column grid so they fill the width */}
+      <div className="grid grid-cols-2 gap-1.5 border-t border-border px-3 py-2">
         {TEMPLATES.map((tpl) => (
           <button
             key={tpl}
             type="button"
             disabled={isStreaming}
             onClick={() => sendGrounded(tpl)}
-            className="hs-press rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-50"
+            className="hs-press w-full truncate rounded-full border border-border bg-card px-2.5 py-1.5 text-center text-[11px] font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-50"
           >
             {tpl}
           </button>

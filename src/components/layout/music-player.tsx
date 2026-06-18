@@ -1,15 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Music, Play, Pause, SkipForward, Shuffle, Repeat, Volume2, VolumeX } from "lucide-react";
+import { Music, Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMusic } from "@/components/providers/music-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { toast } from "@/components/ui/toast";
 
+function mmss(ms: number): string {
+  if (!ms || ms < 0) return "0:00";
+  const total = Math.floor(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export function MusicPlayer() {
-  const { isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, isCustomPlaylist, setVolume, toggle, next, toggleShuffle, toggleLoop, setPlaylistUrl, resetPlaylist } = useMusic();
+  const { isPlaying, isReady, trackTitle, shuffleEnabled, loopEnabled, volume, isCustomPlaylist, position, duration, setVolume, toggle, next, previous, seek, toggleShuffle, toggleLoop, setPlaylistUrl, resetPlaylist } = useMusic();
   const { t } = useTranslation();
   const [urlInput, setUrlInput] = useState("");
 
@@ -68,6 +76,25 @@ export function MusicPlayer() {
             </p>
           </div>
 
+          {/* Seek bar - click/drag to scrub */}
+          <div className="space-y-1">
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              value={Math.min(position, duration || 0)}
+              step={1000}
+              onChange={(e) => seek(Number(e.target.value))}
+              disabled={!duration}
+              aria-label="Posisi lagu"
+              className="w-full h-1 accent-primary cursor-pointer disabled:cursor-default disabled:opacity-40"
+            />
+            <div className="flex justify-between text-[10px] tabular-nums text-muted-foreground">
+              <span>{mmss(position)}</span>
+              <span>{mmss(duration)}</span>
+            </div>
+          </div>
+
           {/* Volume */}
           <div className="flex items-center gap-2">
             <button onClick={() => setVolume(volume > 0 ? 0 : 80)} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -95,6 +122,15 @@ export function MusicPlayer() {
                 onClick={toggleShuffle}
               >
                 <Shuffle className="h-3 w-3" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 rounded-full"
+                onClick={previous}
+                aria-label="Sebelumnya"
+              >
+                <SkipBack className="h-3.5 w-3.5" />
               </Button>
               <Button
                 size="icon"
