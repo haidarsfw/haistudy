@@ -339,7 +339,7 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[90] flex flex-col bg-background"
+      className="fixed inset-0 z-[90] flex flex-col overscroll-none bg-background"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border bg-card/80 px-4 py-2.5 backdrop-blur-sm">

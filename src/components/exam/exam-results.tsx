@@ -84,7 +84,7 @@ export function ExamResults({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[90] overflow-y-auto bg-background"
+      className="fixed inset-0 z-[90] overflow-y-auto overscroll-none bg-background"
     >
       <div className="mx-auto max-w-2xl px-5 py-8">
         <motion.div

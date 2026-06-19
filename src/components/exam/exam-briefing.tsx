@@ -103,7 +103,7 @@ export function ExamBriefing({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[100] overflow-y-auto bg-background"
+      className="fixed inset-0 z-[100] overflow-y-auto overscroll-none bg-background"
     >
       <div className="mx-auto max-w-lg px-5 py-8">
         <motion.div

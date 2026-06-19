@@ -333,6 +333,19 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isExamRoute = pathname?.includes("/latihan");
+
+  if (isExamRoute) {
+    return (
+      <div className="flex h-[100dvh] min-h-[100dvh] w-full overflow-hidden bg-background [overscroll-behavior:none]">
+        <PreviewWatermark />
+        <main className="flex-1 h-full w-full overflow-y-auto bg-background [overscroll-behavior:none]">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <>
     <div className="flex min-h-[100dvh] sm:h-[100dvh] bg-background overflow-x-clip max-w-[100vw]">
