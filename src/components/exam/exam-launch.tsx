@@ -1,11 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { PenLine, Clock, FileText, Award, History, ChevronRight, Lock, AlertCircle, Trash2 } from "lucide-react";
 import type { ExamData } from "@/types/exam";
 import { useExam } from "@/hooks/use-exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { ExamConfirmModal } from "./exam-confirm-modal";
 
 interface Props {
   exam: ExamData;
@@ -42,6 +44,7 @@ function formatDuration(seconds: number) {
 export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDeleteAttempt }: Props) {
   const { t } = useTranslation();
   const { quota, history, loading } = useExam(subjectId);
+  const [attemptToDelete, setAttemptToDelete] = useState<string | null>(null);
   const lang = "id"; // Launch screen always uses app language
 
   const totalQuestions = exam.questions.length;
@@ -233,9 +236,7 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm(t("exam.delete_confirm"))) {
-                      onDeleteAttempt?.(attempt.id);
-                    }
+                    setAttemptToDelete(attempt.id);
                   }}
                   className="hs-press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/50 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30"
                   aria-label="Delete"
@@ -255,6 +256,26 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
           {exam.meta.banner[lang]}
         </p>
       </motion.div>
+
+      <AnimatePresence>
+        {attemptToDelete !== null && (
+          <ExamConfirmModal
+            open={true}
+            title={t("exam.delete_title")}
+            message={t("exam.delete_confirm")}
+            confirmText={t("exam.delete_confirm_btn")}
+            cancelText={t("exam.delete_cancel_btn")}
+            isDanger={true}
+            onConfirm={() => {
+              if (attemptToDelete) {
+                onDeleteAttempt?.(attemptToDelete);
+              }
+              setAttemptToDelete(null);
+            }}
+            onCancel={() => setAttemptToDelete(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

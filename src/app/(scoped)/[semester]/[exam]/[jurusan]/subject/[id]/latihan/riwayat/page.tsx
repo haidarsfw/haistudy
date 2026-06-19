@@ -41,6 +41,10 @@ export default function RiwayatPage() {
     router.push(`/${scopePath}/subject/${subjectId}?tab=10`);
   }, [router, scopePath, subjectId]);
 
+  const handleRetry = useCallback(() => {
+    router.push(`/${scopePath}/subject/${subjectId}/latihan`);
+  }, [router, scopePath, subjectId]);
+
   useEffect(() => {
     if (!attemptId || !examDataLoaded) return;
 
@@ -146,9 +150,7 @@ export default function RiwayatPage() {
     );
   }
 
-  const handleRetry = useCallback(() => {
-    router.push(`/${scopePath}/subject/${subjectId}/latihan`);
-  }, [router, scopePath, subjectId]);
+
 
   return (
     <ExamResults

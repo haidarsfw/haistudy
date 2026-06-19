@@ -949,7 +949,7 @@ const en: Record<string, string> = {
   "exam.briefing_attempt": "This will be attempt {n} of {max}.",
   "exam.briefing_cta": "Start Exam",
   "exam.grace_period": "Grace period: {s}s remaining. You can still exit without using your quota.",
-  "exam.grace_period_short": "Free exit: {s}s left",
+  "exam.grace_period_short": "Exit without using quota: {s}s",
   "exam.answer_placeholder": "Type your answer here...",
   "exam.nav_panel": "Question Navigation",
   "exam.progress": "answered",
@@ -996,6 +996,9 @@ const en: Record<string, string> = {
   "exam.confirm_quota_unlimited": "You have unlimited attempts.",
   "exam.confirm_rules": "Once the exam starts, you cannot exit until you submit. AI Chat will be disabled during the exam.",
   "exam.confirm_proceed": "Continue and start the exam?",
+  "exam.delete_title": "Delete History",
+  "exam.delete_confirm_btn": "Delete",
+  "exam.delete_cancel_btn": "Cancel",
 };
 
 export default en;

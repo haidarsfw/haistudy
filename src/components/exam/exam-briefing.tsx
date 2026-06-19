@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PenLine, Clock, FileText, Award, AlertTriangle, Languages, ArrowLeft } from "lucide-react";
 import type { ExamData } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { ExamConfirmModal } from "./exam-confirm-modal";
 
 interface Props {
   exam: ExamData;
@@ -32,20 +33,23 @@ export function ExamBriefing({
   const { t } = useTranslation();
   const [counting, setCounting] = useState(false);
   const [count, setCount] = useState(3);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const lang = examLanguage;
 
+  const isUnlimited = maxAttempts === -1 || maxAttempts >= 999;
+  const quotaMsg = isUnlimited
+    ? t("exam.confirm_quota_unlimited")
+    : t("exam.confirm_quota")
+        .replace("{remaining}", String(maxAttempts - attemptNumber + 1))
+        .replace("{max}", String(maxAttempts));
+  const confirmMsg = `${quotaMsg}\n\n${t("exam.confirm_rules")}\n\n${t("exam.confirm_proceed")}`;
+
   const handleStart = () => {
-    // Native confirm dialog with quota and warnings
-    const isUnlimited = maxAttempts === -1 || maxAttempts >= 999;
-    const quotaMsg = isUnlimited
-      ? t("exam.confirm_quota_unlimited")
-      : t("exam.confirm_quota")
-          .replace("{remaining}", String(maxAttempts - attemptNumber + 1))
-          .replace("{max}", String(maxAttempts));
-    const confirmMsg = `${quotaMsg}\n\n${t("exam.confirm_rules")}\n\n${t("exam.confirm_proceed")}`;
+    setShowConfirmModal(true);
+  };
 
-    if (!confirm(confirmMsg)) return;
-
+  const executeStart = () => {
+    setShowConfirmModal(false);
     setCounting(true);
     let c = 3;
     setCount(c);
@@ -217,6 +221,20 @@ export function ExamBriefing({
           </motion.div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showConfirmModal && (
+          <ExamConfirmModal
+            open={true}
+            title={t("exam.briefing_title")}
+            message={confirmMsg}
+            confirmText={t("exam.briefing_cta")}
+            cancelText={t("exam.submit_back")}
+            onConfirm={executeStart}
+            onCancel={() => setShowConfirmModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
