@@ -11,6 +11,7 @@ import { motion, useDragControls } from "framer-motion";
 import { Bot, X, Minus, Sparkles, GripHorizontal, SquarePen, ChevronDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useSession } from "@/components/providers/session-provider";
+import { useTranslation } from "@/components/providers/language-provider";
 import { useAiChat } from "@/hooks/use-ai-chat";
 import { AiMessageBubble } from "@/components/ai/ai-message";
 import { AiInput } from "@/components/ai/ai-input";
@@ -19,13 +20,15 @@ import { cn } from "@/lib/utils";
 import { cardToText } from "./card-to-text";
 import type { KilatCard } from "@/types";
 
-const TEMPLATES = [
-  "Jelaskan lebih detail",
-  "Jelaskan lebih mudah",
-  "Kasih contoh",
-  "Kenapa ini penting?",
-  "Ringkas poin pentingnya",
-  "Kasih analogi sederhana",
+// Keys (not literals): the template's translated text is also what gets sent to
+// the AI, so an English user asks the question in English.
+const TEMPLATE_KEYS = [
+  "kilat.tpl_detail",
+  "kilat.tpl_simple",
+  "kilat.tpl_example",
+  "kilat.tpl_why",
+  "kilat.tpl_summary",
+  "kilat.tpl_analogy",
 ];
 
 // Desktop window geometry. Persisted by the player so minimize keeps it and
@@ -52,6 +55,7 @@ interface Props {
 
 export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, onClose }: Props) {
   const { session } = useSession();
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { messages, isStreaming, error, sendMessage, stopStreaming, clearHistory } = useAiChat();
 
@@ -237,7 +241,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         <div className="flex items-center gap-2 border-b border-border bg-primary/5 px-3 py-2 text-[11px]">
           <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
           <span className="min-w-0 flex-1 truncate text-muted-foreground">
-            Lagi bahas: <span className="font-medium text-foreground">{ctx.label}</span>
+            {t("kilat.now_discussing")}: <span className="font-medium text-foreground">{ctx.label}</span>
           </span>
         </div>
       )}
@@ -251,14 +255,14 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
             </div>
             <div>
               <p className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-primary">
-                <Sparkles className="h-3 w-3" /> Lagi bahas
+                <Sparkles className="h-3 w-3" /> {t("kilat.now_discussing")}
               </p>
               <p className="mt-1 text-sm font-semibold leading-snug text-foreground">
                 {ctx.label}
               </p>
             </div>
             <p className="text-xs text-muted-foreground">
-              Tanya apa aja soal materi ini, atau pilih salah satu di bawah.
+              {t("kilat.ai_empty_hint")}
             </p>
           </div>
         ) : (
@@ -285,7 +289,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
           aria-expanded={templatesOpen}
           className="hs-press flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground"
         >
-          <span>Pertanyaan cepat</span>
+          <span>{t("kilat.templates")}</span>
           <ChevronDown
             className={cn(
               "h-3.5 w-3.5 transition-transform",
@@ -295,17 +299,20 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         </button>
         {templatesOpen && (
           <div className="grid grid-cols-2 gap-1.5 px-3 pb-2">
-            {TEMPLATES.map((tpl) => (
-              <button
-                key={tpl}
-                type="button"
-                disabled={isStreaming}
-                onClick={() => sendGrounded(tpl)}
-                className="hs-press w-full truncate rounded-full border border-border bg-card px-2.5 py-1 text-center text-[11px] font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-50"
-              >
-                {tpl}
-              </button>
-            ))}
+            {TEMPLATE_KEYS.map((key) => {
+              const label = t(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={isStreaming}
+                  onClick={() => sendGrounded(label)}
+                  className="hs-press w-full truncate rounded-full border border-border bg-card px-2.5 py-1 text-center text-[11px] font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-50"
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -352,8 +359,8 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
           <button
             type="button"
             onClick={() => clearHistory()}
-            aria-label="Obrolan baru"
-            title="Obrolan baru"
+            aria-label={t("kilat.new_chat")}
+            title={t("kilat.new_chat")}
             className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <SquarePen className="h-4 w-4" />
@@ -361,7 +368,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
           <button
             type="button"
             onClick={onClose}
-            aria-label="Tutup"
+            aria-label={t("kilat.close")}
             className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -394,8 +401,8 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         <button
           type="button"
           onClick={() => clearHistory()}
-          aria-label="Obrolan baru"
-          title="Obrolan baru"
+          aria-label={t("kilat.new_chat")}
+          title={t("kilat.new_chat")}
           className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <SquarePen className="h-4 w-4" />
@@ -403,7 +410,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         <button
           type="button"
           onClick={onMinimize}
-          aria-label="Kecilkan"
+          aria-label={t("kilat.minimize")}
           className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <Minus className="h-4 w-4" />
@@ -411,7 +418,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         <button
           type="button"
           onClick={onClose}
-          aria-label="Tutup"
+          aria-label={t("kilat.close")}
           className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <X className="h-4 w-4" />

@@ -7,6 +7,7 @@ import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
 import { staggerContainer } from "@/lib/motion";
+import { useTranslation } from "@/components/providers/language-provider";
 import type { KilatCardProps } from "../kilat-types";
 import { Tag, Feedback, Option, singleState } from "./card-bits";
 
@@ -35,6 +36,7 @@ function Steps({ steps }: { steps?: string[] }) {
 }
 
 export function CalcCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "calc" }>;
   const answered = !!response;
   const [typed, setTyped] = useState("");
@@ -45,7 +47,7 @@ export function CalcCard({ card, response, onAnswer }: KilatCardProps) {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Calculator className="h-4 w-4" />
         </span>
-        <Tag>{c.tag || "Hitung"}</Tag>
+        <Tag>{c.tag || t("kilat.tag_calc")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">
         {parseInline(c.question)}
@@ -112,7 +114,7 @@ export function CalcCard({ card, response, onAnswer }: KilatCardProps) {
           disabled={answered}
           onChange={(e) => setTyped(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Ketik angka..."
+          placeholder={t("kilat.calc_placeholder")}
           className={cn(
             "h-12 flex-1 rounded-xl border bg-card px-4 text-lg font-mono outline-none transition-colors focus:border-primary",
             answered
@@ -137,7 +139,7 @@ export function CalcCard({ card, response, onAnswer }: KilatCardProps) {
       {answered && (
         <>
           <Feedback tone={response!.correct ? "correct" : "wrong"}>
-            {response!.correct ? parseInline(c.explain) : <>Jawaban benar: <b className="font-mono">{c.answer}{c.unit ? ` ${c.unit}` : ""}</b>. {parseInline(c.explain)}</>}
+            {response!.correct ? parseInline(c.explain) : <>{t("kilat.calc_correct_answer")} <b className="font-mono">{c.answer}{c.unit ? ` ${c.unit}` : ""}</b>. {parseInline(c.explain)}</>}
           </Feedback>
           <Steps steps={c.steps} />
         </>

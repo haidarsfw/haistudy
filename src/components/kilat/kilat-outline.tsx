@@ -5,28 +5,31 @@ import { Check, X, SkipForward, Lock, Circle, Link2, RotateCcw, ListTree } from 
 import type { KilatCard, KilatChapter } from "@/types";
 import { cn } from "@/lib/utils";
 import { springSmooth } from "@/lib/motion";
+import { useTranslation } from "@/components/providers/language-provider";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { CardStatus } from "./use-kilat";
 
-function cardLabel(card: KilatCard): string {
+// Outline label for a card. Card-data fields (title/heading/tag) are content and
+// stay as-authored; only the generic fallback labels are translated.
+function cardLabel(card: KilatCard, t: (k: string) => string): string {
   switch (card.kind) {
     case "intro": return card.title;
     case "explain": return card.heading;
-    case "quote": return "Kutipan";
-    case "check": return "Cek cepat";
+    case "quote": return t("kilat.lbl_quote");
+    case "check": return t("kilat.tag_check");
     case "checkpoint": return card.title;
-    case "scenario": return card.tag || "Skenario";
-    case "match": return "Jodohin istilah";
-    case "fill": return "Isi bagian kosong";
-    case "multi": return "Pilih semua yang benar";
-    case "order": return "Urutkan langkah";
-    case "categorize": return "Kategorikan";
-    case "swipe": return "Benar atau salah";
-    case "calc": return "Hitung";
-    case "table": return card.title || "Tabel";
-    case "hotspot": return "Tunjuk di gambar";
-    case "prompt": return "Pilih prompt";
-    default: return "Kartu";
+    case "scenario": return card.tag || t("kilat.tag_scenario");
+    case "match": return t("kilat.lbl_match");
+    case "fill": return t("kilat.lbl_fill");
+    case "multi": return t("kilat.tag_multi");
+    case "order": return t("kilat.lbl_order");
+    case "categorize": return t("kilat.tag_categorize");
+    case "swipe": return t("kilat.lbl_swipe");
+    case "calc": return t("kilat.tag_calc");
+    case "table": return card.title || t("kilat.lbl_table");
+    case "hotspot": return t("kilat.tag_hotspot");
+    case "prompt": return t("kilat.lbl_prompt");
+    default: return t("kilat.lbl_card");
   }
 }
 
@@ -52,6 +55,7 @@ interface Props {
 }
 
 export function KilatOutline({ chapters, cards, index, cardStatus, onJump, onClose, onRestart }: Props) {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -70,12 +74,12 @@ export function KilatOutline({ chapters, cards, index, cardStatus, onJump, onClo
       >
         <div className="flex items-center gap-2 border-b border-border px-4 py-3">
           <ListTree className="h-4 w-4 text-primary" />
-          <h3 className="font-heading text-sm font-bold">Daftar isi</h3>
+          <h3 className="font-heading text-sm font-bold">{t("kilat.toc")}</h3>
           <button
             type="button"
             onClick={onClose}
             className="hs-press ml-auto flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label="Tutup"
+            aria-label={t("kilat.close")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -85,7 +89,7 @@ export function KilatOutline({ chapters, cards, index, cardStatus, onJump, onClo
           {chapters.map((ch) => (
             <div key={ch.n} className="mb-3">
               <p className="px-2 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                Bab {ch.n}: {ch.title}
+                {t("kilat.chapter")} {ch.n}: {ch.title}
               </p>
               <div className="flex flex-col gap-0.5">
                 {cards
@@ -108,8 +112,8 @@ export function KilatOutline({ chapters, cards, index, cardStatus, onJump, onClo
                         )}
                       >
                         <StatusIcon status={status} />
-                        <span className="line-clamp-1 flex-1">{cardLabel(c)}</span>
-                        {isCurrent && <span className="text-[10px] uppercase">di sini</span>}
+                        <span className="line-clamp-1 flex-1">{cardLabel(c, t)}</span>
+                        {isCurrent && <span className="text-[10px] uppercase">{t("kilat.here")}</span>}
                       </button>
                     );
                   })}
@@ -121,15 +125,15 @@ export function KilatOutline({ chapters, cards, index, cardStatus, onJump, onClo
         <div className="border-t border-border p-3">
           <ConfirmDialog
             className="flex w-full"
-            title="Ulang dari awal?"
-            description="Semua jawaban dan poin di sesi ini bakal direset, dan kamu mulai lagi dari kartu pertama."
+            title={t("kilat.restart_confirm_title")}
+            description={t("kilat.restart_confirm_desc")}
             onConfirm={onRestart}
             trigger={
               <button
                 type="button"
                 className="hs-press flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground"
               >
-                <RotateCcw className="h-4 w-4" /> Ulang dari awal
+                <RotateCcw className="h-4 w-4" /> {t("kilat.restart")}
               </button>
             }
           />

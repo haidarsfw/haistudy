@@ -7,6 +7,7 @@ import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
 import { staggerContainer } from "@/lib/motion";
+import { useTranslation } from "@/components/providers/language-provider";
 import type { KilatCardProps } from "../kilat-types";
 import { Tag, Feedback, Option } from "./card-bits";
 
@@ -15,6 +16,7 @@ const SLIDE_BASE =
 
 // ─── Hotspot (tap the right spot on a diagram) ───
 export function HotspotCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "hotspot" }>;
   const answered = !!response;
   const chosen = (response?.data as { spot: number } | undefined)?.spot;
@@ -25,7 +27,7 @@ export function HotspotCard({ card, response, onAnswer }: KilatCardProps) {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Crosshair className="h-4 w-4" />
         </span>
-        <Tag>{c.tag || "Tunjuk di gambar"}</Tag>
+        <Tag>{c.tag || t("kilat.tag_hotspot")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">
         {parseInline(c.question)}
@@ -66,7 +68,7 @@ export function HotspotCard({ card, response, onAnswer }: KilatCardProps) {
         })}
       </div>
       {!answered && (
-        <p className="mt-3 text-center text-xs text-muted-foreground">Tap bagian yang benar di gambar.</p>
+        <p className="mt-3 text-center text-xs text-muted-foreground">{t("kilat.media_tap_hint")}</p>
       )}
       {answered && (
         <Feedback tone={response!.correct ? "correct" : "wrong"}>{parseInline(c.explain)}</Feedback>
@@ -77,6 +79,7 @@ export function HotspotCard({ card, response, onAnswer }: KilatCardProps) {
 
 // ─── Prompt: pick the better prompt ───
 export function PromptCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "prompt" }>;
   const answered = !!response;
   const chosen = (response?.data as { selected: number } | undefined)?.selected;
@@ -94,7 +97,7 @@ export function PromptCard({ card, response, onAnswer }: KilatCardProps) {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Wand2 className="h-4 w-4" />
         </span>
-        <Tag>{c.tag || "Pilih prompt terbaik"}</Tag>
+        <Tag>{c.tag || t("kilat.tag_prompt")}</Tag>
       </div>
       <h2 className="font-heading text-lg font-bold leading-snug sm:text-xl">
         {parseInline(c.goal)}

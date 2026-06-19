@@ -6,6 +6,7 @@ import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
 import { sounds } from "@/lib/sounds";
+import { useTranslation } from "@/components/providers/language-provider";
 import type { KilatCardProps } from "../kilat-types";
 import { Tag, seededShuffle } from "./card-bits";
 
@@ -17,6 +18,7 @@ interface Line {
 }
 
 export function MatchCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "match" }>;
   const answered = !!response;
   const n = c.pairs.length;
@@ -103,7 +105,7 @@ export function MatchCard({ card, response, onAnswer }: KilatCardProps) {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Link2 className="h-4 w-4" />
         </span>
-        <Tag>Jodohin</Tag>
+        <Tag>{t("kilat.tag_match")}</Tag>
       </div>
       <h2 className="font-heading text-lg font-bold sm:text-xl">
         {c.prompt || "Pasangkan istilah dengan artinya"}

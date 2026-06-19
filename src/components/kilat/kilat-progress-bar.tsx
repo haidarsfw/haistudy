@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Star, X, ListTree, RotateCcw, Bot } from "lucide-react";
 import type { KilatCard, KilatChapter } from "@/types";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/components/providers/language-provider";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 interface Props {
@@ -35,6 +36,7 @@ export function KilatProgressBar({
   onToggleAi,
 }: Props) {
   const activeChapter = cards[index]?.chapter ?? 1;
+  const { t } = useTranslation();
 
   return (
     <div className="flex items-center gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+10px)] pb-2.5 sm:gap-2 sm:px-4">
@@ -42,26 +44,26 @@ export function KilatProgressBar({
       <button
         type="button"
         onClick={onOpenOutline}
-        aria-label="Daftar isi"
+        aria-label={t("kilat.toc")}
         className="hs-press flex h-7 shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 text-primary"
       >
         <ListTree className="h-3.5 w-3.5" />
-        <span className="hidden text-[11px] font-semibold sm:inline">Daftar isi</span>
+        <span className="hidden text-[11px] font-semibold sm:inline">{t("kilat.toc")}</span>
       </button>
 
       {/* Restart, right beside it, behind a confirmation */}
       <ConfirmDialog
-        title="Ulang dari awal?"
-        description="Semua jawaban dan poin di sesi ini bakal direset, dan kamu mulai lagi dari kartu pertama."
+        title={t("kilat.restart_confirm_title")}
+        description={t("kilat.restart_confirm_desc")}
         onConfirm={onRestart}
         trigger={
           <button
             type="button"
-            aria-label="Ulang dari awal"
+            aria-label={t("kilat.restart")}
             className="hs-press flex h-7 shrink-0 items-center gap-1 rounded-full border border-border bg-card px-2 text-muted-foreground hover:text-foreground"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            <span className="hidden text-[11px] font-semibold sm:inline">Ulang</span>
+            <span className="hidden text-[11px] font-semibold sm:inline">{t("kilat.restart_short")}</span>
           </button>
         }
       />
@@ -109,7 +111,7 @@ export function KilatProgressBar({
       <button
         type="button"
         onClick={onToggleAi}
-        aria-label="Tanya haistudy AI soal kartu ini"
+        aria-label={t("kilat.ask_ai_aria")}
         className={cn(
           "hs-press flex h-7 shrink-0 items-center gap-1 rounded-full border px-2",
           aiActive
@@ -118,13 +120,13 @@ export function KilatProgressBar({
         )}
       >
         <Bot className="h-3.5 w-3.5" />
-        <span className="hidden text-[11px] font-semibold sm:inline">Tanya AI</span>
+        <span className="hidden text-[11px] font-semibold sm:inline">{t("kilat.ask_ai")}</span>
       </button>
 
       <button
         type="button"
         onClick={onClose}
-        aria-label="Tutup"
+        aria-label={t("kilat.close")}
         className="hs-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
       >
         <X className="h-4 w-4" />

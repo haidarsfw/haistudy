@@ -7,6 +7,7 @@ import {
   Zap, Star, Target, Play, RotateCcw, Check, Sparkles, Layers, Hand, BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/components/providers/language-provider";
 import { useScope } from "@/components/providers/scope-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useProgress } from "@/hooks/use-progress";
@@ -18,6 +19,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
   const { scopePath } = useScope();
   const { kilat, kilatLoaded } = useScopedData();
   const { progress } = useProgress(subjectId);
+  const { t } = useTranslation();
 
   const feed = kilat[subjectId];
   const total = feed?.cards.length ?? 0;
@@ -62,7 +64,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
   if (!feed) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
-        Belajar Kilat belum tersedia untuk mata kuliah ini.
+        {t("kilat.unavailable")}
       </p>
     );
   }
@@ -83,22 +85,21 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
             <Zap className="h-5 w-5 fill-primary" />
           </span>
           <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-            Cara belajar baru
+            {t("kilat.badge_new")}
           </span>
         </motion.div>
         <motion.h2 variants={staggerItem} className="mt-3 font-heading text-2xl font-bold">
-          Belajar Kilat
+          {t("kilat.title")}
         </motion.h2>
         <motion.p variants={staggerItem} className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-          Materi {feed.title} dipecah jadi kartu-kartu singkat yang tinggal kamu geser.
-          Gak perlu baca rangkuman panjang, cukup cicil sambil santai.
+          {t("kilat.launch_desc")}
         </motion.p>
 
         {/* Mini feature row */}
         <motion.div variants={staggerItem} className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5"><Hand className="h-3.5 w-3.5 text-primary" /> Geser kayak medsos</span>
-          <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> Kuis + skenario</span>
-          <span className="inline-flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-primary" /> {total} kartu, {feed.chapters.length} bab</span>
+          <span className="inline-flex items-center gap-1.5"><Hand className="h-3.5 w-3.5 text-primary" /> {t("kilat.feat_swipe")}</span>
+          <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> {t("kilat.feat_quiz")}</span>
+          <span className="inline-flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-primary" /> {total} {t("kilat.cards")}, {feed.chapters.length} {t("kilat.chapters")}</span>
         </motion.div>
       </motion.div>
 
@@ -107,27 +108,27 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
         <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="mt-4 rounded-2xl border border-border bg-card p-4 shadow-warm">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-2">
-              {completed ? "Selesai" : "Progress kamu"}
+              {completed ? t("kilat.done") : t("kilat.progress")}
               {passed && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                  <BadgeCheck className="h-3 w-3" /> Lulus
+                  <BadgeCheck className="h-3 w-3" /> {t("kilat.passed")}
                 </span>
               )}
             </span>
-            <span className="tabular-nums">{pct}% dijelajahi</span>
+            <span className="tabular-nums">{pct}% {t("kilat.explored")}</span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${pct}%` }} />
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
             <span className="inline-flex items-center gap-1 font-semibold text-primary">
-              <Target className="h-3.5 w-3.5" /> Skor {scorePct}%
+              <Target className="h-3.5 w-3.5" /> {t("kilat.score")} {scorePct}%
             </span>
             <span className="inline-flex items-center gap-1 font-semibold text-primary">
-              <Star className="h-3.5 w-3.5 fill-primary" /> {points}/{gradedTotal} poin
+              <Star className="h-3.5 w-3.5 fill-primary" /> {points}/{gradedTotal} {t("kilat.points")}
             </span>
             <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground">
-              <Check className="h-3.5 w-3.5" /> {babDone}/{feed.chapters.length} bab
+              <Check className="h-3.5 w-3.5" /> {babDone}/{feed.chapters.length} {t("kilat.chapters")}
             </span>
           </div>
         </motion.div>
@@ -146,7 +147,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{ch.title}</p>
-              <p className="truncate text-xs text-muted-foreground">{ch.count} kartu</p>
+              <p className="truncate text-xs text-muted-foreground">{ch.count} {t("kilat.cards")}</p>
             </div>
           </motion.div>
         ))}
@@ -156,11 +157,11 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
       <div className="mt-5">
         <Button size="lg" onClick={start} className="h-12 w-full text-sm">
           {completed ? (
-            <><RotateCcw className="h-4 w-4" /> Ulangi dari awal</>
+            <><RotateCcw className="h-4 w-4" /> {t("kilat.cta_restart")}</>
           ) : started ? (
-            <><Play className="h-4 w-4 fill-current" /> Lanjut belajar</>
+            <><Play className="h-4 w-4 fill-current" /> {t("kilat.cta_continue")}</>
           ) : (
-            <><Play className="h-4 w-4 fill-current" /> Mulai Belajar Kilat</>
+            <><Play className="h-4 w-4 fill-current" /> {t("kilat.cta_start")}</>
           )}
         </Button>
       </div>

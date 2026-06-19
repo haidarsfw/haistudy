@@ -7,6 +7,7 @@ import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
 import { staggerContainer, tapScale } from "@/lib/motion";
+import { useTranslation } from "@/components/providers/language-provider";
 import type { KilatCardProps } from "../kilat-types";
 import { Tag, Feedback, Option, singleState } from "./card-bits";
 
@@ -19,6 +20,7 @@ export function ChoiceCard({
   onAnswer,
   isCheckpoint,
 }: KilatCardProps & { isCheckpoint: boolean }) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "check" | "checkpoint" }>;
   const answered = !!response;
   const chosen = (response?.data as Resp | undefined)?.selected;
@@ -29,7 +31,7 @@ export function ChoiceCard({
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           {isCheckpoint ? <Flag className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
         </span>
-        <Tag>{isCheckpoint ? (c as { title?: string }).title || "Checkpoint" : "Cek cepat"}</Tag>
+        <Tag>{isCheckpoint ? (c as { title?: string }).title || t("kilat.tag_checkpoint") : t("kilat.tag_check")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">
         {parseInline(c.question)}
@@ -61,6 +63,7 @@ export function ChoiceCard({
 
 // ─── Fill in the blank ───
 export function FillCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "fill" }>;
   const answered = !!response;
   const chosen = (response?.data as Resp | undefined)?.selected;
@@ -70,7 +73,7 @@ export function FillCard({ card, response, onAnswer }: KilatCardProps) {
   return (
     <div>
       <div className="mb-3">
-        <Tag>Lengkapi kalimat</Tag>
+        <Tag>{t("kilat.tag_fill")}</Tag>
       </div>
       <p className="font-heading text-xl font-semibold leading-relaxed sm:text-2xl">
         {parseInline(c.before)}{" "}
@@ -131,6 +134,7 @@ function setEq(a: number[], b: number[]): boolean {
 }
 
 export function MultiCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "multi" }>;
   const answered = !!response;
   const locked = (response?.data as { selected: number[] } | undefined)?.selected;
@@ -159,7 +163,7 @@ export function MultiCard({ card, response, onAnswer }: KilatCardProps) {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <ListChecks className="h-4 w-4" />
         </span>
-        <Tag>Pilih semua yang benar</Tag>
+        <Tag>{t("kilat.tag_multi")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">
         {parseInline(c.question)}
@@ -187,7 +191,7 @@ export function MultiCard({ card, response, onAnswer }: KilatCardProps) {
           disabled={sel.length === 0}
           className="hs-press mt-4 h-10 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity disabled:opacity-40"
         >
-          Cek jawaban ({sel.length} dipilih)
+          {t("kilat.check_answer")} ({sel.length} {t("kilat.selected")})
         </button>
       )}
       {answered && (
@@ -199,6 +203,7 @@ export function MultiCard({ card, response, onAnswer }: KilatCardProps) {
 
 // ─── Scenario (per-choice feedback, optional one-step branch) ───
 export function ScenarioCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "scenario" }>;
   const answered = !!response;
   const chosen = (response?.data as Resp | undefined)?.selected;
@@ -208,7 +213,7 @@ export function ScenarioCard({ card, response, onAnswer }: KilatCardProps) {
   return (
     <div>
       <div className="mb-3">
-        <Tag>{c.tag || "Skenario"}</Tag>
+        <Tag>{c.tag || t("kilat.tag_scenario")}</Tag>
       </div>
       <p className="text-[17px] font-semibold leading-relaxed sm:text-lg">
         {parseInline(c.situation)}
@@ -239,7 +244,7 @@ export function ScenarioCard({ card, response, onAnswer }: KilatCardProps) {
       {answered && c.follow && (
         <div className="mt-6 border-t border-border pt-5">
           <div className="mb-3">
-            <Tag>Terus gimana?</Tag>
+            <Tag>{t("kilat.tag_scenario_next")}</Tag>
           </div>
           <p className="text-[16px] font-semibold leading-relaxed">
             {parseInline(c.follow.situation)}

@@ -14,6 +14,7 @@ import { KilatTutorial } from "./kilat-tutorial";
 import { KilatAiDock, type KilatAiGeom } from "./kilat-ai-dock";
 import { sounds } from "@/lib/sounds";
 import { springSmooth } from "@/lib/motion";
+import { useTranslation } from "@/components/providers/language-provider";
 
 interface Props {
   feed: SubjectKilat;
@@ -36,6 +37,7 @@ const cardVariants = {
 export function KilatPlayer({ feed, subjectId, initial, onPersist, onClose }: Props) {
   const k = useKilat({ feed, initial, onPersist });
   const reduce = useReducedMotion();
+  const { t } = useTranslation();
   const [dir, setDir] = useState(1);
   const [showComplete, setShowComplete] = useState(false);
   const [showOutline, setShowOutline] = useState(false);
@@ -199,12 +201,12 @@ export function KilatPlayer({ feed, subjectId, initial, onPersist, onClose }: Pr
 
   let btnLabel: React.ReactNode = (
     <>
-      <ArrowUp className="h-4 w-4" /> Lanjut
+      <ArrowUp className="h-4 w-4" /> {t("kilat.btn_next")}
     </>
   );
-  if (isLast && k.completed) btnLabel = (<><Trophy className="h-4 w-4" /> Lihat Skor</>);
-  else if (gated && k.pendingSkip) btnLabel = (<><SkipForward className="h-4 w-4" /> Lewatin (dihitung 0)</>);
-  else if (gated) btnLabel = <span>Jawab dulu</span>;
+  if (isLast && k.completed) btnLabel = (<><Trophy className="h-4 w-4" /> {t("kilat.btn_score")}</>);
+  else if (gated && k.pendingSkip) btnLabel = (<><SkipForward className="h-4 w-4" /> {t("kilat.btn_skip")}</>);
+  else if (gated) btnLabel = <span>{t("kilat.answer_first")}</span>;
 
   return (
     <motion.div
@@ -271,7 +273,7 @@ export function KilatPlayer({ feed, subjectId, initial, onPersist, onClose }: Pr
             <button
               type="button"
               onClick={tryPrev}
-              aria-label="Kartu sebelumnya"
+              aria-label={t("kilat.prev_card")}
               className="hs-press flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground"
             >
               <ChevronUp className="h-5 w-5" />

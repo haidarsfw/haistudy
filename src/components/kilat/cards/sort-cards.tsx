@@ -7,11 +7,13 @@ import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { useTranslation } from "@/components/providers/language-provider";
 import type { KilatCardProps } from "../kilat-types";
 import { Tag, Feedback, seededShuffle } from "./card-bits";
 
 // ─── Order / sequence: build the order first, then check (no instant fail) ───
 export function OrderCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "order" }>;
   const answered = !!response;
   const shuffled = useMemo(
@@ -37,7 +39,7 @@ export function OrderCard({ card, response, onAnswer }: KilatCardProps) {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <ArrowDownUp className="h-4 w-4" />
         </span>
-        <Tag>Urutkan</Tag>
+        <Tag>{t("kilat.tag_order")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">
         {parseInline(c.prompt)}
@@ -128,8 +130,8 @@ export function OrderCard({ card, response, onAnswer }: KilatCardProps) {
           {response!.correct
             ? c.explain
               ? parseInline(c.explain)
-              : "Urutannya pas!"
-            : "Belum urut. Ini urutan yang benar di atas."}
+              : t("kilat.order_correct")
+            : t("kilat.order_wrong")}
         </Feedback>
       )}
     </div>
@@ -145,6 +147,7 @@ const BUCKET_TONE = [
 ];
 
 export function CategorizeCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "categorize" }>;
   const answered = !!response;
   const locked = (response?.data as { assign: number[] } | undefined)?.assign;
@@ -176,7 +179,7 @@ export function CategorizeCard({ card, response, onAnswer }: KilatCardProps) {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Boxes className="h-4 w-4" />
         </span>
-        <Tag>Kategorikan</Tag>
+        <Tag>{t("kilat.tag_categorize")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">
         {parseInline(c.prompt)}
@@ -195,7 +198,7 @@ export function CategorizeCard({ card, response, onAnswer }: KilatCardProps) {
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        {answered ? "Hasil:" : "Tap tiap item buat muter ke kelompok yang menurut kamu benar."}
+        {answered ? t("kilat.result") : t("kilat.cat_hint")}
       </p>
 
       <div className="mt-2 flex flex-col gap-2.5">
@@ -246,8 +249,8 @@ export function CategorizeCard({ card, response, onAnswer }: KilatCardProps) {
           {response!.correct
             ? c.explain
               ? parseInline(c.explain)
-              : "Semua masuk kelompok yang benar!"
-            : "Ada yang salah kelompok. Yang merah belum pas (lihat kelompok seharusnya)."}
+              : t("kilat.cat_all_correct")
+            : t("kilat.cat_some_wrong")}
         </Feedback>
       )}
     </div>

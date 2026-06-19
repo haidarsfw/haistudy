@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { PartyPopper, RotateCcw, ArrowLeft, Star, Target, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/components/providers/language-provider";
 import { scaleIn, fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 
 interface Props {
@@ -26,6 +27,7 @@ interface ConfettiPiece {
 }
 
 export function KilatComplete({ scorePct, points, gradedTotal, passed, onRestart, onClose }: Props) {
+  const { t } = useTranslation();
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
   useEffect(() => {
     if (!passed) return;
@@ -69,7 +71,7 @@ export function KilatComplete({ scorePct, points, gradedTotal, passed, onRestart
         >
           {passed ? <PartyPopper className="h-10 w-10" /> : <RefreshCw className="h-10 w-10" />}
         </div>
-        <h2 className="font-heading text-3xl font-bold">{passed ? "Lulus, mantap!" : "Belum lulus nih"}</h2>
+        <h2 className="font-heading text-3xl font-bold">{passed ? t("kilat.pass_title") : t("kilat.fail_title")}</h2>
         <p
           className={`mt-3 font-heading text-5xl font-extrabold tabular-nums ${
             passed ? "text-emerald-500" : "text-amber-500"
@@ -78,9 +80,7 @@ export function KilatComplete({ scorePct, points, gradedTotal, passed, onRestart
           {scorePct}%
         </p>
         <p className="mt-3 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
-          {passed
-            ? "Kamu lewat KKM 90%. Materinya udah lumayan nempel. Boleh diulang kalau mau makin lancar."
-            : "KKM-nya 90%. Mending diulang dulu biar lebih paham dan nempel, tapi santai, gak maksa kok."}
+          {passed ? t("kilat.pass_msg") : t("kilat.fail_msg")}
         </p>
       </motion.div>
 
@@ -93,14 +93,14 @@ export function KilatComplete({ scorePct, points, gradedTotal, passed, onRestart
         <motion.div variants={staggerItem} className="rounded-2xl border border-border bg-card p-3 shadow-warm">
           <Target className="mx-auto h-5 w-5 text-primary" />
           <p className="mt-1 font-heading text-lg font-bold tabular-nums">{scorePct}%</p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Skor</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("kilat.score")}</p>
         </motion.div>
         <motion.div variants={staggerItem} className="rounded-2xl border border-border bg-card p-3 shadow-warm">
           <Star className="mx-auto h-5 w-5 text-primary" />
           <p className="mt-1 font-heading text-lg font-bold tabular-nums">
             {points}/{gradedTotal}
           </p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Poin</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("kilat.points")}</p>
         </motion.div>
       </motion.div>
 
@@ -112,11 +112,11 @@ export function KilatComplete({ scorePct, points, gradedTotal, passed, onRestart
       >
         <Button variant={passed ? "outline" : "default"} size="lg" onClick={onRestart}>
           <RotateCcw className="h-4 w-4" />
-          Ulangi
+          {t("kilat.again")}
         </Button>
         <Button variant={passed ? "default" : "outline"} size="lg" onClick={onClose}>
           <ArrowLeft className="h-4 w-4" />
-          Kembali
+          {t("kilat.back")}
         </Button>
       </motion.div>
     </div>

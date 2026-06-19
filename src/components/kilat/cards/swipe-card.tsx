@@ -7,10 +7,12 @@ import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
 import { sounds } from "@/lib/sounds";
+import { useTranslation } from "@/components/providers/language-provider";
 import type { KilatCardProps } from "../kilat-types";
 import { Tag, Feedback } from "./card-bits";
 
 export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
+  const { t } = useTranslation();
   const c = card as Extract<KilatCard, { kind: "swipe" }>;
   const answered = !!response;
   const [idx, setIdx] = useState(0);
@@ -45,7 +47,7 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
     return (
       <div>
         <div className="mb-3">
-          <Tag>Benar atau Salah</Tag>
+          <Tag>{t("kilat.tag_swipe")}</Tag>
         </div>
 
         {/* Distinct, celebratory header when every guess was right */}
@@ -56,10 +58,10 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
             </span>
             <span>
               <span className="block text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                Mantap, semua tepat!
+                {t("kilat.swipe_all_correct")}
               </span>
               <span className="block text-xs text-muted-foreground">
-                Kamu benar menilai semua pernyataan di bawah.
+                {t("kilat.swipe_all_correct_sub")}
               </span>
             </span>
           </div>
@@ -99,11 +101,11 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
                           : "text-rose-700 dark:text-rose-300"
                       )}
                     >
-                      {ok ? "Tebakanmu tepat. " : "Tebakanmu keliru. "}
+                      {ok ? t("kilat.swipe_right") : t("kilat.swipe_wrong")}{" "}
                     </span>
                   )}
                   <span className="text-muted-foreground">
-                    Pernyataan ini {s.isTrue ? "benar" : "salah"}.
+                    {s.isTrue ? t("kilat.fact_true") : t("kilat.fact_false")}
                   </span>{" "}
                   {parseInline(s.text)}
                   {s.note ? (
@@ -117,7 +119,7 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
 
         {!allCorrect && (
           <Feedback tone="wrong">
-            Ada yang belum tepat. Cek lagi mana yang kamu lewatkan di atas.
+            {t("kilat.swipe_some_wrong")}
           </Feedback>
         )}
       </div>
@@ -128,7 +130,7 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <Tag>Benar atau Salah</Tag>
+        <Tag>{t("kilat.tag_swipe")}</Tag>
         <span className="text-xs text-muted-foreground tabular-nums">
           {idx + 1} / {c.statements.length}
         </span>
@@ -156,14 +158,14 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
           onClick={() => judge(false)}
           className="hs-press flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 text-sm font-semibold text-rose-700 dark:text-rose-300"
         >
-          <ThumbsDown className="h-4 w-4" /> Salah
+          <ThumbsDown className="h-4 w-4" /> {t("kilat.swipe_btn_false")}
         </button>
         <button
           type="button"
           onClick={() => judge(true)}
           className="hs-press flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-sm font-semibold text-emerald-700 dark:text-emerald-300"
         >
-          <ThumbsUp className="h-4 w-4" /> Benar
+          <ThumbsUp className="h-4 w-4" /> {t("kilat.swipe_btn_true")}
         </button>
       </div>
     </div>
