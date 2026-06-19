@@ -25,10 +25,7 @@ function readArray(key: string): string[] {
 // Entries the popup should announce, given the last version it ran for.
 function computePopupNotes(seen: string | null): PatchNote[] {
   if (seen === LATEST) return []; // already shown for the newest version
-  if (!seen) return PATCH_NOTES.slice(0, 1); // first run (or first ship): latest only
-  const idx = PATCH_NOTES.findIndex((p) => p.version === seen);
-  if (idx === -1) return PATCH_NOTES.slice(); // unknown older marker → show all
-  return PATCH_NOTES.slice(0, idx); // everything newer than `seen`
+  return PATCH_NOTES.slice(0, 1); // only show the single newest version patch note in the popup
 }
 
 export interface UsePatchNotesValue {
