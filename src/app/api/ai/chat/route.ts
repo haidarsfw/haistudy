@@ -132,9 +132,8 @@ export async function POST(request: Request) {
         apiKey: DEEPSEEK_API_KEY,
       });
 
-      // Tier picks model: VIP/diamond/admin → pro, everyone else → flash.
-      const isPro = packageTier === "vip" || packageTier === "diamond" || validatedAdmin;
-      const deepseekModel = isPro ? DEEPSEEK_PRO : DEEPSEEK_FLASH;
+      // Temporarily all tiers use flash (pricing). Revert to pro for VIP/diamond/admin later.
+      const deepseekModel = DEEPSEEK_FLASH;
       // Thinking toggle is available to ALL tiers via the model param.
       // Flash defaults thinking OFF, Pro defaults ON, so set it explicitly.
       const thinkingEnabled = model === "reasoning";

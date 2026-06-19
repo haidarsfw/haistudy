@@ -13,6 +13,7 @@
 
 import type { ScopeTuple, ScopeKey } from "@/types/scope";
 import type { Subject, SubjectContent, Schedule, ForumThread, SubjectKilat } from "@/types";
+import type { ExamData } from "@/types/exam";
 import { scopeKey } from "@/lib/scope";
 
 // Authoritative - must match AVAILABLE_SCOPES in src/lib/scope.ts.
@@ -31,6 +32,8 @@ interface ScopeLoaders {
   pinnedThreads: () => Promise<Record<string, ForumThread[]>>;
   // Optional - only scopes that have authored a Belajar Kilat feed register this.
   kilat?: () => Promise<Record<string, SubjectKilat>>;
+  // Optional - only scopes that have authored exam data register this.
+  examData?: () => Promise<Record<string, ExamData>>;
 }
 
 const loaders: Record<ScopeKey, ScopeLoaders> = {
@@ -62,6 +65,7 @@ const loaders: Record<ScopeKey, ScopeLoaders> = {
     rangkuman: () => import("./s2/uas/bm/rangkuman").then((m) => m.rangkumanContent),
     pinnedThreads: () => import("./s2/uas/bm/pinned-threads").then((m) => m.PINNED_THREADS),
     kilat:     () => import("./s2/uas/bm/kilat").then((m) => m.kilat),
+    examData:  () => import("./s2/uas/bm/exam-data").then((m) => m.examData),
   },
 };
 
@@ -112,6 +116,17 @@ export async function loadKilat(
   subjectId?: string
 ): Promise<SubjectKilat | Record<string, SubjectKilat> | null> {
   const load = getLoaders(s).kilat;
+  if (!load) return subjectId ? null : {};
+  const map = await load();
+  if (subjectId) return map[subjectId] ?? null;
+  return map;
+}
+
+export async function loadExamData(
+  s: ScopeTuple,
+  subjectId?: string
+): Promise<ExamData | Record<string, ExamData> | null> {
+  const load = getLoaders(s).examData;
   if (!load) return subjectId ? null : {};
   const map = await load();
   if (subjectId) return map[subjectId] ?? null;

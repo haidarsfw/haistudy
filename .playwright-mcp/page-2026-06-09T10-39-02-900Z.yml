@@ -1,0 +1,179 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - button "haistudy" [ref=e5] [cursor=pointer]
+        - button "Ciutkan sidebar" [expanded] [ref=e6]:
+          - img [ref=e7]
+      - navigation [ref=e10]:
+        - button "Dashboard" [ref=e12]:
+          - img [ref=e13]
+          - generic [ref=e16]: Dashboard
+        - button "Mata Kuliah" [ref=e18]:
+          - img [ref=e19]
+          - generic [ref=e21]: Mata Kuliah
+        - button "Jadwal Ujian" [ref=e23]:
+          - img [ref=e24]
+          - generic [ref=e26]: Jadwal Ujian
+        - button "Statistik Belajar" [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e31]: Statistik Belajar
+        - button "Catatan" [ref=e33]:
+          - img [ref=e34]
+          - generic [ref=e37]: Catatan
+        - button "Pustaka" [ref=e39]:
+          - img [ref=e40]
+          - generic [ref=e42]: Pustaka
+        - button "Saran" [ref=e44]:
+          - img [ref=e45]
+          - generic [ref=e47]: Saran
+        - button "Layanan Pelanggan" [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e57]: Layanan Pelanggan
+        - button "Settings" [ref=e59]:
+          - img [ref=e60]
+          - generic [ref=e63]: Settings
+        - button "Admin" [ref=e65]:
+          - img [ref=e66]
+          - generic [ref=e69]: Admin
+        - button "S1 · UTS · BM" [ref=e71]:
+          - img [ref=e72]
+          - generic [ref=e75]: S1 · UTS · BM
+      - generic [ref=e76]:
+        - button "A Admin Other" [ref=e77] [cursor=pointer]:
+          - generic [ref=e78]: A
+          - generic [ref=e79]:
+            - paragraph [ref=e80]: Admin
+            - paragraph [ref=e81]: Other
+        - button "Logout" [ref=e82]:
+          - img [ref=e83]
+          - generic [ref=e86]: Logout
+    - generic [ref=e87]:
+      - banner [ref=e88]:
+        - button "Search... ⌘K" [ref=e91] [cursor=pointer]:
+          - img [ref=e92]
+          - generic [ref=e95]: Search...
+          - generic [ref=e96]: ⌘K
+        - generic [ref=e97]:
+          - button "Voice" [ref=e98] [cursor=pointer]:
+            - img [ref=e100]
+            - generic: Voice
+          - button "Buka Pomodoro timer" [ref=e103] [cursor=pointer]:
+            - img [ref=e104]
+            - generic: Pomodoro
+          - button "Musik" [ref=e107] [cursor=pointer]:
+            - img [ref=e109]
+            - generic: Musik
+          - button "Aktifkan mode terang" [pressed] [ref=e113] [cursor=pointer]:
+            - img [ref=e115]
+            - generic: Terang
+          - button "Notifikasi" [ref=e122] [cursor=pointer]:
+            - img [ref=e123]
+            - generic: Notifikasi
+      - generic [ref=e126]:
+        - img [ref=e127]
+        - paragraph [ref=e130]: Aktifkan notifikasi agar tidak melewatkan balasan support.
+        - button "Aktifkan" [ref=e131]
+        - button "Tutup" [ref=e132]:
+          - img
+      - main [ref=e133]:
+        - generic [ref=e386]:
+          - heading "Dashboard" [level=1] [ref=e387]
+          - generic [ref=e388]:
+            - generic [ref=e390]:
+              - generic [ref=e391]:
+                - generic [ref=e392]:
+                  - generic [ref=e393]:
+                    - paragraph [ref=e394]: Selasa, 9 Juni 2026
+                    - generic [ref=e395]:
+                      - img
+                      - text: Admin
+                  - heading "Selamat Sore, Admin!" [level=2] [ref=e396]
+                  - paragraph [ref=e397]: Yuk mulai belajar hari ini!
+                - generic [ref=e399]:
+                  - img [ref=e400]
+                  - generic [ref=e403]: 0%
+              - generic [ref=e406]: Semester 1 · UTS · Business Management
+              - generic [ref=e407]:
+                - generic [ref=e408]:
+                  - img [ref=e410]
+                  - generic [ref=e412]:
+                    - heading "Tips Belajar" [level=3] [ref=e413]
+                    - paragraph [ref=e414]: Tulis pertanyaan saat belajar, lalu coba jawab sendiri tanpa membuka catatan.
+                - generic [ref=e415]:
+                  - img [ref=e417]
+                  - generic [ref=e420]:
+                    - heading "Fun Fact" [level=3] [ref=e421]
+                    - paragraph [ref=e422]: Tertawa melepaskan endorfin yang membantu mengurangi stres dan meningkatkan daya ingat.
+            - generic [ref=e423]:
+              - generic [ref=e424]:
+                - generic [ref=e425]:
+                  - img [ref=e426]
+                  - generic [ref=e429]: Ujian Terdekat
+                - paragraph [ref=e431]: Semua ujian sudah berlalu
+              - generic [ref=e432]:
+                - generic [ref=e433]:
+                  - img [ref=e434]
+                  - generic [ref=e437]: Progress Belajar
+                - generic [ref=e439]:
+                  - img [ref=e440]
+                  - generic [ref=e443]: 0%
+              - generic [ref=e444]:
+                - generic [ref=e445]:
+                  - img [ref=e446]
+                  - generic [ref=e449]: Catatan Cepat
+                  - img [ref=e450]
+                - textbox "Tulis catatan cepat..." [ref=e453]
+              - generic [ref=e454]:
+                - button "Tampilkan daftar user online" [ref=e455] [cursor=pointer]:
+                  - generic [ref=e456]:
+                    - img [ref=e457]
+                    - generic [ref=e462]: Online
+                  - generic [ref=e463]:
+                    - generic [ref=e464]: "1"
+                    - img [ref=e465]
+                - button "A" [ref=e469] [cursor=pointer]
+            - generic [ref=e471]:
+              - generic [ref=e472]:
+                - img [ref=e473]
+                - heading "Lanjut Belajar" [level=3] [ref=e475]
+              - generic [ref=e476]:
+                - link "Marketing Management Strategi pemasaran & marketing mix" [ref=e477] [cursor=pointer]:
+                  - /url: /s1/uts/bm/subject/marketing
+                  - img [ref=e478]
+                  - generic [ref=e481]:
+                    - paragraph [ref=e482]: Marketing Management
+                    - paragraph [ref=e483]: Strategi pemasaran & marketing mix
+                  - img [ref=e484]
+                - link "Human Resources Management Rekrutmen & manajemen kinerja" [ref=e486] [cursor=pointer]:
+                  - /url: /s1/uts/bm/subject/hr
+                  - img [ref=e487]
+                  - generic [ref=e492]:
+                    - paragraph [ref=e493]: Human Resources Management
+                    - paragraph [ref=e494]: Rekrutmen & manajemen kinerja
+                  - img [ref=e495]
+                - link "Management Information Systems for Leader Sistem informasi & digital" [ref=e497] [cursor=pointer]:
+                  - /url: /s1/uts/bm/subject/mis
+                  - img [ref=e498]
+                  - generic [ref=e500]:
+                    - paragraph [ref=e501]: Management Information Systems for Leader
+                    - paragraph [ref=e502]: Sistem informasi & digital
+                  - img [ref=e503]
+              - link "Lihat Semua" [ref=e505] [cursor=pointer]:
+                - /url: /s1/uts/bm/subjects
+                - text: Lihat Semua
+                - img [ref=e506]
+    - generic:
+      - button "Buka AI Assistant" [ref=e148]:
+        - img
+      - button "Buka Chat" [ref=e149]:
+        - img
+    - generic [ref=e152]:
+      - heading "Navigasi" [level=3] [ref=e508]
+      - paragraph [ref=e167]: Gunakan sidebar untuk berpindah antar halaman. Dashboard, Mata Kuliah, Jadwal, dan lainnya ada di sini.
+      - generic [ref=e168]:
+        - button "Kembali" [ref=e509] [cursor=pointer]
+        - button "Lanjut" [active] [ref=e169] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e175] [cursor=pointer]:
+    - img [ref=e176]
+  - alert [ref=e179]: Dashboard | haistudy

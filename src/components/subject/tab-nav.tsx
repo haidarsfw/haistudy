@@ -12,6 +12,7 @@ import {
   BookMarked,
   ClipboardList,
   Zap,
+  PenLine,
 } from "lucide-react";
 import { sounds } from "@/lib/sounds";
 
@@ -23,6 +24,7 @@ import { sounds } from "@/lib/sounds";
 export const SUBJECT_TABS = [
   { id: 0, label: "Materi", shortLabel: "Materi", icon: FileText },
   { id: 9, label: "Belajar Kilat", shortLabel: "Kilat", icon: Zap },
+  { id: 10, label: "Latihan Soal", shortLabel: "Latihan", icon: PenLine },
   { id: 7, label: "Diktat", shortLabel: "Diktat", icon: BookMarked },
   { id: 8, label: "Soal Ujian", shortLabel: "Soal", icon: ClipboardList },
   { id: 1, label: "Rangkuman", shortLabel: "Rangkum", icon: BookOpen },

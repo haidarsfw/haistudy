@@ -1,0 +1,69 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "Beranda" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - text: Beranda
+      - generic [ref=e8]: haistudy
+    - paragraph [ref=e15]: Langkah 1/4 · Identitas
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: Nama Lengkap*
+          - generic [ref=e21]: Sesuai data mahasiswa. Dipakai sebagai hak cipta kepemilikan lisensi.
+        - textbox "Nama Lengkap* Sesuai data mahasiswa. Dipakai sebagai hak cipta kepemilikan lisensi." [ref=e22]:
+          - /placeholder: Nama lengkap kamu
+      - generic [ref=e23]:
+        - generic [ref=e25]: Kelas*
+        - generic [ref=e26]:
+          - combobox "Kelas*" [ref=e27]:
+            - option "Pilih kelas" [disabled] [selected]
+            - option "LA86"
+            - option "LB86"
+            - option "LC86"
+            - option "LD86"
+            - option "LE86"
+            - option "Lainnya"
+          - img
+      - generic [ref=e28]:
+        - generic [ref=e30]: Kampus*
+        - radiogroup "campus" [ref=e31]:
+          - radio "Bekasi" [ref=e32]:
+            - generic [ref=e35]: Bekasi
+          - radio "Kemanggisan" [ref=e36]:
+            - generic [ref=e39]: Kemanggisan
+          - radio "Alam Sutera" [ref=e40]:
+            - generic [ref=e43]: Alam Sutera
+          - radio "Lainnya" [ref=e44]:
+            - generic [ref=e47]: Lainnya
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]: Nomor WhatsApp*
+          - generic [ref=e51]: WAJIB AKTIF — license key & panduan dikirim ke sini.
+        - textbox "Nomor WhatsApp* WAJIB AKTIF — license key & panduan dikirim ke sini." [ref=e52]:
+          - /placeholder: 0878xxxxxxxx
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - generic [ref=e55]: Email Kontak*
+          - generic [ref=e56]: Untuk notifikasi & reset key. Boleh email apa saja.
+        - textbox "Email Kontak* Untuk notifikasi & reset key. Boleh email apa saja." [ref=e57]:
+          - /placeholder: kamu@email.com
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]: Cara Login*
+          - generic [ref=e61]: Pilih satu. Email → login lewat Google (key tidak dipakai). License Key → login dengan key (Google tidak bisa).
+        - radiogroup "loginMethod" [ref=e62]:
+          - radio "License Key Login dengan license key" [checked] [ref=e63]:
+            - img [ref=e65]
+            - generic [ref=e67]:
+              - generic [ref=e68]: License Key
+              - generic [ref=e69]: Login dengan license key
+          - radio "Email (Gmail) Login lewat Google" [ref=e70]:
+            - generic [ref=e72]:
+              - generic [ref=e73]: Email (Gmail)
+              - generic [ref=e74]: Login lewat Google
+    - button "Lanjut" [ref=e76]:
+      - text: Lanjut
+      - img [ref=e77]
+  - alert [ref=e79]

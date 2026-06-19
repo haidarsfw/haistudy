@@ -1,0 +1,22 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]: haistudy
+  - paragraph [ref=e3]: Halo Test User,
+  - paragraph [ref=e4]: Pesananmu sudah kami terima ✅
+  - paragraph [ref=e5]: "Invoice #003 · Semester 2 · UAS · Business Management"
+  - paragraph [ref=e7]:
+    - text: Pembayaran & buktimu sedang
+    - strong [ref=e8]: diverifikasi admin
+    - text: . Maksimal
+    - strong [ref=e9]: 1×12 jam
+    - text: ","
+    - strong [ref=e10]: license key / akses login
+    - text: kami kirim ke WhatsApp-mu (087812345678). Kamu tidak perlu melakukan apa pun sekarang 🙌
+  - text: Paket Share Nominal Rp 20.678 Periode Semester 2 · UAS · Business Management Metode login Login via License Key Status Menunggu verifikasi
+  - link "Buka haistudy" [ref=e11] [cursor=pointer]:
+    - /url: http://localhost:3000
+  - paragraph [ref=e12]:
+    - text: Ada kendala atau ingin menyusulkan info?
+    - link "Hubungi admin via WhatsApp" [ref=e13] [cursor=pointer]:
+      - /url: https://wa.me/6287839256171
+    - text: .
+  - paragraph [ref=e14]: "Email otomatis dari haistudy · Invoice #003. Simpan sebagai referensi pesananmu."

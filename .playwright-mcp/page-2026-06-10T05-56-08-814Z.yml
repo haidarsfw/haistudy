@@ -1,0 +1,229 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - button "haistudy" [ref=e5] [cursor=pointer]
+        - button "Ciutkan sidebar" [expanded] [ref=e6]:
+          - img [ref=e7]
+      - navigation [ref=e10]:
+        - button "Dashboard" [ref=e12]:
+          - img [ref=e13]
+          - generic [ref=e16]: Dashboard
+        - button "Mata Kuliah" [ref=e18]:
+          - img [ref=e19]
+          - generic [ref=e21]: Mata Kuliah
+        - button "Jadwal Ujian" [ref=e23]:
+          - img [ref=e24]
+          - generic [ref=e26]: Jadwal Ujian
+        - button "Statistik Belajar" [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e31]: Statistik Belajar
+        - button "Catatan" [ref=e33]:
+          - img [ref=e34]
+          - generic [ref=e37]: Catatan
+        - button "Pustaka" [ref=e39]:
+          - img [ref=e40]
+          - generic [ref=e42]: Pustaka
+        - button "Saran" [ref=e44]:
+          - img [ref=e45]
+          - generic [ref=e47]: Saran
+        - button "Layanan Pelanggan" [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e57]: Layanan Pelanggan
+        - button "Settings" [ref=e59]:
+          - img [ref=e60]
+          - generic [ref=e63]: Settings
+        - button "Admin" [ref=e65]:
+          - img [ref=e66]
+          - generic [ref=e69]: Admin
+        - button "S1 · UTS · BM" [ref=e71]:
+          - img [ref=e72]
+          - generic [ref=e75]: S1 · UTS · BM
+      - generic [ref=e76]:
+        - button "A Admin Other" [ref=e77] [cursor=pointer]:
+          - generic [ref=e78]: A
+          - generic [ref=e79]:
+            - paragraph [ref=e80]: Admin
+            - paragraph [ref=e81]: Other
+        - button "Logout" [ref=e82]:
+          - img [ref=e83]
+          - generic [ref=e86]: Logout
+    - generic [ref=e87]:
+      - banner [ref=e88]:
+        - button "Kembali" [ref=e89]:
+          - img
+        - button "Search... ⌘K" [ref=e91] [cursor=pointer]:
+          - img [ref=e92]
+          - generic [ref=e95]: Search...
+          - generic [ref=e96]: ⌘K
+        - generic [ref=e97]:
+          - button "Voice" [ref=e98] [cursor=pointer]:
+            - img [ref=e100]
+            - generic: Voice
+          - button "Buka Pomodoro timer" [ref=e103] [cursor=pointer]:
+            - img [ref=e104]
+            - generic: Pomodoro
+          - button "Musik" [ref=e107] [cursor=pointer]:
+            - img [ref=e109]
+            - generic: Musik
+          - button "Aktifkan mode terang" [pressed] [ref=e113] [cursor=pointer]:
+            - img [ref=e115]
+            - generic: Terang
+          - button "Notifikasi" [ref=e122] [cursor=pointer]:
+            - img [ref=e123]
+            - generic: Notifikasi
+      - generic [ref=e126]:
+        - img [ref=e127]
+        - paragraph [ref=e130]: Aktifkan notifikasi agar tidak melewatkan balasan support.
+        - button "Aktifkan" [ref=e131]
+        - button "Tutup" [ref=e132]:
+          - img
+      - main [ref=e133]:
+        - generic [ref=e134]:
+          - navigation [ref=e135]:
+            - button "Dashboard" [ref=e136]
+            - img [ref=e137]
+            - button "Mata Kuliah" [ref=e139]
+            - img [ref=e140]
+            - generic [ref=e142]: Marketing Management
+          - generic [ref=e143]:
+            - img [ref=e145]
+            - generic [ref=e148]:
+              - heading "Marketing Management" [level=1] [ref=e149]
+              - paragraph [ref=e150]: Strategi pemasaran & marketing mix
+            - generic [ref=e151]:
+              - img [ref=e152]
+              - generic [ref=e155]: 0%
+          - generic [ref=e157]:
+            - button "Materi (11)" [ref=e158]:
+              - img [ref=e160]
+              - generic [ref=e163]: Materi
+              - generic [ref=e164]: (11)
+            - button "Rangkuman" [ref=e166]:
+              - img [ref=e168]
+              - generic [ref=e170]: Rangkuman
+            - button "Kisi-Kisi (19)" [ref=e171]:
+              - img [ref=e173]
+              - generic [ref=e174]: Kisi-Kisi
+              - generic [ref=e175]: (19)
+            - button "Flashcards (92)" [ref=e176]:
+              - img [ref=e178]
+              - generic [ref=e182]: Flashcards
+              - generic [ref=e183]: (92)
+            - button "Quiz (90)" [ref=e184]:
+              - img [ref=e186]
+              - generic [ref=e189]: Quiz
+              - generic [ref=e190]: (90)
+            - button "Forum" [ref=e191]:
+              - img [ref=e193]
+              - generic [ref=e195]: Forum
+            - button "Catatan" [ref=e196]:
+              - img [ref=e198]
+              - generic [ref=e201]: Catatan
+          - generic [ref=e204]:
+            - 'button "Sesi 1 Chapter 1: Marketing - Creating Customer Value and Engagement" [ref=e206] [cursor=pointer]':
+              - img [ref=e208]
+              - generic [ref=e211]:
+                - generic [ref=e212]: Sesi 1
+                - paragraph [ref=e213]: "Chapter 1: Marketing - Creating Customer Value and Engagement"
+              - button [ref=e215]:
+                - img
+            - 'button "Sesi 2 Chapter 2: Company and Marketing Strategy" [ref=e217] [cursor=pointer]':
+              - img [ref=e219]
+              - generic [ref=e222]:
+                - generic [ref=e223]: Sesi 2
+                - paragraph [ref=e224]: "Chapter 2: Company and Marketing Strategy"
+              - button [ref=e226]:
+                - img
+            - 'button "Sesi 3 Chapter 3: Analyzing the Marketing Environment" [ref=e228] [cursor=pointer]':
+              - img [ref=e230]
+              - generic [ref=e233]:
+                - generic [ref=e234]: Sesi 3
+                - paragraph [ref=e235]: "Chapter 3: Analyzing the Marketing Environment"
+              - button [ref=e237]:
+                - img
+            - 'button "Sesi 4 Chapter 4: Managing Marketing Information to Gain Customer Insights" [ref=e239] [cursor=pointer]':
+              - img [ref=e241]
+              - generic [ref=e244]:
+                - generic [ref=e245]: Sesi 4
+                - paragraph [ref=e246]: "Chapter 4: Managing Marketing Information to Gain Customer Insights"
+              - button [ref=e248]:
+                - img
+            - 'button "Sesi 5 Chapter 5: Consumer Markets and Consumer Buyer Behavior" [ref=e250] [cursor=pointer]':
+              - img [ref=e252]
+              - generic [ref=e255]:
+                - generic [ref=e256]: Sesi 5
+                - paragraph [ref=e257]: "Chapter 5: Consumer Markets and Consumer Buyer Behavior"
+              - button [ref=e259]:
+                - img
+            - 'button "Sesi 6 Chapter 6: Business Markets and Business Buyer Behavior" [ref=e261] [cursor=pointer]':
+              - img [ref=e263]
+              - generic [ref=e266]:
+                - generic [ref=e267]: Sesi 6
+                - paragraph [ref=e268]: "Chapter 6: Business Markets and Business Buyer Behavior"
+              - button [ref=e270]:
+                - img
+            - 'button "Sesi 7 Chapter 7: Customer Value-Driven Marketing Strategy" [ref=e272] [cursor=pointer]':
+              - img [ref=e274]
+              - generic [ref=e277]:
+                - generic [ref=e278]: Sesi 7
+                - paragraph [ref=e279]: "Chapter 7: Customer Value-Driven Marketing Strategy"
+              - button [ref=e281]:
+                - img
+            - 'button "Sesi 8 Chapter 8: Products, Services, and Brands - Building Customer Value" [ref=e283] [cursor=pointer]':
+              - img [ref=e285]
+              - generic [ref=e288]:
+                - generic [ref=e289]: Sesi 8
+                - paragraph [ref=e290]: "Chapter 8: Products, Services, and Brands - Building Customer Value"
+              - button [ref=e292]:
+                - img
+            - 'button "Sesi 10 Chapter 10: Pricing - Understanding and Capturing Customer Value" [ref=e294] [cursor=pointer]':
+              - img [ref=e296]
+              - generic [ref=e299]:
+                - generic [ref=e300]: Sesi 10
+                - paragraph [ref=e301]: "Chapter 10: Pricing - Understanding and Capturing Customer Value"
+              - button [ref=e303]:
+                - img
+            - generic [ref=e304]:
+              - generic [ref=e307]:
+                - img [ref=e308]
+                - text: Materi Tambahan - Referensi & Mentor
+              - 'button "E-Book Pearson: Principles of Marketing" [ref=e312] [cursor=pointer]':
+                - img [ref=e314]
+                - paragraph [ref=e318]: "E-Book Pearson: Principles of Marketing"
+                - button [ref=e320]:
+                  - img
+            - generic [ref=e321]:
+              - generic [ref=e324]:
+                - img [ref=e325]
+                - text: Materi Tambahan - Referensi & Mentor
+              - button "PPT Kisi-Kisi Mentor MM (Ringkasan sesuai soal tahun lalu)" [ref=e329] [cursor=pointer]:
+                - img [ref=e331]
+                - paragraph [ref=e335]: PPT Kisi-Kisi Mentor MM (Ringkasan sesuai soal tahun lalu)
+                - button [ref=e337]:
+                  - img
+            - paragraph [ref=e338]: 11 materi tersedia
+    - generic:
+      - button "Buka AI Assistant" [ref=e339]:
+        - img
+      - button "Buka Chat" [ref=e340]:
+        - img
+    - generic [ref=e343]:
+      - heading "Selamat Datang di haistudy!" [level=3] [ref=e357]
+      - paragraph [ref=e358]: Yuk, kenalan dulu dengan fitur-fitur yang akan membantu kamu belajar lebih efektif untuk ujian.
+      - button "Lanjut" [ref=e360] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e366] [cursor=pointer]:
+    - img [ref=e367]
+  - alert [ref=e370]
+  - iframe [ref=e371]:
+    - application [active]:
+      - iframe [ref=f2e1]:
+        
+      - generic "Menunjukkan penampil.":
+        - generic:
+          - generic "Sebelumnya" [ref=f2e2]
+          - generic "Berikutnya" [ref=f2e3]
+          - main:
+            - generic:
+              - img
+      - region

@@ -1,0 +1,80 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - button "Buka Drive" [ref=e4] [cursor=pointer]
+    - generic [ref=e9]: Kisi Kisi Human Resources Management (HRM)
+  - generic [ref=e13]:
+    - paragraph [ref=e14]: Kisi Kisi Human Resources Management (HRM)
+    - paragraph [ref=e15]: "Catatan:"
+    - paragraph [ref=e16]: Jawaban harus disampaikan dengan lengkap dan relevan. Jika pertanyaan meminta penjelasan singkat (misalnya 2 baris), tetap berikan sekitar 5–10 baris yang padat dan sesuai konteks.
+    - paragraph [ref=e17]: HRM memiliki total 14 bab (chapter).
+    - paragraph [ref=e18]: "Dunia bisnis saat ini menghadapi tantangan VUCA, yaitu:"
+    - list [ref=e19]:
+      - listitem [ref=e20]:
+        - text: "● Volatility (Volatilitas):"
+        - generic [ref=e21]: kondisi yang cepat berubah dan tidak stabil
+      - listitem [ref=e22]:
+        - text: "● Uncertainty (Ketidakpastian):"
+        - generic [ref=e23]: banyak hal sulit diprediksi
+      - listitem [ref=e24]:
+        - text: "● Complexity (Kompleksitas):"
+        - generic [ref=e25]: banyak faktor yang saling terkait dan sulit dikendalikan
+      - listitem [ref=e26]:
+        - text: "● Ambiguity (Ambiguitas):"
+        - generic [ref=e27]: situasi yang tidak jelas arah dan maknanya
+    - paragraph [ref=e28]: Beberapa perusahaan besar cenderung menolak konsep work-life balance karena menekankan pentingnya kerja keras untuk mencapai hasil maksimal (work class performance).
+    - paragraph [ref=e29]: "Manajemen mencakup empat fungsi utama: POAC, yaitu:"
+    - list [ref=e30]:
+      - listitem [ref=e31]:
+        - text: ●
+        - generic [ref=e32]: Planning (Perencanaan)
+      - listitem [ref=e33]:
+        - text: ●
+        - generic [ref=e34]: Organizing (Pengorganisasian)
+      - listitem [ref=e35]:
+        - text: ●
+        - generic [ref=e36]: Actuating (Pelaksanaan)
+      - listitem [ref=e37]:
+        - text: ●
+        - generic [ref=e38]: Controlling (Pengendalian)
+    - paragraph [ref=e39]: Penjelasan dapat dibuat dalam bentuk mind map, deskripsi singkat, atau flowchart yang jelas.
+    - separator [ref=e40]
+    - paragraph [ref=e41]
+    - list [ref=e42]:
+      - listitem [ref=e43]:
+        - generic [ref=e44]: Introduction
+        - generic [ref=e45]: Pelajari seluruh materi dari PowerPoint untuk memahami konsep dasar manajemen sumber daya manusia.
+      - listitem [ref=e46]:
+        - generic [ref=e47]: Job Analysis
+        - generic [ref=e48]: Membahas mengenai job desk dan job description. Rendahnya kinerja (performance) umumnya disebabkan oleh analisis pekerjaan yang tidak akurat atau tidak sesuai kebutuhan jabatan.
+      - listitem [ref=e49]:
+        - generic [ref=e50]: Personnel Planning
+        - generic [ref=e51]: Dikenal juga sebagai Manpower Planning atau Workforce Planning. Hasil akhir dari tahap perencanaan (planning) dan pengorganisasian (organizing) adalah proses recruiting (perekrutan) tenaga kerja.
+      - listitem [ref=e52]:
+        - generic [ref=e53]: Testing & Selection
+        - generic [ref=e54]: Tahap ini dilakukan setelah perencanaan tenaga kerja. Prosesnya mencakup pengujian dan seleksi kandidat, yang kemudian dilanjutkan ke tahap interview (wawancara).
+      - listitem [ref=e55]:
+        - generic [ref=e56]: Interview
+        - generic [ref=e57]: Dalam proses wawancara digunakan metode STAR, yaitu Situation (Situasi), Task (Tugas), Action (Aksi), dan Result (Hasil). Tahap akhir dari proses ini adalah offering (penawaran kerja), yang mencakup aspek karier dan kompensasi.
+      - listitem [ref=e58]:
+        - generic [ref=e59]: Interview II
+        - generic [ref=e60]: Melanjutkan pembahasan wawancara dan penawaran kerja, dengan penekanan pada kesesuaian kandidat terhadap posisi dan budaya perusahaan.
+      - listitem [ref=e61]:
+        - generic [ref=e62]: Training and Development
+        - generic [ref=e63]: Membahas proses pelatihan dan pengembangan karyawan menggunakan model ADDIE, yang terdiri dari Analysis, Design, Develop, Implement, dan Evaluate. Tujuannya untuk menilai apakah ada peningkatan atau perubahan setelah pelatihan dilakukan.
+      - listitem [ref=e64]:
+        - generic [ref=e65]: Equal Opportunity
+        - generic [ref=e66]: Menekankan pentingnya kesetaraan dalam pekerjaan, terutama terkait gender. Perusahaan harus memastikan tidak ada diskriminasi dalam rekrutmen, promosi, maupun pemberian kompensasi.
+      - listitem [ref=e67]:
+        - generic [ref=e68]: Building Positive Relations
+        - generic [ref=e69]: Membahas peran serikat pekerja (labor union). Organisasi diperbolehkan membentuk serikat karena memiliki manfaat sebagai jembatan antara karyawan (employee) dan pemberi kerja (employer), guna menjaga komunikasi dan kesejahteraan.
+      - listitem [ref=e70]:
+        - generic [ref=e71]: Career and Retention
+        - generic [ref=e72]: Menyoroti pentingnya jenjang karier dan upaya mempertahankan karyawan (retention). Perusahaan perlu mempertahankan best employee (karyawan berprestasi) dan mengevaluasi karyawan yang kurang produktif.
+      - listitem [ref=e73]:
+        - generic [ref=e74]: ESG and Good Corporate Governance
+        - generic [ref=e75]: HRM juga didasari oleh prinsip ESG (Environmental, Social, and Governance) serta praktik Good Corporate Governance yang menekankan etika, tanggung jawab sosial, dan keberlanjutan organisasi.
+      - listitem [ref=e76]:
+        - generic [ref=e77]: Total Compensation
+        - generic [ref=e78]: Total kompensasi terbagi menjadi dua bagian, yaitu 31% benefits (tunjangan) dan 69% wages and salary (upah dan gaji pokok).
+    - paragraph [ref=e79]: Hubungan Talent Management dengan Performance
+    - paragraph [ref=e80]: Manajemen talenta (Talent Management) berperan penting dalam meningkatkan kinerja organisasi. Dengan mengelola dan mengembangkan karyawan berbakat secara efektif, perusahaan dapat meningkatkan produktivitas, efisiensi, dan pencapaian tujuan jangka panjang.

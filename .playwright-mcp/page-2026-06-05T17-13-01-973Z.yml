@@ -1,0 +1,106 @@
+- generic [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7]:
+      - img [ref=e8]
+    - generic [ref=e11]:
+      - button "Open issues overlay" [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: "1"
+          - generic [ref=e15]: "2"
+        - generic [ref=e16]:
+          - text: Issue
+          - generic [ref=e17]: s
+      - button "Collapse issues badge" [ref=e18]:
+        - img [ref=e19]
+  - generic [ref=e22]:
+    - generic [ref=e23]:
+      - link "Beranda" [ref=e24] [cursor=pointer]:
+        - /url: /
+        - img [ref=e25]
+        - text: Beranda
+      - generic [ref=e27]: haistudy
+    - paragraph [ref=e34]: Langkah 2/4 · Paket
+    - generic [ref=e101]:
+      - generic [ref=e102]:
+        - generic [ref=e104]: Pilih Paket*
+        - generic [ref=e105]:
+          - button "Hemat Share Rp 25.000 / 30 hari Akses penuh, hemat (wajib share) Lihat semua fitur" [ref=e106] [cursor=pointer]:
+            - generic [ref=e107]:
+              - img [ref=e109]
+              - generic [ref=e115]: Hemat
+            - heading "Share" [level=3] [ref=e116]
+            - generic [ref=e117]:
+              - generic [ref=e118]: Rp 25.000
+              - generic [ref=e119]: / 30 hari
+            - paragraph [ref=e120]: Akses penuh, hemat (wajib share)
+            - button "Lihat semua fitur" [ref=e122]:
+              - text: Lihat semua fitur
+              - img [ref=e123]
+          - button "Populer Populer Normal Rp 30.000 / 30 hari Akses penuh, tanpa syarat Lihat semua fitur" [pressed] [ref=e125] [cursor=pointer]:
+            - generic [ref=e126]: Populer
+            - img [ref=e128]
+            - generic [ref=e130]:
+              - img [ref=e132]
+              - generic [ref=e135]: Populer
+            - heading "Normal" [level=3] [ref=e136]
+            - generic [ref=e137]:
+              - generic [ref=e138]: Rp 30.000
+              - generic [ref=e139]: / 30 hari
+            - paragraph [ref=e140]: Akses penuh, tanpa syarat
+            - button "Lihat semua fitur" [ref=e142]:
+              - text: Lihat semua fitur
+              - img [ref=e143]
+          - button "Best Price to Value Premium VIP Rp 35.000 / 30 hari Fitur eksklusif · AI lebih pintar · Komunitas · Badge Lihat semua fitur" [ref=e145] [cursor=pointer]:
+            - generic [ref=e146]:
+              - img [ref=e147]
+              - text: Best Price to Value
+            - generic [ref=e150]:
+              - img [ref=e152]
+              - generic [ref=e154]: Premium
+            - heading "VIP" [level=3] [ref=e155]
+            - generic [ref=e156]:
+              - generic [ref=e157]: Rp 35.000
+              - generic [ref=e158]: / 30 hari
+            - paragraph [ref=e159]: Fitur eksklusif · AI lebih pintar · Komunitas · Badge
+            - button "Lihat semua fitur" [ref=e161]:
+              - text: Lihat semua fitur
+              - img [ref=e162]
+          - button "Eksklusif Diamond Rp 50.000 / 30 hari Semua VIP + nama glow · dukung haistudy Lihat semua fitur" [ref=e164] [cursor=pointer]:
+            - generic [ref=e165]:
+              - img [ref=e167]
+              - generic [ref=e170]: Eksklusif
+            - heading "Diamond" [level=3] [ref=e171]
+            - generic [ref=e172]:
+              - generic [ref=e173]: Rp 50.000
+              - generic [ref=e174]: / 30 hari
+            - paragraph [ref=e175]: Semua VIP + nama glow · dukung haistudy
+            - button "Lihat semua fitur" [ref=e177]:
+              - text: Lihat semua fitur
+              - img [ref=e178]
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - generic [ref=e182]:
+            - generic [ref=e183]: Jumlah Device*
+            - generic [ref=e184]: Berapa perangkat yang akan dipakai untuk login.
+          - radiogroup "device" [ref=e185]:
+            - radio "1 device" [ref=e187]:
+              - generic [ref=e188]: 1 device
+            - radio "2 device" [checked] [ref=e190]:
+              - generic [ref=e191]: 2 device
+            - generic [ref=e192]:
+              - radio "3 device" [disabled] [ref=e193]:
+                - generic [ref=e194]: 3 device
+              - tooltip "Hanya paket VIP & Diamond yang bisa memakai 3 device."
+          - paragraph [ref=e195]: Berbagi akses = blacklist permanen & tanpa refund.
+        - generic [ref=e196]:
+          - paragraph [ref=e197]: Periode
+          - paragraph [ref=e198]: Semester 2 · UAS · Business Management
+          - button "bukan angkatan B29? klik di sini" [ref=e199]
+    - generic [ref=e94]:
+      - button "Kembali" [ref=e200]:
+        - img [ref=e201]
+        - text: Kembali
+      - button "Lanjut" [active] [ref=e95]:
+        - text: Lanjut
+        - img [ref=e96]
+  - alert [ref=e98]

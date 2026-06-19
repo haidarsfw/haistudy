@@ -1,0 +1,329 @@
+- generic [active] [ref=e1]:
+  - iframe [ref=e2]:
+    
+  - region
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - button "Skip to main content" [ref=e7] [cursor=pointer]:
+        - generic [ref=e9]: Skip to main content
+      - button "Keyboard shortcuts" [ref=e11] [cursor=pointer]:
+        - generic [ref=e13]: Keyboard shortcuts
+      - button "Accessibility feedback" [ref=e15] [cursor=pointer]:
+        - generic [ref=e17]: Accessibility feedback
+    - banner [ref=e19]:
+      - generic [ref=e20]:
+        - link "Drive" [ref=e24] [cursor=pointer]:
+          - /url: https://drive.google.com/?tab=oo&authuser=0
+          - img [ref=e25]
+          - generic [ref=e26]: Drive
+        - generic [ref=e27]:
+          - search [ref=e29]:
+            - table [ref=e31]:
+              - rowgroup [ref=e32]:
+                - row [ref=e33]:
+                  - cell [ref=e34]:
+                    - textbox "Get answers from Drive" [ref=e35]
+            - generic [ref=e40]:
+              - button "AI Overview search" [ref=e41] [cursor=pointer]:
+                - img [ref=e44]
+              - tooltip [ref=e47]: AI Overview search
+            - button "Advanced search" [ref=e48] [cursor=pointer]:
+              - img [ref=e49]
+            - button "Search Google Drive" [ref=e51] [cursor=pointer]:
+              - img [ref=e52]
+          - generic [ref=e54]:
+            - button "Support" [ref=e57] [cursor=pointer]:
+              - img [ref=e58]
+            - button "Settings" [ref=e62] [cursor=pointer]:
+              - img [ref=e64]
+            - generic [ref=e69]:
+              - generic:
+                - button "Ask Gemini" [ref=e72] [cursor=pointer]:
+                  - img [ref=e75]
+                - tooltip [ref=e78]: Ask Gemini
+        - generic [ref=e80]:
+          - button "Google apps" [ref=e84] [cursor=pointer]:
+            - img [ref=e85]
+          - 'button "Google Account: haidar (haidar.surya@gmail.com)" [ref=e90] [cursor=pointer]':
+            - img [ref=e92]
+            - img [ref=e98]
+    - button "New" [ref=e101] [cursor=pointer]:
+      - img [ref=e104]
+      - generic [ref=e106]: New
+    - navigation [ref=e112]:
+      - heading "Folders and views" [level=2] [ref=e113]
+      - tree "Folders and views" [ref=e114]:
+        - treeitem "Home" [ref=e115]:
+          - link "Home" [ref=e116] [cursor=pointer]:
+            - generic [ref=e119]:
+              - generic [ref=e121]:
+                - img [ref=e124]
+                - img [ref=e129]
+              - generic "Home" [ref=e134]
+          - group
+        - treeitem "Projects" [ref=e135]:
+          - link "Projects" [ref=e136] [cursor=pointer]:
+            - generic [ref=e139]:
+              - generic [ref=e141]:
+                - img [ref=e143]
+                - img [ref=e146]
+              - generic "Projects" [ref=e148]
+          - group
+        - treeitem "My Drive Collapsed" [ref=e149]:
+          - link "My Drive Collapsed" [ref=e150] [cursor=pointer]:
+            - img [ref=e153]
+            - generic [ref=e156]:
+              - generic [ref=e158]:
+                - img [ref=e161]
+                - img [ref=e165]
+              - generic "My Drive" [ref=e167]
+            - text: Collapsed
+        - treeitem "Computers Collapsed" [ref=e168]:
+          - link "Computers Collapsed" [ref=e169] [cursor=pointer]:
+            - img [ref=e172]
+            - generic [ref=e175]:
+              - generic [ref=e177]:
+                - img [ref=e180]
+                - img [ref=e185]
+              - generic "Computers" [ref=e188]
+            - text: Collapsed
+        - treeitem "Items shared with me" [ref=e189]:
+          - link "Items shared with me" [ref=e190] [cursor=pointer]:
+            - generic [ref=e193]:
+              - generic [ref=e195]:
+                - img [ref=e198]
+                - img [ref=e203]
+              - generic "Items shared with me" [ref=e209]: Shared with me
+          - group
+        - treeitem "Recent items" [ref=e210]:
+          - link "Recent items" [ref=e211] [cursor=pointer]:
+            - generic [ref=e214]:
+              - generic [ref=e216]:
+                - img [ref=e219]
+                - img [ref=e225]
+              - generic "Recent items" [ref=e230]: Recent
+          - group
+        - treeitem "Starred items" [ref=e231]:
+          - link "Starred items" [ref=e232] [cursor=pointer]:
+            - generic [ref=e235]:
+              - generic [ref=e237]:
+                - img [ref=e239]
+                - img [ref=e242]
+              - generic "Starred items" [ref=e246]: Starred
+          - group
+        - treeitem "Spam" [ref=e247]:
+          - link "Spam" [ref=e248] [cursor=pointer]:
+            - generic [ref=e251]:
+              - generic [ref=e253]:
+                - img [ref=e256]
+                - img [ref=e260]
+              - generic "Spam" [ref=e265]
+          - group
+        - treeitem "Trashed items" [ref=e266]:
+          - link "Trashed items" [ref=e267] [cursor=pointer]:
+            - generic [ref=e270]:
+              - generic [ref=e272]:
+                - img [ref=e275]
+                - img [ref=e280]
+              - generic "Trashed items" [ref=e285]: Trash
+          - group
+        - treeitem "Storage" [ref=e286]:
+          - link "Storage" [ref=e287] [cursor=pointer]:
+            - generic [ref=e290]:
+              - generic [ref=e292]:
+                - img [ref=e295]
+                - img [ref=e300]
+              - generic "Storage" [ref=e303]
+          - group
+      - generic [ref=e308]:
+        - 'generic "Storage Summary: 16.24 GB of 5 TB used" [ref=e311] [cursor=pointer]': 16.24 GB of 5 TB used
+        - generic [ref=e315] [cursor=pointer]:
+          - text: Get more storage
+          - link "Get more storage" [ref=e316]:
+            - /url: https://drive.google.com/settings/storage?authuser=0&i=m&utm_source=drive&utm_medium=web&utm_campaign=g1_widget_normal#upgrade
+    - generic [ref=e319]:
+      - generic [ref=e328]:
+        - generic [ref=e330]:
+          - generic:
+            - navigation:
+              - heading "Folder Path" [ref=e331]
+              - list "Folder Path"
+        - toolbar [ref=e332]:
+          - generic [ref=e333]:
+            - radiogroup "List or Grid layout (⌥V then L)" [ref=e337]:
+              - generic [ref=e338]:
+                - radio "List" [checked] [ref=e339] [cursor=pointer]:
+                  - generic [ref=e340]:
+                    - img [ref=e341]
+                    - img [ref=e345]
+                - radio "Grid" [ref=e348] [cursor=pointer]:
+                  - generic [ref=e349]:
+                    - img [ref=e350]
+                    - img [ref=e354]
+            - button "View details (⌥V then D)" [ref=e357] [cursor=pointer]:
+              - img [ref=e359]
+      - main [ref=e365]:
+        - region [ref=e371]:
+          - generic [ref=e372]:
+            - grid "Item List" [ref=e375]:
+              - rowgroup [ref=e376]:
+                - generic [ref=e377] [cursor=pointer]: Name
+                - img [ref=e379] [cursor=pointer]
+                - generic [ref=e381] [cursor=pointer]: Date modified
+                - text: File size
+                - generic [ref=e387]:
+                  - button "Sort" [ref=e388] [cursor=pointer]:
+                    - img [ref=e390]
+                  - tooltip [ref=e393]: View sort options
+              - rowgroup [ref=e394]:
+                - row "Marketing Management Shared folder Modified Nov 10, 2025 Size not available More actions" [ref=e395]:
+                  - gridcell "Marketing Management Shared folder" [ref=e396]:
+                    - generic [ref=e398]:
+                      - img [ref=e404]
+                      - generic "Marketing Management Shared folder" [ref=e410]:
+                        - strong [ref=e413]: Marketing Management
+                  - gridcell "Modified Nov 10, 2025" [ref=e414]:
+                    - generic "Modified Nov 10, 2025" [ref=e418]:
+                      - generic [ref=e419]: Nov 10, 2025
+                  - gridcell "Size not available" [ref=e420]:
+                    - generic "Size not available" [ref=e424]:
+                      - generic [ref=e425]: —
+                  - gridcell "More actions" [ref=e426]:
+                    - generic [ref=e430]:
+                      - button "More actions" [ref=e431] [cursor=pointer]:
+                        - img [ref=e434]
+                      - tooltip [ref=e437]: More actions
+                - row "Management Information Systems for Leader Shared folder Modified Nov 1, 2025 Size not available More actions" [ref=e438]:
+                  - gridcell "Management Information Systems for Leader Shared folder" [ref=e439]:
+                    - generic [ref=e441]:
+                      - img [ref=e447]
+                      - generic "Management Information Systems for Leader Shared folder" [ref=e453]:
+                        - strong [ref=e456]: Management Information Systems for Leader
+                  - gridcell "Modified Nov 1, 2025" [ref=e457]:
+                    - generic "Modified Nov 1, 2025" [ref=e461]:
+                      - generic [ref=e462]: Nov 1, 2025
+                  - gridcell "Size not available" [ref=e463]:
+                    - generic "Size not available" [ref=e467]:
+                      - generic [ref=e468]: —
+                  - gridcell "More actions" [ref=e469]:
+                    - generic [ref=e473]:
+                      - button "More actions" [ref=e474] [cursor=pointer]:
+                        - img [ref=e477]
+                      - tooltip [ref=e480]: More actions
+                - row "Introduction to Management & Business Shared folder Modified Nov 1, 2025 Size not available More actions" [ref=e481]:
+                  - gridcell "Introduction to Management & Business Shared folder" [ref=e482]:
+                    - generic [ref=e484]:
+                      - img [ref=e490]
+                      - generic "Introduction to Management & Business Shared folder" [ref=e496]:
+                        - strong [ref=e499]: Introduction to Management & Business
+                  - gridcell "Modified Nov 1, 2025" [ref=e500]:
+                    - generic "Modified Nov 1, 2025" [ref=e504]:
+                      - generic [ref=e505]: Nov 1, 2025
+                  - gridcell "Size not available" [ref=e506]:
+                    - generic "Size not available" [ref=e510]:
+                      - generic [ref=e511]: —
+                  - gridcell "More actions" [ref=e512]:
+                    - generic [ref=e516]:
+                      - button "More actions" [ref=e517] [cursor=pointer]:
+                        - img [ref=e520]
+                      - tooltip [ref=e523]: More actions
+                - row "Human Resources Management Shared folder Modified Nov 1, 2025 Size not available More actions" [ref=e524]:
+                  - gridcell "Human Resources Management Shared folder" [ref=e525]:
+                    - generic [ref=e527]:
+                      - img [ref=e533]
+                      - generic "Human Resources Management Shared folder" [ref=e539]:
+                        - strong [ref=e542]: Human Resources Management
+                  - gridcell "Modified Nov 1, 2025" [ref=e543]:
+                    - generic "Modified Nov 1, 2025" [ref=e547]:
+                      - generic [ref=e548]: Nov 1, 2025
+                  - gridcell "Size not available" [ref=e549]:
+                    - generic "Size not available" [ref=e553]:
+                      - generic [ref=e554]: —
+                  - gridcell "More actions" [ref=e555]:
+                    - generic [ref=e559]:
+                      - button "More actions" [ref=e560] [cursor=pointer]:
+                        - img [ref=e563]
+                      - tooltip [ref=e566]: More actions
+                - row "CB Pancasila Shared folder Modified Oct 28, 2025 Size not available More actions" [ref=e567]:
+                  - gridcell "CB Pancasila Shared folder" [ref=e568]:
+                    - generic [ref=e570]:
+                      - img [ref=e576]
+                      - generic "CB Pancasila Shared folder" [ref=e582]:
+                        - strong [ref=e585]: CB Pancasila
+                  - gridcell "Modified Oct 28, 2025" [ref=e586]:
+                    - generic "Modified Oct 28, 2025" [ref=e590]:
+                      - generic [ref=e591]: Oct 28, 2025
+                  - gridcell "Size not available" [ref=e592]:
+                    - generic "Size not available" [ref=e596]:
+                      - generic [ref=e597]: —
+                  - gridcell "More actions" [ref=e598]:
+                    - generic [ref=e602]:
+                      - button "More actions" [ref=e603] [cursor=pointer]:
+                        - img [ref=e606]
+                      - tooltip [ref=e609]: More actions
+                - 'row "Ringkasan Jadwal Image Shared Modified Oct 25, 2025 Size: 172 KB Storage used: 172 KB More actions" [ref=e610]':
+                  - gridcell "Ringkasan Jadwal Image Shared" [ref=e611]:
+                    - generic [ref=e613]:
+                      - img [ref=e619]
+                      - generic "Ringkasan Jadwal Image Shared" [ref=e622]:
+                        - strong [ref=e625]: Ringkasan Jadwal
+                        - img "Shared" [ref=e627]:
+                          - img [ref=e628]
+                          - generic [ref=e631]: Shared
+                  - gridcell "Modified Oct 25, 2025" [ref=e632]:
+                    - generic "Modified Oct 25, 2025" [ref=e636]:
+                      - generic [ref=e637]: Oct 25, 2025
+                  - 'gridcell "Size: 172 KB Storage used: 172 KB" [ref=e638]':
+                    - 'generic "Size: 172 KB Storage used: 172 KB" [ref=e642]':
+                      - generic [ref=e643]: 172 KB
+                  - gridcell "More actions" [ref=e644]:
+                    - generic [ref=e648]:
+                      - button "More actions" [ref=e649] [cursor=pointer]:
+                        - img [ref=e652]
+                      - tooltip [ref=e655]: More actions
+                - 'row "Jadwal LE86 Image Shared Modified Oct 25, 2025 Size: 248 KB Storage used: 248 KB More actions" [ref=e656]':
+                  - gridcell "Jadwal LE86 Image Shared" [ref=e657]:
+                    - generic [ref=e659]:
+                      - img [ref=e665]
+                      - generic "Jadwal LE86 Image Shared" [ref=e668]:
+                        - strong [ref=e671]: Jadwal LE86
+                        - img "Shared" [ref=e673]:
+                          - img [ref=e674]
+                          - generic [ref=e677]: Shared
+                  - gridcell "Modified Oct 25, 2025" [ref=e678]:
+                    - generic "Modified Oct 25, 2025" [ref=e682]:
+                      - generic [ref=e683]: Oct 25, 2025
+                  - 'gridcell "Size: 248 KB Storage used: 248 KB" [ref=e684]':
+                    - 'generic "Size: 248 KB Storage used: 248 KB" [ref=e688]':
+                      - generic [ref=e689]: 248 KB
+                  - gridcell "More actions" [ref=e690]:
+                    - generic [ref=e694]:
+                      - button "More actions" [ref=e695] [cursor=pointer]:
+                        - img [ref=e698]
+                      - tooltip [ref=e701]: More actions
+                - 'row "DISCLAIMER Google Docs Shared Modified Nov 5, 2025 Size: 1 KB Storage used: 1 KB More actions" [ref=e702]':
+                  - gridcell "DISCLAIMER Google Docs Shared" [ref=e703]:
+                    - generic [ref=e705]:
+                      - img [ref=e711]
+                      - generic "DISCLAIMER Google Docs Shared" [ref=e714]:
+                        - strong [ref=e717]: DISCLAIMER
+                        - img "Shared" [ref=e719]:
+                          - img [ref=e720]
+                          - generic [ref=e723]: Shared
+                  - gridcell "Modified Nov 5, 2025" [ref=e724]:
+                    - generic "Modified Nov 5, 2025" [ref=e728]:
+                      - generic [ref=e729]: Nov 5, 2025
+                  - 'gridcell "Size: 1 KB Storage used: 1 KB" [ref=e730]':
+                    - 'generic "Size: 1 KB Storage used: 1 KB" [ref=e734]':
+                      - generic [ref=e735]: 1 KB
+                  - gridcell "More actions" [ref=e736]:
+                    - generic [ref=e740]:
+                      - button "More actions" [ref=e741] [cursor=pointer]:
+                        - img [ref=e744]
+                      - tooltip [ref=e747]: More actions
+            - progressbar [ref=e750]:
+              - img [ref=e752]
+      - generic:
+        - navigation
+  - region
+  - img [ref=e757]

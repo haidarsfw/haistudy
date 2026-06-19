@@ -1,0 +1,38 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - link "Kembali" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img [ref=e5]
+      - text: Kembali
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - heading "haistudy" [level=1] [ref=e9]
+        - paragraph [ref=e10]: Masuk ke akunmu
+      - generic [ref=e11]:
+        - button "Lanjut dengan Google" [ref=e12]:
+          - img
+          - generic [ref=e13]: Lanjut dengan Google
+        - generic [ref=e16]: atau
+        - generic [ref=e18]:
+          - generic [ref=e19]:
+            - generic [ref=e20]: License Key
+            - generic [ref=e21]:
+              - img [ref=e22]
+              - textbox "License Key" [active] [ref=e25]:
+                - /placeholder: Masukkan license key...
+                - text: ADMIN1
+              - button [ref=e26]:
+                - img [ref=e27]
+          - button "Punya kode referral?" [ref=e30]:
+            - img [ref=e31]
+            - text: Punya kode referral?
+          - button "Masuk" [ref=e36]
+          - paragraph [ref=e37]: Jangan login menggunakan mode Private / Incognito. Setiap sesi incognito dihitung sebagai perangkat baru dan dapat melebihi batas perangkat Anda.
+          - paragraph [ref=e38]: "Dev: gunakan ADMIN1 atau PREVIEW01"
+    - paragraph [ref=e39]:
+      - text: Belum punya license key?
+      - link "Dapatkan di sini" [ref=e40] [cursor=pointer]:
+        - /url: /#pricing
+  - button "Open Next.js Dev Tools" [ref=e46] [cursor=pointer]:
+    - img [ref=e47]
+  - alert [ref=e50]

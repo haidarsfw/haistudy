@@ -1,0 +1,244 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - button "Change theme color" [ref=e5] [cursor=pointer]
+      - button "Toggle dark mode" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+    - generic [ref=e44]:
+      - generic [ref=e46]:
+        - img [ref=e47]
+        - generic [ref=e50]: Study Smarter, Not Harder
+      - heading "haistudy" [level=1] [ref=e52]
+      - paragraph [ref=e54]: Platform belajar pintar all-in-one buat mahasiswa BINUS. Materi, quiz, AI assistant, dan komunitas dalam satu tempat.
+      - generic [ref=e56]:
+        - link "Masuk" [ref=e57] [cursor=pointer]:
+          - /url: /login
+          - img [ref=e58]
+          - text: Masuk
+        - link "Preview Gratis" [ref=e61] [cursor=pointer]:
+          - /url: /preview
+          - img [ref=e62]
+          - text: Preview Gratis
+    - generic [ref=e65]:
+      - heading "Semua yang Kamu Butuhkan" [level=2] [ref=e66]
+      - paragraph [ref=e67]: Fitur lengkap yang dirancang buat mahasiswa BINUS
+      - generic [ref=e68]:
+        - generic [ref=e70]:
+          - img [ref=e72]
+          - heading "Materi Lengkap" [level=3] [ref=e74]
+          - paragraph [ref=e75]: Rangkuman, kisi-kisi, dan materi per modul untuk semua mata kuliah.
+        - generic [ref=e77]:
+          - img [ref=e79]
+          - heading "Flashcards Interaktif" [level=3] [ref=e87]
+          - paragraph [ref=e88]: Kartu bolak-balik 3D dengan shuffle dan progress tracking.
+        - generic [ref=e90]:
+          - img [ref=e92]
+          - heading "Quiz Berbobot" [level=3] [ref=e94]
+          - paragraph [ref=e95]: Soal per kategori dengan scoring otomatis dan leaderboard.
+        - generic [ref=e97]:
+          - img [ref=e99]
+          - heading "AI Assistant & Live Support" [level=3] [ref=e102]
+          - paragraph [ref=e103]: Tanya materi kapan saja lewat AI, atau hubungi admin langsung via live chat support.
+        - generic [ref=e105]:
+          - img [ref=e107]
+          - heading "Forum, Chat & Notifikasi" [level=3] [ref=e109]
+          - paragraph [ref=e110]: Global chat real-time, @mention, voice message, reply, dan notifikasi instan.
+        - generic [ref=e112]:
+          - img [ref=e114]
+          - heading "Voice Room" [level=3] [ref=e116]
+          - paragraph [ref=e117]: Belajar bareng via voice call langsung dari browser.
+    - generic [ref=e120]:
+      - heading "Paket Akses" [level=2] [ref=e121]
+      - paragraph [ref=e122]: Satu kali bayar, akses penuh selama satu periode ujian
+      - generic [ref=e123]:
+        - button "Hemat Share Rp 25.000 / 30 hari Akses penuh, hemat (wajib share) Lihat semua fitur Pilih Paket" [ref=e124] [cursor=pointer]:
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - img [ref=e128]
+              - generic [ref=e134]: Hemat
+            - heading "Share" [level=3] [ref=e135]
+            - generic [ref=e136]:
+              - generic [ref=e137]: Rp 25.000
+              - generic [ref=e138]: / 30 hari
+            - paragraph [ref=e139]: Akses penuh, hemat (wajib share)
+            - button "Lihat semua fitur" [ref=e140]:
+              - text: Lihat semua fitur
+              - img [ref=e141]
+          - button "Pilih Paket" [ref=e144]
+        - button "Populer Populer Normal Rp 30.000 / 30 hari Akses penuh, tanpa syarat Lihat semua fitur Beli Akses" [pressed] [ref=e145] [cursor=pointer]:
+          - generic [ref=e146]: Populer
+          - generic [ref=e147]:
+            - generic [ref=e148]:
+              - img [ref=e150]
+              - generic [ref=e153]: Populer
+            - heading "Normal" [level=3] [ref=e154]
+            - generic [ref=e155]:
+              - generic [ref=e156]: Rp 30.000
+              - generic [ref=e157]: / 30 hari
+            - paragraph [ref=e158]: Akses penuh, tanpa syarat
+            - button "Lihat semua fitur" [ref=e159]:
+              - text: Lihat semua fitur
+              - img [ref=e160]
+          - link "Beli Akses" [ref=e163]:
+            - /url: /payments?pkg=normal
+            - text: Beli Akses
+            - img [ref=e164]
+        - button "Best Price to Value Premium VIP Rp 35.000 / 30 hari Fitur eksklusif · AI lebih pintar · Komunitas · Badge Lihat semua fitur Pilih Paket" [ref=e166] [cursor=pointer]:
+          - generic [ref=e167]:
+            - img [ref=e168]
+            - text: Best Price to Value
+          - generic [ref=e171]:
+            - generic [ref=e172]:
+              - img [ref=e174]
+              - generic [ref=e176]: Premium
+            - heading "VIP" [level=3] [ref=e177]
+            - generic [ref=e178]:
+              - generic [ref=e179]: Rp 35.000
+              - generic [ref=e180]: / 30 hari
+            - paragraph [ref=e181]: Fitur eksklusif · AI lebih pintar · Komunitas · Badge
+            - button "Lihat semua fitur" [ref=e182]:
+              - text: Lihat semua fitur
+              - img [ref=e183]
+          - button "Pilih Paket" [ref=e186]
+        - button "Eksklusif Diamond Rp 50.000 / 30 hari Semua VIP + nama glow · dukung haistudy Lihat semua fitur Pilih Paket" [ref=e187] [cursor=pointer]:
+          - generic [ref=e188]:
+            - generic [ref=e189]:
+              - img [ref=e191]
+              - generic [ref=e194]: Eksklusif
+            - heading "Diamond" [level=3] [ref=e195]
+            - generic [ref=e196]:
+              - generic [ref=e197]: Rp 50.000
+              - generic [ref=e198]: / 30 hari
+            - paragraph [ref=e199]: Semua VIP + nama glow · dukung haistudy
+            - button "Lihat semua fitur" [ref=e200]:
+              - text: Lihat semua fitur
+              - img [ref=e201]
+          - button "Pilih Paket" [ref=e204]
+    - generic [ref=e206]:
+      - generic [ref=e207]:
+        - heading "Apa Kata Mereka" [level=2] [ref=e208]
+        - paragraph [ref=e209]: Pengalaman mahasiswa yang sudah menggunakan haistudy
+      - generic [ref=e211]:
+        - generic [ref=e212]:
+          - generic [ref=e213]:
+            - img [ref=e214]
+            - img [ref=e216]
+            - img [ref=e218]
+            - img [ref=e220]
+            - img [ref=e222]
+          - paragraph [ref=e224]: “Sangat terbantu dengan kelengkapan materi di aplikasi inii. Materinya gampang dimengerti dan nggak bikin pusingg. worth it sekalii ✨🙌🏼”
+          - generic [ref=e225]:
+            - generic [ref=e226]: C
+            - generic [ref=e227]:
+              - paragraph [ref=e228]: Cindy Baby Gracia
+              - paragraph [ref=e229]: B29 - Business Management · IPK 3.97
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - img [ref=e232]
+            - img [ref=e234]
+            - img [ref=e236]
+            - img [ref=e238]
+            - img [ref=e240]
+          - paragraph [ref=e242]: “Webnya ngebantu banget kalo lagi mau baca-baca materi di waktu senggang, materi mudah dimengerti dan tersedia catatan mentor yang mempermudah pemahaman.”
+          - generic [ref=e243]:
+            - generic [ref=e244]: E
+            - generic [ref=e245]:
+              - paragraph [ref=e246]: Erina Amanda Ardiningrum
+              - paragraph [ref=e247]: B29 - Business Management · IPK 3.80
+        - generic [ref=e248]:
+          - generic [ref=e249]:
+            - img [ref=e250]
+            - img [ref=e252]
+            - img [ref=e254]
+            - img [ref=e256]
+            - img [ref=e258]
+          - paragraph [ref=e260]: “the only source i used for study dan materinya lengkap bgt. info tentang materi2 penting dan wajib dipelajarin was very helpful”
+          - generic [ref=e261]:
+            - generic [ref=e262]: K
+            - generic [ref=e263]:
+              - paragraph [ref=e264]: Keiza Alma Larasati
+              - paragraph [ref=e265]: B29 - Business Management · IPK 3.73
+        - generic [ref=e266]:
+          - generic [ref=e267]:
+            - img [ref=e268]
+            - img [ref=e270]
+            - img [ref=e272]
+            - img [ref=e274]
+            - img [ref=e276]
+          - paragraph [ref=e278]: “Ngebantu bgt buat persiapan ujian, materi yang dikasih lengkap dan mudah aku pahamin, kisi kisi yang dikasih juga banyak yang keluar pas ujian.”
+          - generic [ref=e279]:
+            - generic [ref=e280]: S
+            - generic [ref=e281]:
+              - paragraph [ref=e282]: Sutan Jafni Indrayana
+              - paragraph [ref=e283]: B29 - Business Management · IPK 3.70
+    - generic [ref=e285]:
+      - heading "Pertanyaan Umum" [level=2] [ref=e286]
+      - generic [ref=e287]:
+        - group [ref=e289]:
+          - generic "Apa itu haistudy?" [ref=e290] [cursor=pointer]:
+            - text: Apa itu haistudy?
+            - img [ref=e291]
+        - group [ref=e294]:
+          - generic "Bagaimana cara mendapatkan akses?" [ref=e295] [cursor=pointer]:
+            - text: Bagaimana cara mendapatkan akses?
+            - img [ref=e296]
+        - group [ref=e299]:
+          - generic "Apa bedanya paket Share dan Normal?" [ref=e300] [cursor=pointer]:
+            - text: Apa bedanya paket Share dan Normal?
+            - img [ref=e301]
+        - group [ref=e304]:
+          - generic "Apa keuntungan paket VIP?" [ref=e305] [cursor=pointer]:
+            - text: Apa keuntungan paket VIP?
+            - img [ref=e306]
+        - group [ref=e309]:
+          - generic "Apa itu paket Diamond?" [ref=e310] [cursor=pointer]:
+            - text: Apa itu paket Diamond?
+            - img [ref=e311]
+        - group [ref=e314]:
+          - generic "Berapa device yang bisa digunakan?" [ref=e315] [cursor=pointer]:
+            - text: Berapa device yang bisa digunakan?
+            - img [ref=e316]
+        - group [ref=e319]:
+          - generic "Apakah bisa preview dulu sebelum beli?" [ref=e320] [cursor=pointer]:
+            - text: Apakah bisa preview dulu sebelum beli?
+            - img [ref=e321]
+        - group [ref=e324]:
+          - generic "Mata kuliah apa saja yang tersedia?" [ref=e325] [cursor=pointer]:
+            - text: Mata kuliah apa saja yang tersedia?
+            - img [ref=e326]
+        - group [ref=e329]:
+          - generic "Apakah AI-nya akurat?" [ref=e330] [cursor=pointer]:
+            - text: Apakah AI-nya akurat?
+            - img [ref=e331]
+        - group [ref=e334]:
+          - generic "Apa fitur voice room?" [ref=e335] [cursor=pointer]:
+            - text: Apa fitur voice room?
+            - img [ref=e336]
+        - group [ref=e339]:
+          - generic "Bagaimana cara menghubungi admin?" [ref=e340] [cursor=pointer]:
+            - text: Bagaimana cara menghubungi admin?
+            - img [ref=e341]
+        - group [ref=e344]:
+          - generic "Apakah akun boleh di-sharing atau dipinjamkan?" [ref=e345] [cursor=pointer]:
+            - text: Apakah akun boleh di-sharing atau dipinjamkan?
+            - img [ref=e346]
+        - group [ref=e349]:
+          - generic "Apakah ada refund jika tidak jadi menggunakan?" [ref=e350] [cursor=pointer]:
+            - text: Apakah ada refund jika tidak jadi menggunakan?
+            - img [ref=e351]
+    - paragraph [ref=e355]: haistudy adalah platform belajar independen yang dibuat oleh mahasiswa. Platform ini tidak terafiliasi, berafiliasi, didukung, atau disetujui oleh BINUS University. Seluruh materi kuliah, merek dagang, dan hak cipta terkait adalah milik pemiliknya masing-masing.
+    - contentinfo [ref=e356]:
+      - generic [ref=e357]:
+        - paragraph [ref=e358]:
+          - text: made by
+          - link "haidarsb" [ref=e359] [cursor=pointer]:
+            - /url: https://instagram.com/haidarsfw
+          - text: LE86
+        - generic [ref=e360]:
+          - link "Privacy Policy" [ref=e361] [cursor=pointer]:
+            - /url: /privacy
+          - generic [ref=e362]: ·
+          - link "Terms of Service" [ref=e363] [cursor=pointer]:
+            - /url: /terms
+  - button "Open Next.js Dev Tools" [ref=e369] [cursor=pointer]:
+    - img [ref=e370]

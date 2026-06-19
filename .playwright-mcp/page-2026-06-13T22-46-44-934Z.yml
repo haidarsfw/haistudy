@@ -1,0 +1,152 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e46] [cursor=pointer]:
+    - img [ref=e47]
+  - alert [ref=e50]: Dashboard | haistudy
+  - generic [ref=e51]:
+    - complementary [ref=e52]:
+      - generic [ref=e53]:
+        - button "haistudy" [ref=e54] [cursor=pointer]
+        - button "Ciutkan sidebar" [expanded] [ref=e55]:
+          - img [ref=e56]
+      - navigation [ref=e59]:
+        - button "Dashboard" [ref=e61]:
+          - img [ref=e62]
+          - generic [ref=e65]: Dashboard
+        - button "Mata Kuliah" [ref=e67]:
+          - img [ref=e68]
+          - generic [ref=e70]: Mata Kuliah
+        - button "Jadwal Ujian" [ref=e72]:
+          - img [ref=e73]
+          - generic [ref=e75]: Jadwal Ujian
+        - button "Statistik Belajar" [ref=e77]:
+          - img [ref=e78]
+          - generic [ref=e80]: Statistik Belajar
+        - button "Catatan" [ref=e82]:
+          - img [ref=e83]
+          - generic [ref=e86]: Catatan
+        - button "Pustaka" [ref=e88]:
+          - img [ref=e89]
+          - generic [ref=e91]: Pustaka
+        - button "Saran" [ref=e93]:
+          - img [ref=e94]
+          - generic [ref=e96]: Saran
+        - button "Layanan Pelanggan" [ref=e98]:
+          - img [ref=e99]
+          - generic [ref=e106]: Layanan Pelanggan
+        - button "Settings" [ref=e108]:
+          - img [ref=e109]
+          - generic [ref=e112]: Settings
+        - button "Admin" [ref=e114]:
+          - img [ref=e115]
+          - generic [ref=e118]: Admin
+        - button "S2 · UAS · BM" [ref=e120]:
+          - img [ref=e121]
+          - generic [ref=e124]: S2 · UAS · BM
+      - generic [ref=e125]:
+        - button "A Admin Other" [ref=e126] [cursor=pointer]:
+          - generic [ref=e127]: A
+          - generic [ref=e128]:
+            - paragraph [ref=e129]: Admin
+            - paragraph [ref=e130]: Other
+        - button "Logout" [ref=e131]:
+          - img [ref=e132]
+          - generic [ref=e135]: Logout
+    - generic [ref=e136]:
+      - banner [ref=e137]:
+        - button "Search... ⌘K" [ref=e139] [cursor=pointer]:
+          - img [ref=e140]
+          - generic [ref=e143]: Search...
+          - generic [ref=e144]: ⌘K
+        - generic [ref=e145]:
+          - button "Voice" [ref=e146] [cursor=pointer]:
+            - img [ref=e148]
+            - generic: Voice
+          - button "Buka Pomodoro timer" [ref=e151] [cursor=pointer]:
+            - img [ref=e152]
+            - generic: Pomodoro
+          - button "Musik" [ref=e155] [cursor=pointer]:
+            - img [ref=e157]
+            - generic: Musik
+          - button "Aktifkan mode terang" [pressed] [ref=e161] [cursor=pointer]:
+            - img [ref=e163]
+            - generic: Terang
+          - button "Notifikasi" [ref=e170] [cursor=pointer]:
+            - img [ref=e171]
+            - generic: Notifikasi
+      - generic [ref=e174]:
+        - img [ref=e175]
+        - paragraph [ref=e178]: Aktifkan notifikasi agar tidak melewatkan balasan support.
+        - button "Aktifkan" [ref=e179]
+        - button "Tutup" [ref=e180]:
+          - img
+      - main [ref=e181]:
+        - generic [ref=e182]:
+          - heading "Dashboard" [level=1] [ref=e183]
+          - generic [ref=e184]:
+            - generic [ref=e186]:
+              - generic [ref=e187]:
+                - generic [ref=e188]:
+                  - generic [ref=e189]:
+                    - paragraph [ref=e190]: Minggu, 14 Juni 2026
+                    - generic [ref=e191]:
+                      - img
+                      - text: Admin
+                  - heading "Selamat Pagi, Admin!" [level=2] [ref=e192]
+                  - paragraph [ref=e193]: Weekend ini waktu yang tepat untuk mengejar ketinggalan!
+                - generic [ref=e195]:
+                  - img [ref=e196]
+                  - generic [ref=e199]: 0%
+              - generic [ref=e202]: Semester 2 · UAS · Business Management
+              - generic [ref=e203]:
+                - generic [ref=e204]:
+                  - img [ref=e206]
+                  - generic [ref=e208]:
+                    - heading "Tips Belajar" [level=3] [ref=e209]
+                    - paragraph [ref=e210]: Buat daftar istilah kunci beserta definisi untuk setiap mata kuliah - ini memperkuat pondasi pemahaman.
+                - generic [ref=e211]:
+                  - img [ref=e213]
+                  - generic [ref=e216]:
+                    - heading "Fun Fact" [level=3] [ref=e217]
+                    - paragraph [ref=e218]: Otak bisa membentuk memori baru bahkan saat tidur nyenyak non-REM stage 3 menurut riset di jurnal Nature.
+            - generic [ref=e219]:
+              - generic [ref=e220]:
+                - generic [ref=e221]:
+                  - img [ref=e222]
+                  - generic [ref=e225]: Ujian Terdekat
+                  - generic [ref=e226]:
+                    - generic [ref=e227]:
+                      - button "Onsite" [disabled] [pressed] [ref=e228]:
+                        - img [ref=e229]
+                      - generic: Onsite
+                    - generic [ref=e232]:
+                      - button "Tugas" [disabled] [ref=e233]:
+                        - img [ref=e234]
+                      - generic: Tugas
+                - paragraph [ref=e238]: Jadwal ujian belum diumumkan
+              - generic [ref=e239]:
+                - generic [ref=e240]:
+                  - img [ref=e241]
+                  - generic [ref=e244]: Progress Belajar
+                - generic [ref=e246]:
+                  - img [ref=e247]
+                  - generic [ref=e250]: 0%
+              - generic [ref=e251]:
+                - generic [ref=e252]:
+                  - img [ref=e253]
+                  - generic [ref=e256]: Catatan Cepat
+                  - img [ref=e257]
+                - textbox "Tulis catatan cepat..." [ref=e262]
+              - generic [ref=e263]:
+                - button "Tampilkan daftar user online" [ref=e264] [cursor=pointer]:
+                  - generic [ref=e265]:
+                    - img [ref=e266]
+                    - generic [ref=e271]: Online
+                  - generic [ref=e272]:
+                    - generic [ref=e273]: "0"
+                    - img [ref=e274]
+                - paragraph [ref=e276]: Tidak ada yang online saat ini
+    - generic:
+      - button "Buka AI Assistant" [ref=e277]:
+        - img
+      - button "Buka Chat" [ref=e278]:
+        - img

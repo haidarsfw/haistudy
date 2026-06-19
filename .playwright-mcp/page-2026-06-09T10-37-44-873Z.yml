@@ -1,0 +1,93 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - button "haistudy" [ref=e5] [cursor=pointer]
+        - button "Ciutkan sidebar" [expanded] [ref=e6]:
+          - img [ref=e7]
+      - navigation [ref=e10]:
+        - button "Dashboard" [ref=e12]:
+          - img [ref=e13]
+          - generic [ref=e16]: Dashboard
+        - button "Mata Kuliah" [ref=e18]:
+          - img [ref=e19]
+          - generic [ref=e21]: Mata Kuliah
+        - button "Jadwal Ujian" [ref=e23]:
+          - img [ref=e24]
+          - generic [ref=e26]: Jadwal Ujian
+        - button "Statistik Belajar" [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e31]: Statistik Belajar
+        - button "Catatan" [ref=e33]:
+          - img [ref=e34]
+          - generic [ref=e37]: Catatan
+        - button "Pustaka" [ref=e39]:
+          - img [ref=e40]
+          - generic [ref=e42]: Pustaka
+        - button "Saran" [ref=e44]:
+          - img [ref=e45]
+          - generic [ref=e47]: Saran
+        - button "Layanan Pelanggan" [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e57]: Layanan Pelanggan
+        - button "Settings" [ref=e59]:
+          - img [ref=e60]
+          - generic [ref=e63]: Settings
+        - button "Admin" [ref=e65]:
+          - img [ref=e66]
+          - generic [ref=e69]: Admin
+        - button "S1 · UTS · BM" [ref=e71]:
+          - img [ref=e72]
+          - generic [ref=e75]: S1 · UTS · BM
+      - generic [ref=e76]:
+        - button "A Admin Other" [ref=e77] [cursor=pointer]:
+          - generic [ref=e78]: A
+          - generic [ref=e79]:
+            - paragraph [ref=e80]: Admin
+            - paragraph [ref=e81]: Other
+        - button "Logout" [ref=e82]:
+          - img [ref=e83]
+          - generic [ref=e86]: Logout
+    - generic [ref=e87]:
+      - banner [ref=e88]:
+        - button "Kembali" [ref=e89]:
+          - img
+        - button "Search... ⌘K" [ref=e91] [cursor=pointer]:
+          - img [ref=e92]
+          - generic [ref=e95]: Search...
+          - generic [ref=e96]: ⌘K
+        - generic [ref=e97]:
+          - button "Voice" [ref=e98] [cursor=pointer]:
+            - img [ref=e100]
+            - generic: Voice
+          - button "Buka Pomodoro timer" [ref=e103] [cursor=pointer]:
+            - img [ref=e104]
+            - generic: Pomodoro
+          - button "Musik" [ref=e107] [cursor=pointer]:
+            - img [ref=e109]
+            - generic: Musik
+          - button "Aktifkan mode terang" [pressed] [ref=e113] [cursor=pointer]:
+            - img [ref=e115]
+            - generic: Terang
+          - button "Notifikasi" [ref=e122] [cursor=pointer]:
+            - img [ref=e123]
+            - generic: Notifikasi
+      - generic [ref=e126]:
+        - img [ref=e127]
+        - paragraph [ref=e130]: Aktifkan notifikasi agar tidak melewatkan balasan support.
+        - button "Aktifkan" [ref=e131]
+        - button "Tutup" [ref=e132]:
+          - img
+      - main [ref=e133]
+    - generic:
+      - button "Buka AI Assistant" [ref=e148]:
+        - img
+      - button "Buka Chat" [ref=e149]:
+        - img
+    - generic [ref=e152]:
+      - heading "Selamat Datang di haistudy!" [level=3] [ref=e166]
+      - paragraph [ref=e167]: Yuk, kenalan dulu dengan fitur-fitur yang akan membantu kamu belajar lebih efektif untuk ujian.
+      - button "Lanjut" [ref=e169] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e175] [cursor=pointer]:
+    - img [ref=e176]
+  - alert [ref=e179]

@@ -1,0 +1,144 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "Beranda" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - text: Beranda
+      - generic [ref=e8]: haistudy
+    - paragraph [ref=e15]: Langkah 2/4 · Paket
+    - generic [ref=e91]:
+      - generic [ref=e92]:
+        - generic [ref=e94]: Pilih Paket*
+        - generic [ref=e95]:
+          - button "Share Hemat Rp 25.000 Akses penuh, hemat (wajib share) Lihat semua fitur" [ref=e257] [cursor=pointer]:
+            - generic [ref=e258]:
+              - img [ref=e260]
+              - generic [ref=e266]:
+                - generic [ref=e267]:
+                  - generic [ref=e268]:
+                    - generic [ref=e269]: Share
+                    - generic [ref=e270]: Hemat
+                  - generic [ref=e271]: Rp 25.000
+                - paragraph [ref=e272]: Akses penuh, hemat (wajib share)
+              - button "Lihat semua fitur" [ref=e273]:
+                - img [ref=e274]
+          - button "Populer Normal Populer Rp 30.000 Akses penuh, tanpa syarat Lihat semua fitur" [pressed] [ref=e276] [cursor=pointer]:
+            - generic [ref=e116]: Populer
+            - img [ref=e118]
+            - generic [ref=e277]:
+              - img [ref=e279]
+              - generic [ref=e282]:
+                - generic [ref=e283]:
+                  - generic [ref=e284]:
+                    - generic [ref=e285]: Normal
+                    - generic [ref=e286]: Populer
+                  - generic [ref=e287]: Rp 30.000
+                - paragraph [ref=e288]: Akses penuh, tanpa syarat
+              - button "Lihat semua fitur" [ref=e289]:
+                - img [ref=e290]
+          - button "Best Price to Value VIP Premium Rp 35.000 Fitur eksklusif · AI lebih pintar · Komunitas · Badge Sembunyikan Termasuk Semua fitur Normal AI Model AI eksklusif AI Study Assistant (prioritas) Komunitas Akses VIP Lounge Direct Message (DM) antar anggota Snippet Library Kustomisasi Warna aksen & highlight kustom Font premium Lainnya Perks voice room VIP badge di chat & forum Support lebih cepat" [ref=e323] [cursor=pointer]:
+            - generic [ref=e136]:
+              - img [ref=e137]
+              - text: Best Price to Value
+            - generic [ref=e293]:
+              - img [ref=e295]
+              - generic [ref=e297]:
+                - generic [ref=e298]:
+                  - generic [ref=e299]:
+                    - generic [ref=e300]: VIP
+                    - generic [ref=e301]: Premium
+                  - generic [ref=e302]: Rp 35.000
+                - paragraph [ref=e303]: Fitur eksklusif · AI lebih pintar · Komunitas · Badge
+              - button "Sembunyikan" [expanded] [active] [ref=e324]:
+                - img [ref=e305]
+            - generic [ref=e327]:
+              - generic [ref=e328]:
+                - paragraph [ref=e329]: Termasuk
+                - list [ref=e330]:
+                  - listitem [ref=e331]:
+                    - img [ref=e332]
+                    - generic [ref=e334]: Semua fitur Normal
+              - generic [ref=e335]:
+                - paragraph [ref=e336]: AI
+                - list [ref=e337]:
+                  - listitem [ref=e338]:
+                    - img [ref=e339]
+                    - generic [ref=e341]: Model AI eksklusif
+                  - listitem [ref=e342]:
+                    - img [ref=e343]
+                    - generic [ref=e345]: AI Study Assistant (prioritas)
+              - generic [ref=e346]:
+                - paragraph [ref=e347]: Komunitas
+                - list [ref=e348]:
+                  - listitem [ref=e349]:
+                    - img [ref=e350]
+                    - generic [ref=e352]: Akses VIP Lounge
+                  - listitem [ref=e353]:
+                    - img [ref=e354]
+                    - generic [ref=e356]: Direct Message (DM) antar anggota
+                  - listitem [ref=e357]:
+                    - img [ref=e358]
+                    - generic [ref=e360]: Snippet Library
+              - generic [ref=e361]:
+                - paragraph [ref=e362]: Kustomisasi
+                - list [ref=e363]:
+                  - listitem [ref=e364]:
+                    - img [ref=e365]
+                    - generic [ref=e367]: Warna aksen & highlight kustom
+                  - listitem [ref=e368]:
+                    - img [ref=e369]
+                    - generic [ref=e371]: Font premium
+              - generic [ref=e372]:
+                - paragraph [ref=e373]: Lainnya
+                - list [ref=e374]:
+                  - listitem [ref=e375]:
+                    - img [ref=e376]
+                    - generic [ref=e378]: Perks voice room
+                  - listitem [ref=e379]:
+                    - img [ref=e380]
+                    - generic [ref=e382]: VIP badge di chat & forum
+                  - listitem [ref=e383]:
+                    - img [ref=e384]
+                    - generic [ref=e386]: Support lebih cepat
+          - button "Diamond Eksklusif Rp 50.000 Semua VIP + nama glow · dukung haistudy Lihat semua fitur" [ref=e307] [cursor=pointer]:
+            - generic [ref=e308]:
+              - img [ref=e310]
+              - generic [ref=e313]:
+                - generic [ref=e314]:
+                  - generic [ref=e315]:
+                    - generic [ref=e316]: Diamond
+                    - generic [ref=e317]: Eksklusif
+                  - generic [ref=e318]: Rp 50.000
+                - paragraph [ref=e319]: Semua VIP + nama glow · dukung haistudy
+              - button "Lihat semua fitur" [ref=e320]:
+                - img [ref=e321]
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - generic [ref=e173]: Jumlah Device*
+            - generic [ref=e174]: Berapa perangkat yang akan dipakai untuk login.
+          - radiogroup "device" [ref=e175]:
+            - radio "1 device" [ref=e177]:
+              - generic [ref=e178]: 1 device
+            - radio "2 device" [checked] [ref=e180]:
+              - generic [ref=e181]: 2 device
+            - generic [ref=e182]:
+              - radio "3 device" [disabled] [ref=e183]:
+                - generic [ref=e184]: 3 device
+              - tooltip "Hanya paket VIP & Diamond yang bisa memakai 3 device."
+          - paragraph [ref=e185]: Berbagi akses = blacklist permanen & tanpa refund.
+        - generic [ref=e186]:
+          - paragraph [ref=e187]: Periode
+          - paragraph [ref=e188]: Semester 2 · UAS · Business Management
+          - button "bukan angkatan B29? klik di sini" [ref=e189]
+    - generic [ref=e75]:
+      - button "Kembali" [ref=e190]:
+        - img [ref=e191]
+        - text: Kembali
+      - button "Lanjut" [ref=e76]:
+        - text: Lanjut
+        - img [ref=e77]
+  - button "Open Next.js Dev Tools" [ref=e85] [cursor=pointer]:
+    - img [ref=e86]
+  - alert [ref=e79]

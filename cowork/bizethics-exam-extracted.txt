@@ -1,0 +1,416 @@
+BINA NUSANTARA UNIVERSITY
+Latihan Soal Prediksi Ujian Akhir Semester (UAS)
+LEMBAR LATIHAN PREDIKSI. Bukan naskah ujian resmi. Disusun dari rangkuman materi sebagai
+gambaran soal.
+Academic Year
+
+: 2025 / 2026
+
+Course
+
+: Business Ethics
+
+Semester / Period
+
+: Even (Genap)
+
+Program
+
+: Undergraduate, Business Management
+
+Exam
+
+: Final Exam (UAS)
+
+Exam Type
+
+: Onsite, Theory
+
+Day / Date
+
+: Tuesday / 23 June 2026
+
+Time
+
+: 13:00 - 14:40 WIB
+
+Duration
+
+: 100 minutes
+
+Total Score
+
+: 100 points
+
+Format Soal
+
+Essay 40% (Type I) + Case Study 60% (Type II)
+
+Cara Menjawab
+
+Semua soal wajib dijawab dengan teori (konsep dari materi), bukan sekadar opini.
+
+Struktur
+
+6 soal induk: 4 esai (@10) dan 2 studi kasus bercabang a/b/c (@30).
+
+Petunjuk: Soal ditampilkan dalam dua bahasa (English dan Bahasa Indonesia). Jawablah sesuai bahasa pengantar ujian Anda.
+Kunci jawaban dan rubrik penilaian ada di Bagian II.
+
+BAGIAN I. LEMBAR SOAL
+TYPE I. SOAL ESAI (maksimum 40 poin)
+Soal 1 (10 poin). Privasi di Tempat Kerja (Modul 1)
+English. Workplace privacy involves a tension between the rights of the company and the rights of the
+employee. Explain the two definitions of privacy discussed in the material, and explain why the right to
+control information about oneself is treated as the more suitable definition in the workplace. After that,
+explain how the principle of reciprocal obligation limits an employee's right to privacy, and give one
+example of how this balance works in the relationship between an employer and an employee.
+Bahasa Indonesia. Privasi di tempat kerja mengandung tarik menarik antara hak perusahaan dan hak
+karyawan. Jelaskan dua definisi privasi yang dibahas dalam materi, dan jelaskan mengapa hak untuk
+mengendalikan informasi tentang diri sendiri dianggap definisi yang lebih pas untuk tempat kerja.
+Setelah itu, jelaskan bagaimana prinsip reciprocal obligation membatasi hak privasi karyawan, dan beri
+satu contoh bagaimana keseimbangan ini bekerja dalam hubungan antara perusahaan dan karyawan.
+
+Soal 2 (10 poin). Kerangka Etika Pemasaran (Modul 2)
+English. A market exchange between a seller and a buyer is considered prima facie ethically legitimate.
+(a) Identify the two grounds that make a market exchange prima facie legitimate. (b) Explain the four
+questions or conditions that must be examined to judge whether a particular marketing transaction is
+genuinely ethical. Use one short example to show how violating one of these conditions makes a
+transaction ethically problematic.
+Bahasa Indonesia. Pertukaran pasar antara penjual dan pembeli dianggap prima facie sah secara etika.
+(a) Sebutkan dua dasar yang membuat pertukaran pasar prima facie sah. (b) Jelaskan empat pertanyaan
+atau syarat yang harus ditelaah untuk menilai apakah suatu transaksi pemasaran benar-benar etis.
+Gunakan satu contoh singkat untuk menunjukkan bagaimana pelanggaran salah satu syarat itu membuat
+transaksi bermasalah secara etika.
+
+Soal 3 (10 poin). Tanggung Jawab Lingkungan (Modul 2)
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 1
+
+English. There is an ongoing debate about how business should handle its responsibility toward the
+natural environment. Compare the three approaches discussed in the material, namely the market
+approach, the regulatory approach, and the sustainability approach. For each approach, state its main
+idea, and state at least one weakness of the market approach and one weakness of the regulatory
+approach. After that, explain what is meant by the three pillars of sustainability.
+Bahasa Indonesia. Ada perdebatan tentang bagaimana bisnis menangani tanggung jawabnya terhadap
+lingkungan alam. Bandingkan tiga pendekatan yang dibahas dalam materi, yaitu market approach,
+regulatory approach, dan sustainability approach. Untuk tiap pendekatan, sebutkan gagasan utamanya,
+dan sebutkan minimal satu kelemahan market approach dan satu kelemahan regulatory approach.
+Setelah itu, jelaskan apa yang dimaksud dengan three pillars of sustainability.
+
+Soal 4 (10 poin). Tata Kelola Perusahaan dan Gatekeepers (Modul 3)
+English. Trust is central to corporate governance and finance. (a) Explain the role of gatekeepers and
+explain why a conflict of interest is the most basic ethical problem they face, and connect your answer to
+the concept of fiduciary duty. (b) Explain the three legal duties that the law imposes on members of a
+board of directors.
+Bahasa Indonesia. Trust adalah inti dari tata kelola perusahaan dan keuangan. (a) Jelaskan peran
+gatekeepers dan jelaskan mengapa conflict of interest adalah masalah etika yang paling mendasar bagi
+mereka, dan kaitkan jawaban Anda dengan konsep fiduciary duty. (b) Jelaskan tiga kewajiban hukum
+yang dibebankan hukum kepada anggota dewan direksi.
+
+TYPE II. SOAL KASUS (maksimum 60 poin)
+Kasus 1 (30 poin). Privasi, Pemasaran, dan Keamanan Produk (Modul 1 dan 2)
+English. VitaCare is a company that produces and sells the "VitaBand", a wearable wristband that
+monitors heart rate, detects falls, and sends emergency alerts. Inside the company, management gives
+employees smart ID badges that track their location, their tone of voice, and the time they spend at their
+desks, and it also reviews staff email and internet use. None of this is announced to the employees
+beforehand, and management says the goal is to raise productivity. In its advertising, VitaCare targets
+elderly people who live alone, using the slogan "If you fall and no one is there, who will save you?" to
+push sales. A few months after launch, several VitaBands fail to detect real falls, and a number of
+elderly users are injured because no help is called, even though VitaCare had followed the ordinary
+manufacturing standard at the time.
+Bahasa Indonesia. VitaCare adalah perusahaan yang memproduksi dan menjual "VitaBand", gelang
+pintar yang memantau detak jantung, mendeteksi jatuh, dan mengirim peringatan darurat. Di dalam
+perusahaan, manajemen memberi karyawan kartu identitas pintar yang melacak lokasi, nada bicara, dan
+lama waktu mereka di meja kerja, serta memeriksa email dan pemakaian internet karyawan. Semua ini
+tidak diberitahukan lebih dulu kepada karyawan, dan manajemen menyebut tujuannya menaikkan
+produktivitas. Dalam iklannya, VitaCare menyasar orang lanjut usia yang tinggal sendiri, dengan slogan
+"Kalau Anda jatuh dan tidak ada siapa-siapa, siapa yang akan menolong?" untuk mendorong penjualan.
+Beberapa bulan setelah peluncuran, sejumlah VitaBand gagal mendeteksi jatuh yang sungguh terjadi,
+dan beberapa pengguna lansia cedera karena pertolongan tidak dipanggil, padahal VitaCare sudah
+mengikuti standar pembuatan yang wajar pada saat itu.
+1a (10 poin). Analyze VitaCare's monitoring of its employees from the standpoint of workplace
+privacy. Using the parameters of an ethical monitoring policy and the idea of a reasonable expectation
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 2
+
+of privacy, assess whether the monitoring is ethically acceptable, and state what the company should
+correct. / Analisis pemantauan karyawan oleh VitaCare dari sudut privasi di tempat kerja. Dengan
+memakai parameter kebijakan pemantauan yang etis dan gagasan reasonable expectation of privacy,
+nilai apakah pemantauan itu bisa diterima secara etika, dan sebutkan apa yang harus diperbaiki
+perusahaan.
+1b (10 poin). Evaluate the ethics of VitaCare's advertising aimed at the elderly. Use the concepts of
+consumer vulnerability and general vulnerability, together with the guidelines on manipulation and on
+targeting vulnerable populations, to judge whether this campaign is ethically problematic. / Nilai etika
+iklan VitaCare yang menyasar lansia. Pakai konsep consumer vulnerability dan general vulnerability,
+bersama pedoman tentang manipulasi dan tentang menyasar populasi rentan, untuk menilai apakah
+kampanye ini bermasalah secara etika.
+1c (10 poin). When the VitaBand fails and users are injured even though the company was not
+negligent, who should bear responsibility? Explain your answer using the concepts of negligence and
+strict product liability, and explain the two meanings of the word "responsibility". / Ketika VitaBand
+gagal dan pengguna cedera padahal perusahaan tidak lalai, siapa yang harus menanggung tanggung
+jawab? Jelaskan jawaban Anda dengan konsep negligence dan strict product liability, dan jelaskan dua
+arti dari kata "responsibility".
+
+Kasus 2 (30 poin). Keberlanjutan dan Tata Kelola Perusahaan (Modul 2 dan 3)
+English. TerraNusa is a publicly listed manufacturing company. To improve its image, it runs a
+campaign claiming that its products are "100% environmentally friendly", even though in practice it has
+only changed its packaging while its production still uses resources and produces waste at the same rate
+as before. The board of directors is chaired by the same person who serves as the CEO, and this CEO
+also takes part in selecting new board members. Most of the executives' pay is tied to short-term stock
+options. Shortly before TerraNusa is due to announce a major acquisition that will sharply raise its share
+price, one of its senior executives quietly tells a close relative to buy the company's shares.
+Bahasa Indonesia. TerraNusa adalah perusahaan manufaktur yang sahamnya tercatat di bursa. Untuk
+memperbaiki citranya, perusahaan menjalankan kampanye yang mengklaim produknya "100% ramah
+lingkungan", padahal pada praktiknya ia hanya mengganti kemasan sementara produksinya masih
+memakai sumber daya dan menghasilkan limbah pada laju yang sama seperti sebelumnya. Dewan
+direksi diketuai oleh orang yang sama yang menjabat sebagai CEO, dan CEO ini juga ikut memilih
+anggota dewan yang baru. Sebagian besar gaji eksekutif dikaitkan dengan stock options jangka pendek.
+Tidak lama sebelum TerraNusa mengumumkan akuisisi besar yang akan menaikkan tajam harga
+sahamnya, salah satu eksekutif seniornya diam-diam menyuruh seorang kerabat dekat membeli saham
+perusahaan.
+2a (10 poin). Assess TerraNusa's "100% environmentally friendly" campaign. Explain the concept of
+greenwashing, and using the principles of a sustainable business (eco-efficiency, biomimicry, and the
+shift from products to services), explain what genuine sustainability would require instead. / Nilai
+kampanye "100% ramah lingkungan" TerraNusa. Jelaskan konsep greenwashing, dan dengan
+memakai prinsip-prinsip sustainable business (eco-efficiency, biomimicry, dan pergeseran dari produk
+ke jasa), jelaskan apa yang sebenarnya dituntut oleh keberlanjutan sejati.
+2b (10 poin). Analyze the governance problem in TerraNusa's board and in its executive pay. Explain
+the conflicts of interest that arise when the CEO also chairs the board and helps select its members,
+and explain why tying executive pay to short-term stock options is ethically problematic. / Analisis
+masalah tata kelola pada dewan TerraNusa dan pada gaji eksekutifnya. Jelaskan benturan kepentingan
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 3
+
+yang muncul ketika CEO juga merangkap ketua dewan dan ikut memilih anggotanya, dan jelaskan
+mengapa mengaitkan gaji eksekutif dengan stock options jangka pendek bermasalah secara etika.
+2c (10 poin). Evaluate the senior executive's act of tipping a relative before the acquisition is
+announced. Explain why this is illegal insider trading and why it is considered unethical, and connect
+your answer to the ideas of proprietary knowledge and fair pricing. / Nilai tindakan eksekutif senior
+yang memberi tahu kerabatnya sebelum akuisisi diumumkan. Jelaskan mengapa ini termasuk insider
+trading yang ilegal dan mengapa dianggap tidak etis, dan kaitkan jawaban Anda dengan gagasan
+proprietary knowledge dan penetapan harga yang adil.
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 4
+
+BAGIAN II. KUNCI JAWABAN DAN RUBRIK PENILAIAN
+Kunci jawaban ditulis dalam Bahasa Indonesia sebagai acuan koreksi. Rubrik menunjukkan pembagian poin untuk tiap soal.
+
+Jawaban Soal 1 (10 poin)
+Ada dua definisi privasi yang saling terkait. Pertama, hak untuk dibiarkan sendiri (left alone), yaitu hak
+atas ruang pribadi agar tidak diganggu. Kedua, hak untuk mengendalikan informasi tentang diri sendiri,
+yaitu hak menentukan siapa yang boleh tahu data pribadi seseorang. Untuk tempat kerja, definisi kedua
+dianggap lebih pas karena gagasan dibiarkan sendiri terlalu luas dan sulit diterapkan dalam hubungan
+kerja, sementara kendali atas informasi pribadi lebih bisa dipakai untuk menilai sampai mana perusahaan
+boleh masuk.
+Privasi berakar pada autonomy, yaitu kebebasan menentukan pilihan atas diri sendiri. Hak ini dibatasi oleh
+reciprocal obligation, yaitu kewajiban timbal balik: kalau seseorang ingin kebebasannya dihormati, ia juga
+wajib menghormati kebebasan orang lain. Di tempat kerja, karyawan wajib menghormati tujuan dan
+properti perusahaan, dan sebaliknya perusahaan wajib menghormati hak karyawan termasuk privasinya.
+Jadi hak privasi karyawan tidak mutlak karena dibatasi oleh kewajibannya kepada perusahaan.
+Contoh keseimbangan: perusahaan boleh memantau pemakaian internet kerja untuk melindungi
+produktivitas dan properti perusahaan, tetapi tidak boleh ikut campur dalam keputusan pribadi karyawan
+yang tidak terkait kontrak kerja. Karyawan menghormati alat dan waktu milik perusahaan, dan perusahaan
+membatasi pemantauan hanya pada hal yang relevan dengan pekerjaan.
+Rubrik. Dua definisi privasi benar (3). Alasan definisi kedua lebih pas untuk tempat kerja (2). Penjelasan
+autonomy dan reciprocal obligation sebagai pembatas (3). Contoh keseimbangan hak dan kewajiban (2).
+
+Jawaban Soal 2 (10 poin)
+(a) Dua dasar yang membuat pertukaran pasar prima facie sah secara etika adalah respect for autonomy
+(penghormatan terhadap kebebasan kedua pihak) dan mutual benefit (saling untung).
+(b) Empat syarat yang harus ditelaah, yang muncul dari empat pertanyaan. Pertama, apakah pertukaran
+benar-benar voluntary (sukarela); penghalangnya antara lain tidak adanya pilihan alternatif yang nyata,
+tekanan dalam situasi beli tertentu, adanya price-fixing, monopoli, atau price gouging, serta konsumen
+yang ditarget dan rentan. Kedua, apakah persetujuannya benar-benar informed; penghalangnya adalah
+kurangnya informasi, deception (penipuan), dan informasi yang terlalu rumit. Ketiga, apakah orang
+benar-benar diuntungkan; penghalangnya antara lain impulse buying, konsumerisme dan affluenza, produk
+yang tidak aman, kebutuhan yang dibuat-buat (contrived wants), serta market failures seperti externalities.
+Keempat, apakah ada nilai lain yang dipertaruhkan; nilai seperti fairness, justice, health, dan safety bisa
+mengalahkan kebebasan berkontrak walaupun ketiga syarat di atas terpenuhi.
+Contoh: iklan yang menipu melanggar syarat informed consent, sehingga autonomy konsumen tidak
+dihormati dan transaksi menjadi bermasalah secara etika. Contoh lain, kebebasan pengedar narkoba untuk
+bertransaksi yang sama-sama disepakati tetap dikalahkan oleh nilai lain berupa kepedulian masyarakat
+menjaga hukum dan ketertiban.
+Rubrik. Dua dasar, yaitu respect for autonomy dan mutual benefit (2). Empat syarat dijelaskan beserta
+penghalangnya (6, sekitar 1,5 per syarat). Contoh pelanggaran satu syarat yang tepat (2).
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 5
+
+Jawaban Soal 3 (10 poin)
+Market approach. Gagasan utamanya, masalah lingkungan dipandang sebagai masalah ekonomi yang
+butuh solusi ekonomi. William Baxter berargumen ada tingkat polusi optimal yang paling baik dicapai
+lewat pasar bersaing, dan dari sudut ini sumber daya dianggap tak terbatas (infinite) serta bisa saling
+diganti (fungible). Kelemahannya terlihat pada market failures, yaitu externalities (biaya kerusakan
+ditanggung pihak luar transaksi seperti generasi mendatang), tidak adanya pasar untuk memberi harga
+pada barang sosial seperti pemandangan indah, dan beda antara keputusan perorangan dengan akibat bagi
+kelompok. Contohnya, standar CAFE tidak akan muncul lewat pendekatan pasar.
+Regulatory approach. Gagasan utamanya, pemerintah menetapkan standar dan bisnis bebas mengejar
+tujuannya asalkan memenuhi standar minimum, dengan ganti rugi sebagai dorongan utama.
+Kelemahannya, pendekatan ini meremehkan pengaruh bisnis dalam membentuk hukum (misalnya industri
+otomotif melobi agar truk ringan dan SUV dikecualikan dari standar CAFE), meremehkan kemampuan
+bisnis memengaruhi pilihan konsumen, dan keliru menganggap pertumbuhan ekonomi netral secara
+lingkungan.
+Sustainability approach. Gagasan utamanya menggabungkan peluang finansial dengan tanggung jawab
+lingkungan dan etika. Sustainable development memenuhi kebutuhan masa kini tanpa mengorbankan
+kebutuhan generasi mendatang, dan konsep ini berakar pada laporan Brundtland Commission 1987.
+Three pillars of sustainability menilai kecukupan pembangunan dari tiga sisi sekaligus, yaitu
+pembangunan harus memuaskan secara ekonomi, lingkungan, dan etika. Konsep ini sering disebut triple
+bottom line dan juga dikenal sebagai ESG (Environmental, Social, and Governance).
+Rubrik. Market approach beserta satu kelemahan (3). Regulatory approach beserta satu kelemahan (3).
+Sustainability approach (2). Three pillars of sustainability (2).
+
+Jawaban Soal 4 (10 poin)
+(a) Gatekeepers adalah pihak yang bertindak sebagai watchdogs untuk memastikan pelaku pasar bermain
+sesuai aturan, misalnya pengacara, auditor, akuntan, dan analis keuangan, yang bekerja berdasarkan
+pengendalian internal dalam sistem ekonomi pasar. Masalah etika yang paling mendasar bagi gatekeeper
+adalah conflict of interest, yaitu keadaan saat seseorang memegang posisi kepercayaan yang menuntut
+penilaian demi kepentingan orang lain, tetapi kepentingan atau kewajiban pribadinya berbenturan dengan
+penilaian itu. Hal ini paling mendasar karena tugas inti gatekeeper justru memberi penilaian demi pihak
+lain, terutama publik, sehingga benturan kepentingan langsung merusak fungsinya. Profesional seperti ini
+punya fiduciary duty, yaitu kewajiban hukum yang berakar pada kepercayaan untuk bertindak demi
+kepentingan pihak lain, yaitu kliennya. Karena kewajiban gatekeeper adalah syarat agar pasar berjalan adil
+dan efektif, kewajiban itu seharusnya mengalahkan tanggung jawab lain kepada majikannya.
+(b) Tiga kewajiban hukum anggota dewan direksi. Pertama, duty of care, yaitu menjalankan kehati-hatian
+wajar dengan memastikan eksekutif menjalankan tanggung jawabnya dan mematuhi hukum. Kedua, duty
+of good faith, yaitu kewajiban ketaatan berupa kesetiaan pada misi organisasi. Ketiga, duty of loyalty,
+yaitu kesetiaan penuh saat mengambil keputusan yang memengaruhi organisasi, sehingga benturan
+kepentingan selalu diselesaikan demi kepentingan organisasi.
+Rubrik. Peran gatekeeper sebagai watchdog (2). Conflict of interest dan alasan mengapa paling mendasar (3).
+Kaitan dengan fiduciary duty (2). Tiga kewajiban dewan disebut dengan benar (3).
+
+Jawaban Kasus 1
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 6
+
+1a (10 poin)
+Pemantauan VitaCare bermasalah secara etika terutama karena dilakukan diam-diam, tanpa pemberitahuan
+lebih dulu kepada karyawan. Parameter kebijakan pemantauan yang etis menuntut beberapa hal:
+pemantauan hanya untuk mencapai kepentingan bisnis tertentu dan hanya mengumpulkan informasi yang
+terkait pekerjaan; harus ada kesepakatan pemberitahuan (disclosure agreement); tidak memantau area
+pribadi; karyawan bisa mengakses informasi yang dikumpulkan tentang dirinya; dan tidak boleh ada
+pemantauan diam-diam karena pemberitahuan lebih dulu wajib.
+Dari sisi reasonable expectation of privacy, selama tidak ada pemberitahuan jelas (actual notice),
+karyawan masih punya harapan wajar atas privasi, sehingga pemantauan rahasia melanggarnya. Pelacakan
+nada bicara dan lokasi lewat badge termasuk biotracking yang bisa terasa sangat mengganggu. Yang harus
+diperbaiki: VitaCare perlu memberi pemberitahuan yang jelas (memberi tahu pekerja saat dipantau juga
+bisa menaikkan produktivitas lewat Hawthorne effect), membatasi pengumpulan data hanya pada hal yang
+relevan dengan pekerjaan, memberi karyawan akses ke datanya, dan menghentikan pemantauan atas area
+atau aktivitas pribadi.
+Rubrik. Mengenali pelanggaran utama, yaitu pemantauan diam-diam tanpa notice (3). Menyebut parameter
+kebijakan pemantauan yang etis (4). Usulan perbaikan yang tepat (3).
+
+1b (10 poin)
+Iklan VitaCare bermasalah secara etika karena memanfaatkan rasa takut dan cemas populasi yang rentan.
+Consumer vulnerability adalah keadaan saat seseorang punya kemampuan terbatas untuk memberi
+informed consent dalam pertukaran pasar karena kurangnya kemampuan berpikir, kondisi psikologis,
+pengalaman, atau kematangan. General vulnerability adalah keadaan saat seseorang mudah terkena bahaya
+fisik, psikologis, atau finansial tertentu. Lansia yang tinggal sendiri sering rentan dalam dua arti sekaligus.
+Pedoman tentang manipulasi dan iklan menyatakan: mencari konsumen yang memang sudah cenderung
+membeli sebuah produk itu sah secara etika; tetapi mengincar kelompok yang mudah dipengaruhi dan
+dimanipulasi itu dipertanyakan secara etika; iklan yang memancing rasa takut, cemas, atau dorongan tidak
+masuk akal lainnya tidak pantas; dan bentuk manipulasi terburuk adalah ketika orang rentan disasar untuk
+dirugikan. Slogan VitaCare jelas memainkan ketakutan lansia, sehingga kampanye ini termasuk pemasaran
+yang bermasalah secara etika karena menyasar populasi rentan dengan memanfaatkan rasa takut mereka.
+Rubrik. Menjelaskan consumer vulnerability dan general vulnerability serta menempatkan lansia di dalamnya (4).
+Menyebut pedoman manipulasi dan iklan yang relevan (3). Kesimpulan penilaian etika kampanye yang tepat (3).
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 7
+
+1c (10 poin)
+Ketika konsumen cedera padahal tidak ada pihak yang lalai, jawabannya ada pada doktrin strict product
+liability, yang membuat produsen tetap bertanggung jawab mengganti rugi atas bahaya produknya bahkan
+saat tidak ada kelalaian. Negligence adalah kegagalan tak sengaja untuk berhati-hati secara wajar agar
+tidak membahayakan orang lain; standar ini berfokus pada adanya pihak yang bersalah dan pada bahaya
+yang seharusnya bisa diramalkan. Karena VitaCare sudah mengikuti standar pembuatan yang wajar, kasus
+ini tidak masuk negligence, tetapi pertanyaan tanggung gugat tetap ada, yaitu siapa yang harus membayar
+saat tidak ada yang bersalah.
+Di sinilah strict product liability berlaku: produsen yang menanggung, dengan alasan ia paling mampu dan
+agar produk dibuat lebih aman. Biaya cedera ini akhirnya diteruskan ke konsumen lewat harga yang lebih
+tinggi, sehingga biaya eksternal diinternalkan dan seluruh biaya produk dibayar oleh mereka yang
+memakainya. Perlu juga dijelaskan bahwa responsibility punya dua arti, yaitu cause (penyebab) dan
+accountability (tanggung gugat); pada kasus tanpa kelalaian, yang relevan adalah accountability.
+Rubrik. Menjelaskan negligence dan alasan kasus ini tidak masuk negligence (3). Menjelaskan strict product
+liability sebagai jawaban dan dampak internalisasi biaya (4). Menjelaskan dua arti responsibility, yaitu cause dan
+accountability (3).
+
+Jawaban Kasus 2
+2a (10 poin)
+Kampanye TerraNusa adalah contoh greenwashing, yaitu mempromosikan produk dengan menyesatkan
+konsumen tentang sisi ramah lingkungannya. Klaim 100% ramah lingkungan menyesatkan karena
+perusahaan hanya mengganti kemasan, sementara produksinya masih memakai sumber daya dan
+menghasilkan limbah pada laju yang sama.
+Keberlanjutan sejati menuntut tiga aturan dasar: sumber daya tidak boleh diambil dari biosfer lebih cepat
+dari laju pemulihannya; limbah idealnya dihapus atau setidaknya tidak dihasilkan lebih cepat dari
+kemampuan biosfer menyerapnya; dan energi penggeraknya harus terbarukan. Dari sini muncul prinsip
+sustainable business: eco-efficiency, yaitu mengurangi pemakaian sumber daya dengan pedoman doing
+more with less (termasuk closed loop production); biomimicry, yang bertujuan menghapus limbah sama
+sekali dengan meniru proses biologis dan tanggung jawab cradle-to-cradle; serta pergeseran dari produk ke
+jasa lewat service-based economy. Dalam pemasaran berkelanjutan, fungsi promosi seharusnya
+membentuk permintaan akan produk yang benar-benar berkelanjutan, bukan menyesatkan konsumen
+seperti yang dilakukan TerraNusa.
+Rubrik. Menjelaskan greenwashing dan menerapkannya ke kasus (3). Menyebut prinsip sustainable business,
+yaitu eco-efficiency, biomimicry, dan pergeseran produk ke jasa (4). Menjelaskan apa yang seharusnya dilakukan
+agar benar-benar berkelanjutan (3).
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 8
+
+2b (10 poin)
+Susunan dewan TerraNusa menimbulkan benturan kepentingan. Ketika CEO merangkap ketua dewan
+direksi dan ikut memilih anggota dewan, pihak yang seharusnya diawasi justru ikut menentukan para
+pengawasnya. Padahal tugas anggota dewan justru memastikan eksekutif dibayar secara adil dan tidak
+berlebihan serta menilai kinerja eksekutif. Keadaan ini diperburuk oleh cronyism dan cross-fertilization of
+boards, dan benturan makin kuat ketika gaji anggota dewan ikut ditentukan oleh eksekutif.
+Mengaitkan gaji eksekutif dengan stock options jangka pendek juga bermasalah secara etika. Praktik ini
+mendorong eksekutif berfokus pada harga saham jangka pendek ketimbang kepentingan jangka panjang
+perusahaan, dan stock options bisa menjadi biang korupsi berupa managed earnings, yaitu manipulasi laba.
+Secara teori paket gaji berfungsi sebagai insentif dan imbalan, tetapi dalam praktik sering tidak ada
+hubungan antara gaji dan kinerja, dan ada hasil yang makin menurun (diminishing return) dari pemberian
+insentif di atas tingkat tertentu. Dari sudut virtue ethics, watak seperti ini paling tepat disebut keserakahan
+(greed dan avarice), dan muncul pula pertanyaan soal distributive justice dan fairness.
+Rubrik. Menjelaskan benturan kepentingan dari CEO merangkap ketua dewan dan ikut memilih anggota (4).
+Menjelaskan mengapa stock options jangka pendek bermasalah, termasuk managed earnings (4). Mengaitkan
+dengan tugas dewan atau dengan fairness dan distributive justice (2).
+
+2c (10 poin)
+Tindakan eksekutif itu termasuk insider trading yang ilegal. Insider trading adalah perdagangan efek
+(securities) oleh orang yang memegang informasi orang dalam yang masih rahasia, yang akan sangat
+memengaruhi nilai saham dan membuatnya untung dari membeli atau menjual saham itu. Insider trading
+menjadi ilegal saat orang dalam memberi tips kepada keluarga, teman, atau pihak lain untuk membeli atau
+menjual saham berdasarkan informasi itu, dan inilah yang dilakukan eksekutif TerraNusa terhadap
+kerabatnya. Informasi soal akuisisi yang belum diumumkan termasuk private information, yaitu informasi
+istimewa yang belum dirilis ke publik.
+Tindakan ini tidak etis karena merupakan penyalahgunaan proprietary knowledge, yaitu pengetahuan yang
+hanya boleh dimiliki orang dalam dan merupakan milik perusahaan, sehingga tidak boleh dipakai dengan
+menyalahgunakan tanggung jawab fidusia kepada perusahaan. Praktik ini juga dianggap sangat tidak adil
+karena menghalangi penetapan harga yang adil berdasarkan akses informasi yang setara antarpelaku pasar.
+Securities and Exchange Commission bahkan menjadikan pendeteksian dan penuntutan insider trading
+sebagai salah satu prioritas penegakannya.
+Rubrik. Menjelaskan definisi insider trading dan mengapa tindakan ini ilegal, yaitu memberi tips berdasarkan
+private information (4). Menjelaskan penyalahgunaan proprietary knowledge dan fiduciary duty (3). Menjelaskan
+pelanggaran terhadap penetapan harga yang adil dan akses informasi yang setara (3).
+
+Distribusi Poin
+Type I Esai: Soal 1 (10) + Soal 2 (10) + Soal 3 (10) + Soal 4 (10) = 40 poin. Type II Kasus: Kasus 1 (1a 10
++ 1b 10 + 1c 10) + Kasus 2 (2a 10 + 2b 10 + 2c 10) = 60 poin. Total = 100 poin. Durasi ujian 100 menit.
+
+Business Ethics - Latihan Soal Prediksi UAS (haistudy)
+
+Halaman 9
+
+

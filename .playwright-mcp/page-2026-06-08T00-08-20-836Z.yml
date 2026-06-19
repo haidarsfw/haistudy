@@ -1,0 +1,83 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "Beranda" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - text: Beranda
+      - generic [ref=e8]: haistudy
+    - paragraph [ref=e15]: Langkah 3/4 · Pembayaran
+    - generic [ref=e391]:
+      - generic [ref=e392]:
+        - paragraph [ref=e393]: Nominal Transfer
+        - button "Rp 30.890" [ref=e394]:
+          - text: Rp 30.890
+          - img [ref=e395]
+        - paragraph [ref=e398]: Rp 30.000 + 3 digit terakhir nomor WA (890). Transfer tepat sejumlah ini agar mudah diverifikasi.
+      - generic [ref=e399]:
+        - button "BCA 5222213886 a.n. Haidar Shofwan Bani Salin" [ref=e400]:
+          - img [ref=e402]
+          - generic [ref=e404]:
+            - paragraph [ref=e405]: BCA
+            - paragraph [ref=e406]: "5222213886"
+            - paragraph [ref=e407]: a.n. Haidar Shofwan Bani
+          - generic [ref=e408]:
+            - img [ref=e409]
+            - generic [ref=e412]: Salin
+        - button "GoPay / ShopeePay / DANA / OVO 087839256171 a.n. Haidar Shofwan Bani Salin" [ref=e413]:
+          - img [ref=e415]
+          - generic [ref=e418]:
+            - paragraph [ref=e419]: GoPay / ShopeePay / DANA / OVO
+            - paragraph [ref=e420]: "087839256171"
+            - paragraph [ref=e421]: a.n. Haidar Shofwan Bani
+          - generic [ref=e422]:
+            - img [ref=e423]
+            - generic [ref=e426]: Salin
+        - button "QRIS Ketuk untuk perbesar & scan QRIS" [ref=e428]:
+          - img [ref=e430]
+          - generic [ref=e436]:
+            - paragraph [ref=e437]: QRIS
+            - paragraph [ref=e438]: Ketuk untuk perbesar & scan
+          - img "QRIS" [ref=e440]
+      - generic [ref=e441]:
+        - generic [ref=e443]: Metode Pembayaran*
+        - radiogroup "method" [ref=e444]:
+          - radio "Transfer BCA" [ref=e446]:
+            - generic [ref=e447]: Transfer BCA
+          - radio "E-Wallet" [ref=e449]:
+            - generic [ref=e450]: E-Wallet
+          - radio "QRIS" [ref=e452]:
+            - generic [ref=e453]: QRIS
+      - generic [ref=e454]:
+        - generic [ref=e455]:
+          - generic [ref=e456]: Bukti Pembayaran*
+          - generic [ref=e457]: Screenshot bukti transfer/pembayaran. Maks 5MB, otomatis dikompres.
+        - button "Ketuk untuk unggah / seret ke sini JPG, PNG, WEBP, atau HEIC · maks 5MB" [ref=e459]:
+          - img [ref=e460]
+          - generic [ref=e463]: Ketuk untuk unggah / seret ke sini
+          - generic [ref=e464]: JPG, PNG, WEBP, atau HEIC · maks 5MB
+      - generic [ref=e465]:
+        - generic [ref=e467]: Dari mana tahu haistudy?*
+        - radiogroup "source" [ref=e468]:
+          - radio "Grup WhatsApp" [ref=e469]:
+            - generic [ref=e472]: Grup WhatsApp
+          - radio "Teman" [ref=e473]:
+            - generic [ref=e476]: Teman
+          - radio "Instagram" [ref=e477]:
+            - generic [ref=e480]: Instagram
+          - radio "LINE" [ref=e481]:
+            - generic [ref=e484]: LINE
+          - radio "Langsung dari pengembang" [ref=e485]:
+            - generic [ref=e488]: Langsung dari pengembang
+          - radio "Lainnya" [ref=e489]:
+            - generic [ref=e492]: Lainnya
+    - generic [ref=e75]:
+      - button "Kembali" [ref=e190]:
+        - img [ref=e191]
+        - text: Kembali
+      - button "Lanjut" [active] [ref=e76]:
+        - text: Lanjut
+        - img [ref=e77]
+  - button "Open Next.js Dev Tools" [ref=e85] [cursor=pointer]:
+    - img [ref=e86]
+  - alert [ref=e79]

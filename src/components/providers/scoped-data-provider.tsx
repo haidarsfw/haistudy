@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { Subject, SubjectContent, Schedule, SubjectKilat } from "@/types";
+import type { ExamData } from "@/types/exam";
 import { useScope, useOptionalScope } from "@/components/providers/scope-provider";
-import { loadCourses, loadContent, loadSchedule, loadRangkuman, loadKilat } from "@/data";
+import { loadCourses, loadContent, loadSchedule, loadRangkuman, loadKilat, loadExamData } from "@/data";
 
 interface ScopedDataValue {
   subjects: Subject[];
@@ -17,6 +18,9 @@ interface ScopedDataValue {
   /** subjectId -> Belajar Kilat feed. Used for tab visibility + the player. */
   kilat: Record<string, SubjectKilat>;
   kilatLoaded: boolean;
+  /** subjectId -> Exam data. Used for tab visibility + the exam player. */
+  examData: Record<string, ExamData>;
+  examDataLoaded: boolean;
 }
 
 const EMPTY: ScopedDataValue = {
@@ -29,6 +33,8 @@ const EMPTY: ScopedDataValue = {
   rangkumanLoaded: false,
   kilat: {},
   kilatLoaded: false,
+  examData: {},
+  examDataLoaded: false,
 };
 
 const ScopedDataContext = createContext<ScopedDataValue>(EMPTY);
@@ -73,6 +79,12 @@ export function ScopedDataProvider({ children }: { children: React.ReactNode }) 
     (loadKilat(scope) as Promise<Record<string, SubjectKilat>>).then((kilat) => {
       if (cancelled) return;
       setValue((v) => ({ ...v, kilat, kilatLoaded: true }));
+    });
+    // Exam data - same non-blocking pattern. Resolves to {} for scopes
+    // without exam data registered (loader is optional).
+    (loadExamData(scope) as Promise<Record<string, ExamData>>).then((examData) => {
+      if (cancelled) return;
+      setValue((v) => ({ ...v, examData, examDataLoaded: true }));
     });
     return () => {
       cancelled = true;

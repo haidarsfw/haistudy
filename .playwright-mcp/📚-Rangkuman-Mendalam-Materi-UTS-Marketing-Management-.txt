@@ -1,0 +1,289 @@
+﻿📚 Rangkuman Mendalam Materi UTS (Marketing Management)
+
+PPT Kisi Kisi Mentor MM (Ringkasan sesuai soal tahun lalu)
+Materi 01: Marketing: Creating Customer Value and Engagement (Chapter 1) [MATERI UJIAN: INTRODUCTION, MARKETING PROCESS, CONCEPTS, CRM] [⚠️]
+Materi ini memperkenalkan definisi, proses, dan konsep inti pemasaran.
+* Definisi Pemasaran (Marketing): Pemasaran adalah proses di mana perusahaan menciptakan nilai (create value) bagi pelanggan dan membangun hubungan pelanggan yang kuat untuk menangkap nilai (capture value) dari pelanggan sebagai imbalannya.
+* Proses Pemasaran (The Marketing Process): Ini adalah model 5 langkah:
+   * Understand the marketplace and customer needs and wants (Memahami pasar serta kebutuhan & keinginan pelanggan).
+   * Design a customer value-driven marketing strategy (Merancang strategi pemasaran yang berorientasi nilai).
+   * Construct an integrated marketing program (Membangun program pemasaran terintegrasi yang memberikan nilai superior).
+   * Engage customers, build profitable relationships (Melibatkan pelanggan, membangun hubungan yang menguntungkan).
+   * Capture value from customers (Menangkap nilai dari pelanggan untuk menciptakan keuntungan dan ekuitas pelanggan).
+* 5 Konsep Inti Pasar (5 Core Marketplace Concepts):
+   * Needs, Wants, and Demands:
+      * Needs (Kebutuhan): Kondisi kekurangan yang dirasakan (states of felt deprivation). Contoh: Butuh laptop untuk kuliah.
+      * Wants (Keinginan): Bentuk kebutuhan yang dipengaruhi budaya dan kepribadian. Contoh: Ingin baju merek ternama.
+      * Demands (Permintaan): Keinginan yang didukung oleh daya beli.
+   * Market Offerings: Kombinasi produk, layanan, informasi, atau pengalaman yang ditawarkan ke pasar untuk memuaskan Needs atau Wants.
+      * Marketing Myopia: Kesalahan karena terlalu fokus pada produk spesifik, bukan pada manfaat dan pengalaman yang dihasilkan produk tersebut. Contoh: Nokia yang fokus membuat HP, bukan pada apa yang pelanggan lakukan dengan HP (konektivitas, apps).
+   * Value and Satisfaction: Pelanggan membentuk ekspektasi akan nilai (value) dan kepuasan (satisfaction) yang diberikan penawaran pasar.
+   * Exchanges and Relationships: Pertukaran adalah tindakan mendapatkan objek yang diinginkan dengan menawarkan sesuatu sebagai imbalan.
+   * Markets: Kumpulan semua pembeli aktual dan potensial dari suatu produk atau jasa.
+* Modern Marketing System: Sebuah sistem di mana perusahaan dan pesaing meneliti pasar dan berinteraksi dengan konsumen untuk memahami kebutuhan mereka. Mereka kemudian menciptakan dan mengirimkan penawaran pasar serta pesan, baik secara langsung maupun melalui perantara pemasaran (marketing intermediaries), kepada konsumen akhir.
+* Orientasi Manajemen Pemasaran (Marketing Management Orientations): Ada 5 konsep yang memandu strategi pemasaran:
+   * Production Concept: Fokus pada ketersediaan dan harga yang terjangkau.
+   * Product Concept: Fokus pada kualitas, kinerja, dan fitur terbaik.
+   * Selling Concept: Fokus pada penjualan dan promosi skala besar (pandangan inside-out, dari pabrik ke pasar).
+   * Marketing Concept: Fokus pada pemahaman kebutuhan dan keinginan target pasar dan memberikan kepuasan (pandangan outside-in, dari pasar ke pabrik).
+   * Societal Marketing Concept: Mempertimbangkan wants konsumen, requirements perusahaan, serta long-run interests konsumen dan masyarakat (segitiga: Society, Consumers, Company) . Contoh: Ben & Jerry's memiliki 3 misi: Produk, Ekonomi, dan Sosial.
+* Customer Relationship Management (CRM): Proses keseluruhan membangun dan memelihara hubungan pelanggan yang menguntungkan dengan memberikan nilai dan kepuasan pelanggan yang superior.
+* Customer Relationship Groups: Matriks untuk mengelola pelanggan berdasarkan profitabilitas dan loyalitas:
+   * Strangers (Profitabilitas Rendah, Loyalitas Jangka Pendek): Jangan berinvestasi pada mereka.
+   * Butterflies (Profitabilitas Tinggi, Loyalitas Jangka PendekB): Nikmati saat mereka ada, jangan berinvestasi untuk mengubah mereka.
+   * True Friends (Profitabilitas Tinggi, Loyalitas Jangka Panjang): Investasi berkelanjutan untuk mengubah mereka menjadi "True Believers".
+   * Barnacles (Profitabilitas Rendah, Loyalitas Jangka Panjang): Sangat loyal tapi tidak menguntungkan. Contoh: Pelanggan bank yang setia tapi saldonya sangat kecil. Coba tingkatkan profitabilitasnya atau "pecat" mereka.
+________________
+
+
+Materi 02: Company and Marketing Strategy (Chapter 2) [MATERI UJIAN: STRATEGIC PLANNING, BCG MATRIX, MARKETING MIX] [⚠️]
+Materi ini menjelaskan perencanaan strategis di tingkat korporat dan fungsional (pemasaran).
+* Strategic Planning (Perencanaan Strategis): Proses mengembangkan dan memelihara kesesuaian strategis (strategic fit) antara tujuan dan kapabilitas organisasi dengan peluang pemasaran yang terus berubah.
+* Langkah-langkah dalam Strategic Planning (Corporate Level):
+   * Defining the company mission (Menetapkan misi perusahaan).
+   * Setting company objectives and goals (Menetapkan tujuan dan sasaran).
+   * Designing the business portfolio (Merancang portofolio bisnis).
+   * Planning marketing and other functional strategies (Merencanakan pemasaran, ini terjadi di level unit bisnis).
+* Mission Statement: Pernyataan tentang tujuan organisasi; apa yang ingin dicapainya di lingkungan yang lebih luas. Misi harus market-oriented (berorientasi pasar), bukan product-oriented.
+   * Contoh: Misi Starbucks bukan "Kami menjual kopi dan makanan ringan" (product-oriented), tetapi "Kami menjual 'The Starbucks Experience,'..." .
+* Designing the Business Portfolio: Portofolio bisnis adalah kumpulan bisnis dan produk yang membentuk perusahaan. Manajemen harus menganalisis portofolio saat ini.
+* BCG Growth-Share Matrix: Alat analisis portofolio yang paling terkenal. Ini memetakan SBU (Strategic Business Unit) perusahaan berdasarkan dua dimensi: Market Growth Rate (Tingkat Pertumbuhan Pasar) dan Relative Market Share (Pangsa Pasar Relatif) .
+   * Stars (Bintang) (High Growth, High Share): Menjanjikan di masa depan. Perlu investasi besar untuk mendanai pertumbuhan pesat mereka. Contoh: iPhone bagi Apple.
+   * Cash Cows (Sapi Perah) (Low Growth, High Share): Menghasilkan banyak uang tunai (laba) yang stabil. Investasi rendah. Contoh: Indomie bagi Indofood.
+   * Question Marks (Tanda Tanya) (High Growth, Low Share): Produk baru yang belum pasti. Perlu keputusan: investasi besar agar jadi Star, atau dihentikan. Contoh: Mobil listrik Tesla di tahun-tahun awal.
+   * Dogs (Anjing) (Low Growth, Low Share): Tidak menguntungkan. Pertimbangkan untuk dihentikan (divestasi). Contoh: HP Nokia 3310 di masa kini.
+* Product/Market Expansion Grid (Ansoff Matrix): Alat untuk mengidentifikasi peluang pertumbuhan perusahaan.
+   * Market Penetration (Existing Product, Existing Market): Meningkatkan penjualan produk saat ini ke segmen pasar saat ini.
+   * Market Development (Existing Product, New Market): Mengembangkan pasar baru untuk produk saat ini. Contoh: Starbucks berekspansi pesat di Cina (pasar baru).
+   * Product Development (New Product, Existing Market): Menawarkan produk baru atau modifikasi ke pasar saat ini.
+   * Diversification (New Product, New Market): Memulai atau membeli bisnis di luar produk/pasar saat ini.
+* Marketing Strategy & Marketing Mix:
+   * Marketing Strategy: Logika pemasaran di mana perusahaan berharap untuk menciptakan nilai pelanggan dan mencapai hubungan yang menguntungkan. Ini melibatkan Segmentation, Targeting, Positioning (STP) (lihat Ch. 7).
+   * Marketing Mix: Kumpulan alat pemasaran taktis yang dapat dikendalikan yang dipadukan perusahaan untuk menghasilkan respons yang diinginkannya di pasar sasaran.
+   * The 4Ps: Product (Produk), Price (Harga), Place (Tempat/Distribusi), Promotion (Promosi).
+________________
+
+
+Materi 03: Analyzing the Marketing Environment (Chapter 3) [MATERI UJIAN: MICRO & MACRO ENVIRONMENT] [⚠️]
+Materi ini membedah kekuatan internal dan eksternal yang memengaruhi kemampuan perusahaan melayani pelanggan.
+* Marketing Environment: Para pelaku dan kekuatan di luar pemasaran yang memengaruhi kemampuan manajemen pemasaran untuk membangun dan memelihara hubungan dengan pelanggan sasaran.
+* Microenvironment (Lingkungan Mikro): Para pelaku yang dekat dengan perusahaan dan memengaruhi kemampuannya melayani pelanggan. Terdiri dari:
+   * The Company (Perusahaan): Departemen internal (Top management, Finance, R&D, HR) harus bekerja harmonis.
+   * Suppliers (Pemasok): Menyediakan sumber daya untuk memproduksi barang/jasa. Diperlakukan sebagai mitra . Contoh: IKEA melibatkan pemasoknya secara mendalam dalam proses pengiriman nilai .
+   * Marketing Intermediaries (Perantara Pemasaran): Firma yang membantu mempromosikan, menjual, dan mendistribusikan barang. (Reseller, firma distribusi fisik, agensi jasa) .
+   * Competitors (Pesaing): Perusahaan harus memposisikan penawarannya lebih kuat daripada pesaing.
+   * Publics (Publik): Kelompok yang memiliki kepentingan aktual atau potensial pada organisasi (Finansial, Media, Pemerintah, Warga, Lokal, Internal, dll.) .
+   * Customers (Pelanggan): Pelaku paling penting. Termasuk pasar Konsumen, Bisnis, Reseller, Pemerintah, dan Internasional .
+* Macroenvironment (Lingkungan Makro): Kekuatan sosial yang lebih besar yang memengaruhi lingkungan mikro. Terdiri dari:
+   * Demographic: Studi populasi manusia (ukuran, kepadatan, usia, gender, ras, dll.). Contoh: Pemasaran Generasional (Baby Boomers, Gen X, Millennials, Gen Z) .
+   * Economic: Faktor yang memengaruhi daya beli konsumen. Contoh: Konsumen menjadi lebih hemat, sehingga Target menekankan proposisi nilai "expect more, pay less" .
+   * Natural: Lingkungan fisik dan sumber daya alam yang dibutuhkan sebagai input atau dipengaruhi oleh aktivitas pemasaran. Tren: kekurangan bahan baku, polusi, intervensi pemerintah, environmental sustainability .
+   * Technological: Kekuatan paling dramatis yang mengubah pasar; menciptakan produk dan peluang baru . Contoh: MagicBand dari Disney.
+   * Political: Hukum, badan pemerintah, dan kelompok penekan yang memengaruhi atau membatasi organisasi.
+   * Cultural: Institusi dan kekuatan lain yang memengaruhi nilai, persepsi, dan perilaku dasar masyarakat. Contoh: Aerie's #AerieREAL (body positivity) menjadi bagian integral dari identitas mereknya .
+* Responding to the Environment: Perusahaan bisa mengambil pandangan:
+   * Uncontrollable/Reactive: Reaktif, hanya beradaptasi dengan kekuatan lingkungan .
+   * Proactive: Mengambil tindakan agresif untuk memengaruhi kekuatan di lingkungan .
+________________
+
+
+Materi 04: Managing Marketing Information (Chapter 4) [MATERI UJIAN: MARKETING INFORMATION & RESEARCH] [⚠️]
+Materi ini berfokus pada cara perusahaan mendapatkan dan mengelola wawasan pelanggan.
+* Customer Insights: Pemahaman segar berbasis informasi pemasaran tentang pelanggan dan pasar, yang menjadi dasar untuk menciptakan nilai dan hubungan.
+* Marketing Information System (MIS): Terdiri dari orang dan prosedur yang didedikasikan untuk menilai kebutuhan informasi, mengembangkan informasi yang dibutuhkan, dan membantu pengambil keputusan menggunakan informasi tersebut untuk menghasilkan wawasan.
+* Mengembangkan Informasi Pemasaran: Marketer mendapatkan informasi dari tiga sumber :
+   * Internal Databases: Kumpulan informasi konsumen dan pasar yang diperoleh dari sumber data di dalam jaringan perusahaan. Contoh: Stitch Fix menggunakan database internal untuk membangun loyalitas pelanggan.
+   * Competitive Marketing Intelligence: Pengumpulan dan analisis sistematis informasi yang tersedia untuk umum tentang konsumen, pesaing, dan perkembangan di pasar. Contoh: "Conversation Suite" dari Mastercard yang memonitor jutaan percakapan brand.
+   * Marketing Research (Riset Pemasaran): Desain, pengumpulan, analisis, dan pelaporan data secara sistematis yang relevan dengan situasi pemasaran spesifik yang dihadapi organisasi.
+* Proses Riset Pemasaran (Marketing Research Process): Ini adalah proses 4 langkah yang penting:
+   * Defining the problem and research objectives: (Menetapkan masalah dan tujuan riset). Ini adalah langkah paling sulit namun paling penting. Tujuan bisa berupa: Exploratory (eksplorasi), Descriptive (deskriptif), atau Causal (kausal) .
+   * Developing the research plan: (Mengembangkan rencana riset). Menguraikan sumber data, pendekatan, metode kontak, dan instrumen.
+   * Implementing the research plan: (Mengimplementasikan rencana) Mengumpulkan dan menganalisis data.
+   * Interpreting and reporting the findings: (Menginterpretasi dan melaporkan temuan).
+* Data Primer vs. Sekunder:
+   * Secondary Data: Informasi yang sudah ada di suatu tempat, dikumpulkan untuk tujuan lain. Keuntungan: Biaya rendah, cepat diperoleh. Kerugian: Mungkin tidak relevan, akurat, atau terkini .
+   * Primary Data: Informasi yang dikumpulkan untuk tujuan spesifik yang sedang dihadapi.
+* Pendekatan Riset (Primary Data):
+   * Observational Research: Mengumpulkan data primer dengan mengamati orang, tindakan, dan situasi yang relevan.
+   * Ethnographic Research: Mengirim pengamat terlatih untuk menonton dan berinteraksi dengan konsumen di "lingkungan alami" mereka. Contoh: Program "follow me home" dari Intuit.
+   * Survey Research: Mengumpulkan data dengan bertanya langsung kepada orang-orang.
+   * Experimental Research: Menguji sebab-akibat dengan memberikan perlakuan berbeda pada kelompok subjek yang dicocokkan. Contoh: A/B testing untuk mesin pencari Bing.
+* Customer Relationship Management (CRM): Mengelola informasi rinci tentang pelanggan individu dan mengelola "titik sentuh" (touch points) pelanggan dengan hati-hati untuk memaksimalkan loyalitas.
+________________
+
+
+Materi 05: Consumer Markets and Buyer Behavior (Chapter 5) [MATERI UJIAN: CONSUMER BEHAVIOR] [⚠️]
+Materi ini menganalisis pasar konsumen dan faktor-faktor yang memengaruhi keputusan pembelian.
+* Definisi:
+   1. Consumer Buyer Behavior: Perilaku pembelian konsumen akhir—individu dan rumah tangga yang membeli barang dan jasa untuk konsumsi pribadi.
+   2. Consumer Market: Semua individu dan rumah tangga yang membeli atau memperoleh barang/jasa untuk konsumsi pribadi.
+* Model Perilaku Pembeli (Buyer Behavior):
+   1. Pemasar mencari tahu respons terhadap rangsangan pemasaran (4P) dan rangsangan "Lainnya" (Ekonomi, Teknologi, Sosial, Kultural).
+   2. Rangsangan ini masuk ke Buyer's Black Box (kotak hitam pembeli), yang berisi Buyer's characteristics (karakteristik pembeli) dan Buyer's decision process (proses keputusan pembeli).
+   3. Ini menghasilkan Buyer Responses (respons pembeli): sikap pembelian, perilaku pembelian (apa, kapan, di mana, berapa banyak), dan keterlibatan merek.
+* Faktor yang Mempengaruhi Perilaku Konsumen (The "Black Box"):
+   1. Cultural (Kultural):
+      * Culture (Budaya): Kumpulan nilai, persepsi, keinginan, dan perilaku dasar yang dipelajari.
+      * Subculture (Sub-budaya): Kelompok orang dengan sistem nilai bersama berdasarkan pengalaman hidup yang sama. Contoh: Menargetkan konsumen Hispanik, Afrika-Amerika, atau Asia-Amerika.
+      * Social Class (Kelas Sosial): Divisi masyarakat yang relatif permanen berdasarkan kombinasi pekerjaan, pendapatan, pendidikan, kekayaan, dll.
+   2. Social (Sosial):
+      * Groups and Social Networks: Termasuk reference groups (kelompok referensi) dan opinion leaders (pemimpin opini). Melahirkan word-of-mouth influence dan influencer marketing . Contoh: Kampanye "I Am What I Make Up" dari CoverGirl menggunakan brand ambassador berpengaruh.
+      * Family (Keluarga): Organisasi pembelian konsumen yang paling penting dalam masyarakat.
+      * Roles and Status (Peran dan Status).
+   3. Personal (Pribadi):
+      * Occupation (Pekerjaan): Mempengaruhi barang/jasa yang dibeli. Contoh: CAT membuat ponsel yang tangguh untuk industri konstruksi.
+      * Age and Life Stage (Usia dan Tahap Hidup).
+      * Economic Situation (Situasi Ekonomi).
+      * Lifestyle (Gaya Hidup): Pola hidup seseorang yang diekspresikan dalam psikografis.
+      * Personality (Kepribadian): Karakteristik psikologis unik. Contoh: MINI memasarkan ke segmen kepribadian yang "petualang, individualistis... apa saja selain normal".
+   4. Psychological (Psikologis):
+      * Motivation (Motivasi): Kebutuhan yang cukup mendesak untuk mengarahkan seseorang mencari kepuasan. (Lihat: Hirarki Kebutuhan Maslow).
+      * Perception (Persepsi): Proses di mana orang memilih, mengatur, dan menginterpretasi informasi. Termasuk: Selective attention (perhatian selektif), Selective distortion (distorsi selektif), dan Selective retention (retensi selektif) .
+      * Learning (Pembelajaran): Perubahan perilaku yang timbul dari pengalaman.
+      * Beliefs (Keyakinan) dan Attitudes (Sikap).
+* Maslow’s Hierarchy of Needs: Teori motivasi yang menyatakan kebutuhan manusia diatur dalam hierarki : (1) Physiological (fisiologis: lapar, haus), (2) Safety (keamanan), (3) Social (sosial: rasa memiliki, cinta), (4) Esteem (penghargaan: status), (5) Self-actualization (aktualisasi diri) .
+* Tipe Perilaku Keputusan Pembelian: Didasarkan pada Involvement (Keterlibatan) dan Differences between brands (Perbedaan antar merek):
+   1. Complex Buying Behavior (Keterlibatan Tinggi, Perbedaan Signifikan): Contoh: Membeli mobil baru.
+   2. Dissonance-Reducing Buying Behavior (Keterlibatan Tinggi, Sedikit Perbedaan).
+   3. Habitual Buying Behavior (Keterlibatan Rendah, Sedikit Perbedaan): Contoh: Membeli garam.
+   4. Variety-Seeking Buying Behavior (Keterlibatan Rendah, Perbedaan Signifikan).
+* Proses Keputusan Pembeli (Buyer Decision Process): Terdiri dari 5 tahap:
+   1. Need recognition (Pengenalan kebutuhan): Dipicu oleh stimuli internal atau eksternal.
+   2. Information search (Pencarian informasi): Dari sumber personal, komersial, publik, atau eksperiensial.
+   3. Evaluation of alternatives (Evaluasi alternatif).
+   4. Purchase decision (Keputusan pembelian): Niat membeli bisa berubah karena sikap orang lain atau faktor situasional tak terduga.
+   5. Postpurchase behavior (Perilaku pasca-pembelian): Kepuasan atau ketidakpuasan.
+* Cognitive Dissonance: Ketidaknyamanan pembeli yang disebabkan oleh konflik pasca-pembelian.
+________________
+
+
+Materi 06: Business Markets and Business Buyer Behavior (Chapter 6) [MATERI UJIAN: BUSINESS BEHAVIOR] [⚠️]
+Materi ini berfokus pada pasar B2B (Business-to-Business) dan perilaku pembelinya.
+* Definisi:
+   1. Business Buyer Behavior: Perilaku pembelian organisasi yang membeli barang/jasa untuk digunakan dalam produksi produk/jasa lain yang dijual atau disewakan.
+* Perbedaan Pasar Bisnis vs. Pasar Konsumen:
+   1. Market Structure and Demand (Struktur Pasar dan Permintaan):
+      1. Fewer but larger buyers (Lebih sedikit tapi pembeli lebih besar).
+      2. Derived demand (Permintaan turunan): Permintaan B2B berasal dari permintaan konsumen akhir.
+      3. Inelastic demand (Permintaan tidak elastis): Perubahan harga tidak terlalu memengaruhi permintaan total.
+      4. Fluctuating demand (Permintaan berfluktuasi): Permintaan lebih berfluktuasi dan lebih cepat.
+   2. Nature of the Buying Unit (Sifat Unit Pembeli):
+      1. Melibatkan more decision participants (lebih banyak peserta keputusan).
+      2. Melibatkan more professional purchasing effort (upaya pembelian yang lebih profesional).
+* Tipe Situasi Pembelian Bisnis (Types of Buying Situations):
+   1. Straight Rebuy: Pembeli memesan ulang sesuatu secara rutin tanpa modifikasi.
+   2. Modified Rebuy: Pembeli ingin memodifikasi spesifikasi produk, harga, syarat, atau pemasok.
+   3. New Task: Pembeli membeli produk atau jasa untuk pertama kalinya.
+* Buying Center (Pusat Pembelian):
+   1. Ini adalah unit pengambilan keputusan dari organisasi pembeli. Terdiri dari semua individu dan unit yang memainkan peran dalam proses keputusan pembelian bisnis.
+   2. 5 Peran dalam Buying Center:
+      1. Users (Pengguna): Anggota yang akan menggunakan produk/jasa.
+      2. Influencers (Pemberi Pengaruh): Sering membantu mendefinisikan spesifikasi dan memberikan info.
+      3. Buyers (Pembeli): Memiliki wewenang formal untuk memilih pemasok.
+      4. Deciders (Pengambil Keputusan): Memiliki kekuatan formal/informal untuk memilih pemasok akhir.
+      5. Gatekeepers (Penjaga Gerbang): Mengontrol aliran informasi ke orang lain.
+* Proses Keputusan Pembelian Bisnis: Terdiri dari 8 tahap (lebih kompleks daripada proses konsumen):
+   1. Problem recognition (Pengenalan masalah).
+   2. General need description (Deskripsi kebutuhan umum).
+   3. Product specification (Spesifikasi produk): Sering menggunakan value analysis untuk mengurangi biaya.
+   4. Supplier search (Pencarian pemasok).
+   5. Proposal solicitation (Pengumpulan proposal).
+   6. Supplier selection (Pemilihan pemasok).
+   7. Order-routine specification (Spesifikasi pesanan rutin).
+   8. Performance review (Tinjauan kinerja).
+________________
+
+
+Materi 07: Customer Value-Driven Marketing Strategy (Chapter 7) [MATERI UJIAN: SEGMENTATION, TARGETING, POSITIONING] [⚠️]
+Materi ini adalah inti dari strategi pemasaran modern: Segmenting, Targeting, Differentiation, and Positioning (STP).
+* Customer-Driven Marketing Strategy (STP): Perusahaan tidak bisa melayani semua pelanggan; mereka harus memilih siapa yang akan mereka layani. Proses ini memiliki empat langkah:
+   * Segmentasi (Segmentation): Membagi pasar total menjadi segmen-segmen yang lebih kecil.
+   * Targeting (Penargetan): Memilih satu atau lebih segmen untuk dimasuki.
+   * Differentiation (Diferensiasi): Mendiferensiasikan penawaran pasar untuk menciptakan nilai pelanggan yang superior.
+   * Positioning (Pemosisian): Memosisikan penawaran pasar di benak pelanggan sasaran.
+* Market Segmentation:
+   * Basis Segmentasi Konsumen:
+      1. Geographic: Membagi pasar berdasarkan unit geografis (negara, kota, lingkungan).
+      2. Demographic: Berdasarkan variabel seperti usia, tahap siklus hidup, jenis kelamin, pendapatan, pekerjaan.
+      3. Psychographic: Berdasarkan kelas sosial, gaya hidup, atau karakteristik kepribadian. Contoh: Panera melayani segmen gaya hidup sehat.
+      4. Behavioral: Berdasarkan pengetahuan, sikap, penggunaan, atau respons konsumen. Contoh: Segmentasi Benefit Sought (manfaat yang dicari). Schwinn membuat e-bike untuk segmen manfaat "membuat perjalanan lebih mudah".
+   * Multiple Segmentation: Menggunakan beberapa basis segmentasi untuk mengidentifikasi kelompok sasaran yang lebih kecil dan lebih terdefinisi. Contoh: Sistem Experian Mosaic USA yang mengklasifikasikan rumah tangga AS ke dalam 71 segmen gaya hidup.
+* Market Targeting:
+   * Strategi Penargetan (Targeting Strategies):
+      1. Undifferentiated (Mass) Marketing: Menargetkan seluruh pasar dengan satu tawaran. Berfokus pada kebutuhan yang sama.
+      2. Differentiated (Segmented) Marketing: Menargetkan beberapa segmen pasar dan merancang penawaran terpisah untuk masing-masing. Contoh: Marriott International memiliki lebih dari 30 merek hotel (Luxury, Premium, Select) untuk melayani segmen yang berbeda.
+      3. Concentrated (Niche) Marketing: Menargetkan pangsa besar dari satu atau beberapa pasar yang lebih kecil (niche).
+      4. Micromarketing: Menyesuaikan produk/pemasaran untuk individu atau lokasi tertentu. Termasuk Local Marketing dan Individual Marketing. Contoh: Tim desain "Bespoke" Rolls-Royce bekerja dengan pelanggan individu.
+* Differentiation and Positioning:
+   * Product Position: Cara produk didefinisikan oleh konsumen berdasarkan atribut-atribut penting; tempat produk berada di benak konsumen relatif terhadap pesaing.
+   * Positioning Maps: Menunjukkan persepsi konsumen tentang merek mereka versus produk pesaing pada dimensi pembelian penting. Contoh: Peta SUV Mewah yang memetakan merek (Cadillac, Lexus, Land Rover) berdasarkan sumbu Price (Harga) dan Orientation (Performa/Kemewahan).
+   * Value Proposition: Campuran penuh manfaat (full mix of benefits) di mana merek diposisikan. Ada lima proposisi nilai yang "menang": More for more, More for the same, More for less, The same for less, dan Less for much less.
+   * Positioning Statement: Pernyataan yang merangkum posisi merek/perusahaan. Formatnya: "To (target segment and need) our (brand) is (concept) that (point of difference)".
+________________
+
+
+Materi 08: Products, Services, and Brands (Chapter 8) [MATERI UJIAN: PRODUCTS, SERVICES, BRANDS] [⚠️]
+Materi ini membedah konsep produk, layanan, dan strategi branding.
+* Definisi:
+   * Product: Segala sesuatu yang dapat ditawarkan ke pasar untuk perhatian, akuisisi, penggunaan, atau konsumsi yang mungkin memuaskan kebutuhan atau keinginan.
+   * Services: Bentuk produk yang terdiri dari aktivitas, manfaat, atau kepuasan yang pada dasarnya intangible (tidak berwujud) dan tidak mengakibatkan kepemilikan.
+* Three Levels of Product (Tiga Level Produk): Ini adalah model inti.
+   * Core Customer Value: Level paling dasar. Menjawab pertanyaan: "Apa yang sebenarnya dibeli oleh pelanggan?" Contoh: Orang yang membeli Harley-Davidson tidak hanya membeli sepeda motor; mereka membeli kebebasan, independensi, dan otentisitas.
+   * Actual Product: Bagian yang terlihat. Mengubah nilai inti menjadi produk aktual. Meliputi: Brand name, Features, Design, Quality level, Packaging.
+   * Augmented Product: Produk aktual ditambah layanan tambahan. Meliputi: After-sale service, Warranty, Product support, Delivery and credit.
+* Klasifikasi Produk Konsumen (Consumer Products):
+   * Convenience Products: Sering dibeli, usaha minimal. Contoh: Pasta gigi, majalah, fast food .
+   * Shopping Products: Jarang dibeli, pelanggan membandingkan dengan cermat (kualitas, harga, gaya). Contoh: Furnitur, mobil, pakaian .
+   * Specialty Products: Karakteristik unik atau identifikasi merek di mana pembeli bersedia melakukan upaya khusus. Contoh: Jam tangan Rolex, pakaian desainer .
+   * Unsought Products: Produk yang tidak diketahui konsumen atau diketahui tetapi biasanya tidak terpikir untuk dibeli. Contoh: Asuransi jiwa, donor darah .
+* Keputusan Produk Individual: Meliputi: Product attributes (kualitas, fitur, desain), Branding, Packaging, Labeling, dan Product support services.
+   * Contoh Packaging/Labeling: Mengidentifikasi produk/merek, mendeskripsikan atribut.
+* Keputusan Lini Produk (Product Line):
+   * Product Line: Sekelompok produk yang terkait erat.
+   * Product Line Length: Jumlah item dalam lini produk. Dapat diperpanjang melalui Line Stretching (menambah produk di luar rentang saat ini) atau Line Filling (menambah item di dalam rentang) . Contoh: BMW meregangkan dan mengisi lininya untuk menarik "orang kaya, super kaya, dan yang berharap kaya".
+* Keputusan Bauran Produk (Product Mix): Terdiri dari semua lini produk dan item yang ditawarkan penjual. Memiliki 4 dimensi: Width (lebar), Length (panjang), Depth (kedalaman), Consistency (konsistensi).
+* Services Marketing (Pemasaran Jasa):
+   * Empat Karakteristik Jasa (4 Service Characteristics):
+      1. Intangibility: Jasa tidak dapat dilihat, dirasakan, atau dicium sebelum dibeli.
+      2. Inseparability: Jasa tidak dapat dipisahkan dari penyedianya.
+      3. Variability: Kualitas jasa bergantung pada siapa, kapan, di mana, dan bagaimana jasa itu diberikan.
+      4. Perishability: Jasa tidak dapat disimpan untuk dijual atau digunakan nanti.
+   * Tiga Jenis Pemasaran Jasa:
+      1. Internal Marketing: Perusahaan -> Karyawan.
+      2. External Marketing: Perusahaan -> Pelanggan.
+      3. Interactive Marketing: Karyawan -> Pelanggan (interaksi pembeli-penjual).
+* Brand Strategy (Strategi Merek):
+   * Brand Equity: Efek diferensial yang dimiliki oleh pengetahuan nama merek terhadap respons pelanggan.
+   * Brand Development Strategies (Matriks 2x2):
+      1. Line Extension (Existing Brand, Existing Category): Contoh: Rasa baru Indomie Goreng.
+      2. Brand Extension (Existing Brand, New Category): Contoh: Toyota Camry Hybrid (merek Toyota masuk ke kategori Hybrid).
+      3. Multibrands (New Brand, Existing Category): Contoh: Unilever menjual Pepsodent dan Close-Up.
+      4. New Brands (New Brand, New Category): Contoh: Toyota menciptakan merek Lexus untuk masuk ke pasar mobil mewah.
+________________
+
+
+Materi 10: Pricing: Understanding and Capturing Customer Value (Chapter 10) [MATERI UJIAN: PRICING] [⚠️]
+Materi ini membahas strategi dan pertimbangan dalam penetapan harga.
+* Definisi Harga (Price): Jumlah uang yang dibebankan untuk suatu produk/jasa, ATAU jumlah dari semua nilai (sum of all the values) yang ditukar pelanggan untuk mendapatkan manfaat dari produk/jasa.
+* Tiga Strategi Penetapan Harga Utama (Major Pricing Strategies):
+   * Customer Value-Based Pricing (Penetapan Harga Berbasis Nilai Pelanggan):
+      * Menggunakan persepsi pembeli tentang nilai, bukan biaya penjual. Ini adalah pendekatan customer-driven (dimulai dengan menilai kebutuhan pelanggan).
+      * Price Ceiling (Langit-langit Harga): Ditetapkan oleh persepsi nilai konsumen. Tidak ada permintaan di atas harga ini.
+      * Jenis:
+         * Good-Value Pricing: Menawarkan kombinasi yang pas antara kualitas dan layanan baik dengan harga wajar. Termasuk EDLP (Everyday Low Pricing) (harga rendah konstan).
+         * Value-Added Pricing: Melampirkan fitur dan layanan bernilai tambah untuk membedakan penawaran dan mendukung harga yang lebih tinggi.
+   * Cost-Based Pricing (Penetapan Harga Berbasis Biaya):
+      * Menetapkan harga berdasarkan biaya produksi, distribusi, dan penjualan, ditambah tingkat pengembalian yang wajar. Ini adalah pendekatan product-driven (dimulai dengan mendesain produk).
+      * Price Floor (Lantai Harga): Ditetapkan oleh biaya produk. Tidak ada keuntungan di bawah harga ini.
+      * Jenis:
+         * Cost-Plus Pricing (Markup Pricing): Menambahkan markup standar ke biaya produk.
+         * Break-Even Pricing (Target Return Pricing): Menetapkan harga untuk mencapai titik impas (break-even) atau mencapai target laba.
+   * Competition-Based Pricing (Penetapan Harga Berbasis Persaingan):
+      * Menetapkan harga berdasarkan strategi, biaya, harga, dan penawaran pesaing.
+      * Contoh: Caterpillar mendominasi industrinya meskipun mengenakan harga premium, karena pelanggan percaya mereka memberikan nilai jangka panjang yang lebih besar daripada pesaing . Studi kasus Gojek & Grab juga membahas ini.
+* Faktor Lain yang Mempengaruhi Harga:
+   * The Market and Demand (Pasar dan Permintaan):
+      * Pricing in Different Markets: Pure competition, Monopolistic competition, Oligopolistic competition, Pure monopoly .
+      * Price Elasticity of Demand (Elastisitas Harga): Ukuran sensitivitas permintaan terhadap perubahan harga.
+         * Inelastic Demand: Permintaan hampir tidak berubah ketika harga sedikit berubah.
+         * Elastic Demand: Permintaan berubah sangat besar ketika harga sedikit berubah.

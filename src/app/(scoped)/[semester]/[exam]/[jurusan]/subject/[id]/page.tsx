@@ -20,6 +20,7 @@ import { PersonalNotesTab } from "@/components/subject/personal-notes-tab";
 import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
 import { KilatLaunch } from "@/components/kilat/kilat-launch";
+import { ExamLaunch } from "@/components/exam/exam-launch";
 import { ChevronRight, Lightbulb, X } from "lucide-react";
 
 // YYYY-MM-DD in WIB (UTC+7). Gates the once-per-day tip dismissal.
@@ -77,8 +78,11 @@ export default function SubjectPage() {
     rangkumanLoaded,
     kilat,
     kilatLoaded,
+    examData,
+    examDataLoaded,
   } = useScopedData();
   const hasKilat = kilatLoaded && !!kilat[subjectId];
+  const hasExam = examDataLoaded && !!examData[subjectId];
   const subject = useMemo(() => subjects.find((s) => s.id === subjectId), [subjects, subjectId]);
   const content = scopedContent[subjectId] ?? null;
   const loaded = scopedLoaded;
@@ -168,8 +172,10 @@ export default function SubjectPage() {
     if (content.materi.every((m) => m.tab !== "soal")) h.add(8);
     // Belajar Kilat (9) only shows once we've confirmed a feed exists.
     if (!hasKilat) h.add(9);
+    // Latihan Soal (10) only shows for subjects with exam data.
+    if (!hasExam) h.add(10);
     return h;
-  }, [content, rangkuman, rangkumanLoaded, subjectId, hasKilat]);
+  }, [content, rangkuman, rangkumanLoaded, subjectId, hasKilat, hasExam]);
 
   // If the active tab is hidden (e.g. a deep-link to an empty tab), fall back
   // to Materi. Don't bounce off the Belajar Kilat tab (9) while the feed is
@@ -177,8 +183,9 @@ export default function SubjectPage() {
   // a feed exists before deciding.
   useEffect(() => {
     if (activeTab === 9 && !kilatLoaded) return;
+    if (activeTab === 10 && !examDataLoaded) return;
     if (hiddenTabs.has(activeTab)) setActiveTab(0);
-  }, [hiddenTabs, activeTab, kilatLoaded]);
+  }, [hiddenTabs, activeTab, kilatLoaded, examDataLoaded]);
 
   if (!loaded) {
     return (
@@ -332,6 +339,38 @@ export default function SubjectPage() {
           {visited.has(9) && (
             <PreviewLock title="Belajar Kilat">
               <KilatLaunch subjectId={subjectId} />
+            </PreviewLock>
+          )}
+        </div>
+
+        <div className="tab-panel" hidden={activeTab !== 10}>
+          {visited.has(10) && hasExam && (
+            <PreviewLock title="Latihan Soal">
+              <ExamLaunch
+                exam={examData[subjectId]}
+                subjectId={subjectId}
+                onStartExam={() =>
+                  router.push(`/${scopePath}/subject/${subjectId}/latihan`)
+                }
+                onViewAttempt={(attemptId) =>
+                  router.push(
+                    `/${scopePath}/subject/${subjectId}/latihan/riwayat?attemptId=${attemptId}`
+                  )
+                }
+                onDeleteAttempt={async (attemptId) => {
+                  try {
+                    await fetch("/api/exam/history", {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ attemptId }),
+                    });
+                    // Force page reload to refresh history
+                    router.refresh();
+                  } catch (err) {
+                    console.error("Delete failed:", err);
+                  }
+                }}
+              />
             </PreviewLock>
           )}
         </div>
