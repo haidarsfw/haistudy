@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, createElement } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNowStrict } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
@@ -26,6 +26,7 @@ interface NotificationItemProps {
   // When false the row doesn't handle its own click - the parent (popup)
   // routes taps via its own click/drag wrapper so swipe-to-dismiss still works.
   clickable?: boolean;
+  onActivate?: () => void;
 }
 
 /**
@@ -49,13 +50,14 @@ export function NotificationItem({
   onDismiss,
   variant = "center",
   clickable = true,
+  onActivate,
 }: NotificationItemProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const scopeCtx = useOptionalScope();
 
-  const Icon = notificationIcon(notification);
-  const CtxIcon = contextIcon(notification);
+  const icon = notificationIcon(notification);
+  const ctxIcon = contextIcon(notification);
   const label = notificationLabel(notification, t);
   // Relative time, e.g. "37 mnt yang lalu" / "37 mins ago".
   const time = formatDistanceToNowStrict(new Date(notification.createdAt), {
@@ -81,7 +83,8 @@ export function NotificationItem({
       onAnnouncementClick,
       onDismiss,
     });
-  }, [notification, onAnnouncementClick, onRead, onDismiss, navigateForum]);
+    onActivate?.();
+  }, [notification, onAnnouncementClick, onRead, onDismiss, navigateForum, onActivate]);
 
   return (
     <div
@@ -122,11 +125,11 @@ export function NotificationItem({
               : "bg-primary/10 text-primary"
           }`}
         >
-          <Icon className="h-3.5 w-3.5" />
+          {createElement(icon, { className: "h-3.5 w-3.5" })}
         </div>
-        {CtxIcon && (
+        {ctxIcon && (
           <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border">
-            <CtxIcon className="h-2 w-2" />
+            {createElement(ctxIcon, { className: "h-2 w-2" })}
           </span>
         )}
       </div>

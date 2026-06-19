@@ -47,17 +47,18 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
   // Combined red-dot count: server notifications + unread patch notes.
   const totalUnread = unreadCount + patchUnread;
 
-  // When user clicks an announcement notification, show the dialog BUT keep the popover open
+  // When user clicks an announcement notification, show the dialog and close the popover
   const handleAnnouncementClick = useCallback((n: Notification) => {
     setSelectedAnnouncement(n);
-    // Don't close popover - we want user to see other notifications after dismissing dialog
+    setPopoverOpen(false);
   }, []);
 
-  // Patch notes are dismiss-only (never deletable): opening one marks it read.
+  // Patch notes are dismiss-only (never deletable): opening one marks it read and closes the popover.
   const handlePatchClick = useCallback(
     (note: PatchNote) => {
       setSelectedPatch(note);
       patchMarkRead(note.version);
+      setPopoverOpen(false);
     },
     [patchMarkRead]
   );
@@ -72,12 +73,9 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
     if (!open) setSelectedAnnouncement(null);
   }, []);
 
-  // Prevent popover from closing when a dialog is open
   const handlePopoverOpenChange = useCallback((open: boolean) => {
-    // Only allow closing if no dialog is open
-    if (!open && (selectedAnnouncement || selectedPatch)) return;
     setPopoverOpen(open);
-  }, [selectedAnnouncement, selectedPatch]);
+  }, []);
 
   const badge =
     totalUnread > 0 ? (
@@ -212,6 +210,7 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                       onDismiss={dismissNotification}
                       onAnnouncementClick={handleAnnouncementClick}
                       variant="center"
+                      onActivate={() => setPopoverOpen(false)}
                     />
                   </motion.div>
                 ))}
