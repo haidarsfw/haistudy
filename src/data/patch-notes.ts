@@ -26,7 +26,7 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
-    version: "2.2.0",
+    version: "2.1.0",
     date: "2026-06-20",
     title: "Latihan Soal Ujian (Practice Exam)",
     items: [
