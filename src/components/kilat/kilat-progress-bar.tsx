@@ -105,19 +105,20 @@ export function KilatProgressBar({
         {points}
       </motion.div>
 
-      {/* Tanya AI - anchored here instead of floating over the card */}
+      {/* Tanya AI - labeled pill like Daftar isi / Ulang so it's obvious */}
       <button
         type="button"
         onClick={onToggleAi}
         aria-label="Tanya haistudy AI soal kartu ini"
         className={cn(
-          "hs-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+          "hs-press flex h-7 shrink-0 items-center gap-1 rounded-full border px-2",
           aiActive
-            ? "bg-primary/15 text-primary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            ? "border-primary/30 bg-primary/10 text-primary"
+            : "border-border bg-card text-muted-foreground hover:text-foreground"
         )}
       >
-        <Bot className="h-4 w-4" />
+        <Bot className="h-3.5 w-3.5" />
+        <span className="hidden text-[11px] font-semibold sm:inline">Tanya AI</span>
       </button>
 
       <button

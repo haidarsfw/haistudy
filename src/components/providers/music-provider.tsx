@@ -529,8 +529,14 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       {armed && (
         <iframe
           ref={iframeRef}
-          style={{ position: 'fixed', bottom: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', overflow: 'hidden', border: 0 }}
-          allow="autoplay"
+          // Hidden but with a REAL layout box: a 1x1 frame made SoundCloud's
+          // waveform canvas render at 0x0 (createPattern errors) and got the
+          // frame deprioritized (slow / no load). encrypted-media is required
+          // or the widget aborts DRM-streamed tracks and auto-skips after a few
+          // seconds (the 10-30s skip bug). Delegation is paired with the
+          // Permissions-Policy header in next.config.ts.
+          style={{ position: 'fixed', bottom: 0, left: 0, width: '320px', height: '120px', opacity: 0, pointerEvents: 'none', overflow: 'hidden', border: 0, zIndex: -1 }}
+          allow="autoplay; encrypted-media"
           src={armedSrc}
         />
       )}

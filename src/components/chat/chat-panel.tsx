@@ -107,6 +107,25 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
     }
   }, [isOpen, unreadCount, markAsRead, onUnreadChange]);
 
+  // Tell the always-on chat-unread watcher (useChatUnread) which channel is
+  // being viewed, so the bottom-right red dot clears for that channel only.
+  // null = panel closed or on the DM tab (DM unread is tracked separately).
+  useEffect(() => {
+    const active: ChatChannel | null = isOpen && tab === "chat" ? channel : null;
+    window.dispatchEvent(
+      new CustomEvent("hs:chat-active", { detail: { channel: active } })
+    );
+  }, [isOpen, tab, channel]);
+
+  // Clear active state if the panel unmounts while open.
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("hs:chat-active", { detail: { channel: null } })
+      );
+    };
+  }, []);
+
   const handleSend = async (
     content: string,
     reply?: { id: string; name: string; content: string } | null

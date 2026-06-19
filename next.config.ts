@@ -79,9 +79,12 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",
-            // Allow mic (voice rooms) and camera (forum image upload / PWA); deny others
+            // Allow mic (voice rooms) and camera (forum image upload / PWA); deny
+            // others. encrypted-media is enabled for self + delegated to the
+            // SoundCloud widget origin so the music iframe (allow="encrypted-media")
+            // can play DRM-streamed tracks instead of aborting + auto-skipping.
             value:
-              "microphone=(self), camera=(self), geolocation=(), interest-cohort=()",
+              'microphone=(self), camera=(self), geolocation=(), interest-cohort=(), encrypted-media=(self "https://w.soundcloud.com")',
           },
           {
             key: "Strict-Transport-Security",

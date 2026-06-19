@@ -52,6 +52,7 @@ const NotificationPopup = dynamic(
   { ssr: false, loading: () => null }
 );
 import { useNotifications } from "@/hooks/use-notifications";
+import { useChatUnread } from "@/hooks/use-chat-unread";
 import { useSettings } from "@/hooks/use-settings";
 import { useProgressSync } from "@/hooks/use-progress-sync";
 import { useVersionCheck } from "@/hooks/use-version-check";
@@ -67,6 +68,7 @@ import { EnableNotificationsBanner } from "@/components/notifications/enable-not
 import { useSupportNotifier } from "@/hooks/use-support-notifier";
 import { InstallBanner } from "@/components/system/install-banner";
 import { UpdateBanner } from "@/components/system/update-banner";
+import { PatchNotesPopup } from "@/components/system/patch-notes-popup";
 import { VipWelcomeListener } from "@/components/system/vip-welcome-listener";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -91,7 +93,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
-  const [chatUnread, setChatUnread] = useState(0);
   // Issue 10: AI panel pre-seeded reference (selected materi text).
   const [aiReference, setAiReference] = useState<{ text: string; subjectId: string | null } | null>(null);
   // Issue 4d: pending DM target license key (open chat → DM tab → thread).
@@ -119,12 +120,15 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     (pathname ? pathname.replace(/^\//, "").split("/")[0] || null : null);
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
   const { notifications, dismissNotification, markAsRead } = useNotifications();
+  // Always-on Global/VIP unread (works before the chat panel ever mounts).
+  const { total: liveChatUnread } = useChatUnread();
   // DM unread for the chat-FAB / mobile-nav red dot, derived from dm_message
   // notifications (no extra polling — reuses the notifications realtime + state).
   const dmNotifUnread = notifications.filter(
     (n) => n.type === "dm_message" && !n.read
   ).length;
-  const chatBadge = chatUnread + dmNotifUnread;
+  // Bottom-right chat red dot = live Global/VIP unread + DM notifications.
+  const chatBadge = liveChatUnread + dmNotifUnread;
   const { settings, isLoading: settingsLoading } = useSettings();
   const voiceRoom = useVoice();
 
@@ -263,10 +267,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     setIsChatOpen(false);
   }, []);
 
-  const handleChatUnreadChange = useCallback((count: number) => {
-    setChatUnread(count);
-  }, []);
-
   const handleAiToggle = useCallback(() => {
     setIsAiOpen((prev) => !prev);
   }, []);
@@ -380,7 +380,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <ChatPanel
           isOpen={isChatOpen}
           onClose={handleChatClose}
-          onUnreadChange={handleChatUnreadChange}
           pendingDmKey={pendingDmKey}
           onDmKeyConsumed={() => setPendingDmKey(null)}
         />
@@ -459,6 +458,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     {/* PWA install prompt + update pill - both self-gate internally */}
     <InstallBanner />
     <UpdateBanner />
+
+    {/* One-time "what's new" popup after an update - self-gates internally */}
+    <PatchNotesPopup />
 
     {/* VIP welcome toast - listens hs:vip-online, dedups per session */}
     <VipWelcomeListener />

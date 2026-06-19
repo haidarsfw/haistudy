@@ -8,13 +8,14 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { motion, useDragControls } from "framer-motion";
-import { Bot, X, Minus, Sparkles, GripHorizontal } from "lucide-react";
+import { Bot, X, Minus, Sparkles, GripHorizontal, SquarePen, ChevronDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useSession } from "@/components/providers/session-provider";
 import { useAiChat } from "@/hooks/use-ai-chat";
 import { AiMessageBubble } from "@/components/ai/ai-message";
 import { AiInput } from "@/components/ai/ai-input";
 import { springSmooth } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 import { cardToText } from "./card-to-text";
 import type { KilatCard } from "@/types";
 
@@ -52,10 +53,14 @@ interface Props {
 export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, onClose }: Props) {
   const { session } = useSession();
   const isMobile = useIsMobile();
-  const { messages, isStreaming, error, sendMessage, stopStreaming } = useAiChat();
+  const { messages, isStreaming, error, sendMessage, stopStreaming, clearHistory } = useAiChat();
 
   const [aiModel, setAiModel] = useState<"fast" | "reasoning">("fast");
   const [focusSignal, setFocusSignal] = useState(0);
+  // Quick-question templates: open on an empty thread, collapse after the first
+  // question, re-open when the thread is cleared (new chat).
+  const [templatesOpen, setTemplatesOpen] = useState(true);
+  const prevLenRef = useRef(0);
 
   const cardRef = useRef(card);
   cardRef.current = card;
@@ -84,6 +89,14 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
   useEffect(() => {
     if (open) setFocusSignal((n) => n + 1);
   }, [open]);
+
+  // Collapse templates after the first question; reopen on a cleared thread.
+  useEffect(() => {
+    const prev = prevLenRef.current;
+    prevLenRef.current = messages.length;
+    if (messages.length === 0) setTemplatesOpen(true);
+    else if (prev === 0) setTemplatesOpen(false);
+  }, [messages.length]);
 
   // Compute a default geometry the first time it opens on desktop.
   useEffect(() => {
@@ -254,19 +267,37 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         )}
       </div>
 
-      {/* Template quick-questions - compact 2-column grid */}
-      <div className="grid grid-cols-2 gap-1.5 border-t border-border px-3 py-2">
-        {TEMPLATES.map((tpl) => (
-          <button
-            key={tpl}
-            type="button"
-            disabled={isStreaming}
-            onClick={() => sendGrounded(tpl)}
-            className="hs-press w-full truncate rounded-full border border-border bg-card px-2.5 py-1 text-center text-[11px] font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-50"
-          >
-            {tpl}
-          </button>
-        ))}
+      {/* Template quick-questions - collapsible; auto-collapses after first Q */}
+      <div className="border-t border-border">
+        <button
+          type="button"
+          onClick={() => setTemplatesOpen((o) => !o)}
+          aria-expanded={templatesOpen}
+          className="hs-press flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+        >
+          <span>Pertanyaan cepat</span>
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 transition-transform",
+              templatesOpen && "rotate-180"
+            )}
+          />
+        </button>
+        {templatesOpen && (
+          <div className="grid grid-cols-2 gap-1.5 px-3 pb-2">
+            {TEMPLATES.map((tpl) => (
+              <button
+                key={tpl}
+                type="button"
+                disabled={isStreaming}
+                onClick={() => sendGrounded(tpl)}
+                className="hs-press w-full truncate rounded-full border border-border bg-card px-2.5 py-1 text-center text-[11px] font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-50"
+              >
+                {tpl}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <AiInput
@@ -310,6 +341,15 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
           <span className="flex-1 text-sm font-semibold">haistudy AI</span>
           <button
             type="button"
+            onClick={() => clearHistory()}
+            aria-label="Obrolan baru"
+            title="Obrolan baru"
+            className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <SquarePen className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
             onClick={onClose}
             aria-label="Tutup"
             className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -341,6 +381,15 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         <GripHorizontal className="h-4 w-4 text-muted-foreground/60" />
         <Bot className="h-4 w-4 text-primary" />
         <span className="flex-1 text-sm font-semibold">haistudy AI</span>
+        <button
+          type="button"
+          onClick={() => clearHistory()}
+          aria-label="Obrolan baru"
+          title="Obrolan baru"
+          className="hs-press flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <SquarePen className="h-4 w-4" />
+        </button>
         <button
           type="button"
           onClick={onMinimize}

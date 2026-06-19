@@ -109,6 +109,12 @@ export async function GET(request: Request) {
     );
 
     // Last message per conversation (most recent row each: body + sender + time).
+    // Bounded: previously this pulled EVERY message of EVERY conversation just to
+    // grab the latest of each (unbounded → slow DM open). Capped to the most
+    // recent rows globally. Conversations are sorted by recency, so any unread
+    // (recently active) conversation's latest is well within the window; an old
+    // conversation that falls outside it is already read, so a missing preview
+    // there is harmless.
     const convIds = convs.map((c) => c.id);
     const { data: lastMsgs } = await scopeEq(scope)(
       supabase
@@ -116,6 +122,7 @@ export async function GET(request: Request) {
         .select("conversation_id, body, created_at, sender_key")
         .in("conversation_id", convIds)
         .order("created_at", { ascending: false })
+        .limit(500)
     );
     const lastMsgMap = new Map<
       string,
