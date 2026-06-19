@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { SOUNDCLOUD_PLAYLIST_URL } from "@/lib/constants";
+import { useSession } from "@/components/providers/session-provider";
 
 interface MusicContextValue {
   isPlaying: boolean;
@@ -141,6 +142,7 @@ function srcFor(raw: string): string {
 }
 
 export function MusicProvider({ children }: { children: ReactNode }) {
+  const { session } = useSession();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const widgetRef = useRef<SCWidget | null>(null);
   // Armed flag - gates the SoundCloud script + iframe load until the user first
@@ -214,6 +216,30 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     }, 1000);
     return () => clearInterval(id);
   }, [isPlaying]);
+
+  // Stop playback on logout. The provider lives at the root layout so the widget
+  // survives navigation between the scoped app and /admin; the only time it
+  // should hard-stop is when the session goes away (logout / forced sign-out).
+  const wasAuthedRef = useRef(false);
+  useEffect(() => {
+    if (session) {
+      wasAuthedRef.current = true;
+      return;
+    }
+    if (wasAuthedRef.current) {
+      wasAuthedRef.current = false;
+      const w = widgetRef.current;
+      if (w) {
+        try {
+          w.pause();
+        } catch {
+          /* ignore */
+        }
+      }
+      isPlayingRef.current = false;
+      setIsPlaying(false);
+    }
+  }, [session]);
 
   const arm = useCallback(() => {
     if (armedRef.current) return;

@@ -39,9 +39,27 @@ function renderKatex(latex: string, key: string, display = false): ReactNode {
   }
 }
 
+// ── GFM table helpers ──
+// A row is any line with a pipe; a delimiter is the "|---|:--:|" line under the
+// header. We only treat a line as a table when the NEXT line is a delimiter, so
+// a stray "|" in prose never triggers it.
+function isTableRow(line: string): boolean {
+  return line.includes("|");
+}
+function isTableDelimiter(line: string): boolean {
+  const t = line.trim();
+  return t.includes("|") && t.includes("-") && /^[|\s:-]+$/.test(t);
+}
+function splitCells(line: string): string[] {
+  let t = line.trim();
+  if (t.startsWith("|")) t = t.slice(1);
+  if (t.endsWith("|")) t = t.slice(0, -1);
+  return t.split("|").map((c) => c.trim());
+}
+
 /**
  * Render strategy: extract math into placeholders → classify lines (heading / bullet /
- * ordered / quote / paragraph) → restore math. This prevents math delimiters from
+ * ordered / quote / paragraph / table) → restore math. This prevents math delimiters from
  * breaking markdown patterns AND gives block-level elements their own <div> so lists
  * and headings render as proper rows, not prefixed by literal `*` or `##` tokens.
  */
@@ -86,6 +104,56 @@ function renderMarkdown(text: string): ReactNode[] {
     // Blank line → small vertical spacer
     if (rawLine.trim() === "") {
       elements.push(<div key={`sp-${i}`} className="h-2" />);
+      continue;
+    }
+
+    // Table block: header row + delimiter row + body rows → a real, horizontally
+    // scrollable <table> that adapts to the bubble/window width on resize.
+    if (
+      isTableRow(rawLine) &&
+      i + 1 < lines.length &&
+      isTableDelimiter(lines[i + 1])
+    ) {
+      const header = splitCells(rawLine);
+      let j = i + 2;
+      const rows: string[][] = [];
+      while (j < lines.length && isTableRow(lines[j].trimEnd())) {
+        rows.push(splitCells(lines[j].trimEnd()));
+        j++;
+      }
+      elements.push(
+        <div key={`tbl-${i}`} className="my-2 max-w-full overflow-x-auto">
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr>
+                {header.map((cell, ci) => (
+                  <th
+                    key={ci}
+                    className="border border-border bg-muted/40 px-2 py-1 text-left align-top font-semibold"
+                  >
+                    {parseMarkdownInline(cell, `th${i}-${ci}`, mathMap)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, ri) => (
+                <tr key={ri}>
+                  {r.map((cell, ci) => (
+                    <td
+                      key={ci}
+                      className="border border-border px-2 py-1 align-top"
+                    >
+                      {parseMarkdownInline(cell, `td${i}-${ri}-${ci}`, mathMap)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      i = j - 1;
       continue;
     }
 
@@ -191,9 +259,11 @@ function parseMarkdownInline(
   const result: ReactNode[] = [];
   // Bold allows inner `*` so `**Hak (*left alone*):**` matches as one bold and
   // the inner `*italic*` is parsed by recursion. Italic uses lookarounds to
-  // reject `**` and word-internal stars. code + strike unchanged.
+  // reject `**` and word-internal stars. Underscore emphasis (__bold__, _italic_)
+  // is also supported - the model emits it often - with lookarounds so snake_case
+  // (e.g. actual_notice) is left untouched. code + strike unchanged.
   const regex =
-    /(\*\*([^\n]+?)\*\*|(?<![*\w])\*([^*\n]+?)\*(?![*\w])|`([^`\n]+?)`|~~([^~\n]+?)~~)/g;
+    /(\*\*([^\n]+?)\*\*|__([^\n]+?)__|(?<![*\w])\*([^*\n]+?)\*(?![*\w])|(?<![\w_])_([^_\n]+?)_(?![\w_])|`([^`\n]+?)`|~~([^~\n]+?)~~)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let idx = 0;
@@ -210,31 +280,33 @@ function parseMarkdownInline(
     if (match.index > lastIndex) {
       pushText(text.slice(lastIndex, match.index), `${keyPrefix}-t${idx}`);
     }
-    if (match[2]) {
+    const boldInner = match[2] ?? match[3]; // **bold** or __bold__
+    const italicInner = match[4] ?? match[5]; // *italic* or _italic_
+    if (boldInner != null) {
       result.push(
         <strong key={`${keyPrefix}-b${idx}`} className="font-semibold">
-          {parseMarkdownInline(match[2], `${keyPrefix}-b${idx}`, mathMap)}
+          {parseMarkdownInline(boldInner, `${keyPrefix}-b${idx}`, mathMap)}
         </strong>
       );
-    } else if (match[3]) {
+    } else if (italicInner != null) {
       result.push(
         <em key={`${keyPrefix}-i${idx}`}>
-          {parseMarkdownInline(match[3], `${keyPrefix}-i${idx}`, mathMap)}
+          {parseMarkdownInline(italicInner, `${keyPrefix}-i${idx}`, mathMap)}
         </em>
       );
-    } else if (match[4]) {
+    } else if (match[6]) {
       result.push(
         <code
           key={`${keyPrefix}-c${idx}`}
           className="rounded bg-background/50 px-1 py-0.5 text-xs"
         >
-          {match[4]}
+          {match[6]}
         </code>
       );
-    } else if (match[5]) {
+    } else if (match[7]) {
       result.push(
         <s key={`${keyPrefix}-s${idx}`}>
-          {parseMarkdownInline(match[5], `${keyPrefix}-s${idx}`, mathMap)}
+          {parseMarkdownInline(match[7], `${keyPrefix}-s${idx}`, mathMap)}
         </s>
       );
     }

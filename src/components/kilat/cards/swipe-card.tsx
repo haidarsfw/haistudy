@@ -32,38 +32,94 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
   };
 
   if (answered) {
+    // Per-statement USER correctness (did they guess right), not the statement's
+    // truth value. Coloring rows by truth made a correctly-identified false
+    // statement look like the user erred. `data.results` carries the per-item
+    // judgement; on resume it's absent, so fall back to all-correct from
+    // `response.correct` (and a neutral row when we genuinely can't tell).
+    const userResults = (response!.data as { results?: boolean[] } | undefined)?.results;
+    const allCorrect = response!.correct;
+    const okFor = (i: number): boolean | undefined =>
+      userResults ? !!userResults[i] : allCorrect ? true : undefined;
+
     return (
       <div>
         <div className="mb-3">
           <Tag>Benar atau Salah</Tag>
         </div>
+
+        {/* Distinct, celebratory header when every guess was right */}
+        {allCorrect && (
+          <div className="mb-3 flex items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
+              <Check className="h-5 w-5 text-emerald-600" />
+            </span>
+            <span>
+              <span className="block text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                Mantap, semua tepat!
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                Kamu benar menilai semua pernyataan di bawah.
+              </span>
+            </span>
+          </div>
+        )}
+
         <div className="flex flex-col gap-2">
-          {c.statements.map((s, i) => (
-            <div
-              key={i}
-              className={cn(
-                "flex items-start gap-2.5 rounded-xl border px-4 py-2.5 text-sm",
-                s.isTrue
-                  ? "border-emerald-500/40 bg-emerald-500/10"
-                  : "border-rose-500/40 bg-rose-500/10"
-              )}
-            >
-              <span className="mt-0.5 shrink-0">
-                {s.isTrue ? <Check className="h-4 w-4 text-emerald-600" /> : <X className="h-4 w-4 text-rose-600" />}
-              </span>
-              <span>
-                <span className="font-semibold">{s.isTrue ? "Benar. " : "Salah. "}</span>
-                {parseInline(s.text)}
-                {s.note ? <span className="text-muted-foreground"> {parseInline(s.note)}</span> : null}
-              </span>
-            </div>
-          ))}
+          {c.statements.map((s, i) => {
+            const ok = okFor(i);
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-start gap-2.5 rounded-xl border px-4 py-2.5 text-sm",
+                  ok === undefined
+                    ? "border-border bg-card"
+                    : ok
+                    ? "border-emerald-500/40 bg-emerald-500/10"
+                    : "border-rose-500/40 bg-rose-500/10"
+                )}
+              >
+                <span className="mt-0.5 shrink-0">
+                  {ok === undefined ? (
+                    <span className="block h-4 w-4" />
+                  ) : ok ? (
+                    <Check className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <X className="h-4 w-4 text-rose-600" />
+                  )}
+                </span>
+                <span className="min-w-0">
+                  {ok !== undefined && (
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        ok
+                          ? "text-emerald-700 dark:text-emerald-300"
+                          : "text-rose-700 dark:text-rose-300"
+                      )}
+                    >
+                      {ok ? "Tebakanmu tepat. " : "Tebakanmu keliru. "}
+                    </span>
+                  )}
+                  <span className="text-muted-foreground">
+                    Pernyataan ini {s.isTrue ? "benar" : "salah"}.
+                  </span>{" "}
+                  {parseInline(s.text)}
+                  {s.note ? (
+                    <span className="text-muted-foreground"> {parseInline(s.note)}</span>
+                  ) : null}
+                </span>
+              </div>
+            );
+          })}
         </div>
-        <Feedback tone={response!.correct ? "correct" : "wrong"}>
-          {response!.correct
-            ? "Semua tebakan kamu benar!"
-            : "Ada yang kebalik. Lihat mana yang benar/salah di atas."}
-        </Feedback>
+
+        {!allCorrect && (
+          <Feedback tone="wrong">
+            Ada yang belum tepat. Cek lagi mana yang kamu lewatkan di atas.
+          </Feedback>
+        )}
       </div>
     );
   }

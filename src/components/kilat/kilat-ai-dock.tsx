@@ -85,10 +85,14 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
 
   const ctx = cardToText(card);
 
-  // Focus the input when the dock opens.
+  // On open (desktop), drop the cursor straight into the chatbox, ready to type.
+  // rAF so it fires after the dock has painted; skip mobile (avoids popping the
+  // on-screen keyboard the moment the sheet appears).
   useEffect(() => {
-    if (open) setFocusSignal((n) => n + 1);
-  }, [open]);
+    if (!open || isMobile) return;
+    const id = requestAnimationFrame(() => setFocusSignal((n) => n + 1));
+    return () => cancelAnimationFrame(id);
+  }, [open, isMobile]);
 
   // Collapse templates after the first question; reopen on a cleared thread.
   useEffect(() => {
@@ -111,11 +115,17 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
     });
   }, [open, isMobile, geom, onGeom]);
 
-  // Keep the view pinned to the newest message.
+  // Keep the view pinned to the newest message. rAF so a fresh open (including
+  // reopening after minimize) lands at the bottom once the list has laid out,
+  // instead of requiring a manual scroll.
   useEffect(() => {
     if (!open) return;
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    const id = requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+    return () => cancelAnimationFrame(id);
   }, [open, messages]);
 
   const sendGrounded = useCallback(

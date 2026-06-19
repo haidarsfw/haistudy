@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { LanguageProvider } from "@/components/providers/language-provider";
 import { MotionProvider } from "@/components/providers/motion-provider";
+import { MusicProvider } from "@/components/providers/music-provider";
 import { Toaster } from "@/components/ui/toast";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -177,7 +178,10 @@ export default function RootLayout({
           <SessionProvider>
             <LanguageProvider>
               <MotionProvider>
-                {children}
+                {/* MusicProvider here (under SessionProvider) so playback
+                    survives navigation between the scoped app and /admin, and
+                    only stops on logout. */}
+                <MusicProvider>{children}</MusicProvider>
                 <Toaster />
               </MotionProvider>
               <Analytics />
