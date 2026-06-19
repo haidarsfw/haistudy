@@ -26,6 +26,19 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.2.0",
+    date: "2026-06-20",
+    title: "Latihan Soal Ujian (Practice Exam)",
+    items: [
+      "Fitur Latihan Soal baru: Simulasi ujian dengan durasi waktu nyata dan evaluasi AI.",
+      "Pembahasan Soal Lengkap: Dapatkan kunci jawaban, rubrik penilaian, dan feedback AI dalam bahasa Indonesia.",
+      "Hapus Riwayat Latihan: Sekarang kamu bisa menghapus riwayat pengerjaan latihan soal.",
+      "Mode Imersif: Tampilan ujian layar penuh tanpa gangguan menu navigasi utama.",
+      "Bebas Keluar Ujian: Kamu bisa keluar gratis dalam 30 detik pertama tanpa memotong kuota latihan.",
+      "Tombol Back & Coba Lagi yang responsif sebelum dan sesudah ujian.",
+    ],
+  },
+  {
     version: "2.0.1",
     date: "2026-06-19",
     title: "Notifikasi chat + musik yang lebih enak",
