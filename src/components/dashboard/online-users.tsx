@@ -40,7 +40,14 @@ export function OnlineUsers() {
   const myLicenseKey = session?.licenseKey ?? "";
   // Check if the current user has hide status enabled (from their own presence entry)
   const myHideStatus = users.find((u) => u.licenseKey === myLicenseKey)?.hideStatus ?? false;
-  const visibleUsers = users;
+  const visibleUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      // Prioritize non-hidden users over hidden users
+      if (a.hideStatus && !b.hideStatus) return 1;
+      if (!a.hideStatus && b.hideStatus) return -1;
+      return 0;
+    });
+  }, [users]);
   const { subjects } = useScopedData();
   const subjectMap = new Map(subjects.map((s) => [s.id, s] as const));
 

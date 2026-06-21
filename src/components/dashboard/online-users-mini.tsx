@@ -88,7 +88,14 @@ export function OnlineUsersMini() {
   const isAdmin = session?.isAdmin ?? false;
   const myLicenseKey = session?.licenseKey ?? "";
   const myHideStatus = users.find((u) => u.licenseKey === myLicenseKey)?.hideStatus ?? false;
-  const visibleUsers = users;
+  const visibleUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      // Prioritize non-hidden users over hidden users
+      if (a.hideStatus && !b.hideStatus) return 1;
+      if (!a.hideStatus && b.hideStatus) return -1;
+      return 0;
+    });
+  }, [users]);
 
   // Batch-resolve real avatars (cached cross-surface). Masked users render the
   // anonymized placeholder regardless, so we only need keys for unmasked rows.
