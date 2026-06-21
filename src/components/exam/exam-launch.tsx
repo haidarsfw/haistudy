@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Clock, FileText, Award, History, ChevronRight, Lock, AlertCircle, Trash2 } from "lucide-react";
+import { PenLine, Clock, FileText, Award, History, ChevronRight, Lock, AlertCircle, Trash2, Ticket } from "lucide-react";
 import type { ExamData } from "@/types/exam";
 import { useExam } from "@/hooks/use-exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { ExamConfirmModal } from "./exam-confirm-modal";
+import { ExamTopupModal } from "./exam-topup-modal";
 
 interface Props {
   exam: ExamData;
@@ -45,6 +46,7 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
   const { t } = useTranslation();
   const { quota, history, loading } = useExam(subjectId);
   const [attemptToDelete, setAttemptToDelete] = useState<string | null>(null);
+  const [showTopup, setShowTopup] = useState(false);
   const lang = "id"; // Launch screen always uses app language
 
   // An unfinished (in-progress) attempt → offer "continue" instead of a fresh
@@ -157,6 +159,16 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
               /{isUnlimited ? "∞" : quota.max}
             </span>
           </p>
+          {!isUnlimited && (
+            <button
+              type="button"
+              onClick={() => setShowTopup(true)}
+              className="hs-press mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 py-2 text-xs font-bold text-primary"
+            >
+              <Ticket className="h-3.5 w-3.5" />
+              Top-up kuota
+            </button>
+          )}
         </motion.div>
       )}
 
@@ -198,13 +210,21 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
             {t("exam.cta_start")}
           </button>
         ) : (
-          <div className="rounded-xl border border-border bg-muted/30 py-3.5 text-center">
+          <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
             <p className="text-sm font-bold text-muted-foreground">
               {t("exam.cta_no_quota")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {t("exam.quota_upgrade")}
+              Kuota latihan untuk matkul ini habis. Top-up buat lanjut latihan soal.
             </p>
+            <button
+              type="button"
+              onClick={() => setShowTopup(true)}
+              className="hs-press mt-3 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20"
+            >
+              <Ticket className="h-4 w-4" />
+              Top-up kuota
+            </button>
           </div>
         )}
       </motion.div>
@@ -295,6 +315,16 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
               setAttemptToDelete(null);
             }}
             onCancel={() => setAttemptToDelete(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showTopup && (
+          <ExamTopupModal
+            subjectId={subjectId}
+            subjectName={exam.meta.courseName}
+            onClose={() => setShowTopup(false)}
           />
         )}
       </AnimatePresence>

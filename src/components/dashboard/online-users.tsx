@@ -31,6 +31,38 @@ const PAGE_LABELS: Record<string, string> = {
   "jadwal-uts": "Jadwal UTS",
 };
 
+const SHORT_LOCATION_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
+  subjects: "Subjects",
+  bookmarks: "Bookmarks",
+  notes: "Notes",
+  analytics: "Analytics",
+  feedback: "Feedback",
+  voice: "Voice",
+  admin: "Admin",
+  settings: "Settings",
+  "jadwal-uts": "Jadwal",
+  jadwal: "Jadwal",
+  forum: "Forum",
+  latihan: "Practice",
+  riwayat: "History",
+  kilat: "Kilat",
+  library: "Library",
+
+  bizethics: "Ethics",
+  opsmgmt: "Operations",
+  akuntansi: "Accounting",
+  foundai: "AI",
+  statistik: "Statistics",
+  biseko: "Economics",
+  cbkwn: "Civics",
+  pancasila: "Pancasila",
+  marketing: "Marketing",
+  hr: "HR",
+  mis: "MIS",
+  intro: "Management",
+};
+
 export function OnlineUsers() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
@@ -91,15 +123,14 @@ export function OnlineUsers() {
             const subject = user.currentSubject
               ? subjectMap.get(user.currentSubject) ?? null
               : null;
-            // Subjects: visible to all (preserves existing UX).
-            // Page labels (dashboard, forum, etc.): admin-only - others don't
-            // need to know what non-subject page a user is viewing.
-            const locationText =
-              subject?.name ||
-              (isAdmin && user.currentSubject
-                ? PAGE_LABELS[user.currentSubject]
-                : null) ||
-              null;
+            // Shortened location text resolution
+            const locationText = user.currentSubject
+              ? SHORT_LOCATION_LABELS[user.currentSubject] ||
+                subject?.shortName ||
+                subject?.name ||
+                PAGE_LABELS[user.currentSubject] ||
+                user.currentSubject.toUpperCase()
+              : null;
             const isSelf = user.licenseKey === myLicenseKey;
             // Masking logic:
             // - Admin: always sees real names
@@ -169,9 +200,9 @@ export function OnlineUsers() {
                   <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
                 )}
 
-                {/* Location badge - subject name or page label */}
-                {locationText && !masked && (
-                  <span className="text-[10px] text-muted-foreground truncate max-w-[90px]">
+                {/* Location badge - only visible to admin */}
+                {isAdmin && locationText && (
+                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/40 truncate max-w-[85px]" title={locationText}>
                     {locationText}
                   </span>
                 )}

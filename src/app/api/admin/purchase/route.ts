@@ -258,6 +258,55 @@ export async function PATCH(request: Request) {
 
     if (error) throw error;
 
+    // ── Exam-quota top-up (package='exam_quota'): on approval, add the bought
+    // attempts as bonus credits + send an in-app confirmation. Skips the invoice
+    // counter + contact propagation (those are for access purchases). ──
+    const meta0 = (data?.meta as PurchaseMeta) ?? {};
+    if (status === "approved" && data && meta0.kind === "exam_quota") {
+      const lk = (data.license_key as string) || "";
+      const sk = meta0.scopeKey || "";
+      const subjectId = meta0.subjectId || "";
+      const qty = Number(meta0.quotaQty) || 0;
+      if (lk && sk && subjectId && qty > 0) {
+        const { data: ov } = await supabase
+          .from("exam_quota_overrides")
+          .select("bonus")
+          .eq("license_key", lk)
+          .eq("scope_key", sk)
+          .eq("subject_id", subjectId)
+          .maybeSingle();
+        const newBonus = Math.max(0, ((ov?.bonus as number) ?? 0) + qty);
+        const { error: ovErr } = await supabase.from("exam_quota_overrides").upsert(
+          {
+            license_key: lk,
+            scope_key: sk,
+            subject_id: subjectId,
+            bonus: newBonus,
+            updated_at: now,
+            updated_by: "purchase-approve",
+          },
+          { onConflict: "license_key,scope_key,subject_id" }
+        );
+        if (ovErr) throw ovErr;
+
+        // In-app confirmation (scoped → realtime delivery + bell). Opens the
+        // subject's Latihan Soal tab when tapped (context=system + subject_id).
+        await supabase.from("notifications").insert({
+          license_key: lk,
+          type: "exam_quota",
+          sender_name: "HaiStudy",
+          preview: `Top-up ${qty} kuota latihan untuk ${meta0.subjectName || subjectId} berhasil ditambahkan. Selamat berlatih!`,
+          context: "system",
+          subject_id: subjectId,
+          thread_title: "Kuota latihan ditambahkan",
+          semester: data.semester,
+          exam_period: data.exam_period,
+          jurusan: data.jurusan,
+        });
+      }
+      return NextResponse.json({ purchase: mapRow(data) });
+    }
+
     // Assign the per-scope invoice number at APPROVAL (not at submit), so
     // unverified / rejected orders never burn a number. Idempotent: only assign
     // when meta.orderNo is missing, so re-approving keeps the same invoice #.

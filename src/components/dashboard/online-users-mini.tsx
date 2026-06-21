@@ -39,6 +39,38 @@ const PAGE_LABELS: Record<string, string> = {
   "jadwal-uts": "Jadwal UTS",
 };
 
+const SHORT_LOCATION_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
+  subjects: "Subjects",
+  bookmarks: "Bookmarks",
+  notes: "Notes",
+  analytics: "Analytics",
+  feedback: "Feedback",
+  voice: "Voice",
+  admin: "Admin",
+  settings: "Settings",
+  "jadwal-uts": "Jadwal",
+  jadwal: "Jadwal",
+  forum: "Forum",
+  latihan: "Practice",
+  riwayat: "History",
+  kilat: "Kilat",
+  library: "Library",
+
+  bizethics: "Ethics",
+  opsmgmt: "Operations",
+  akuntansi: "Accounting",
+  foundai: "AI",
+  statistik: "Statistics",
+  biseko: "Economics",
+  cbkwn: "Civics",
+  pancasila: "Pancasila",
+  marketing: "Marketing",
+  hr: "HR",
+  mis: "MIS",
+  intro: "Management",
+};
+
 const MAX_VISIBLE_EXPANDED = 2;
 
 function UserRow({
@@ -50,7 +82,6 @@ function UserRow({
   avatarUrl = null,
   popover = true,
   showAvatar = true,
-  locationText = null,
 }: {
   user: OnlineUser;
   index: number;
@@ -60,8 +91,17 @@ function UserRow({
   avatarUrl?: string | null;
   popover?: boolean;
   showAvatar?: boolean;
-  locationText?: string | null;
 }) {
+  const { subjects } = useScopedData();
+  const subject = user.currentSubject ? subjects.find((s) => s.id === user.currentSubject) ?? null : null;
+  const locationText = user.currentSubject
+    ? SHORT_LOCATION_LABELS[user.currentSubject] ||
+      subject?.shortName ||
+      subject?.name ||
+      PAGE_LABELS[user.currentSubject] ||
+      user.currentSubject.toUpperCase()
+    : null;
+
   const devices = user.deviceTypes || [user.deviceType];
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -122,8 +162,6 @@ export function OnlineUsersMini() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
   const { session } = useSession();
-  const { subjects } = useScopedData();
-  const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.id, s] as const)), [subjects]);
   const [expanded, setExpanded] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
@@ -261,11 +299,6 @@ export function OnlineUsersMini() {
               <div className="mt-3 border-t border-border pt-2 space-y-1.5">
                 {visibleUsers.slice(0, MAX_VISIBLE_EXPANDED).map((user, i) => {
                   const masked = isMasked(user);
-                  const subject = user.currentSubject ? subjectMap.get(user.currentSubject) ?? null : null;
-                  const locationText =
-                    subject?.name ||
-                    (user.currentSubject ? PAGE_LABELS[user.currentSubject] || user.currentSubject.toUpperCase() : null) ||
-                    null;
                   return (
                     <UserRow
                       key={`${user.licenseKey || user.id}-${i}`}
@@ -276,7 +309,6 @@ export function OnlineUsersMini() {
                       displayName={getDisplayName(user)}
                       avatarUrl={masked || !user.licenseKey ? null : avatarMap.get(user.licenseKey.toUpperCase()) ?? null}
                       showAvatar={false}
-                      locationText={locationText}
                     />
                   );
                 })}
@@ -334,11 +366,6 @@ export function OnlineUsersMini() {
               <div className="p-4 space-y-2 max-h-[50vh] overflow-y-auto">
                 {visibleUsers.map((user, i) => {
                   const masked = isMasked(user);
-                  const subject = user.currentSubject ? subjectMap.get(user.currentSubject) ?? null : null;
-                  const locationText =
-                    subject?.name ||
-                    (user.currentSubject ? PAGE_LABELS[user.currentSubject] || user.currentSubject.toUpperCase() : null) ||
-                    null;
                   return (
                     <UserRow
                       key={`${user.id}:${user.licenseKey || "anon"}:${i}`}
@@ -348,7 +375,6 @@ export function OnlineUsersMini() {
                       masked={masked}
                       displayName={getDisplayName(user)}
                       avatarUrl={masked || !user.licenseKey ? null : avatarMap.get(user.licenseKey.toUpperCase()) ?? null}
-                      locationText={locationText}
                     />
                   );
                 })}

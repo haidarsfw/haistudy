@@ -384,7 +384,8 @@ export interface Notification {
     | "poll_result"
     | "comment_reply"
     | "support_message"
-    | "dm_message";
+    | "dm_message"
+    | "exam_quota";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";
@@ -461,6 +462,15 @@ export interface PurchaseMeta {
   orderNo?: number;
   // Short name / nickname supplied in the order form (shown everywhere in-app).
   nickname?: string;
+  // ─── In-app exam-quota top-up orders (package = 'exam_quota') ───
+  // Marks this as a quota top-up rather than an access purchase.
+  kind?: "exam_quota";
+  // Number of extra attempts being bought (1 / 3 / 7).
+  quotaQty?: number;
+  // Subject the top-up applies to (quota is per-matkul).
+  subjectId?: string;
+  // Human-readable subject name (shown in the admin queue).
+  subjectName?: string;
 }
 
 export interface PurchaseRequest {
@@ -468,8 +478,9 @@ export interface PurchaseRequest {
   name: string;
   whatsapp: string;
   email: string | null;
-  // 'share'|'normal'|'vip'|'diamond' = on-site form tiers; 'discount'|'free' = legacy rows.
-  package: "share" | "normal" | "vip" | "diamond" | "discount" | "free";
+  // 'share'|'normal'|'vip'|'diamond' = on-site form tiers; 'discount'|'free' = legacy rows;
+  // 'exam_quota' = in-app exam-quota top-up (meta.kind === 'exam_quota').
+  package: "share" | "normal" | "vip" | "diamond" | "discount" | "free" | "exam_quota";
   status: "pending" | "approved" | "rejected";
   licenseKey: string | null;
   approvedAt: string | null;

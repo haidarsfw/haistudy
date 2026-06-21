@@ -102,6 +102,7 @@ const en: Record<string, string> = {
   "notification.mentioned_all": "mentioned @all",
   "notification.replied_thread": "replied to thread",
   "notification.default": "Notification",
+  "notification.exam_quota": "Practice quota added",
   "notification.announcement": "New announcement",
   "notification.new_thread": "created a new thread",
   "notification.voted_poll": "voted on a poll",

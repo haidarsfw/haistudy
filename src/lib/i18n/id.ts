@@ -102,6 +102,7 @@ const id: Record<string, string> = {
   "notification.mentioned_all": "menyebut @all",
   "notification.replied_thread": "membalas thread",
   "notification.default": "Notifikasi",
+  "notification.exam_quota": "Kuota latihan ditambahkan",
   "notification.announcement": "Pengumuman baru",
   "notification.new_thread": "membuat thread baru",
   "notification.voted_poll": "memilih di polling",

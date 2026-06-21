@@ -48,6 +48,7 @@ const PACKAGE_LABELS: Record<string, string> = {
   diamond: "Diamond (Rp50.000)",
   discount: "Diskon (legacy)",
   free: "Free",
+  exam_quota: "Top-up Kuota",
 };
 
 // Purchase package → license_keys.package_tier granted on approval.
@@ -161,6 +162,26 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
 
   const handleApprove = useCallback(async (purchase: PurchaseRequest) => {
     setProcessingId(purchase.id);
+
+    // Exam-quota top-up: the buyer already has a key — no new key minted. Just
+    // approve; the server adds the bonus credits + sends the in-app confirmation.
+    if (purchase.package === "exam_quota") {
+      try {
+        const res = await fetch(`/api/admin/purchase${scopeQuery()}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: purchase.id, status: "approved" }),
+        });
+        if (!res.ok) throw new Error("Failed to update purchase");
+        const { purchase: updated } = await res.json();
+        setPurchases((prev) => prev.map((p) => (p.id === purchase.id ? updated : p)));
+        toast.success(`Top-up ${purchase.meta?.quotaQty ?? ""}× disetujui — kuota ditambahkan.`);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Gagal approve");
+      }
+      setProcessingId(null);
+      return;
+    }
 
     // Generate license key
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -496,6 +517,12 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                             </div>
                             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                               <span>{PACKAGE_LABELS[purchase.package] || purchase.package}</span>
+                              {purchase.package === "exam_quota" && (
+                                <>
+                                  <span>· {purchase.meta?.quotaQty ?? "?"}× kuota</span>
+                                  {purchase.meta?.subjectName && <span>· {purchase.meta.subjectName}</span>}
+                                </>
+                              )}
                               {purchase.meta?.classCode && <span>· {purchase.meta.classCode}</span>}
                               {purchase.meta?.campus && <span>· {purchase.meta.campus}</span>}
                               {purchase.meta?.deviceLimit && <span>· {purchase.meta.deviceLimit} device</span>}
@@ -515,10 +542,17 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                             )}
                           </div>
                           <div className="flex shrink-0 flex-col items-end gap-1">
-                            {typeof purchase.meta?.uniqueAmount === "number" && (
+                            {typeof purchase.meta?.uniqueAmount === "number" ? (
                               <span className="text-sm font-bold text-foreground">
                                 Rp {purchase.meta.uniqueAmount.toLocaleString("id-ID")}
                               </span>
+                            ) : (
+                              purchase.package === "exam_quota" &&
+                              typeof purchase.meta?.basePrice === "number" && (
+                                <span className="text-sm font-bold text-foreground">
+                                  Rp {purchase.meta.basePrice.toLocaleString("id-ID")}
+                                </span>
+                              )
                             )}
                             <ChevronDown
                               className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}

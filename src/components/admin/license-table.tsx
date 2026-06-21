@@ -222,22 +222,71 @@ function UserDetailDialog({
   const [copied, setCopied] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [resettingDevices, setResettingDevices] = useState(false);
-  // Lightweight Latihan Soal summary (attempts + best/last score per subject).
-  const [examSummary, setExamSummary] = useState<
-    { subjectId: string; attempts: number; best: number | null; last: number | null; lastAt: string | null }[] | null
-  >(null);
+  // Latihan Soal summary per subject: attempts + best/last score + credit-model
+  // quota (used / base+bonus), with admin reset + bonus controls.
+  interface ExamSub {
+    subjectId: string;
+    subjectName: string;
+    scopeKey: string;
+    attempts: number;
+    best: number | null;
+    last: number | null;
+    lastAt: string | null;
+    used: number;
+    bonus: number;
+    base: number;
+    max: number;
+    remaining: number;
+  }
+  const [examSummary, setExamSummary] = useState<ExamSub[] | null>(null);
+  const [quotaBusy, setQuotaBusy] = useState<string | null>(null);
+
+  const loadSummary = useCallback(async () => {
+    const q = scopeQuery();
+    const sep = q ? "&" : "?";
+    try {
+      const r = await fetch(`/api/admin/exam-summary${q}${sep}key=${encodeURIComponent(license.key)}`);
+      const d = r.ok ? await r.json() : { subjects: [] };
+      setExamSummary(d.subjects || []);
+    } catch {
+      setExamSummary([]);
+    }
+  }, [license.key, scopeQuery]);
 
   useEffect(() => {
     if (!open) return;
-    let cancelled = false;
-    const q = scopeQuery();
-    const sep = q ? "&" : "?";
-    fetch(`/api/admin/exam-summary${q}${sep}key=${encodeURIComponent(license.key)}`)
-      .then((r) => (r.ok ? r.json() : { subjects: [] }))
-      .then((d) => { if (!cancelled) setExamSummary(d.subjects || []); })
-      .catch(() => { if (!cancelled) setExamSummary([]); });
-    return () => { cancelled = true; };
-  }, [open, license.key, scopeQuery]);
+    loadSummary();
+  }, [open, loadSummary]);
+
+  const adjustQuota = useCallback(
+    async (
+      subjectId: string,
+      sk: string,
+      action: "reset" | "addBonus",
+      value?: number
+    ) => {
+      setQuotaBusy(subjectId + action);
+      try {
+        const res = await fetch("/api/admin/exam-quota", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: license.key, scopeKey: sk, subjectId, action, value }),
+        });
+        if (res.ok) {
+          toast.success(action === "reset" ? "Kuota direset" : "Kuota diperbarui");
+          await loadSummary();
+        } else {
+          const d = await res.json().catch(() => ({}));
+          toast.error(d.error || "Gagal update kuota");
+        }
+      } catch {
+        toast.error("Gagal menghubungi server");
+      } finally {
+        setQuotaBusy(null);
+      }
+    },
+    [license.key, loadSummary]
+  );
 
   const copyKey = () => {
     navigator.clipboard.writeText(license.key).then(() => {
@@ -309,21 +358,61 @@ function UserDetailDialog({
             <>
               <div className="space-y-2">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Latihan Soal
+                  Latihan Soal — Kuota & Riwayat
                 </span>
-                <div className="space-y-1">
-                  {examSummary.map((s) => (
-                    <div
-                      key={s.subjectId}
-                      className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-2.5 py-1.5 text-xs"
-                    >
-                      <span className="truncate font-medium">{s.subjectId}</span>
-                      <span className="shrink-0 text-muted-foreground tabular-nums">
-                        {s.attempts}x · terbaik {s.best != null ? Math.round(s.best) : "-"}% · terakhir{" "}
-                        {s.last != null ? Math.round(s.last) : "-"}%
-                      </span>
-                    </div>
-                  ))}
+                <div className="space-y-1.5">
+                  {examSummary.map((s) => {
+                    const unlimited = s.max === -1;
+                    return (
+                      <div key={s.subjectId} className="rounded-lg border border-border bg-muted/40 p-2.5 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-semibold text-foreground">{s.subjectName}</span>
+                          <span className="shrink-0 rounded-md bg-background px-1.5 py-0.5 font-bold tabular-nums text-primary">
+                            {unlimited ? "∞ sisa" : `${s.remaining}/${s.max} sisa`}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground tabular-nums">
+                          <span>{s.attempts}x dicoba</span>
+                          <span>· terbaik {s.best != null ? Math.round(s.best) : "-"}%</span>
+                          <span>· terakhir {s.last != null ? Math.round(s.last) : "-"}%</span>
+                          {s.bonus > 0 && (
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">· +{s.bonus} top-up</span>
+                          )}
+                        </div>
+                        {!unlimited && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              disabled={!!quotaBusy}
+                              onClick={() => adjustQuota(s.subjectId, s.scopeKey, "addBonus", -1)}
+                              className="hs-press flex h-6 w-6 items-center justify-center rounded-md border border-border bg-background text-sm font-bold text-muted-foreground disabled:opacity-40"
+                              aria-label="Kurangi 1 bonus"
+                            >
+                              −
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!!quotaBusy}
+                              onClick={() => adjustQuota(s.subjectId, s.scopeKey, "addBonus", 1)}
+                              className="hs-press flex h-6 w-6 items-center justify-center rounded-md border border-border bg-background text-sm font-bold text-muted-foreground disabled:opacity-40"
+                              aria-label="Tambah 1 bonus"
+                            >
+                              +
+                            </button>
+                            <span className="text-[10px] text-muted-foreground">bonus</span>
+                            <button
+                              type="button"
+                              disabled={!!quotaBusy}
+                              onClick={() => adjustQuota(s.subjectId, s.scopeKey, "reset")}
+                              className="hs-press ml-auto rounded-md border border-border bg-background px-2 py-1 text-[10px] font-semibold text-muted-foreground disabled:opacity-40"
+                            >
+                              Reset kuota
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <Separator />

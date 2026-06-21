@@ -8,6 +8,7 @@ import {
   AtSign,
   Megaphone,
   BarChart,
+  Ticket,
   type LucideIcon,
 } from "lucide-react";
 import { openChatToMessage, openDmTo } from "@/lib/events";
@@ -58,6 +59,8 @@ export function notificationIcon(n: Notification): LucideIcon {
       return BarChart;
     case "dm_message":
       return MessageCircle;
+    case "exam_quota":
+      return Ticket;
     default:
       return Bell;
   }
@@ -99,6 +102,8 @@ export function notificationLabel(
       return `${n.senderName} ${t("notification.replied_comment")}`;
     case "dm_message":
       return n.senderName ? `${n.senderName} mengirim pesan` : "Pesan baru";
+    case "exam_quota":
+      return t("notification.exam_quota");
     default:
       return t("notification.default");
   }
