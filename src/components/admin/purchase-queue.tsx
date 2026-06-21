@@ -176,6 +176,22 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
         const { purchase: updated } = await res.json();
         setPurchases((prev) => prev.map((p) => (p.id === purchase.id ? updated : p)));
         toast.success(`Top-up ${purchase.meta?.quotaQty ?? ""}× disetujui — kuota ditambahkan.`);
+
+        // WhatsApp a quota-specific confirmation to the buyer's phone (from their
+        // profile, stored at top-up). Different message from the access invoice;
+        // no key/invoice. Skipped silently when no phone is on file.
+        const phone = waPhone((updated as PurchaseRequest).whatsapp || purchase.whatsapp || "");
+        if (phone.length >= 8) {
+          const subj = purchase.meta?.subjectName || "mata kuliah";
+          const qty = purchase.meta?.quotaQty ?? "";
+          const msg =
+            `Halo ${purchase.name || ""}, top-up kuota latihan kamu untuk ${subj} (${qty}× attempt) sudah disetujui. ✅\n\n` +
+            `Kuotanya langsung ditambahkan dan bisa dipakai sekarang lewat menu Latihan Soal. Selamat berlatih, terima kasih sudah mendukung HaiStudy!`;
+          window.open(
+            `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`,
+            "_blank"
+          );
+        }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Gagal approve");
       }

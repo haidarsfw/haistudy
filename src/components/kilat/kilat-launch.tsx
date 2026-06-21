@@ -78,9 +78,9 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
         variants={staggerContainer(0.07)}
         initial="hidden"
         animate="visible"
-        className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 shadow-warm"
+        className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 text-center shadow-warm"
       >
-        <motion.div variants={staggerItem} className="flex items-center gap-2">
+        <motion.div variants={staggerItem} className="flex items-center justify-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
             <Zap className="h-5 w-5 fill-primary" />
           </span>
@@ -91,12 +91,12 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
         <motion.h2 variants={staggerItem} className="mt-3 font-heading text-2xl font-bold">
           {t("kilat.title")}
         </motion.h2>
-        <motion.p variants={staggerItem} className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+        <motion.p variants={staggerItem} className="mx-auto mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
           {t("kilat.launch_desc")}
         </motion.p>
 
         {/* Mini feature row */}
-        <motion.div variants={staggerItem} className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+        <motion.div variants={staggerItem} className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5"><Hand className="h-3.5 w-3.5 text-primary" /> {t("kilat.feat_swipe")}</span>
           <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> {t("kilat.feat_quiz")}</span>
           <span className="inline-flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-primary" /> {total} {t("kilat.cards")}, {feed.chapters.length} {t("kilat.chapters")}</span>
@@ -106,7 +106,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
       {/* Progress (only once started) */}
       {started && (
         <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="mt-4 rounded-2xl border border-border bg-card p-4 shadow-warm">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-2">
               {completed ? t("kilat.done") : t("kilat.progress")}
               {passed && (
@@ -120,7 +120,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${pct}%` }} />
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs">
             <span className="inline-flex items-center gap-1 font-semibold text-primary">
               <Target className="h-3.5 w-3.5" /> {t("kilat.score")} {scorePct}%
             </span>
@@ -136,21 +136,26 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
 
       {/* Chapter list (2-col on desktop to fill width + cut scrolling) */}
       <motion.div variants={staggerContainer(0.05)} initial="hidden" animate="visible" className="mt-4 grid gap-2 sm:grid-cols-2">
-        {perChapter.map((ch) => (
-          <motion.div
-            key={ch.n}
-            variants={staggerItem}
-            className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
-          >
-            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${ch.done ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-primary/10 text-primary"}`}>
-              {ch.done ? <Check className="h-4 w-4" /> : ch.n}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{ch.title}</p>
-              <p className="truncate text-xs text-muted-foreground">{ch.count} {t("kilat.cards")}</p>
-            </div>
-          </motion.div>
-        ))}
+        {perChapter.map((ch, i) => {
+          // A lone last chapter (odd count) spans both columns + stays centered,
+          // so it sits as one full-width card aligned under the pair above it.
+          const lastOdd = perChapter.length % 2 === 1 && i === perChapter.length - 1;
+          return (
+            <motion.div
+              key={ch.n}
+              variants={staggerItem}
+              className={`flex items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-3 ${lastOdd ? "sm:col-span-2" : ""}`}
+            >
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${ch.done ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-primary/10 text-primary"}`}>
+                {ch.done ? <Check className="h-4 w-4" /> : ch.n}
+              </span>
+              <div className="min-w-0 text-center">
+                <p className="truncate text-sm font-semibold">{ch.title}</p>
+                <p className="truncate text-xs text-muted-foreground">{ch.count} {t("kilat.cards")}</p>
+              </div>
+            </motion.div>
+          );
+        })}
       </motion.div>
 
       {/* CTA */}

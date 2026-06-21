@@ -65,14 +65,14 @@ export const TabNav = memo(function TabNav({
             <button
               key={tab.id}
               onClick={() => { sounds.click(); onTabChange(tab.id); }}
-              className={`hs-press relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] font-medium transition-colors sm:flex-row sm:gap-1 sm:px-4 sm:py-2.5 sm:text-sm ${
+              className={`hs-press relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-medium leading-none transition-colors sm:flex-row sm:gap-1 sm:px-4 sm:py-2.5 sm:text-sm ${
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="relative">
-                <tab.icon className="h-4 w-4 shrink-0" />
+                <tab.icon className="h-[15px] w-[15px] shrink-0 sm:h-4 sm:w-4" />
                 {tabDots?.[tab.id] && (
                   <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-destructive" />
                 )}

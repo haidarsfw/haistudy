@@ -100,10 +100,12 @@ export function MusicPlayer() {
           )}
         </div>
         {isPlaying && trackTitle ? (
-          // Playing: full title scrolls (marquee) inside a fixed chip width.
-          <Marquee text={trackTitle} className="w-[120px] text-xs font-medium" />
+          // Playing: full title scrolls (marquee), desktop only + width adapts to
+          // the title (capped). Hidden on mobile so it never pushes other toolbar
+          // buttons — the pulsing dot on the icon already signals "playing".
+          <Marquee text={trackTitle} className="hidden w-fit max-w-[130px] text-xs font-medium sm:block" />
         ) : (
-          <span className="whitespace-nowrap text-xs font-medium transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-width,opacity] max-w-0 overflow-hidden opacity-0 group-hover:max-w-[120px] group-hover:opacity-100">
+          <span className="hidden whitespace-nowrap text-xs font-medium transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-width,opacity] max-w-0 overflow-hidden opacity-0 group-hover:max-w-[130px] group-hover:opacity-100 sm:inline">
             {t("music.title")}
           </span>
         )}

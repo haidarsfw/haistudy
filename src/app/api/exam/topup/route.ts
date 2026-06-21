@@ -80,13 +80,15 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
 
-    const { data: lic } = await supabase
-      .from("license_keys")
-      .select("name, short_name")
-      .eq("key", licenseKey)
-      .maybeSingle();
+    const [{ data: lic }, { data: prof }] = await Promise.all([
+      supabase.from("license_keys").select("name, short_name").eq("key", licenseKey).maybeSingle(),
+      supabase.from("user_profiles").select("phone").eq("license_key", licenseKey).maybeSingle(),
+    ]);
     const buyerName =
       (lic?.short_name as string) || (lic?.name as string) || "Pengguna";
+    // Buyer's phone (from their saved profile) so the admin can WA a confirmation
+    // on approval. May be empty → admin approve just skips opening WhatsApp.
+    const buyerPhone = ((prof?.phone as string) || "").trim();
 
     // Upload proof to the PRIVATE payment-proofs bucket (service_role).
     const path = `${sk}/topup-${crypto.randomUUID()}.jpg`;
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
       .from("purchase_requests")
       .insert({
         name: buyerName,
-        whatsapp: "-", // not collected for top-ups (buyer already logged in)
+        whatsapp: buyerPhone || "-", // from profile; "-" when none on file
         email: null,
         package: "exam_quota",
         status: "pending",

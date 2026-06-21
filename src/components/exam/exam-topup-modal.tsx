@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Check, Upload, Loader2, Copy, Sparkles, Ticket } from "lucide-react";
+import { X, Check, Upload, Loader2, Copy, Sparkles, Ticket, Download } from "lucide-react";
 import { QUOTA_PACKS } from "@/lib/exam/quota";
 import { PAYMENT_ACCOUNTS, WA_ADMIN } from "@/lib/payments";
 import { compressImageToBudget } from "@/lib/image";
@@ -85,6 +85,17 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
 
   const acct = method === "qris" ? null : PAYMENT_ACCOUNTS[method];
 
+  // Prefilled WhatsApp message to the admin (simplified vs the access-purchase
+  // template, but keeps the key details).
+  const waText = encodeURIComponent(
+    `Halo admin, konfirmasi top-up kuota latihan:\n` +
+      `• Mata kuliah: ${subjectName}\n` +
+      `• Paket: ${qty}× attempt\n` +
+      `• Total: ${idr(pack.price)}\n` +
+      `Bukti pembayaran sudah saya unggah di aplikasi. Mohon dicek ya, terima kasih!`
+  );
+  const waHref = `https://wa.me/${WA_ADMIN}?text=${waText}`;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -135,7 +146,7 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
             </p>
             <div className="mt-4 flex gap-2">
               <a
-                href={`https://wa.me/${WA_ADMIN}`}
+                href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hs-press flex-1 rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground"
@@ -157,9 +168,10 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
             <div className="mb-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <p className="text-[11px] leading-relaxed text-muted-foreground">
-                Tiap latihan soal dinilai <span className="font-semibold text-foreground">AI sungguhan</span> yang
-                makan token berbayar. Top-up bantu nutup biayanya, sekalian kamu bisa lanjut latihan tanpa nunggu
-                reset. Kuota nambah buat <span className="font-semibold text-foreground">matkul ini</span> aja.
+                Setiap latihan soal dinilai oleh <span className="font-semibold text-foreground">AI</span> yang
+                menggunakan token berbayar. Top-up membantu menutup biaya tersebut sekaligus memungkinkanmu lanjut
+                berlatih tanpa menunggu reset kuota. Kuota ditambahkan khusus untuk{" "}
+                <span className="font-semibold text-foreground">mata kuliah ini</span>.
               </p>
             </div>
 
@@ -207,13 +219,27 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
             <div className="mt-2 rounded-xl border border-border bg-muted/30 p-3 text-sm">
               {method === "qris" ? (
                 <div className="text-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={PAYMENT_ACCOUNTS.qrisImage}
-                    alt="QRIS"
-                    className="mx-auto h-44 w-44 rounded-lg border border-border bg-white object-contain"
-                  />
-                  <p className="mt-1.5 text-xs text-muted-foreground">Scan QRIS, bayar {idr(pack.price)}</p>
+                  {/* Slight zoom + clip removes the white margin baked into the
+                      QRIS image; QR + finder patterns stay fully inside. */}
+                  <div className="mx-auto w-full max-w-[280px] overflow-hidden rounded-xl">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={PAYMENT_ACCOUNTS.qrisImage}
+                      alt="QRIS HaiStudy"
+                      className="block w-full origin-center scale-[1.06] object-cover"
+                    />
+                  </div>
+                  <div className="mt-2 flex items-center justify-center gap-3">
+                    <a
+                      href={PAYMENT_ACCOUNTS.qrisImage}
+                      download="qris-haistudy.jpg"
+                      className="hs-press inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-foreground"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download QRIS
+                    </a>
+                    <span className="text-xs text-muted-foreground">bayar {idr(pack.price)}</span>
+                  </div>
                 </div>
               ) : acct ? (
                 <div className="flex items-center justify-between gap-2">

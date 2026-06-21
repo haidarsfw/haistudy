@@ -240,7 +240,11 @@ export async function PATCH(request: Request) {
     const supabase = createServerClient()!;
     const updates: Record<string, unknown> = { status };
     if (status === "approved") {
-      updates.license_key = licenseKey || null;
+      // Only set license_key when one is provided (access-purchase flow passes
+      // the freshly-minted key). For exam-quota top-ups the body has NO licenseKey
+      // and the row already carries the buyer's key — overwriting it with null
+      // here was nulling the grant target so the quota was never added.
+      if (licenseKey) updates.license_key = licenseKey;
       updates.approved_at = now;
     }
 

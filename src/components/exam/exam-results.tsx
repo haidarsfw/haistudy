@@ -81,8 +81,26 @@ export function ExamResults({
   const grade = getGrade(scorePct);
   const GradeIcon = grade.icon;
 
+  // Display order = the exam's question order (1, 1a, 1b, 2, 3 …), NOT the
+  // grading/return order — so the review + TOC + Prev/Next always read 1→last
+  // regardless of which filter is active.
+  const orderedResults = useMemo(() => {
+    const pos = new Map<string, number>();
+    let i = 0;
+    for (const q of exam.questions) {
+      if (q.subQuestions && q.subQuestions.length > 0) {
+        for (const s of q.subQuestions) pos.set(s.id, i++);
+      } else {
+        pos.set(q.id, i++);
+      }
+    }
+    return [...gradingResults].sort(
+      (a, b) => (pos.get(a.questionId) ?? 1e9) - (pos.get(b.questionId) ?? 1e9)
+    );
+  }, [exam, gradingResults]);
+
   // Cards visible under the current filter (drives the Prev/Next stepper + TOC).
-  const filtered = gradingResults.filter(
+  const filtered = orderedResults.filter(
     (r) => reviewFilter === "all" || statusOf(r) === reviewFilter
   );
   const activeId =
@@ -97,9 +115,9 @@ export function ExamResults({
   const jumpToReview = (id: string) => {
     setShowReview(true);
     setReviewFilter("all");
-    const idx = gradingResults.findIndex((r) => r.questionId === id);
+    const idx = orderedResults.findIndex((r) => r.questionId === id);
     if (idx >= 0) setActiveIdx(idx);
-    setTimeout(() => scrollToUnit(id), 80);
+    setTimeout(() => scrollToUnit(id), 120);
   };
 
   // Step Prev/Next through the filtered discussion list.
@@ -146,6 +164,34 @@ export function ExamResults({
     };
     requestAnimationFrame(tick);
   }, [totalScore]);
+
+  // Scroll-spy: keep activeIdx synced to the card currently at the top of the
+  // viewport, so Prev/Next always step from what the user is actually reading
+  // (fixes "Prev/Next kadang tidak jalan" after manual scrolling). setState runs
+  // in the observer callback, not synchronously in the effect body.
+  useEffect(() => {
+    if (!showReview) return;
+    const ids = filtered.map((r) => r.questionId);
+    if (ids.length === 0) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const vis = entries.filter((e) => e.isIntersecting);
+        if (vis.length === 0) return;
+        vis.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        const topId = vis[0].target.id.replace("review-", "");
+        const idx = ids.indexOf(topId);
+        if (idx >= 0) setActiveIdx(idx);
+      },
+      { rootMargin: "-150px 0px -55% 0px", threshold: 0 }
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(`review-${id}`);
+      if (el) obs.observe(el);
+    });
+    return () => obs.disconnect();
+    // filtered is derived from these; recompute observers when they change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showReview, reviewFilter, orderedResults]);
 
   // Map each answer unit -> { section heading, short code } from the exam shape.
   const unitMeta = useMemo(() => {
@@ -291,7 +337,7 @@ export function ExamResults({
 
             {/* Per-unit mini scores — click to jump into the review (TOC) */}
             <div className="mt-3 flex flex-wrap gap-2">
-              {gradingResults.map((r) => {
+              {orderedResults.map((r) => {
                 const st = statusOf(r);
                 const dotColor =
                   st === "ok" ? "bg-emerald-400" : st === "partial" ? "bg-amber-400" : "bg-red-400";
@@ -389,7 +435,7 @@ export function ExamResults({
                   <div
                     key={result.questionId}
                     id={`review-${result.questionId}`}
-                    className={`scroll-mt-32 rounded-2xl transition-shadow ${
+                    className={`scroll-mt-44 rounded-2xl transition-shadow ${
                       result.questionId === activeId ? "ring-2 ring-primary/40" : ""
                     }`}
                   >
