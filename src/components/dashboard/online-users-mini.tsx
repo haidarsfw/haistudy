@@ -11,6 +11,14 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { PublicProfilePopover } from "@/components/user/public-profile-popover";
 import type { OnlineUser } from "@/types";
 
+const DOT_COLORS = [
+  "bg-emerald-500",
+  "bg-blue-500",
+  "bg-violet-500",
+  "bg-amber-500",
+  "bg-rose-500",
+];
+
 const deviceIconMap: Record<string, typeof Monitor> = {
   desktop: Monitor,
   mobile: Smartphone,
@@ -130,6 +138,60 @@ export function OnlineUsersMini() {
             />
           </div>
         </button>
+
+        {/* Avatar row (always visible) */}
+        {visibleUsers.length > 0 && (
+          <div className="flex items-center gap-2 mt-2">
+            <div className="flex -space-x-1.5">
+              {visibleUsers.slice(0, 5).map((user, i) => {
+                const masked = isMasked(user);
+                const avatarUrl = !masked && user.licenseKey
+                  ? avatarMap.get(user.licenseKey.toUpperCase()) ?? null
+                  : null;
+                const avatarClass = `h-6 w-6 overflow-hidden rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`;
+                const title = masked ? "Hidden User" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`;
+                const inner = avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt={user.userName || "?"} className="h-full w-full object-cover" />
+                ) : masked ? (
+                  "?"
+                ) : (
+                  (user.userName || "?").charAt(0).toUpperCase()
+                );
+                // Masked users get NO popover (privacy); everyone else is hoverable.
+                if (masked) {
+                  return (
+                    <div key={`${user.id}-${i}`} className={avatarClass} title={title}>
+                      {inner}
+                    </div>
+                  );
+                }
+                return (
+                  <PublicProfilePopover
+                    key={`${user.id}-${i}`}
+                    licenseKey={user.licenseKey}
+                    fallbackName={user.userName || "?"}
+                    fallbackIsAdmin={user.isAdmin}
+                    fallbackTier={user.packageTier ?? null}
+                  >
+                    <button
+                      type="button"
+                      className={`${avatarClass} cursor-pointer transition-transform hover:z-10 hover:scale-110`}
+                      title={title}
+                    >
+                      {inner}
+                    </button>
+                  </PublicProfilePopover>
+                );
+              })}
+              {visibleUsers.length > 5 && (
+                <div className="h-6 w-6 rounded-full border-2 border-card bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground">
+                  +{visibleUsers.length - 5}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {visibleUsers.length === 0 && (
           <p className="text-[11px] text-muted-foreground mt-2">
