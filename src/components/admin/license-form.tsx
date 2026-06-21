@@ -23,6 +23,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
 
   const [key, setKey] = useState(license?.key || "");
   const [name, setName] = useState(license?.name || "");
+  const [shortName, setShortName] = useState(license?.shortName || "");
   const [maxDevices, setMaxDevices] = useState(license?.maxDevices || 2);
   const [unlimitedDevices, setUnlimitedDevices] = useState(
     license?.unlimitedDevices || false
@@ -63,6 +64,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
             body: JSON.stringify({
               key: license.key,
               name,
+              shortName: shortName.trim() || null,
               maxDevices,
               unlimitedDevices,
               isAdmin,
@@ -83,6 +85,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
             body: JSON.stringify({
               key: key.trim(),
               name: name.trim(),
+              ...(shortName.trim() ? { shortName: shortName.trim() } : {}),
               maxDevices,
               unlimitedDevices,
               isAdmin,
@@ -106,7 +109,7 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
 
       setSaving(false);
     },
-    [isEdit, key, name, maxDevices, unlimitedDevices, isAdmin, isTester, packageTier, linkedEmail, license, onSave, scopeQuery]
+    [isEdit, key, name, shortName, maxDevices, unlimitedDevices, isAdmin, isTester, packageTier, linkedEmail, license, onSave, scopeQuery]
   );
 
   return (
@@ -130,6 +133,17 @@ export function LicenseForm({ license, onSave, onCancel }: LicenseFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nama pemilik"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="lf-shortname">Nickname</Label>
+        <Input
+          id="lf-shortname"
+          value={shortName}
+          onChange={(e) => setShortName(e.target.value)}
+          placeholder="Nama panggilan (opsional)"
+          maxLength={24}
         />
       </div>
 

@@ -306,6 +306,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       list = list.filter((p) => {
         const hay = [
           p.name,
+          p.meta?.nickname,
           p.whatsapp,
           p.email,
           p.meta?.loginEmail,

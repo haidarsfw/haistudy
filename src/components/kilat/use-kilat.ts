@@ -164,11 +164,14 @@ export function useKilat({ feed, initial, onPersist }: Args) {
 
   const jumpTo = useCallback(
     (i: number) => {
-      if (i < 0 || i > reached) return; // only revisit reached cards
+      // Before completion: only revisit reached cards. After completion: free
+      // jump to any card (replay unlocks the whole feed).
+      if (i < 0 || i >= cards.length) return;
+      if (i > reached && !completed) return;
       setPendingSkip(false);
       setIndex(i);
     },
-    [reached]
+    [reached, completed, cards.length]
   );
 
   const reset = useCallback(() => {
@@ -189,10 +192,13 @@ export function useKilat({ feed, initial, onPersist }: Args) {
       if (skipped.includes(card.id)) return "skipped";
       const r = responses[card.id];
       if (r) return isGraded(card) ? (r.correct ? "correct" : "wrong") : "done";
-      if (i > reached) return "locked";
+      // Once the whole feed is completed, replay unlocks every card for free
+      // jumping (no step-by-step gate). Before that, anything past the furthest
+      // reached card stays locked.
+      if (i > reached && !completed) return "locked";
       return "todo";
     },
-    [cards, responses, skipped, reached]
+    [cards, responses, skipped, reached, completed]
   );
 
   const firstIndexOfChapter = useCallback(

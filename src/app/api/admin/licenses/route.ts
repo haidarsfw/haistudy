@@ -520,6 +520,11 @@ export async function PUT(request: Request) {
     const supabase = createServerClient()!;
     const dbUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.shortName !== undefined)
+      dbUpdates.short_name =
+        typeof updates.shortName === "string" && updates.shortName.trim()
+          ? updates.shortName.trim().slice(0, 24)
+          : null;
     if (updates.daysActive !== undefined) dbUpdates.days_active = updates.daysActive;
     if (updates.maxDevices !== undefined) dbUpdates.max_devices = updates.maxDevices;
     if (updates.unlimitedDevices !== undefined) dbUpdates.unlimited_devices = updates.unlimitedDevices;

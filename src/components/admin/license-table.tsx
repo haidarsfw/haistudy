@@ -222,6 +222,22 @@ function UserDetailDialog({
   const [copied, setCopied] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [resettingDevices, setResettingDevices] = useState(false);
+  // Lightweight Latihan Soal summary (attempts + best/last score per subject).
+  const [examSummary, setExamSummary] = useState<
+    { subjectId: string; attempts: number; best: number | null; last: number | null; lastAt: string | null }[] | null
+  >(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const q = scopeQuery();
+    const sep = q ? "&" : "?";
+    fetch(`/api/admin/exam-summary${q}${sep}key=${encodeURIComponent(license.key)}`)
+      .then((r) => (r.ok ? r.json() : { subjects: [] }))
+      .then((d) => { if (!cancelled) setExamSummary(d.subjects || []); })
+      .catch(() => { if (!cancelled) setExamSummary([]); });
+    return () => { cancelled = true; };
+  }, [open, license.key, scopeQuery]);
 
   const copyKey = () => {
     navigator.clipboard.writeText(license.key).then(() => {
@@ -287,6 +303,32 @@ function UserDetailDialog({
           </div>
 
           <Separator />
+
+          {/* Latihan Soal summary (lightweight: attempts + best/last score) */}
+          {examSummary && examSummary.length > 0 && (
+            <>
+              <div className="space-y-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Latihan Soal
+                </span>
+                <div className="space-y-1">
+                  {examSummary.map((s) => (
+                    <div
+                      key={s.subjectId}
+                      className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-2.5 py-1.5 text-xs"
+                    >
+                      <span className="truncate font-medium">{s.subjectId}</span>
+                      <span className="shrink-0 text-muted-foreground tabular-nums">
+                        {s.attempts}x · terbaik {s.best != null ? Math.round(s.best) : "-"}% · terakhir{" "}
+                        {s.last != null ? Math.round(s.last) : "-"}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
 
           {/* User Info */}
           {activation ? (
@@ -526,11 +568,17 @@ export function LicenseTable() {
     fetchData();
   }, [fetchData]);
 
-  const filtered = licenses.filter(
-    (l) =>
-      l.key.toLowerCase().includes(search.toLowerCase()) ||
-      l.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const q = search.toLowerCase();
+  const filtered = licenses.filter((l) => {
+    const act = activations.find((a) => a.licenseKey === l.key);
+    return (
+      l.key.toLowerCase().includes(q) ||
+      l.name.toLowerCase().includes(q) ||
+      (l.shortName || "").toLowerCase().includes(q) ||
+      (act?.userName || "").toLowerCase().includes(q) ||
+      (act?.shortName || "").toLowerCase().includes(q)
+    );
+  });
 
   const deviceIcon = (type: string) => {
     if (type === "mobile") return <Smartphone className="h-3 w-3" />;
