@@ -7,22 +7,7 @@ import {
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import { scopeKey } from "@/lib/scope";
 import type { PackageTier } from "@/lib/tier";
-
-// ─── Tier-based attempt limits ───
-function maxAttempts(
-  isAdmin: boolean,
-  tier: PackageTier | null | undefined
-): number {
-  if (isAdmin) return -1; // -1 = unlimited (shown as ∞ on frontend)
-  switch (tier) {
-    case "diamond":
-      return 5;
-    case "vip":
-      return 3;
-    default:
-      return 2; // share, normal
-  }
-}
+import { computeQuota, quotaCountFrom } from "@/lib/exam/quota";
 
 /**
  * GET /api/exam/quota?subjectId=bizethics
@@ -68,18 +53,34 @@ export async function GET(request: Request) {
 
     const isAdmin = Boolean(license?.is_admin);
     const tier = (license?.package_tier as PackageTier) ?? "normal";
-    const max = maxAttempts(isAdmin, tier);
 
-    // Count non-abandoned attempts
+    // Per-subject bonus credits (top-ups) + reset marker (credit model).
+    let bonus = 0;
+    let resetAt: string | null = null;
+    const { data: override } = await supabase
+      .from("exam_quota_overrides")
+      .select("bonus, reset_at")
+      .eq("license_key", licenseKey)
+      .eq("scope_key", sk)
+      .eq("subject_id", subjectId)
+      .maybeSingle();
+    if (override) {
+      bonus = (override.bonus as number) ?? 0;
+      resetAt = (override.reset_at as string) ?? null;
+    }
+
+    // Count non-abandoned attempts since the effective reset point.
     const { count } = await supabase
       .from("exam_attempts")
       .select("id", { count: "exact", head: true })
       .eq("license_key", licenseKey)
       .eq("scope_key", sk)
       .eq("subject_id", subjectId)
-      .neq("status", "abandoned");
+      .neq("status", "abandoned")
+      .gte("started_at", quotaCountFrom(resetAt));
 
     const used = count ?? 0;
+    const q = computeQuota({ isAdmin, tier, bonus, used });
 
     // Fetch attempt summaries for history
     const { data: history } = await supabase
@@ -97,8 +98,9 @@ export async function GET(request: Request) {
       quota: {
         subjectId,
         used,
-        max,
-        remaining: max === -1 ? -1 : Math.max(0, max - used),
+        max: q.max,
+        remaining: q.remaining,
+        bonus: q.bonus,
       },
       history: history ?? [],
     });
