@@ -175,16 +175,11 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
             </div>
           )}
 
-          {/* "Update aplikasi" LAST + collapsed to the latest (expand for older). */}
+          {/* App updates merged into the SAME list below the real notifications
+              (no header / separator), collapsed to the latest (expand for older).
+              Real notifications stay on top + persist until dismissed manually. */}
           {patchNotes.length > 0 && (
             <>
-              {notifications.length > 0 && <Separator />}
-              <div className="px-3 pt-2.5 pb-1">
-                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <Sparkles className="h-3 w-3 text-primary" />
-                  Update aplikasi
-                </p>
-              </div>
               <div className="pb-1">
                 {(showAllPatches ? patchNotes : patchNotes.slice(0, 1)).map((note) => {
                   const unread = !patchIsRead(note.version);

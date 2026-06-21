@@ -103,7 +103,7 @@ export function NotificationPopup({
             }}
             onPointerDownCapture={(e) => e.stopPropagation()}
             aria-label={t("notification.dismiss")}
-            className="absolute -left-2 -top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/15 text-foreground/70 ring-1 ring-foreground/10 backdrop-blur-sm transition-colors hover:bg-foreground/25 hover:text-foreground"
+            className="absolute -left-2 -top-2 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-foreground/15 text-foreground/70 opacity-0 ring-1 ring-foreground/10 backdrop-blur-sm transition-[opacity,background-color] hover:bg-foreground/25 hover:text-foreground sm:flex sm:group-hover/toast:opacity-100"
           >
             <X className="h-3 w-3" />
           </button>

@@ -55,7 +55,7 @@ export const TabNav = memo(function TabNav({
   hiddenTabs,
 }: TabNavProps) {
   return (
-    <div className="border-b border-border">
+    <div className="relative border-b border-border">
       {/* Mobile: single inline row that scrolls horizontally (icon + label like
           desktop — clear widths, no empty gaps, not tall). Desktop (sm+): wraps. */}
       <div className="relative flex overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
@@ -92,6 +92,8 @@ export const TabNav = memo(function TabNav({
           );
         })}
       </div>
+      {/* Mobile-only scroll hint: a soft right-edge fade signals "more tabs →". */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
     </div>
   );
 });
