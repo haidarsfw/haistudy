@@ -98,9 +98,9 @@ export function useOnlineUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeKey]);
 
-  // Realtime is only considered working if it contains other users besides ourselves.
-  const hasOthersOnRealtime = users.some((u) => u.licenseKey?.toUpperCase() !== session?.licenseKey?.toUpperCase());
-  const effective = hasOthersOnRealtime ? users : (polled.length > 0 ? polled : users);
+  // If the database poll has more users than the realtime presence channel (e.g. due to websocket throttling in background tabs,
+  // old client versions, or network blocks), use the polled database list as the source of truth.
+  const effective = polled.length > users.length ? polled : users;
 
   // Keep the VIP baseline current from the latest list.
   useEffect(() => {
