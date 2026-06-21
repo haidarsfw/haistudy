@@ -26,6 +26,22 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.2.0",
+    date: "2026-06-21",
+    title: "Update besar: Latihan Soal lengkap + perbaikan platform",
+    items: [
+      "Latihan Soal makin lengkap: tambahan mata kuliah, area coret-coret (scratchpad), kalkulator, dan cheat sheet di dalam ujian.",
+      "Penilaian AI lebih akurat: semua soal kini dinilai penuh, plus tombol Nilai Ulang di layar hasil.",
+      "Pembahasan lebih enak dibaca: daftar isi yang bisa diklik dan filter Salah/Sebagian.",
+      "Foto profil kamu kini tampil di mana saja: daftar mulai chat baru, DM, dan daftar online.",
+      "Daftar online jadi real-time, muncul tanpa perlu refresh.",
+      "Notifikasi DM lebih jelas: titik merah di ikon chat dan di tab sumbernya.",
+      "Pemutar musik diperbaiki: judul lagu tampil dan langsung jalan saat diputar.",
+      "Flashcards dan Quiz digabung jadi satu tab Hafalan & Kuis biar lebih rapi.",
+      "Atur ulang foto profil dengan crop yang bisa digeser bebas.",
+    ],
+  },
+  {
     version: "2.1.0",
     date: "2026-06-20",
     title: "Latihan Soal Ujian (Practice Exam)",

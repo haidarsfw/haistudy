@@ -6,7 +6,7 @@ import { useOptionalScope } from "@/components/providers/scope-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useSettings } from "@/hooks/use-settings";
 import { getDeviceId, getDeviceType } from "@/lib/auth/device";
-import { getCurrentSubject } from "@/lib/presence";
+import { getCurrentSubject, fetchOnlineUsers } from "@/lib/presence";
 import {
   joinPresence,
   subscribeLiveUsers,
@@ -28,6 +28,10 @@ export function useOnlineUsers() {
   const scopeKey = scopeCtx?.scopeKey ?? "";
 
   const [users, setUsers] = useState<OnlineUser[]>(() => getLiveUsers());
+  // Fallback list from the presence TABLE, used only if the Realtime Presence
+  // channel yields nobody (e.g. realtime auth blocks the channel in prod). Slow
+  // 120s poll — same cadence as before, so IO is unchanged in the worst case.
+  const [polled, setPolled] = useState<OnlineUser[]>([]);
   // Baseline of keys already online, so a join event only toasts genuinely-new
   // VIP/admin arrivals (not everyone present on first sync).
   const prevKeysRef = useRef<Set<string>>(new Set());
@@ -79,12 +83,29 @@ export function useOnlineUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.licenseKey, settings?.hideStatus, scopeKey]);
 
+  // Fallback poll (only matters when the realtime list is empty).
+  useEffect(() => {
+    const sc = scopeCtx?.scope;
+    if (!sc) return;
+    let cancelled = false;
+    const run = () =>
+      fetchOnlineUsers(sc)
+        .then((d) => { if (!cancelled) setPolled(d); })
+        .catch(() => {});
+    run();
+    const iv = setInterval(run, 120_000);
+    return () => { cancelled = true; clearInterval(iv); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scopeKey]);
+
+  const effective = users.length > 0 ? users : polled;
+
   // Keep the VIP baseline current from the latest list.
   useEffect(() => {
     prevKeysRef.current = new Set(
-      users.map((u) => u.licenseKey?.toUpperCase()).filter(Boolean) as string[]
+      effective.map((u) => u.licenseKey?.toUpperCase()).filter(Boolean) as string[]
     );
-  }, [users]);
+  }, [effective]);
 
-  return { users, refresh: () => {} };
+  return { users: effective, refresh: () => {} };
 }
