@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useAvatars } from "@/hooks/use-avatars";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { PublicProfilePopover } from "@/components/user/public-profile-popover";
@@ -25,9 +26,42 @@ const deviceIconMap: Record<string, typeof Monitor> = {
   tablet: Tablet,
 };
 
+const PAGE_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
+  subjects: "Subjects",
+  bookmarks: "Bookmarks",
+  notes: "Catatan",
+  analytics: "Analytics",
+  feedback: "Feedback",
+  voice: "Voice",
+  admin: "Admin",
+  settings: "Settings",
+  "jadwal-uts": "Jadwal UTS",
+};
+
 const MAX_VISIBLE_EXPANDED = 2;
 
-function UserRow({ user, index, isAdmin, masked, displayName, avatarUrl = null, popover = true, showAvatar = true }: { user: OnlineUser; index: number; isAdmin: boolean; masked: boolean; displayName: string; avatarUrl?: string | null; popover?: boolean; showAvatar?: boolean }) {
+function UserRow({
+  user,
+  index,
+  isAdmin,
+  masked,
+  displayName,
+  avatarUrl = null,
+  popover = true,
+  showAvatar = true,
+  locationText = null,
+}: {
+  user: OnlineUser;
+  index: number;
+  isAdmin: boolean;
+  masked: boolean;
+  displayName: string;
+  avatarUrl?: string | null;
+  popover?: boolean;
+  showAvatar?: boolean;
+  locationText?: string | null;
+}) {
   const devices = user.deviceTypes || [user.deviceType];
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -62,6 +96,12 @@ function UserRow({ user, index, isAdmin, masked, displayName, avatarUrl = null, 
           </button>
         </PublicProfilePopover>
       )}
+      {/* Location badge - only visible to admin */}
+      {isAdmin && locationText && (
+        <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/40 truncate max-w-[85px]" title={locationText}>
+          {locationText}
+        </span>
+      )}
       {user.hideStatus && isAdmin && (
         <Lock className="h-3 w-3 text-muted-foreground/50 shrink-0" />
       )}
@@ -82,6 +122,8 @@ export function OnlineUsersMini() {
   const { t } = useTranslation();
   const { users } = useOnlineUsers();
   const { session } = useSession();
+  const { subjects } = useScopedData();
+  const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.id, s] as const)), [subjects]);
   const [expanded, setExpanded] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
@@ -219,8 +261,23 @@ export function OnlineUsersMini() {
               <div className="mt-3 border-t border-border pt-2 space-y-1.5">
                 {visibleUsers.slice(0, MAX_VISIBLE_EXPANDED).map((user, i) => {
                   const masked = isMasked(user);
+                  const subject = user.currentSubject ? subjectMap.get(user.currentSubject) ?? null : null;
+                  const locationText =
+                    subject?.name ||
+                    (user.currentSubject ? PAGE_LABELS[user.currentSubject] || user.currentSubject.toUpperCase() : null) ||
+                    null;
                   return (
-                    <UserRow key={`${user.licenseKey || user.id}-${i}`} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} avatarUrl={masked || !user.licenseKey ? null : avatarMap.get(user.licenseKey.toUpperCase()) ?? null} showAvatar={false} />
+                    <UserRow
+                      key={`${user.licenseKey || user.id}-${i}`}
+                      user={user}
+                      index={i}
+                      isAdmin={isAdmin}
+                      masked={masked}
+                      displayName={getDisplayName(user)}
+                      avatarUrl={masked || !user.licenseKey ? null : avatarMap.get(user.licenseKey.toUpperCase()) ?? null}
+                      showAvatar={false}
+                      locationText={locationText}
+                    />
                   );
                 })}
 
@@ -277,6 +334,11 @@ export function OnlineUsersMini() {
               <div className="p-4 space-y-2 max-h-[50vh] overflow-y-auto">
                 {visibleUsers.map((user, i) => {
                   const masked = isMasked(user);
+                  const subject = user.currentSubject ? subjectMap.get(user.currentSubject) ?? null : null;
+                  const locationText =
+                    subject?.name ||
+                    (user.currentSubject ? PAGE_LABELS[user.currentSubject] || user.currentSubject.toUpperCase() : null) ||
+                    null;
                   return (
                     <UserRow
                       key={`${user.id}:${user.licenseKey || "anon"}:${i}`}
@@ -286,6 +348,7 @@ export function OnlineUsersMini() {
                       masked={masked}
                       displayName={getDisplayName(user)}
                       avatarUrl={masked || !user.licenseKey ? null : avatarMap.get(user.licenseKey.toUpperCase()) ?? null}
+                      locationText={locationText}
                     />
                   );
                 })}
