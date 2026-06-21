@@ -29,6 +29,9 @@ export const SUBJECT_TABS = [
   { id: 8, label: "Soal Ujian", shortLabel: "Soal", icon: ClipboardList },
   { id: 1, label: "Rangkuman", shortLabel: "Rangkum", icon: BookOpen },
   { id: 2, label: "Kisi-Kisi", shortLabel: "Kisi", icon: List },
+  // Merged Flashcards + Quiz (s2/uas/bm onward). Hidden elsewhere; ids 3+4 below
+  // stay for earlier scopes that still show them separately.
+  { id: 11, label: "Hafalan & Kuis", shortLabel: "Hafalan", icon: Layers },
   { id: 3, label: "Flashcards", shortLabel: "Flash", icon: Layers },
   { id: 4, label: "Quiz", shortLabel: "Quiz", icon: HelpCircle },
   { id: 5, label: "Forum", shortLabel: "Forum", icon: MessageSquare },

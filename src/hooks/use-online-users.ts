@@ -1,79 +1,90 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { OnlineUser } from "@/types";
-import type { ScopeTuple } from "@/types/scope";
-import { fetchOnlineUsers } from "@/lib/presence";
-import { whenIdle } from "@/lib/defer";
 import { useOptionalScope } from "@/components/providers/scope-provider";
+import { useSession } from "@/components/providers/session-provider";
+import { useSettings } from "@/hooks/use-settings";
+import { getDeviceId, getDeviceType } from "@/lib/auth/device";
+import { getCurrentSubject } from "@/lib/presence";
+import {
+  joinPresence,
+  subscribeLiveUsers,
+  getLiveUsers,
+  onPresenceJoin,
+  type PresenceSelf,
+} from "@/lib/realtime/presence-live";
 
-// Poll every 120s. Presence is driven by 60s-visible / 5m-hidden heartbeats,
-// so 120s is the natural freshness ceiling - faster polling just wastes DB IO
-// without showing the user anything new.
-//
-// Previously subscribed to postgres_changes event:"*" on presence, which caused
-// N×N query amplification: every user's 60s heartbeat fired UPDATEs that every
-// other user's browser would refetch. With 50 concurrent users that was ~100
-// queries/sec against a seq-scanned table - the primary cause of Disk IO
-// Budget depletion. Polling-only eliminates the cascade entirely.
-const POLL_INTERVAL_MS = 120_000;
-
+/**
+ * Live online users via Supabase Realtime Presence (in-memory, no DB polling).
+ * Replaces the old 120s `presence` table poll: instant join/leave, includes the
+ * current user, and adds zero Postgres/WAL/disk IO. The DB heartbeat still runs
+ * (src/lib/presence.ts) purely for study-minute accounting.
+ */
 export function useOnlineUsers() {
-  const [users, setUsers] = useState<OnlineUser[]>([]);
-  const prevKeysRef = useRef<Set<string>>(new Set());
-
-  // Scope-filter the online list (read via ref so `refresh` stays stable).
+  const { session } = useSession();
+  const { settings } = useSettings();
   const scopeCtx = useOptionalScope();
   const scopeKey = scopeCtx?.scopeKey ?? "";
-  const scopeRef = useRef<ScopeTuple | null>(scopeCtx?.scope ?? null);
-  scopeRef.current = scopeCtx?.scope ?? null;
 
-  const refresh = useCallback(async () => {
-    try {
-      const data = await fetchOnlineUsers(scopeRef.current ?? undefined);
-      setUsers(data);
-
-      // Detect newly-online VIP/admin users and dispatch welcome event.
-      // Skip hideStatus users and free/normal tiers.
-      const prevKeys = prevKeysRef.current;
-      const nextKeys = new Set(data.map((u) => u.licenseKey));
-
-      // Only dispatch after the first poll (prevKeys non-empty) so the
-      // initial load doesn't fire toasts for everyone already online.
-      if (prevKeys.size > 0) {
-        for (const u of data) {
-          if (prevKeys.has(u.licenseKey)) continue; // not new
-          if (u.hideStatus) continue;
-          const tier = u.packageTier;
-          const isVipOrAdmin = u.isAdmin || tier === "vip" || tier === "diamond";
-          if (!isVipOrAdmin) continue;
-          window.dispatchEvent(
-            new CustomEvent("hs:vip-online", {
-              detail: { licenseKey: u.licenseKey, name: u.userName, isAdmin: u.isAdmin },
-            })
-          );
-        }
-      }
-
-      prevKeysRef.current = nextKeys;
-    } catch {
-      // Silently fail - stale data is better than a crash/loop
-    }
-  }, []);
+  const [users, setUsers] = useState<OnlineUser[]>(() => getLiveUsers());
+  // Baseline of keys already online, so a join event only toasts genuinely-new
+  // VIP/admin arrivals (not everyone present on first sync).
+  const prevKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Initial fetch deferred to idle so it doesn't queue a request on the
-    // main thread during FCP. Polling interval is unaffected.
-    const cancelIdle = whenIdle(() => {
-      refresh();
-    });
-    const interval = setInterval(refresh, POLL_INTERVAL_MS);
-    return () => {
-      cancelIdle();
-      clearInterval(interval);
-    };
-    // scopeKey in deps: re-fetch + reset the poll when the user switches scope.
-  }, [refresh, scopeKey]);
+    if (!session || !scopeCtx?.scope) return;
 
-  return { users, refresh };
+    const self: PresenceSelf = {
+      userId: getDeviceId(),
+      userName: session.shortName,
+      licenseKey: session.licenseKey,
+      deviceType: getDeviceType() as PresenceSelf["deviceType"],
+      isAdmin: session.isAdmin,
+      isTester: session.isTester,
+      packageTier: session.packageTier,
+    };
+
+    const dispose = joinPresence(scopeCtx.scope, self, {
+      currentSubject: getCurrentSubject(),
+      hideStatus: settings?.hideStatus ?? false,
+    });
+    const unsub = subscribeLiveUsers(() => setUsers(getLiveUsers()));
+    setUsers(getLiveUsers());
+
+    const unJoin = onPresenceJoin((metas) => {
+      const prev = prevKeysRef.current;
+      const myKey = session.licenseKey.toUpperCase();
+      for (const m of metas) {
+        const k = (m.licenseKey || "").toUpperCase();
+        if (!k || k === myKey) continue;
+        if (prev.has(k)) continue;
+        if (m.hideStatus) continue;
+        const isVipOrAdmin =
+          m.isAdmin || m.packageTier === "vip" || m.packageTier === "diamond";
+        if (!isVipOrAdmin) continue;
+        window.dispatchEvent(
+          new CustomEvent("hs:vip-online", {
+            detail: { licenseKey: m.licenseKey, name: m.userName, isAdmin: m.isAdmin },
+          })
+        );
+      }
+    });
+
+    return () => {
+      dispose();
+      unsub();
+      unJoin();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.licenseKey, settings?.hideStatus, scopeKey]);
+
+  // Keep the VIP baseline current from the latest list.
+  useEffect(() => {
+    prevKeysRef.current = new Set(
+      users.map((u) => u.licenseKey?.toUpperCase()).filter(Boolean) as string[]
+    );
+  }, [users]);
+
+  return { users, refresh: () => {} };
 }

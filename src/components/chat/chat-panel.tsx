@@ -15,6 +15,8 @@ import { ProfileEditor } from "@/components/profile/profile-editor";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useChat } from "@/hooks/use-chat";
+import { useChatUnread } from "@/hooks/use-chat-unread";
+import { useNotifications } from "@/hooks/use-notifications";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { getDeviceId } from "@/lib/auth/device";
 import { canUseVipFeatures } from "@/lib/tier";
@@ -28,6 +30,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ChatChannel, ChatMessage } from "@/types";
 import { toast } from "@/components/ui/toast";
 import { sounds } from "@/lib/sounds";
+import { isCropLocked } from "@/lib/crop-lock";
 
 interface ChatPanelProps {
   isOpen: boolean;
@@ -72,6 +75,15 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
     markAsRead,
     fetchMore,
   } = useChat(channel);
+
+  // Per-source unread, so each tab can show a red dot telling the user WHERE the
+  // new message is (Global / VIP / DM). Reuses existing realtime state — no extra
+  // polling. DM unread is derived from dm_message notifications.
+  const { globalUnread, vipUnread } = useChatUnread();
+  const { notifications } = useNotifications();
+  const dmTabUnread = notifications.filter(
+    (n) => n.type === "dm_message" && !n.read
+  ).length;
   const { users } = useOnlineUsers();
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [deviceId, setDeviceId] = useState("");
@@ -363,6 +375,9 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
               >
                 <MessageCircle className="h-3 w-3" />
                 {t("chat.channel_global")}
+                {globalUnread > 0 && !(tab === "chat" && channel === "global") && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                )}
               </button>
               <button
                 onClick={() => {
@@ -386,6 +401,9 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
                   <Lock className="h-3 w-3" />
                 )}
                 {t("chat.channel_vip")}
+                {canVip && vipUnread > 0 && !(tab === "chat" && channel === "vip-lounge") && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                )}
               </button>
               <button
                 onClick={() => {
@@ -407,6 +425,9 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
                   <Lock className="h-3 w-3" />
                 )}
                 {t("dm.tab")}
+                {dmTabUnread > 0 && tab !== "dm" && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                )}
               </button>
             </div>
 
@@ -471,7 +492,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
     <MediaPreviewer src={previewImage} onClose={() => setPreviewImage(null)} />
 
     {/* Edit own profile */}
-    <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+    <Dialog open={profileOpen} onOpenChange={(o) => { if (!o && isCropLocked()) return; setProfileOpen(o); }}>
       <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("profile.edit_own")}</DialogTitle>

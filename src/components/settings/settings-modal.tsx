@@ -37,6 +37,7 @@ import { ProfileEditor } from "@/components/profile/profile-editor";
 import { NotificationsSettingsTab } from "@/components/notifications/notifications-settings-tab";
 import { Switch } from "@/components/ui/switch";
 import { APP_VERSION } from "@/lib/constants";
+import { isCropLocked } from "@/lib/crop-lock";
 import { getSoundMuted, setSoundMuted, sounds } from "@/lib/sounds";
 import { Download } from "lucide-react";
 import { PWA_EVENTS, isStandalone } from "@/lib/pwa-version";
@@ -74,7 +75,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   if (!session) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && isCropLocked()) return; onOpenChange(o); }}>
       <DialogContent className="flex flex-col w-[calc(100vw-2rem)] max-w-md sm:max-w-md max-h-[85dvh] p-0 overflow-hidden bg-background/90 backdrop-blur-xl border-border/30 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-[0.96]">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-0">
           <DialogTitle className="flex items-center gap-2">

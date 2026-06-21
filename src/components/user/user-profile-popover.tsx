@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
+import { AnimatePresence } from "framer-motion";
 import { getDeviceId } from "@/lib/auth/device";
 import { LogOut, Save, Loader2, Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -16,13 +18,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { APP_EVENTS } from "@/lib/events";
+import { isCropLocked } from "@/lib/crop-lock";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useSession } from "@/components/providers/session-provider";
 import { useProfile } from "@/hooks/use-profile";
 import { generateDefaultAvatar } from "@/lib/avatar";
+import { isHeic, heicToJpeg } from "@/lib/image";
 import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import { toast } from "@/components/ui/toast";
+
+// Lazy-load the cropper (keeps react-easy-crop out of the initial bundle).
+const AvatarCropper = dynamic(() => import("@/components/profile/avatar-cropper"), { ssr: false });
 
 interface UserProfilePopoverProps {
   children: React.ReactElement;
@@ -39,6 +46,7 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
   const [bio, setBio] = useState("");
   const [customStatus, setCustomStatus] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [pendingSrc, setPendingSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync form state when popover opens
@@ -63,24 +71,57 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
 
   const handleAvatarPick = () => fileInputRef.current?.click();
 
+  // Pick → (HEIC convert) → open cropper. Upload waits for a confirmed crop, so
+  // this entry now gets the same crop UX as Settings (was a raw upload before).
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-picking the same file
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith("image/") && !isHeic(file)) {
       toast.error("File harus berupa gambar");
       return;
     }
+    let f = file;
+    if (isHeic(f)) {
+      setAvatarUploading(true);
+      try {
+        f = await heicToJpeg(f);
+      } catch {
+        toast.error("Gagal mengunggah foto");
+        setAvatarUploading(false);
+        return;
+      }
+      setAvatarUploading(false);
+    }
+    setPendingSrc(URL.createObjectURL(f));
+  };
+
+  const handleCropped = async (blob: Blob) => {
+    if (pendingSrc) URL.revokeObjectURL(pendingSrc);
+    setPendingSrc(null);
     setAvatarUploading(true);
     try {
-      const url = await uploadToCloudinary(file);
+      const file = new File([blob], "avatar.jpg", { type: blob.type || "image/jpeg" });
+      const url = await uploadToCloudinary(file, "image");
       await updateProfile({ avatarUrl: url });
+      if (session?.licenseKey) {
+        window.dispatchEvent(
+          new CustomEvent("hs:avatar-updated", {
+            detail: { licenseKey: session.licenseKey.toUpperCase(), avatarUrl: url },
+          })
+        );
+      }
       toast.success("Foto profil diperbarui");
     } catch {
       toast.error("Gagal mengunggah foto");
     } finally {
       setAvatarUploading(false);
     }
+  };
+
+  const handleCropCancel = () => {
+    if (pendingSrc) URL.revokeObjectURL(pendingSrc);
+    setPendingSrc(null);
   };
 
   const handleSave = async () => {
@@ -116,7 +157,8 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
   if (!session) return null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <>
+    <Popover open={open} onOpenChange={(o) => { if (!o && isCropLocked()) return; setOpen(o); }}>
       <PopoverTrigger render={children} />
       <PopoverContent className="w-72 p-0" align="end" sideOffset={8}>
         {/* User header */}
@@ -283,5 +325,18 @@ export function UserProfilePopover({ children }: UserProfilePopoverProps) {
         </div>
       </PopoverContent>
     </Popover>
+
+    {/* Circular cropper (lazy). Portals above this popover; crop-lock keeps the
+        popover open while cropping. */}
+    <AnimatePresence>
+      {pendingSrc && (
+        <AvatarCropper
+          src={pendingSrc}
+          onApply={handleCropped}
+          onCancel={handleCropCancel}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

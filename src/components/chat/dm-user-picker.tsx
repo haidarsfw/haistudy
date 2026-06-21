@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
 import { Search, ArrowLeft, Crown, ShieldCheck, Gem } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
-import { generateDefaultAvatar } from "@/lib/avatar";
+import { useAvatars } from "@/hooks/use-avatars";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import type { DmDirectoryUser } from "@/types";
 
 interface DmUserPickerProps {
@@ -22,6 +22,13 @@ export function DmUserPicker({
 }: DmUserPickerProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+
+  // Resolve real photos for everyone in the directory (cached cross-surface).
+  const avatarKeys = useMemo(
+    () => directory.map((u) => u.licenseKey).filter(Boolean) as string[],
+    [directory]
+  );
+  const avatars = useAvatars(avatarKeys);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -85,13 +92,11 @@ export function DmUserPicker({
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-muted"
                 >
                   <div className="relative shrink-0">
-                    <Image
-                      src={generateDefaultAvatar(u.name, 72)}
-                      alt={u.name}
-                      width={36}
-                      height={36}
-                      className="h-9 w-9 rounded-full"
-                      unoptimized
+                    <UserAvatar
+                      name={u.name}
+                      avatarUrl={avatars.get(u.licenseKey.toUpperCase()) ?? null}
+                      size={36}
+                      className="h-9 w-9"
                     />
                     <span
                       className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${

@@ -7,6 +7,7 @@ import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useAvatars } from "@/hooks/use-avatars";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { PublicProfilePopover } from "@/components/user/public-profile-popover";
 import type { OnlineUser } from "@/types";
 
@@ -26,11 +27,14 @@ const deviceIconMap: Record<string, typeof Monitor> = {
 
 const MAX_VISIBLE_EXPANDED = 2;
 
-function UserRow({ user, index, isAdmin, masked, displayName, popover = true }: { user: OnlineUser; index: number; isAdmin: boolean; masked: boolean; displayName: string; popover?: boolean }) {
+function UserRow({ user, index, isAdmin, masked, displayName, avatarUrl = null, popover = true }: { user: OnlineUser; index: number; isAdmin: boolean; masked: boolean; displayName: string; avatarUrl?: string | null; popover?: boolean }) {
   const devices = user.deviceTypes || [user.deviceType];
   return (
     <div className="flex items-center gap-2 text-xs">
-      <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
+      <div className="relative shrink-0">
+        <UserAvatar name={displayName} avatarUrl={masked ? null : avatarUrl} size={20} className="h-5 w-5" />
+        <span className={`absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full border border-card ${masked ? "bg-zinc-400" : "bg-emerald-500"}`} />
+      </div>
       {masked || !popover ? (
         <span className={`font-medium truncate flex-1 ${user.hideStatus && isAdmin ? "text-muted-foreground" : ""} ${masked ? "italic text-muted-foreground" : ""}`}>
           {displayName}
@@ -207,7 +211,7 @@ export function OnlineUsersMini() {
                 {visibleUsers.slice(0, MAX_VISIBLE_EXPANDED).map((user, i) => {
                   const masked = isMasked(user);
                   return (
-                    <UserRow key={`${user.licenseKey || user.id}-${i}`} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} />
+                    <UserRow key={`${user.licenseKey || user.id}-${i}`} user={user} index={i} isAdmin={isAdmin} masked={masked} displayName={getDisplayName(user)} avatarUrl={masked || !user.licenseKey ? null : avatarMap.get(user.licenseKey.toUpperCase()) ?? null} />
                   );
                 })}
 
@@ -272,6 +276,7 @@ export function OnlineUsersMini() {
                       isAdmin={isAdmin}
                       masked={masked}
                       displayName={getDisplayName(user)}
+                      avatarUrl={masked || !user.licenseKey ? null : avatarMap.get(user.licenseKey.toUpperCase()) ?? null}
                     />
                   );
                 })}

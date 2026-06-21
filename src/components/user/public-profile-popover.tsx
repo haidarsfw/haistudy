@@ -16,6 +16,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { canUseVipFeatures } from "@/lib/tier";
 import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import { openDmTo, openProfileEditor } from "@/lib/events";
+import { isCropLocked } from "@/lib/crop-lock";
 import type { PublicProfile } from "@/types";
 
 interface PublicProfilePopoverProps {
@@ -117,6 +118,7 @@ export function PublicProfilePopover({
     <Popover
       open={open}
       onOpenChange={(next) => {
+        if (!next && isCropLocked()) return;
         if (next) {
           // Opening: close whoever else is open, then claim the slot.
           if (activeClose && activeClose !== closeRef.current) activeClose();

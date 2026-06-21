@@ -14,6 +14,7 @@ import { TabNav } from "@/components/subject/tab-nav";
 import { MateriTab } from "@/components/subject/materi-tab";
 import { RangkumanTab } from "@/components/subject/rangkuman-tab";
 import { KisiKisiTab } from "@/components/subject/kisi-kisi-tab";
+import { sounds } from "@/lib/sounds";
 import { FlashcardsTab } from "@/components/subject/flashcards-tab";
 import { QuizTab } from "@/components/subject/quiz-tab";
 import { PersonalNotesTab } from "@/components/subject/personal-notes-tab";
@@ -33,7 +34,11 @@ export default function SubjectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session } = useSession();
-  const { scopePath, scopeKey } = useScope();
+  const { scope, scopePath, scopeKey } = useScope();
+  // Merge Flashcards + Quiz into one "Hafalan & Kuis" tab for s2/UAS/BM and any
+  // later cohort; earlier scopes keep the two tabs separate.
+  const mergeHafalanKuis =
+    scope.semester > 2 || (scope.semester === 2 && scope.examPeriod === "uas");
   const subjectId = params.id as string;
   const dashboardHref = `/${scopePath}/dashboard`;
   const subjectsHref = `/${scopePath}/subjects`;
@@ -69,6 +74,8 @@ export default function SubjectPage() {
     setActiveTab(tab);
     setVisited((v) => (v.has(tab) ? v : new Set(v).add(tab)));
   }, []);
+  // Sub-view inside the merged "Hafalan & Kuis" tab (id 11).
+  const [hkSub, setHkSub] = useState<"flash" | "quiz">("flash");
 
   const {
     subjects,
@@ -174,8 +181,16 @@ export default function SubjectPage() {
     if (!hasKilat) h.add(9);
     // Latihan Soal (10) only shows for subjects with exam data.
     if (!hasExam) h.add(10);
+    // Hafalan & Kuis merge (11): replaces Flashcards (3) + Quiz (4) for s2/uas/bm+.
+    if (mergeHafalanKuis) {
+      h.add(3);
+      h.add(4);
+      if (content.flashcards.length === 0 && content.quiz.length === 0) h.add(11);
+    } else {
+      h.add(11);
+    }
     return h;
-  }, [content, rangkuman, rangkumanLoaded, subjectId, hasKilat, hasExam]);
+  }, [content, rangkuman, rangkumanLoaded, subjectId, hasKilat, hasExam, mergeHafalanKuis]);
 
   // If the active tab is hidden (e.g. a deep-link to an empty tab), fall back
   // to Materi. Don't bounce off the Belajar Kilat tab (9) while the feed is
@@ -184,8 +199,21 @@ export default function SubjectPage() {
   useEffect(() => {
     if (activeTab === 9 && !kilatLoaded) return;
     if (activeTab === 10 && !examDataLoaded) return;
+    // Merge mode: a deep-link to the old Flashcards/Quiz tabs lands on the
+    // combined "Hafalan & Kuis" tab instead of bouncing to Materi.
+    if (mergeHafalanKuis && (activeTab === 3 || activeTab === 4)) {
+      setActiveTab(11);
+      setVisited((v) => (v.has(11) ? v : new Set(v).add(11)));
+      return;
+    }
     if (hiddenTabs.has(activeTab)) setActiveTab(0);
-  }, [hiddenTabs, activeTab, kilatLoaded, examDataLoaded]);
+  }, [hiddenTabs, activeTab, kilatLoaded, examDataLoaded, mergeHafalanKuis]);
+
+  // Ensure any programmatically-selected tab (e.g. the merge redirect) is marked
+  // visited so its lazy panel mounts.
+  useEffect(() => {
+    setVisited((v) => (v.has(activeTab) ? v : new Set(v).add(activeTab)));
+  }, [activeTab]);
 
   if (!loaded) {
     return (
@@ -447,6 +475,58 @@ export default function SubjectPage() {
                 onScoreSave={(score, total) => saveQuizScore(score, total)}
                 subjectId={subjectId}
               />
+            </PreviewLock>
+          )}
+        </div>
+
+        {/* Merged Hafalan & Kuis (id 11) — Flashcards + Quiz with a sub-toggle */}
+        <div className="tab-panel" hidden={activeTab !== 11}>
+          {visited.has(11) && (
+            <PreviewLock title="Hafalan & Kuis">
+              <div className="mb-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { sounds.click(); setHkSub("flash"); }}
+                  className={`hs-press flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    hkSub === "flash"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Flashcards
+                  {content.flashcards.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground/70">({content.flashcards.length})</span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { sounds.click(); setHkSub("quiz"); }}
+                  className={`hs-press flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    hkSub === "quiz"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Quiz
+                  {content.quiz.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground/70">({content.quiz.length})</span>
+                  )}
+                </button>
+              </div>
+              <div hidden={hkSub !== "flash"}>
+                <FlashcardsTab
+                  items={content.flashcards}
+                  onComplete={handleFlashcardsComplete}
+                  subjectId={subjectId}
+                />
+              </div>
+              <div hidden={hkSub !== "quiz"}>
+                <QuizTab
+                  questions={content.quiz}
+                  onScoreSave={(score, total) => saveQuizScore(score, total)}
+                  subjectId={subjectId}
+                />
+              </div>
             </PreviewLock>
           )}
         </div>

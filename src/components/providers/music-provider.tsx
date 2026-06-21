@@ -213,6 +213,12 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       w.getDuration((d) => {
         if (typeof d === "number" && d > 0) setDuration(d);
       });
+      // Title safety net: SC's PLAY event sometimes fires before getCurrentSound
+      // resolves a title; refresh it here so the player never shows a blank name.
+      w.getCurrentSound((sound) => {
+        const tt = (sound as { title?: string })?.title;
+        if (tt) setTrackTitle(tt);
+      });
     }, 1000);
     return () => clearInterval(id);
   }, [isPlaying]);
@@ -257,19 +263,38 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       widget.bind(window.SC.Widget.Events.READY, () => {
         setIsReady(true);
         widget.setVolume(volumeRef.current);
-        widget.getSounds((sounds) => {
-          const count = sounds?.length || 0;
-          trackCountRef.current = count;
-          if (count > 0) {
-            shuffledOrderRef.current = buildShuffledOrder(count);
-            shuffledPositionRef.current = 0;
-          }
-          // Replay queued intent if user clicked play while widget was loading.
-          if (pendingPlayRef.current) {
-            pendingPlayRef.current = false;
-            widget.play();
-          }
+        // Show the first track's title immediately, before any PLAY event.
+        widget.getCurrentSound((sound) => {
+          if (sound?.title) setTrackTitle(sound.title);
         });
+        // Replay queued intent if user clicked play while the widget was loading.
+        // Use an explicit load(auto_play) — the SAME path that works when the
+        // user switches playlists — because a bare play() right after READY is
+        // sometimes ignored by SoundCloud (the "won't start until I re-enter the
+        // link / go back to lofi" bug). applyLoaded rebuilds the shuffle order.
+        const rebuildSounds = () => {
+          widget.getSounds((sounds) => {
+            const count = sounds?.length || 0;
+            trackCountRef.current = count;
+            if (count > 0) {
+              shuffledOrderRef.current = buildShuffledOrder(count);
+              shuffledPositionRef.current = 0;
+            }
+          });
+        };
+        if (pendingPlayRef.current) {
+          pendingPlayRef.current = false;
+          widget.load(rawUrlRef.current, {
+            auto_play: true,
+            callback: () => {
+              setIsReady(true);
+              widget.setVolume(volumeRef.current);
+              rebuildSounds();
+            },
+          });
+          return;
+        }
+        rebuildSounds();
       });
 
       widget.bind(window.SC.Widget.Events.PLAY, () => {

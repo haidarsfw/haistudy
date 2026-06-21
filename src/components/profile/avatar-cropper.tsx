@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getCroppedBlob } from "@/lib/image";
+import { setCropLock } from "@/lib/crop-lock";
 import { sounds } from "@/lib/sounds";
 
 interface AvatarCropperProps {
@@ -43,21 +44,14 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
     setArea(pixels);
   }, []);
 
-  // Stop pointer/mouse/touch from bubbling out of the overlay to document, where
-  // the underlying modal listens for outside-press. Without this, clicking the
-  // cropper backdrop would also dismiss the settings modal beneath it.
+  // Hold a global "crop open" lock so the host modal/popover ignores outside-press
+  // and won't close while we interact with the cropper. We deliberately do NOT
+  // stopPropagation on the overlay anymore — that was swallowing the pointerdown
+  // before react-easy-crop's (React-synthetic) drag handler could fire, which is
+  // why the image only zoomed and never panned. The backdrop button still cancels.
   useEffect(() => {
-    const el = overlayRef.current;
-    if (!el) return;
-    const stop = (e: Event) => e.stopPropagation();
-    el.addEventListener("pointerdown", stop);
-    el.addEventListener("mousedown", stop);
-    el.addEventListener("touchstart", stop, { passive: true });
-    return () => {
-      el.removeEventListener("pointerdown", stop);
-      el.removeEventListener("mousedown", stop);
-      el.removeEventListener("touchstart", stop);
-    };
+    setCropLock(true);
+    return () => setCropLock(false);
   }, []);
 
   // Escape closes the cropper (only). Capture phase + stopImmediatePropagation so

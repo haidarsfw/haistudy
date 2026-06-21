@@ -16,6 +16,7 @@ import {
   PRESENCE_HEARTBEAT_HIDDEN_MS,
 } from "@/lib/constants";
 import { capitalizeFirst } from "@/lib/name";
+import { setLocalDynamic } from "@/lib/realtime/presence-live";
 import type { OnlineUser } from "@/types";
 import type { ScopeTuple } from "@/types/scope";
 
@@ -31,10 +32,18 @@ let currentSubject: string | null = null;
 
 export function updateHideStatus(hide: boolean) {
   currentHideStatus = hide;
+  // Mirror into the live presence channel so the online list updates instantly.
+  setLocalDynamic({ hideStatus: hide });
 }
 
 export function updateCurrentSubject(subject: string | null) {
   currentSubject = subject;
+  setLocalDynamic({ currentSubject: subject });
+}
+
+/** Current subject route, for the live presence track payload. */
+export function getCurrentSubject(): string | null {
+  return currentSubject;
 }
 
 export async function setupPresence(opts: {
