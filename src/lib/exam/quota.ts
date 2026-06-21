@@ -80,6 +80,13 @@ export const QUOTA_PACKS: QuotaPack[] = [
   { qty: 7, price: 10000 },
 ];
 
+/**
+ * Master switch for the in-app top-up feature. While false the UI is shown but
+ * disabled ("Segera") AND the /api/exam/topup endpoint rejects, so a direct POST
+ * can't bypass the gate. Flip to true to open purchases (see memory note).
+ */
+export const EXAM_TOPUP_ENABLED = false;
+
 /** Validate a requested top-up quantity → the matching pack (or null). */
 export function quotaPackFor(qty: number): QuotaPack | null {
   return QUOTA_PACKS.find((p) => p.qty === qty) ?? null;

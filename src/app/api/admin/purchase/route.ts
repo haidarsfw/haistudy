@@ -271,7 +271,10 @@ export async function PATCH(request: Request) {
       const sk = meta0.scopeKey || "";
       const subjectId = meta0.subjectId || "";
       const qty = Number(meta0.quotaQty) || 0;
-      if (lk && sk && subjectId && qty > 0) {
+      // Idempotency: grant the bonus ONCE. meta.granted guards against a
+      // re-approve double-crediting (and the row always returns here, so an
+      // exam-quota order never falls through to the invoice/contact logic).
+      if (!meta0.granted && lk && sk && subjectId && qty > 0) {
         const { data: ov } = await supabase
           .from("exam_quota_overrides")
           .select("bonus")
@@ -293,6 +296,12 @@ export async function PATCH(request: Request) {
         );
         if (ovErr) throw ovErr;
 
+        // Mark granted so a re-approve can never add the bonus twice.
+        await supabase
+          .from("purchase_requests")
+          .update({ meta: { ...meta0, granted: true } })
+          .eq("id", id);
+
         // In-app confirmation (scoped → realtime delivery + bell). Opens the
         // subject's Latihan Soal tab when tapped (context=system + subject_id).
         await supabase.from("notifications").insert({
@@ -308,7 +317,9 @@ export async function PATCH(request: Request) {
           jurusan: data.jurusan,
         });
       }
-      return NextResponse.json({ purchase: mapRow(data) });
+      return NextResponse.json({
+        purchase: mapRow({ ...data, meta: { ...meta0, granted: true } }),
+      });
     }
 
     // Assign the per-scope invoice number at APPROVAL (not at submit), so

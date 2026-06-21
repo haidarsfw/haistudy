@@ -474,6 +474,9 @@ export interface PurchaseMeta {
   subjectId?: string;
   // Human-readable subject name (shown in the admin queue).
   subjectName?: string;
+  // Idempotency guard: set true once the quota bonus has been granted, so a
+  // re-approve can never double-credit.
+  granted?: boolean;
 }
 
 export interface PurchaseRequest {

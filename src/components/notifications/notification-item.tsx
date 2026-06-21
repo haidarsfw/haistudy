@@ -82,6 +82,8 @@ export function NotificationItem({
       onRead,
       onAnnouncementClick,
       onDismiss,
+      // Center rows persist on click (mark-read only); only X/swipe removes them.
+      keepOnActivate: true,
     });
     onActivate?.();
   }, [notification, onAnnouncementClick, onRead, onDismiss, navigateForum, onActivate]);
@@ -98,7 +100,7 @@ export function NotificationItem({
             }
           : undefined
       }
-      className={`group/item relative flex w-full items-start gap-3 py-2.5 pl-3 pr-9 text-left transition-colors hover:bg-muted/50 sm:pr-3 ${
+      className={`group/item relative flex w-full items-center gap-3 rounded-xl border border-border/40 bg-card px-3 py-2.5 pr-8 text-left transition-colors hover:bg-muted/40 sm:pr-3 ${
         clickable ? "cursor-pointer" : ""
       } ${notification.read && variant === "center" ? "opacity-60" : ""}`}
     >
@@ -120,11 +122,13 @@ export function NotificationItem({
         )}
       </div>
 
-      {/* Body: title + relative time on top, description below */}
+      {/* Body. Desktop: title + time inline on top. Mobile: title on top, time
+          on its own muted line at the bottom (keeps the right side clean for the
+          centered X — no cramped time next to it). */}
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <p className="min-w-0 flex-1 truncate text-xs font-medium">{label}</p>
-          <span className="shrink-0 text-[10px] text-muted-foreground">{time}</span>
+          <span className="hidden shrink-0 text-[10px] text-muted-foreground sm:block">{time}</span>
         </div>
         {notification.preview && (
           <p
@@ -137,21 +141,23 @@ export function NotificationItem({
             {notification.preview}
           </p>
         )}
+        <span className="mt-0.5 block text-[10px] text-muted-foreground sm:hidden">{time}</span>
       </div>
 
-      {/* Dismiss — right edge, vertically centered. Mobile: always visible;
-          desktop: hover-reveal overlay (matches the toast). stopPropagation so
-          dismissing never also activates/routes. */}
+      {/* Dismiss. Mobile: a bare X (no circle) at the right edge, vertically
+          centered, content to its left (never covers the time). Desktop: a
+          hover-reveal circle in the TOP-LEFT corner (toast-style overlay).
+          stopPropagation so dismissing never also activates/routes. */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onDismiss(notification.id);
         }}
         onPointerDownCapture={(e) => e.stopPropagation()}
-        className="absolute right-1.5 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-card/80 text-muted-foreground ring-1 ring-border backdrop-blur transition-opacity hover:text-foreground opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100"
+        className="absolute right-2 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-muted-foreground transition-opacity hover:text-foreground sm:-left-2 sm:-top-2 sm:right-auto sm:h-5 sm:w-5 sm:translate-y-0 sm:rounded-full sm:bg-foreground/10 sm:text-foreground/60 sm:opacity-0 sm:ring-1 sm:ring-foreground/10 sm:backdrop-blur-sm sm:group-hover/item:opacity-100 sm:hover:bg-foreground/20 sm:hover:text-foreground"
         aria-label={t("notification.dismiss")}
       >
-        <X className="h-3 w-3" />
+        <X className="h-4 w-4 sm:h-3 sm:w-3" />
       </button>
     </div>
   );

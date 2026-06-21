@@ -125,9 +125,13 @@ export function activateNotification(
     onRead?: (id: string) => void;
     onAnnouncementClick?: (n: Notification) => void;
     onDismiss?: (id: string) => void;
+    // When true (notification CENTER), a click marks-read + routes but KEEPS the
+    // row in the list (only the X / swipe removes it). The transient popup leaves
+    // this false so a tap still closes it.
+    keepOnActivate?: boolean;
   }
 ): void {
-  const { navigateForum, onRead, onAnnouncementClick, onDismiss } = handlers;
+  const { navigateForum, onRead, onAnnouncementClick, onDismiss, keepOnActivate } = handlers;
   if (n.type === "announcement") {
     onAnnouncementClick?.(n);
     if (!n.read) onRead?.(n.id);
@@ -136,12 +140,12 @@ export function activateNotification(
   if (isInteractiveNotification(n)) {
     routeToNotification(n, navigateForum);
     if (!n.read) onRead?.(n.id);
-    onDismiss?.(n.id);
+    if (!keepOnActivate) onDismiss?.(n.id);
     return;
   }
-  // Non-interactive → just dismiss.
+  // Non-interactive: mark read; keep in the center, dismiss in the popup.
   if (!n.read) onRead?.(n.id);
-  onDismiss?.(n.id);
+  if (!keepOnActivate) onDismiss?.(n.id);
 }
 
 /**

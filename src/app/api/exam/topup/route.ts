@@ -7,7 +7,7 @@ import {
 } from "@/lib/supabase/server";
 import { requireScope, ScopeError, scopeColumns } from "@/lib/auth/scope-check";
 import { scopeKey, scopeFullLabel } from "@/lib/scope";
-import { quotaPackFor } from "@/lib/exam/quota";
+import { quotaPackFor, EXAM_TOPUP_ENABLED } from "@/lib/exam/quota";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 
 // ─── POST /api/exam/topup — in-app exam-quota top-up (authenticated) ───
@@ -38,6 +38,12 @@ function asUpload(v: FormDataEntryValue | null): Blob | null {
 
 export async function POST(request: Request) {
   try {
+    // Feature-gated: UI buttons are disabled ("Segera"); reject here too so a
+    // direct POST can't create a top-up order before the feature is opened.
+    if (!EXAM_TOPUP_ENABLED) {
+      return NextResponse.json({ error: "Top-up kuota belum tersedia." }, { status: 403 });
+    }
+
     const scope = await requireScope(request.clone());
     const sk = scopeKey(scope);
 

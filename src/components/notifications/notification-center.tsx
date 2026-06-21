@@ -137,13 +137,13 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
         </div>
         <Separator />
 
-        {/* List - bounded height with scroll */}
-        <div className="max-h-[min(60vh,400px)] overflow-y-auto overscroll-contain">
+        {/* List - bounded height with scroll. Cards are spaced (space-y + p-2) so
+            the toast-style corner X can float in the gap without clipping. */}
+        <div className="max-h-[min(60vh,400px)] space-y-2 overflow-y-auto overscroll-contain p-2">
           {/* Web notifications FIRST (the priority surface) */}
           {notifications.length > 0 && (
-            <div className="py-1">
-              <AnimatePresence initial={false}>
-                {notifications.map((notif) => (
+            <AnimatePresence initial={false}>
+              {notifications.map((notif) => (
                   <motion.div
                     key={notif.id}
                     variants={notificationSpring}
@@ -172,7 +172,6 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                   </motion.div>
                 ))}
               </AnimatePresence>
-            </div>
           )}
 
           {/* App updates merged into the SAME list below the real notifications
@@ -180,44 +179,42 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
               Real notifications stay on top + persist until dismissed manually. */}
           {patchNotes.length > 0 && (
             <>
-              <div className="pb-1">
-                {(showAllPatches ? patchNotes : patchNotes.slice(0, 1)).map((note) => {
-                  const unread = !patchIsRead(note.version);
-                  return (
-                    <button
-                      key={note.version}
-                      type="button"
-                      onClick={() => handlePatchClick(note)}
-                      className="flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
-                    >
-                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <Sparkles className="h-3.5 w-3.5 text-primary" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
-                            v{note.version}
-                          </span>
-                          <span className="truncate text-xs font-semibold text-foreground">
-                            {note.title}
-                          </span>
+              {(showAllPatches ? patchNotes : patchNotes.slice(0, 1)).map((note) => {
+                const unread = !patchIsRead(note.version);
+                return (
+                  <button
+                    key={note.version}
+                    type="button"
+                    onClick={() => handlePatchClick(note)}
+                    className={`flex w-full items-center gap-3 rounded-xl border border-border/40 bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/40 ${unread ? "" : "opacity-60"}`}
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
+                          v{note.version}
                         </span>
-                        <span className="mt-0.5 line-clamp-1 block text-[11px] text-muted-foreground">
-                          {note.items[0]}
+                        <span className="truncate text-xs font-semibold text-foreground">
+                          {note.title}
                         </span>
                       </span>
-                      {unread && (
-                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" aria-label="Belum dibaca" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+                      <span className="mt-0.5 line-clamp-1 block text-[11px] text-muted-foreground">
+                        {note.items[0]}
+                      </span>
+                    </span>
+                    {unread && (
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" aria-label="Belum dibaca" />
+                    )}
+                  </button>
+                );
+              })}
               {patchNotes.length > 1 && (
                 <button
                   type="button"
                   onClick={() => setShowAllPatches((v) => !v)}
-                  className="flex w-full items-center justify-center gap-1 px-3 pb-2.5 pt-0.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex w-full items-center justify-center gap-1 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {showAllPatches
                     ? "Tutup"
