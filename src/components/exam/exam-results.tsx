@@ -21,6 +21,7 @@ import type { ExamData, ExamGradingResult } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { ExamMarkdown } from "./exam-markdown";
+import { ExamGradingLoader, buildGradingUnits } from "./exam-grading-loader";
 
 interface Props {
   exam: ExamData;
@@ -72,6 +73,8 @@ export function ExamResults({
   const [regrading, setRegrading] = useState(false);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   const lang = examLanguage;
+  // Units for the regrade progress loader (same numbering as the review).
+  const gradingUnits = useMemo(() => buildGradingUnits(exam, lang), [exam, lang]);
 
   const statusOf = (r: ExamGradingResult): "ok" | "partial" | "wrong" => {
     const pct = r.maxPoints > 0 ? (r.score / r.maxPoints) * 100 : 0;
@@ -210,9 +213,22 @@ export function ExamResults({
   }, [exam, lang]);
 
   // Score breakdown per real section (Type I / II / III ...).
+  // Order follows the exam's natural question order (Type I first → LEFT), NOT
+  // the grading-result return order — gradeChunked runs chunks concurrently so
+  // results can arrive out of order (which previously put Type II on the left).
   const sections = useMemo(() => {
     const order: string[] = [];
     const map: Record<string, { score: number; max: number }> = {};
+    // 1. Seed the order + buckets from the exam shape (same section string as
+    //    unitMeta: text before the first "(", trimmed).
+    for (const q of exam.questions) {
+      const section = q.sectionLabel[lang].split("(")[0].trim();
+      if (!map[section]) {
+        map[section] = { score: 0, max: 0 };
+        order.push(section);
+      }
+    }
+    // 2. Sum scores from the grading results into their section bucket.
     for (const r of gradingResults) {
       const section = unitMeta[r.questionId]?.section ?? "—";
       if (!map[section]) {
@@ -223,7 +239,7 @@ export function ExamResults({
       map[section].max += r.maxPoints;
     }
     return order.map((s) => ({ label: s, ...map[s] }));
-  }, [gradingResults, unitMeta]);
+  }, [exam, lang, gradingResults, unitMeta]);
 
   return (
     <motion.div
@@ -489,20 +505,16 @@ export function ExamResults({
         )}
       </AnimatePresence>
 
-      {/* Inline regrade overlay (stays on results; no full-screen phase flip) */}
-      <AnimatePresence>
-        {regrading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[110] flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm"
-          >
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm font-semibold text-foreground">{t("exam.regrade_loading")}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Inline regrade overlay — same estimated-progress loader as submit,
+          so re-grading shows the bar + "Sedang menilai…" + ETA instead of a
+          bare spinner. Stays on the results screen (overlay variant). */}
+      {regrading && (
+        <ExamGradingLoader
+          variant="overlay"
+          title={t("exam.regrade_loading")}
+          units={gradingUnits}
+        />
+      )}
     </motion.div>
   );
 }

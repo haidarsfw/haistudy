@@ -26,7 +26,7 @@ import { ExamNavPanel } from "./exam-nav-panel";
 import { ExamQuestionView } from "./exam-question-view";
 import { ExamExitModal } from "./exam-exit-modal";
 import { ExamSubmitModal } from "./exam-submit-modal";
-import { ExamGradingLoader } from "./exam-grading-loader";
+import { ExamGradingLoader, buildGradingUnits } from "./exam-grading-loader";
 import { ExamResults } from "./exam-results";
 import { ExamScratchpad, SCRATCH_KEY_PREFIX } from "./exam-scratchpad";
 import { ExamCheatSheet } from "./exam-cheatsheet";
@@ -559,7 +559,7 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
         </div>
       );
     }
-    return <ExamGradingLoader />;
+    return <ExamGradingLoader units={buildGradingUnits(exam, examLanguage)} />;
   }
 
   if (phase === "results" && gradingResults) {

@@ -49,8 +49,8 @@ export const bizethicsExam: ExamData = {
       id: "essay-1",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (maximum 40 points)",
-        id: "TYPE I. SOAL ESAI (maksimum 40 poin)",
+        en: "Type I: Essay (maximum 40 points)",
+        id: "Type I: Soal Esai (maksimum 40 poin)",
       },
       points: 10,
       title: {
@@ -66,8 +66,8 @@ export const bizethicsExam: ExamData = {
       id: "essay-2",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (maximum 40 points)",
-        id: "TYPE I. SOAL ESAI (maksimum 40 poin)",
+        en: "Type I: Essay (maximum 40 points)",
+        id: "Type I: Soal Esai (maksimum 40 poin)",
       },
       points: 10,
       title: {
@@ -83,8 +83,8 @@ export const bizethicsExam: ExamData = {
       id: "essay-3",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (maximum 40 points)",
-        id: "TYPE I. SOAL ESAI (maksimum 40 poin)",
+        en: "Type I: Essay (maximum 40 points)",
+        id: "Type I: Soal Esai (maksimum 40 poin)",
       },
       points: 10,
       title: {
@@ -100,8 +100,8 @@ export const bizethicsExam: ExamData = {
       id: "essay-4",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (maximum 40 points)",
-        id: "TYPE I. SOAL ESAI (maksimum 40 poin)",
+        en: "Type I: Essay (maximum 40 points)",
+        id: "Type I: Soal Esai (maksimum 40 poin)",
       },
       points: 10,
       title: {
@@ -121,8 +121,8 @@ export const bizethicsExam: ExamData = {
       id: "case-1",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY (maximum 60 points)",
-        id: "TYPE II. SOAL KASUS (maksimum 60 poin)",
+        en: "Type II: Case Study (maximum 60 points)",
+        id: "Type II: Soal Kasus (maksimum 60 poin)",
       },
       points: 30,
       title: {
@@ -164,8 +164,8 @@ export const bizethicsExam: ExamData = {
       id: "case-2",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY (maximum 60 points)",
-        id: "TYPE II. SOAL KASUS (maksimum 60 poin)",
+        en: "Type II: Case Study (maximum 60 points)",
+        id: "Type II: Soal Kasus (maksimum 60 poin)",
       },
       points: 30,
       title: {

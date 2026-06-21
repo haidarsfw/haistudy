@@ -56,8 +56,8 @@ export const foundaiExam: ExamData = {
       id: "tf",
       type: "true-false",
       sectionLabel: {
-        en: "TYPE I. TRUE OR FALSE WITH REASONING (maximum 25 points)",
-        id: "TYPE I. TRUE OR FALSE DENGAN ALASAN (maksimum 25 poin)",
+        en: "Type I: True or False with Reasoning (maximum 25 points)",
+        id: "Type I: True or False dengan Alasan (maksimum 25 poin)",
       },
       points: 25,
       title: {
@@ -119,8 +119,8 @@ export const foundaiExam: ExamData = {
       id: "case-1",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY, AI SOLUTION RECOMMENDATION (maximum 60 points)",
-        id: "TYPE II. STUDI KASUS, REKOMENDASI SOLUSI AI (maksimum 60 poin)",
+        en: "Type II: Case Study, AI Solution Recommendation (maximum 60 points)",
+        id: "Type II: Studi Kasus, Rekomendasi Solusi AI (maksimum 60 poin)",
       },
       points: 30,
       title: {
@@ -162,8 +162,8 @@ export const foundaiExam: ExamData = {
       id: "case-2",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY, AI SOLUTION RECOMMENDATION (maximum 60 points)",
-        id: "TYPE II. STUDI KASUS, REKOMENDASI SOLUSI AI (maksimum 60 poin)",
+        en: "Type II: Case Study, AI Solution Recommendation (maximum 60 points)",
+        id: "Type II: Studi Kasus, Rekomendasi Solusi AI (maksimum 60 poin)",
       },
       points: 30,
       title: {
@@ -209,8 +209,8 @@ export const foundaiExam: ExamData = {
       id: "case-3",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE III. CASE STUDY, ETHICAL CONSIDERATION (maximum 15 points)",
-        id: "TYPE III. STUDI KASUS, PERTIMBANGAN ETIKA (maksimum 15 poin)",
+        en: "Type III: Case Study, Ethical Consideration (maximum 15 points)",
+        id: "Type III: Studi Kasus, Pertimbangan Etika (maksimum 15 poin)",
       },
       points: 15,
       title: {

@@ -56,8 +56,8 @@ export const akuntansiExam: ExamData = {
       id: "soal-1",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (4 questions x 10 = 40 points)",
-        id: "TYPE I. SOAL ESAI (4 soal x 10 poin = 40 poin)",
+        en: "Type I: Essay (4 questions x 10 = 40 points)",
+        id: "Type I: Soal Esai (4 soal x 10 poin = 40 poin)",
       },
       points: 10,
       title: {
@@ -109,8 +109,8 @@ export const akuntansiExam: ExamData = {
       id: "soal-2",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (4 questions x 10 = 40 points)",
-        id: "TYPE I. SOAL ESAI (4 soal x 10 poin = 40 poin)",
+        en: "Type I: Essay (4 questions x 10 = 40 points)",
+        id: "Type I: Soal Esai (4 soal x 10 poin = 40 poin)",
       },
       points: 10,
       title: {
@@ -140,8 +140,8 @@ export const akuntansiExam: ExamData = {
       id: "soal-3",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (4 questions x 10 = 40 points)",
-        id: "TYPE I. SOAL ESAI (4 soal x 10 poin = 40 poin)",
+        en: "Type I: Essay (4 questions x 10 = 40 points)",
+        id: "Type I: Soal Esai (4 soal x 10 poin = 40 poin)",
       },
       points: 10,
       title: {
@@ -179,8 +179,8 @@ export const akuntansiExam: ExamData = {
       id: "soal-4",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (4 questions x 10 = 40 points)",
-        id: "TYPE I. SOAL ESAI (4 soal x 10 poin = 40 poin)",
+        en: "Type I: Essay (4 questions x 10 = 40 points)",
+        id: "Type I: Soal Esai (4 soal x 10 poin = 40 poin)",
       },
       points: 10,
       title: {
@@ -222,8 +222,8 @@ export const akuntansiExam: ExamData = {
       id: "kasus-1",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY (2 cases x 30 = 60 points)",
-        id: "TYPE II. STUDI KASUS (2 kasus x 30 poin = 60 poin)",
+        en: "Type II: Case Study (2 cases x 30 = 60 points)",
+        id: "Type II: Studi Kasus (2 kasus x 30 poin = 60 poin)",
       },
       points: 30,
       title: {
@@ -279,8 +279,8 @@ Dengan high-low method: (i) hitung variable cost per unit; (ii) hitung total fix
       id: "kasus-2",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY (2 cases x 30 = 60 points)",
-        id: "TYPE II. STUDI KASUS (2 kasus x 30 poin = 60 poin)",
+        en: "Type II: Case Study (2 cases x 30 = 60 points)",
+        id: "Type II: Studi Kasus (2 kasus x 30 poin = 60 poin)",
       },
       points: 30,
       title: {

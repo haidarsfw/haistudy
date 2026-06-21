@@ -49,6 +49,7 @@ ATURAN PENILAIAN:
 8. Identifikasi key points yang MATCHED dan yang MISSED berdasarkan rubrik — tulis juga dalam bahasa Indonesia.
 9. Jangan pernah memberikan skor di atas maxPoints untuk soal tersebut.
 10. Totalkan skor dari komponen rubrik. Jangan asal tebak skor keseluruhan.
+11. KONSISTENSI & KEADILAN: Terapkan rubrik secara MEKANIS dan OBJEKTIF. Jawaban yang identik HARUS mendapat skor yang identik setiap kali dinilai. Saat penilaian ulang, JANGAN menaikkan atau menurunkan skor dari komponen yang sama. Beri poin HANYA untuk komponen rubrik yang benar-benar terpenuhi secara eksplisit di dalam jawaban — jangan berasumsi atau memberi "benefit of the doubt".
 
 FORMAT OUTPUT: Kembalikan HANYA JSON array valid tanpa markdown code block, tanpa penjelasan tambahan:
 [
@@ -200,23 +201,38 @@ export async function gradeWithAI(opts: {
   const deepseek = new OpenAI({
     baseURL: "https://api.deepseek.com",
     apiKey: process.env.DEEPSEEK_API_KEY,
+    // Fail a hung request fast — the SDK default is 600s, which is what let a
+    // stuck grade hang for minutes. Never auto-retry here: gradeChunked owns
+    // retries (otherwise SDK retries × our retries compound the latency).
+    timeout: 60_000,
+    maxRetries: 0,
   });
   const prompt = buildGradingPrompt(opts.courseName, opts.answerKeys, opts.answers);
-  const completion = await deepseek.chat.completions.create({
+  // Deterministic grading: temperature 0 + thinking OFF so identical answers
+  // ALWAYS get an identical score (fixes the "score creeps up on every
+  // regrade" inconsistency) and each chunk returns in seconds, not minutes.
+  // `thinking` is a TOP-LEVEL DeepSeek field — the OpenAI Node SDK serializes
+  // the body as-is, so the Python-style `extra_body` wrapper used before never
+  // actually reached the API. Loose object + cast because `thinking` isn't in
+  // the SDK's create() types.
+  const body = {
     model: DEEPSEEK_MODEL,
     messages: [{ role: "user", content: prompt }],
     max_tokens: 8192,
-    // @ts-expect-error -- DeepSeek extension: reasoning_effort + thinking
-    reasoning_effort: "max",
-    extra_body: { thinking: { type: "enabled" } },
-  });
+    temperature: 0,
+    thinking: { type: "disabled" },
+  } as unknown as Parameters<typeof deepseek.chat.completions.create>[0];
+  const completion = (await deepseek.chat.completions.create(body)) as {
+    choices: Array<{
+      message?: { content?: string; reasoning_content?: string };
+      finish_reason?: string;
+    }>;
+  };
   const choice = completion.choices[0];
   const message = choice?.message;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const reasoning = (message as any)?.reasoning_content as string | undefined;
   return parseGradingResponse(
     message?.content ?? "",
-    reasoning,
+    message?.reasoning_content,
     choice?.finish_reason ?? undefined
   );
 }
@@ -225,8 +241,21 @@ export async function gradeWithAI(opts: {
  * Grade a full exam in CHUNKS so a long exam never overflows the model's output
  * limit (the "Soal tidak dinilai oleh AI" bug): each chunk grades only ~4
  * questions against their own keys, so every response is small and complete.
- * Chunks run with limited concurrency; a failed chunk is retried once, then
- * throws (caller surfaces the error so the user can retry / re-grade).
+ *
+ * Robustness against DeepSeek non-determinism (the bug that "resurfaced": one
+ * submit/regrade grades only the first question, the next one grades all):
+ * the model occasionally returns a malformed/truncated chunk from which the
+ * parser recovers only SOME objects. We therefore:
+ *   1. retry a chunk when it throws OR comes back INCOMPLETE (fewer results than
+ *      requested keys) — previously only thrown errors retried; and
+ *   2. after the first pass, run up to 2 extra ROUNDS that re-grade ONLY the
+ *      still-missing question ids, so a single submit/regrade self-heals to a
+ *      complete result instead of needing a manual second regrade.
+ * Results are deduped by questionId (last wins). Bounded rounds + chunking keep
+ * the API call count bounded. Only after rounds are exhausted does the caller's
+ * finalizeResults() fill any leftover with the 0-score "tidak dinilai" fallback.
+ * Throws only if NOTHING could be graded (so the caller surfaces a real error
+ * instead of silently scoring everything 0).
  */
 export async function gradeChunked(opts: {
   courseName: string;
@@ -236,39 +265,70 @@ export async function gradeChunked(opts: {
   const { courseName, answerKeys, answers } = opts;
   const CHUNK_SIZE = 4;
   const CONCURRENCY = 3;
+  const MAX_ROUNDS = 3; // 1 initial pass + up to 2 retry rounds for missing ids
 
   const answerById = new Map(answers.map((a) => [a.questionId, a]));
-  const chunks: ExamAnswerKey[][] = [];
-  for (let i = 0; i < answerKeys.length; i += CHUNK_SIZE) {
-    chunks.push(answerKeys.slice(i, i + CHUNK_SIZE));
-  }
+  // Single source of truth for graded units, keyed by questionId (dedup).
+  const byId = new Map<string, GradingResult>();
+  let lastErr: unknown = null;
 
-  const collected: GradingResult[] = [];
-  let next = 0;
-  async function worker() {
-    while (next < chunks.length) {
-      const keys = chunks[next++];
-      const chunkAnswers = keys.map(
-        (k) => answerById.get(k.questionId) ?? { questionId: k.questionId, answer: "" }
-      );
-      let res: GradingResult[] | null = null;
-      let lastErr: unknown = null;
-      for (let attempt = 0; attempt < 2 && !res; attempt++) {
-        try {
-          res = await gradeWithAI({ courseName, answerKeys: keys, answers: chunkAnswers });
-        } catch (e) {
-          lastErr = e;
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    const missing = answerKeys.filter((k) => !byId.has(k.questionId));
+    if (missing.length === 0) break;
+
+    const chunks: ExamAnswerKey[][] = [];
+    for (let i = 0; i < missing.length; i += CHUNK_SIZE) {
+      chunks.push(missing.slice(i, i + CHUNK_SIZE));
+    }
+
+    let next = 0;
+    let roundProgress = 0; // ids newly graded this round (0 ⇒ stop retrying)
+    async function worker() {
+      while (next < chunks.length) {
+        const keys = chunks[next++];
+        const wantIds = new Set(keys.map((k) => k.questionId));
+        const chunkAnswers = keys.map(
+          (k) => answerById.get(k.questionId) ?? { questionId: k.questionId, answer: "" }
+        );
+        // Up to 2 attempts per chunk; stop early once this chunk is complete.
+        for (let attempt = 0; attempt < 2; attempt++) {
+          if (keys.every((k) => byId.has(k.questionId))) break;
+          try {
+            const res = await gradeWithAI({ courseName, answerKeys: keys, answers: chunkAnswers });
+            for (const r of res) {
+              // Only accept ids we asked for in THIS chunk, and never overwrite
+              // an already-graded unit (keeps the first good result).
+              if (wantIds.has(r.questionId) && !byId.has(r.questionId)) {
+                byId.set(r.questionId, r);
+                roundProgress++;
+              }
+            }
+          } catch (e) {
+            lastErr = e;
+          }
         }
       }
-      if (!res) throw lastErr instanceof Error ? lastErr : new Error("chunk grading failed");
-      collected.push(...res);
     }
+
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, () => worker())
+    );
+
+    // Nothing graded this round (e.g. API down / key invalid) → further rounds
+    // would just repeat the failure. Stop and let the check below decide.
+    if (roundProgress === 0) break;
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, () => worker())
-  );
-  return collected;
+  // Hard failure: not a single unit graded → surface the error so the user sees
+  // a retry prompt rather than a silent all-zero score.
+  if (byId.size === 0) {
+    throw lastErr instanceof Error
+      ? lastErr
+      : new Error("Exam grading returned no results");
+  }
+
+  // Return in the exam's natural answer-key order (the results UI re-sorts too).
+  return answerKeys.filter((k) => byId.has(k.questionId)).map((k) => byId.get(k.questionId)!);
 }
 
 /** Dev-only stand-in when no DEEPSEEK_API_KEY is set. */

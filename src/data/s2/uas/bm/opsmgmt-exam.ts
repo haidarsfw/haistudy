@@ -61,8 +61,8 @@ export const opsmgmtExam: ExamData = {
       id: "soal-1",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (40 points)",
-        id: "TYPE I. SOAL ESAI (40 poin)",
+        en: "Type I: Essay (40 points)",
+        id: "Type I: Soal Esai (40 poin)",
       },
       points: 20,
       title: {
@@ -96,8 +96,8 @@ export const opsmgmtExam: ExamData = {
       id: "soal-2",
       type: "essay",
       sectionLabel: {
-        en: "TYPE I. ESSAY (40 points)",
-        id: "TYPE I. SOAL ESAI (40 poin)",
+        en: "Type I: Essay (40 points)",
+        id: "Type I: Soal Esai (40 poin)",
       },
       points: 20,
       title: {
@@ -143,8 +143,8 @@ export const opsmgmtExam: ExamData = {
       id: "soal-3",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY (60 points)",
-        id: "TYPE II. SOAL KASUS (60 poin)",
+        en: "Type II: Case Study (60 points)",
+        id: "Type II: Soal Kasus (60 poin)",
       },
       points: 20,
       title: {
@@ -236,8 +236,8 @@ $$C_x = \\frac{\\sum x_i Q_i}{\\sum Q_i}, \\quad C_y = \\frac{\\sum y_i Q_i}{\\s
       id: "soal-4",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY (60 points)",
-        id: "TYPE II. SOAL KASUS (60 poin)",
+        en: "Type II: Case Study (60 points)",
+        id: "Type II: Soal Kasus (60 poin)",
       },
       points: 20,
       title: {
@@ -297,8 +297,8 @@ $$C_x = \\frac{\\sum x_i Q_i}{\\sum Q_i}, \\quad C_y = \\frac{\\sum y_i Q_i}{\\s
       id: "soal-5",
       type: "case-study",
       sectionLabel: {
-        en: "TYPE II. CASE STUDY (60 points)",
-        id: "TYPE II. SOAL KASUS (60 poin)",
+        en: "Type II: Case Study (60 points)",
+        id: "Type II: Soal Kasus (60 poin)",
       },
       points: 20,
       title: {
