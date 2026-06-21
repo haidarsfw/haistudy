@@ -72,7 +72,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
   const start = () => router.push(`/${scopePath}/subject/${subjectId}/kilat`);
 
   return (
-    <div className="mx-auto max-w-lg py-6">
+    <div className="mx-auto max-w-3xl py-6">
       {/* Hero */}
       <motion.div
         variants={staggerContainer(0.07)}
@@ -134,8 +134,8 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
         </motion.div>
       )}
 
-      {/* Chapter list */}
-      <motion.div variants={staggerContainer(0.05)} initial="hidden" animate="visible" className="mt-4 flex flex-col gap-2">
+      {/* Chapter list (2-col on desktop to fill width + cut scrolling) */}
+      <motion.div variants={staggerContainer(0.05)} initial="hidden" animate="visible" className="mt-4 grid gap-2 sm:grid-cols-2">
         {perChapter.map((ch) => (
           <motion.div
             key={ch.n}
@@ -154,7 +154,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
       </motion.div>
 
       {/* CTA */}
-      <div className="mt-5">
+      <div className="mt-5 sm:mx-auto sm:max-w-md">
         <Button size="lg" onClick={start} className="h-12 w-full text-sm">
           {completed ? (
             <><RotateCcw className="h-4 w-4" /> {t("kilat.cta_restart")}</>

@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { motion, useDragControls } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   X,
   Pen,
@@ -30,9 +30,56 @@ import { useTranslation } from "@/components/providers/language-provider";
 import { isDismissedToday, dismissToday } from "@/lib/daily-dismiss";
 
 export const SCRATCH_KEY_PREFIX = "hs-exam-scratch-";
+// User-level (not per-attempt) window prefs: position, size, mode persist so the
+// scratchpad reopens exactly where it was left.
+const WIN_KEY = "hs-exam-scratch-win";
+const FLOAT_MIN_W = 280;
+const FLOAT_MIN_H = 320;
 
 type Tool = "pen" | "eraser" | "text";
 type WinMode = "float" | "dock" | "fullscreen";
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+interface PersistedWin {
+  mode: WinMode;
+  floatRect: Rect;
+  dockW: number;
+  dockH: number;
+}
+
+function defaultRect(): Rect {
+  const w = 460;
+  const h = 560;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 768;
+  return { x: Math.max(8, vw - w - 16), y: 80, w: Math.min(w, vw - 16), h: Math.min(h, vh - 16) };
+}
+
+function loadWin(): PersistedWin | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(WIN_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (!p || typeof p !== "object") return null;
+    const r = p.floatRect;
+    const okRect =
+      r &&
+      ["x", "y", "w", "h"].every((k) => typeof r[k] === "number" && Number.isFinite(r[k]));
+    return {
+      mode: p.mode === "dock" || p.mode === "fullscreen" ? p.mode : "float",
+      floatRect: okRect ? { x: r.x, y: r.y, w: r.w, h: r.h } : defaultRect(),
+      dockW: typeof p.dockW === "number" ? p.dockW : 440,
+      dockH: typeof p.dockH === "number" ? p.dockH : 0,
+    };
+  } catch {
+    return null;
+  }
+}
 interface Point {
   x: number;
   y: number;
@@ -68,6 +115,9 @@ interface Props {
   onClose: () => void;
   /** Reports window mode/size so the player can shift exam content when docked. */
   onLayout?: (l: { mode: WinMode; isMobile: boolean; dockW: number; dockH: number }) => void;
+  /** Stacking order (last-focused tool on top) + focus callback from the player. */
+  zIndex?: number;
+  onFocus?: () => void;
 }
 
 /**
@@ -79,8 +129,9 @@ interface Props {
  * resizable), dock (pinned edge, resizable), or fullscreen. Autosaved to
  * localStorage per attempt; the player clears it on submit/exit.
  */
-export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
+export function ExamScratchpad({ attemptId, onClose, onLayout, zIndex = 110, onFocus }: Props) {
   const { t } = useTranslation();
+  const [persisted] = useState<PersistedWin | null>(() => loadWin());
 
   const [pages, setPages] = useState<Page[]>([blankPage()]);
   const [cur, setCur] = useState(0);
@@ -92,14 +143,12 @@ export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
     () => !isDismissedToday("exam-scratchpad-intro")
   );
 
-  // ── Windowing ──
+  // ── Windowing (manual move + 8-way resize, persisted user-level) ──
   const [isMobile, setIsMobile] = useState(false);
-  const [mode, setMode] = useState<WinMode>("float");
-  const [floatSize, setFloatSize] = useState({ w: 460, h: 560 });
-  const [dockW, setDockW] = useState(440); // desktop dock width
-  const [dockH, setDockH] = useState(0); // mobile dock height (set on mount)
-  const dragControls = useDragControls();
-  const boundsRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<WinMode>(persisted?.mode ?? "float");
+  const [floatRect, setFloatRect] = useState<Rect>(persisted?.floatRect ?? defaultRect());
+  const [dockW, setDockW] = useState(persisted?.dockW || 440); // desktop dock width
+  const [dockH, setDockH] = useState(persisted?.dockH ?? 0); // mobile dock height (set on mount)
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -117,8 +166,8 @@ export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
     const apply = () => {
       setIsMobile(mq.matches);
       if (mq.matches) {
-        setMode("dock");
-        setDockH(Math.round(window.innerHeight * 0.5));
+        setMode("dock"); // phones always dock (bottom sheet)
+        setDockH((h) => h || Math.round(window.innerHeight * 0.5));
       }
     };
     apply();
@@ -130,6 +179,30 @@ export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
   useEffect(() => {
     onLayout?.({ mode, isMobile, dockW, dockH });
   }, [mode, isMobile, dockW, dockH, onLayout]);
+
+  // Persist window prefs (debounced) + flush on close/unmount so the scratchpad
+  // reopens exactly where the user left it (position, size, mode).
+  const winRef = useRef<PersistedWin>({ mode, floatRect, dockW, dockH });
+  winRef.current = { mode, floatRect, dockW, dockH };
+  useEffect(() => {
+    const id = setTimeout(() => {
+      try {
+        localStorage.setItem(WIN_KEY, JSON.stringify(winRef.current));
+      } catch {
+        /* ignore */
+      }
+    }, 300);
+    return () => clearTimeout(id);
+  }, [mode, floatRect, dockW, dockH]);
+  useEffect(() => {
+    return () => {
+      try {
+        localStorage.setItem(WIN_KEY, JSON.stringify(winRef.current));
+      } catch {
+        /* ignore */
+      }
+    };
+  }, []);
 
   // ── Load autosave ──
   useEffect(() => {
@@ -197,6 +270,12 @@ export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
   useEffect(() => {
     redraw();
   }, [redraw, cur, pages]);
+
+  // Re-measure the canvas whenever the window mode/size changes (e.g. float ->
+  // dock) so the surface tracks the new container — no reopen needed (#8).
+  useEffect(() => {
+    resize();
+  }, [resize, mode, floatRect, dockW, dockH, isMobile]);
 
   // ── History ──
   const snapshot = useCallback(() => {
@@ -325,25 +404,86 @@ export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
     applyToPage((p) => ({ ...p, texts: p.texts.filter((tb) => tb.id !== id) }));
   };
 
-  // ── Resize handle (float corner / dock edge) ──
-  const startResize = (e: React.PointerEvent) => {
+  // ── Move (float) — dragging the header repositions the window ──
+  const startMove = (e: React.PointerEvent) => {
+    if (mode !== "float") return;
+    if ((e.target as HTMLElement).closest("button")) return; // let header buttons click
+    e.preventDefault();
+    const sx = e.clientX;
+    const sy = e.clientY;
+    const r0 = floatRect;
+    const onMove = (ev: PointerEvent) => {
+      const maxW = window.innerWidth;
+      const maxH = window.innerHeight;
+      const x = Math.max(0, Math.min(r0.x + (ev.clientX - sx), maxW - 40));
+      const y = Math.max(0, Math.min(r0.y + (ev.clientY - sy), maxH - 40));
+      setFloatRect((r) => ({ ...r, x, y }));
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+
+  // ── Resize (float) — any edge or corner; `dir` holds the active edges ──
+  const startFloatResize = (dir: string) => (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const target = e.currentTarget as HTMLElement;
-    target.setPointerCapture(e.pointerId);
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const start = { w: floatSize.w, h: floatSize.h, dockW, dockH };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const sx = e.clientX;
+    const sy = e.clientY;
+    const r0 = floatRect;
     const onMove = (ev: PointerEvent) => {
-      if (mode === "float") {
-        setFloatSize({
-          w: Math.max(280, Math.min(window.innerWidth - 20, start.w + (ev.clientX - startX))),
-          h: Math.max(320, Math.min(window.innerHeight - 20, start.h + (ev.clientY - startY))),
-        });
-      } else if (mode === "dock" && !isMobile) {
-        setDockW(Math.max(300, Math.min(window.innerWidth * 0.8, start.dockW - (ev.clientX - startX))));
-      } else if (mode === "dock" && isMobile) {
-        setDockH(Math.max(220, Math.min(window.innerHeight * 0.85, start.dockH - (ev.clientY - startY))));
+      const dx = ev.clientX - sx;
+      const dy = ev.clientY - sy;
+      let { x, y, w, h } = r0;
+      if (dir.includes("e")) w = r0.w + dx;
+      if (dir.includes("s")) h = r0.h + dy;
+      if (dir.includes("w")) {
+        w = r0.w - dx;
+        x = r0.x + dx;
+      }
+      if (dir.includes("n")) {
+        h = r0.h - dy;
+        y = r0.y + dy;
+      }
+      if (w < FLOAT_MIN_W) {
+        if (dir.includes("w")) x -= FLOAT_MIN_W - w;
+        w = FLOAT_MIN_W;
+      }
+      if (h < FLOAT_MIN_H) {
+        if (dir.includes("n")) y -= FLOAT_MIN_H - h;
+        h = FLOAT_MIN_H;
+      }
+      x = Math.max(0, x);
+      y = Math.max(0, y);
+      w = Math.min(w, window.innerWidth - x);
+      h = Math.min(h, window.innerHeight - y);
+      setFloatRect({ x, y, w, h });
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+
+  // ── Resize (dock edge) ──
+  const startDockResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const sx = e.clientX;
+    const sy = e.clientY;
+    const s = { dockW, dockH };
+    const onMove = (ev: PointerEvent) => {
+      if (!isMobile) {
+        setDockW(Math.max(300, Math.min(window.innerWidth * 0.8, s.dockW - (ev.clientX - sx))));
+      } else {
+        setDockH(Math.max(220, Math.min(window.innerHeight * 0.85, s.dockH - (ev.clientY - sy))));
       }
     };
     const onUp = () => {
@@ -370,35 +510,33 @@ export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
   } else {
     // float
     containerClassName += " rounded-2xl";
+    const vw = typeof window !== "undefined" ? window.innerWidth : floatRect.w;
+    const vh = typeof window !== "undefined" ? window.innerHeight : floatRect.h;
     containerStyle = {
-      width: Math.min(floatSize.w, typeof window !== "undefined" ? window.innerWidth - 16 : floatSize.w),
-      height: Math.min(floatSize.h, typeof window !== "undefined" ? window.innerHeight - 16 : floatSize.h),
-      right: 16,
-      top: 80,
+      left: Math.min(Math.max(0, floatRect.x), Math.max(0, vw - 80)),
+      top: Math.min(Math.max(0, floatRect.y), Math.max(0, vh - 80)),
+      width: Math.min(floatRect.w, vw - 8),
+      height: Math.min(floatRect.h, vh - 8),
     };
   }
 
   const canDrag = mode === "float";
 
   return (
-    <div ref={boundsRef} className="pointer-events-none fixed inset-0 z-[110]">
+    <div
+      className="pointer-events-none fixed inset-0"
+      style={{ zIndex }}
+      onPointerDownCapture={onFocus}
+    >
       <motion.div
-        drag={canDrag}
-        dragControls={dragControls}
-        dragListener={false}
-        dragMomentum={false}
-        dragConstraints={boundsRef}
-        dragElastic={0}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className={containerClassName}
         style={containerStyle}
       >
-        {/* Header (also the float drag handle) */}
+        {/* Header (also the float move handle) */}
         <div
-          onPointerDown={(e) => {
-            if (canDrag) dragControls.start(e);
-          }}
+          onPointerDown={startMove}
           className={`flex shrink-0 items-center justify-between gap-2 border-b border-border bg-card/80 px-3 py-2 backdrop-blur-sm ${
             canDrag ? "cursor-move touch-none" : ""
           }`}
@@ -540,30 +678,39 @@ export function ExamScratchpad({ attemptId, onClose, onLayout }: Props) {
           </div>
         </div>
 
-        {/* Resize handle (not in fullscreen) */}
+        {/* Resize handles — float: any edge + corner; dock: the shared edge */}
         {mode === "float" && (
-          <div
-            onPointerDown={startResize}
-            className="absolute bottom-0 right-0 h-5 w-5 cursor-nwse-resize touch-none"
-            style={{
-              background:
-                "linear-gradient(135deg, transparent 50%, var(--color-muted-foreground, #888) 50%, transparent 60%, var(--color-muted-foreground, #888) 60%)",
-              opacity: 0.4,
-            }}
-            aria-label="resize"
-          />
+          <>
+            <ResizeHandle onDown={startFloatResize("n")} className="left-3 right-3 top-0 h-1.5 cursor-ns-resize" />
+            <ResizeHandle onDown={startFloatResize("s")} className="left-3 right-3 bottom-0 h-1.5 cursor-ns-resize" />
+            <ResizeHandle onDown={startFloatResize("w")} className="left-0 top-3 bottom-3 w-1.5 cursor-ew-resize" />
+            <ResizeHandle onDown={startFloatResize("e")} className="right-0 top-3 bottom-3 w-1.5 cursor-ew-resize" />
+            <ResizeHandle onDown={startFloatResize("nw")} className="left-0 top-0 h-3.5 w-3.5 cursor-nwse-resize" />
+            <ResizeHandle onDown={startFloatResize("ne")} className="right-0 top-0 h-3.5 w-3.5 cursor-nesw-resize" />
+            <ResizeHandle onDown={startFloatResize("sw")} className="left-0 bottom-0 h-3.5 w-3.5 cursor-nesw-resize" />
+            <div
+              onPointerDown={startFloatResize("se")}
+              className="absolute bottom-0 right-0 z-10 h-5 w-5 cursor-nwse-resize touch-none"
+              style={{
+                background:
+                  "linear-gradient(135deg, transparent 50%, var(--color-muted-foreground, #888) 50%, transparent 60%, var(--color-muted-foreground, #888) 60%)",
+                opacity: 0.4,
+              }}
+              aria-label="resize"
+            />
+          </>
         )}
         {mode === "dock" && !isMobile && (
           <div
-            onPointerDown={startResize}
-            className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize touch-none hover:bg-primary/30"
+            onPointerDown={startDockResize}
+            className="absolute left-0 top-0 bottom-0 z-10 w-1.5 cursor-ew-resize touch-none hover:bg-primary/30"
             aria-label="resize"
           />
         )}
         {mode === "dock" && isMobile && (
           <div
-            onPointerDown={startResize}
-            className="absolute left-0 right-0 top-0 flex h-3 cursor-ns-resize touch-none items-center justify-center"
+            onPointerDown={startDockResize}
+            className="absolute left-0 right-0 top-0 z-10 flex h-3 cursor-ns-resize touch-none items-center justify-center"
             aria-label="resize"
           >
             <span className="h-1 w-10 rounded-full bg-muted-foreground/40" />
@@ -708,6 +855,22 @@ function IconBtn({
     >
       <Icon className="h-4 w-4" />
     </button>
+  );
+}
+
+function ResizeHandle({
+  onDown,
+  className,
+}: {
+  onDown: (e: React.PointerEvent) => void;
+  className: string;
+}) {
+  return (
+    <div
+      onPointerDown={onDown}
+      className={`absolute z-10 touch-none ${className}`}
+      aria-label="resize"
+    />
   );
 }
 

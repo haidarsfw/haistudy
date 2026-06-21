@@ -5,27 +5,23 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useScope } from "@/components/providers/scope-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { ExamResults } from "@/components/exam/exam-results";
-import { ExamGradingLoader } from "@/components/exam/exam-grading-loader";
 import { useExam } from "@/hooks/use-exam";
-import { useTranslation } from "@/components/providers/language-provider";
-import { AlertTriangle } from "lucide-react";
 import type { ExamGradingResult } from "@/types/exam";
 
-type Phase = "loading" | "results" | "regrading" | "regrade-error";
+type Phase = "loading" | "results";
 
 /**
  * View past exam attempt: /[scope]/subject/[id]/latihan/riwayat?attemptId=xxx
  *
  * Loads full attempt data from the API and displays the ExamResults view.
- * Supports re-grading: clicking "Nilai Ulang" shows the same grading
- * loading screen used during exam submission, then refreshes scores.
+ * Re-grading runs in place: ExamResults shows its own inline spinner + a
+ * success/error toast and refreshes the scores without leaving the view.
  */
 export default function RiwayatPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { scopePath } = useScope();
-  const { t } = useTranslation();
   const subjectId = params.id as string;
   const attemptId = searchParams.get("attemptId");
 
@@ -34,7 +30,6 @@ export default function RiwayatPage() {
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
-  const [regradeError, setRegradeError] = useState<string | null>(null);
   const [attemptData, setAttemptData] = useState<{
     gradingResults: ExamGradingResult[];
     totalScore: number;
@@ -54,48 +49,25 @@ export default function RiwayatPage() {
     router.push(`/${scopePath}/subject/${subjectId}/latihan`);
   }, [router, scopePath, subjectId]);
 
-  // ─── Regrade handler ───
+  // ─── Regrade handler (in place; ExamResults owns the spinner + toast) ───
+  // Throws on failure so ExamResults can flag it; updates scores on success.
   const handleRegrade = useCallback(async () => {
     if (!attemptId) return;
-    setPhase("regrading");
-    setRegradeError(null);
-
-    try {
-      const result = await regradeAttempt(attemptId);
-
-      // Update local state with new grading results
-      setAttemptData((prev) =>
-        prev
-          ? {
-              ...prev,
-              gradingResults: result.gradingResults,
-              totalScore: result.totalScore,
-              maxScore: result.maxScore,
-              scorePct: result.scorePct,
-              durationUsedSeconds: result.durationUsedSeconds,
-              autoSubmitted: result.autoSubmitted,
-            }
-          : prev
-      );
-      setPhase("results");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error("[Regrade] Failed:", msg, err);
-      setRegradeError(msg);
-      setPhase("regrade-error");
-    }
+    const result = await regradeAttempt(attemptId);
+    setAttemptData((prev) =>
+      prev
+        ? {
+            ...prev,
+            gradingResults: result.gradingResults,
+            totalScore: result.totalScore,
+            maxScore: result.maxScore,
+            scorePct: result.scorePct,
+            durationUsedSeconds: result.durationUsedSeconds,
+            autoSubmitted: result.autoSubmitted,
+          }
+        : prev
+    );
   }, [attemptId, regradeAttempt]);
-
-  // ─── Retry regrade after error ───
-  const retryRegrade = useCallback(() => {
-    handleRegrade();
-  }, [handleRegrade]);
-
-  // ─── Back to results from error ───
-  const backToResults = useCallback(() => {
-    setPhase("results");
-    setRegradeError(null);
-  }, []);
 
   // ─── Initial data load ───
   useEffect(() => {
@@ -201,59 +173,6 @@ export default function RiwayatPage() {
         >
           Kembali
         </button>
-      </div>
-    );
-  }
-
-  // ─── Re-grading: show the same loading screen as exam submission ───
-  if (phase === "regrading") {
-    return <ExamGradingLoader />;
-  }
-
-  // ─── Re-grade error: show error with retry + back buttons ───
-  if (phase === "regrade-error") {
-    return (
-      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background px-6">
-        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-xl">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
-            <AlertTriangle className="h-6 w-6 text-red-500" />
-          </div>
-          <h3 className="text-base font-bold text-foreground">
-            {t("exam.regrade_error_title")}
-          </h3>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            {t("exam.regrade_error_desc")}
-          </p>
-
-          {/* Error detail box */}
-          {regradeError && (
-            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-left dark:border-red-900 dark:bg-red-950/30">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-red-500">
-                Error Log
-              </p>
-              <p className="mt-1 break-all font-mono text-xs text-red-700 dark:text-red-400">
-                {regradeError}
-              </p>
-            </div>
-          )}
-
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={backToResults}
-              className="hs-press flex-1 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-foreground"
-            >
-              {t("exam.results_back")}
-            </button>
-            <button
-              type="button"
-              onClick={retryRegrade}
-              className="hs-press flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground"
-            >
-              {t("exam.submit_retry")}
-            </button>
-          </div>
-        </div>
       </div>
     );
   }

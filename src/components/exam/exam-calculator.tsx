@@ -8,6 +8,9 @@ import { evaluate, formatResult } from "@/lib/exam/calc";
 
 interface Props {
   onClose: () => void;
+  /** Stacking order (last-focused tool on top) + focus callback from the player. */
+  zIndex?: number;
+  onFocus?: () => void;
 }
 
 /**
@@ -15,7 +18,7 @@ interface Props {
  * panel, draggable by its header (1-click open from the toolbar). Uses the safe
  * evaluator in lib/exam/calc.ts — no eval.
  */
-export function ExamCalculator({ onClose }: Props) {
+export function ExamCalculator({ onClose, zIndex = 110, onFocus }: Props) {
   const { t } = useTranslation();
   const [expr, setExpr] = useState("");
   const [deg, setDeg] = useState(true);
@@ -69,7 +72,12 @@ export function ExamCalculator({ onClose }: Props) {
   };
 
   return (
-    <div ref={boundsRef} className="pointer-events-none fixed inset-0 z-[115]">
+    <div
+      ref={boundsRef}
+      className="pointer-events-none fixed inset-0"
+      style={{ zIndex }}
+      onPointerDownCapture={onFocus}
+    >
       <motion.div
         drag
         dragControls={dragControls}

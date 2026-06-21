@@ -203,6 +203,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      // Immersive full-screen routes (exam player, Belajar Kilat) own Escape
+      // themselves — don't let the global handler yank the user to the dashboard
+      // (and flash the exam's own exit modal in the process).
+      const p = window.location.pathname;
+      if (p.endsWith("/latihan") || p.endsWith("/kilat")) return;
       // Don't interfere with input fields (search dialog has its own handler)
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;

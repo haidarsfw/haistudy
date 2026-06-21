@@ -482,7 +482,7 @@ export default function SubjectPage() {
         {/* Merged Hafalan & Kuis (id 11) — Flashcards + Quiz with a sub-toggle */}
         <div className="tab-panel" hidden={activeTab !== 11}>
           {visited.has(11) && (
-            <PreviewLock title="Hafalan & Kuis">
+            <PreviewLock title="Drill">
               <div className="mb-4 flex gap-2">
                 <button
                   type="button"

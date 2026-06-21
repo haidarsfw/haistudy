@@ -31,7 +31,7 @@ export const SUBJECT_TABS = [
   { id: 2, label: "Kisi-Kisi", shortLabel: "Kisi", icon: List },
   // Merged Flashcards + Quiz (s2/uas/bm onward). Hidden elsewhere; ids 3+4 below
   // stay for earlier scopes that still show them separately.
-  { id: 11, label: "Hafalan & Kuis", shortLabel: "Hafalan", icon: Layers },
+  { id: 11, label: "Drill", shortLabel: "Drill", icon: Layers },
   { id: 3, label: "Flashcards", shortLabel: "Flash", icon: Layers },
   { id: 4, label: "Quiz", shortLabel: "Quiz", icon: HelpCircle },
   { id: 5, label: "Forum", shortLabel: "Forum", icon: MessageSquare },
@@ -56,27 +56,29 @@ export const TabNav = memo(function TabNav({
 }: TabNavProps) {
   return (
     <div className="border-b border-border">
-      <div className="relative flex flex-wrap">
+      {/* Mobile: equal-width grid that fills the row and wraps into tidy rows
+          (no ragged gaps). Desktop (sm+): the original single inline row. */}
+      <div className="relative grid grid-cols-4 sm:flex sm:flex-wrap">
         {SUBJECT_TABS.filter((tab) => !hiddenTabs?.has(tab.id)).map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => { sounds.click(); onTabChange(tab.id); }}
-              className={`hs-press relative flex items-center gap-1 px-2.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
+              className={`hs-press relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] font-medium transition-colors sm:flex-row sm:gap-1 sm:px-4 sm:py-2.5 sm:text-sm ${
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="relative">
-                <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <tab.icon className="h-4 w-4 shrink-0" />
                 {tabDots?.[tab.id] && (
                   <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-destructive" />
                 )}
               </div>
               <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.shortLabel}</span>
+              <span className="max-w-full truncate sm:hidden">{tab.shortLabel}</span>
               {counts?.[tab.id] !== undefined &&
                 counts[tab.id] > 0 && (
                   <span className="hidden sm:inline text-[10px] text-muted-foreground/70">

@@ -110,7 +110,7 @@ export function ExamBriefing({
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-[100] overflow-y-auto overscroll-none bg-background"
     >
-      <div className="mx-auto max-w-lg px-5 py-8">
+      <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
         <motion.div
           variants={staggerContainer(0.06)}
           initial="hidden"
@@ -145,7 +145,7 @@ export function ExamBriefing({
           {/* Info grid */}
           <motion.div
             variants={staggerItem}
-            className="grid grid-cols-2 gap-3"
+            className="grid grid-cols-2 gap-3 sm:grid-cols-4"
           >
             <InfoCard icon={Clock} label={t("exam.duration")} value={`${exam.meta.durationMinutes} min`} />
             <InfoCard icon={FileText} label={t("exam.total_questions")} value={`${totalSubQuestions}`} />
@@ -158,7 +158,7 @@ export function ExamBriefing({
             <h3 className="mb-3 text-sm font-bold text-foreground">
               {t("exam.briefing_rules")}
             </h3>
-            <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               {rules.map((rule, i) => (
                 <div
                   key={i}
@@ -215,7 +215,7 @@ export function ExamBriefing({
           </motion.div>
 
           {/* Start button */}
-          <motion.div variants={staggerItem}>
+          <motion.div variants={staggerItem} className="sm:mx-auto sm:max-w-md">
             <button
               type="button"
               onClick={handleStart}

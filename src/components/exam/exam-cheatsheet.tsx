@@ -18,6 +18,9 @@ import { ExamMarkdown } from "./exam-markdown";
 interface Props {
   cheatSheet: CheatSheet;
   onClose: () => void;
+  /** Stacking order (last-focused tool on top) + focus callback from the player. */
+  zIndex?: number;
+  onFocus?: () => void;
 }
 
 type View = "web" | "pdf";
@@ -27,7 +30,7 @@ type View = "web" | "pdf";
  * full-screen on mobile. Two views: a cleaned-up web (KaTeX) version and the
  * original PDF rendered as image sheets (toggle). Reference only — never edited.
  */
-export function ExamCheatSheet({ cheatSheet, onClose }: Props) {
+export function ExamCheatSheet({ cheatSheet, onClose, zIndex = 110, onFocus }: Props) {
   const { t } = useTranslation();
   const sheets = cheatSheet.sheets;
   const images = cheatSheet.imageSheets ?? [];
@@ -49,7 +52,9 @@ export function ExamCheatSheet({ cheatSheet, onClose }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[110] flex justify-end"
+      className="fixed inset-0 flex justify-end"
+      style={{ zIndex }}
+      onPointerDownCapture={onFocus}
     >
       {/* Backdrop */}
       <button
@@ -66,7 +71,7 @@ export function ExamCheatSheet({ cheatSheet, onClose }: Props) {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 360, damping: 38 }}
-        className="relative z-10 flex h-full w-full flex-col border-l border-border bg-card shadow-2xl sm:w-[500px]"
+        className="relative z-10 flex h-full w-full flex-col border-l border-border bg-card shadow-2xl sm:w-[560px] lg:w-[640px]"
       >
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-3">
@@ -155,20 +160,23 @@ export function ExamCheatSheet({ cheatSheet, onClose }: Props) {
 
         {/* Content */}
         {view === "web" ? (
-          <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
             <h2 className="mb-4 border-b border-border pb-2 text-base font-black tracking-tight text-foreground">
               {sheet.title}
             </h2>
             <ExamMarkdown
               content={sheet.contentMd.replace(/^###\s.*\n/, "")}
+              inlineMath
               className={
-                "leading-relaxed " +
-                // generous rhythm so sections + formulas don't feel stacked
-                "[&_h3]:mt-6 [&_h3]:mb-1.5 [&_h3]:text-[13px] [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-wide [&_h3]:text-primary/80 first:[&_h3]:mt-0 " +
-                "[&_p]:my-2 [&_strong]:text-foreground " +
-                "[&_ul]:my-2 [&_ul]:space-y-1 [&_li]:my-0.5 [&_li]:leading-relaxed " +
-                // formula blocks: roomy, boxed, never crammed together
-                "[&_.katex-display]:my-4 [&_.katex-display]:rounded-lg [&_.katex-display]:border [&_.katex-display]:border-border [&_.katex-display]:bg-muted/40 [&_.katex-display]:px-4 [&_.katex-display]:py-3"
+                "text-[13px] leading-relaxed " +
+                // section headings: clearly separated with a top rule + breathing room
+                "[&_h3]:mt-7 [&_h3]:mb-2 [&_h3]:border-t [&_h3]:border-border/60 [&_h3]:pt-4 [&_h3]:text-sm [&_h3]:font-extrabold [&_h3]:uppercase [&_h3]:tracking-wide [&_h3]:text-primary first:[&_h3]:mt-0 first:[&_h3]:border-0 first:[&_h3]:pt-0 " +
+                "[&_p]:my-2.5 [&_strong]:font-bold [&_strong]:text-foreground " +
+                "[&_ul]:my-2.5 [&_ul]:space-y-1.5 [&_li]:leading-relaxed " +
+                // formula blocks: roomy, boxed cards, scrollable, never crammed
+                "[&_.katex-display]:my-3.5 [&_.katex-display]:overflow-x-auto [&_.katex-display]:rounded-xl [&_.katex-display]:border [&_.katex-display]:border-border [&_.katex-display]:bg-muted/40 [&_.katex-display]:px-4 [&_.katex-display]:py-3.5 " +
+                // inline formulas: slightly larger so sub/superscripts stay legible
+                "[&_.katex]:text-[1.03em]"
               }
             />
           </div>

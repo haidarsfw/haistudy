@@ -26,9 +26,16 @@ import "katex/dist/katex.min.css";
 export function ExamMarkdown({
   content,
   className = "",
+  inlineMath = false,
 }: {
   content: string;
   className?: string;
+  /**
+   * Allow single-dollar `$...$` inline math. OFF by default so currency like
+   * `$40,000` stays literal text. Turn ON for math-heavy, money-free content
+   * (e.g. the ops-mgmt cheat sheet) so inline formulas render via KaTeX.
+   */
+  inlineMath?: boolean;
 }) {
   return (
     <div
@@ -52,7 +59,7 @@ export function ExamMarkdown({
       }
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: false }]]}
+        remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: inlineMath }]]}
         rehypePlugins={[rehypeKatex]}
       >
         {content}

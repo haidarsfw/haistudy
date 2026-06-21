@@ -1,8 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Trophy, Star, BookOpen, Flame, ArrowLeft, RotateCcw, ChevronDown, RefreshCw } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Trophy,
+  Star,
+  BookOpen,
+  Flame,
+  ArrowLeft,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import type { ExamData, ExamGradingResult } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
@@ -20,10 +34,13 @@ interface Props {
   examLanguage: "en" | "id";
   onClose: () => void;
   onRetry?: () => void;
-  onRegrade?: () => void;
+  /** Re-grade saved answers in place. May be async; resolves on success. */
+  onRegrade?: () => void | Promise<void>;
   /** Times the user left the exam tab (anti-exploit audit; live attempts only). */
   awayCount?: number;
 }
+
+type ReviewFilter = "all" | "ok" | "partial" | "wrong";
 
 function getGrade(pct: number) {
   if (pct >= 85) return { icon: Trophy, label: "exam.results_grade_excellent", color: "text-emerald-500", bg: "bg-emerald-500" };
@@ -49,27 +66,72 @@ export function ExamResults({
 }: Props) {
   const { t } = useTranslation();
   const [showReview, setShowReview] = useState(false);
-  const [reviewFilter, setReviewFilter] = useState<"all" | "wrong" | "partial">("all");
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
+  const [activeIdx, setActiveIdx] = useState(0);
   const [animatedScore, setAnimatedScore] = useState(0);
+  const [regrading, setRegrading] = useState(false);
+  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   const lang = examLanguage;
 
   const statusOf = (r: ExamGradingResult): "ok" | "partial" | "wrong" => {
     const pct = r.maxPoints > 0 ? (r.score / r.maxPoints) * 100 : 0;
     return pct >= 80 ? "ok" : pct >= 50 ? "partial" : "wrong";
   };
-  // TOC jump: open the review and scroll to a question's card.
-  const jumpToReview = (id: string) => {
-    setShowReview(true);
-    setReviewFilter("all");
-    setTimeout(() => {
-      document
-        .getElementById(`review-${id}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
-  };
 
   const grade = getGrade(scorePct);
   const GradeIcon = grade.icon;
+
+  // Cards visible under the current filter (drives the Prev/Next stepper + TOC).
+  const filtered = gradingResults.filter(
+    (r) => reviewFilter === "all" || statusOf(r) === reviewFilter
+  );
+  const activeId =
+    filtered[Math.min(activeIdx, Math.max(0, filtered.length - 1))]?.questionId;
+
+  const scrollToUnit = (id: string) =>
+    document
+      .getElementById(`review-${id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // TOC jump: open the review, reset to "all", scroll to the question's card.
+  const jumpToReview = (id: string) => {
+    setShowReview(true);
+    setReviewFilter("all");
+    const idx = gradingResults.findIndex((r) => r.questionId === id);
+    if (idx >= 0) setActiveIdx(idx);
+    setTimeout(() => scrollToUnit(id), 80);
+  };
+
+  // Step Prev/Next through the filtered discussion list.
+  const stepReview = (delta: number) => {
+    if (filtered.length === 0) return;
+    const ni = Math.max(0, Math.min(filtered.length - 1, activeIdx + delta));
+    setActiveIdx(ni);
+    const id = filtered[ni]?.questionId;
+    if (id) scrollToUnit(id);
+  };
+
+  const pickFilter = (f: ReviewFilter) => {
+    setReviewFilter(f);
+    setActiveIdx(0);
+  };
+
+  // Re-grade in place: inline overlay, then a success/error toast (#14).
+  const doRegrade = async () => {
+    if (!onRegrade || regrading) return;
+    setRegrading(true);
+    try {
+      await onRegrade();
+      setToast({ kind: "ok", msg: t("exam.regrade_success") });
+    } catch {
+      setToast({ kind: "err", msg: t("exam.regrade_error_title") });
+    } finally {
+      setRegrading(false);
+      setTimeout(() => setToast(null), 3200);
+    }
+  };
+
+  const filters: ReviewFilter[] = ["all", "ok", "partial", "wrong"];
 
   // Animated score counter
   useEffect(() => {
@@ -123,9 +185,50 @@ export function ExamResults({
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-[90] overflow-y-auto overscroll-none bg-background"
     >
-      <div className="mx-auto max-w-2xl px-5 py-8">
+      {/* Sticky action bar — compact score + always-visible actions (no scroll). */}
+      <div className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-border bg-background/90 px-3 py-2 backdrop-blur sm:px-4">
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${grade.bg}/10`}>
+          <GradeIcon className={`h-4 w-4 ${grade.color}`} />
+        </span>
+        <p className="min-w-0 truncate text-sm font-bold leading-tight text-foreground">
+          {totalScore}
+          <span className="text-muted-foreground">/{maxScore}</span>
+          <span className={`ml-1.5 ${grade.color}`}>{scorePct}%</span>
+        </p>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="hs-press flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-semibold text-foreground sm:px-3"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("exam.results_back")}</span>
+          </button>
+          {onRegrade && (
+            <button
+              type="button"
+              onClick={doRegrade}
+              disabled={regrading}
+              className="hs-press flex h-9 items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 text-xs font-bold text-amber-600 disabled:opacity-60 dark:text-amber-400 sm:px-3"
+            >
+              {regrading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              <span className="hidden sm:inline">{t("exam.regrade_btn").replace(/^🔄\s*/, "")}</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onRetry ?? onClose}
+            className="hs-press flex h-9 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-xs font-bold text-primary-foreground sm:px-3"
+          >
+            <RotateCcw className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("exam.results_retry")}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-2xl px-5 py-7">
         <motion.div
-          variants={staggerContainer(0.08)}
+          variants={staggerContainer(0.07)}
           initial="hidden"
           animate="visible"
           className="space-y-6"
@@ -227,38 +330,68 @@ export function ExamResults({
             </button>
           </motion.div>
 
-          {/* Full review (pembahasan) — TOC jump + filter */}
+          {/* Full review (pembahasan) — sticky filter + Prev/Next stepper + TOC */}
           {showReview && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="space-y-4"
             >
-              {/* Filter bar (sticky) */}
-              <div className="sticky top-0 z-10 -mx-1 flex gap-2 bg-background/90 px-1 py-2 backdrop-blur">
-                {(["all", "wrong", "partial"] as const).map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setReviewFilter(f)}
-                    className={`hs-press rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                      reviewFilter === f
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card text-muted-foreground"
-                    }`}
-                  >
-                    {t(`exam.review_filter_${f}`)}
-                  </button>
-                ))}
+              {/* Controls (sticky, just under the action bar) */}
+              <div className="sticky top-[49px] z-20 -mx-1 space-y-2 bg-background/90 px-1 py-2 backdrop-blur">
+                <div className="flex flex-wrap gap-2">
+                  {filters.map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => pickFilter(f)}
+                      className={`hs-press rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        reviewFilter === f
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground"
+                      }`}
+                    >
+                      {t(`exam.review_filter_${f}`)}
+                    </button>
+                  ))}
+                </div>
+                {filtered.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => stepReview(-1)}
+                      disabled={activeIdx <= 0}
+                      className="hs-press flex h-8 items-center gap-1 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground disabled:opacity-30"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      {t("exam.prev")}
+                    </button>
+                    <span className="flex-1 text-center text-xs font-semibold tabular-nums text-muted-foreground">
+                      {Math.min(activeIdx + 1, filtered.length)}/{filtered.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => stepReview(1)}
+                      disabled={activeIdx >= filtered.length - 1}
+                      className="hs-press flex h-8 items-center gap-1 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground disabled:opacity-30"
+                    >
+                      {t("exam.next")}
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {gradingResults
-                .filter((r) => reviewFilter === "all" || statusOf(r) === reviewFilter)
-                .map((result) => (
+              {filtered.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">—</p>
+              ) : (
+                filtered.map((result) => (
                   <div
                     key={result.questionId}
                     id={`review-${result.questionId}`}
-                    className="scroll-mt-20"
+                    className={`scroll-mt-32 rounded-2xl transition-shadow ${
+                      result.questionId === activeId ? "ring-2 ring-primary/40" : ""
+                    }`}
                   >
                     <ReviewCard
                       result={result}
@@ -268,45 +401,62 @@ export function ExamResults({
                       t={t}
                     />
                   </div>
-                ))}
-            </motion.div>
-          )}
+                ))
+              )}
 
-          {/* Retry grading button — shown when onRegrade is provided */}
-          {onRegrade && (
-            <motion.div variants={staggerItem}>
+              {/* Collapse back */}
               <button
                 type="button"
-                onClick={onRegrade}
-                className="hs-press flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500/30 bg-amber-500/10 py-3 text-sm font-bold text-amber-500 transition-all hover:border-amber-500/50 hover:bg-amber-500/20"
+                onClick={() => setShowReview(false)}
+                className="hs-press flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-card py-2.5 text-xs font-semibold text-muted-foreground"
               >
-                <RefreshCw className="h-4 w-4" />
-                {t("exam.regrade_btn")}
+                <ChevronUp className="h-4 w-4" />
+                {t("exam.review_title")}
               </button>
             </motion.div>
           )}
 
-          {/* Actions */}
-          <motion.div variants={staggerItem} className="flex gap-3 pb-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="hs-press flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t("exam.results_back")}
-            </button>
-            <button
-              type="button"
-              onClick={onRetry ?? onClose}
-              className="hs-press flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground"
-            >
-              <RotateCcw className="h-4 w-4" />
-              {t("exam.results_retry")}
-            </button>
-          </motion.div>
+          <div className="pb-4" />
         </motion.div>
       </div>
+
+      {/* Toast (regrade result, #14) */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed inset-x-0 bottom-6 z-[120] flex justify-center px-4"
+          >
+            <div
+              className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-lg ${
+                toast.kind === "ok"
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                  : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+              }`}
+            >
+              {toast.kind === "ok" ? <CheckCircle2 className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+              {toast.msg}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Inline regrade overlay (stays on results; no full-screen phase flip) */}
+      <AnimatePresence>
+        {regrading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm"
+          >
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm font-semibold text-foreground">{t("exam.regrade_loading")}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

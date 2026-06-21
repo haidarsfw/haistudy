@@ -63,10 +63,12 @@ function slotStatus(
   answers: Record<string, string>,
   tf: Record<string, "true" | "false">
 ): SlotStatus {
+  // No minimum-length gate: a unit counts as answered the moment it has any
+  // non-empty content (T/F also needs a verdict). Partial = some parts filled.
   if (q.type === "true-false") {
     const subs = q.subQuestions ?? [];
     const done = subs.filter(
-      (s) => tf[s.id] && (answers[s.id] ?? "").trim().length >= 10
+      (s) => tf[s.id] && (answers[s.id] ?? "").trim().length > 0
     ).length;
     if (done === 0) return "empty";
     return done === subs.length ? "answered" : "partial";
@@ -74,15 +76,13 @@ function slotStatus(
   if (q.subQuestions && q.subQuestions.length > 0) {
     const subs = q.subQuestions;
     const filled = subs.filter(
-      (s) => (answers[s.id] ?? "").trim().length >= 20
+      (s) => (answers[s.id] ?? "").trim().length > 0
     ).length;
-    const any = subs.some((s) => (answers[s.id] ?? "").trim().length > 0);
-    if (filled === subs.length) return "answered";
-    return any ? "partial" : "empty";
+    if (filled === 0) return "empty";
+    return filled === subs.length ? "answered" : "partial";
   }
   const a = (answers[q.id] ?? "").trim();
-  if (a.length === 0) return "empty";
-  return a.length >= 20 ? "answered" : "partial";
+  return a.length === 0 ? "empty" : "answered";
 }
 
 interface ResumeSession {
@@ -149,6 +149,13 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+  // Floating-tool stacking: the last-focused/opened tool renders on top (#8).
+  const [zStack, setZStack] = useState<string[]>([]);
+  const bringToFront = useCallback(
+    (id: string) => setZStack((s) => [...s.filter((x) => x !== id), id]),
+    []
+  );
+  const zOf = (id: string) => 110 + Math.max(0, zStack.indexOf(id));
   const [scratchLayout, setScratchLayout] = useState<{
     mode: string;
     isMobile: boolean;
@@ -375,21 +382,21 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
   }, [doSubmit]);
 
   // Re-grade from the results screen (re-runs AI grading on saved answers).
+  // Stays on the results phase (no flip to the full-screen grading loader) so
+  // the results screen can show its own inline spinner + a success toast; the
+  // score props update in place. Rejects so the results screen can flag errors.
   const handleResultsRegrade = useCallback(async () => {
     if (!attemptId || submittingRef.current) return;
     submittingRef.current = true;
-    setSubmitError(false);
-    setPhase("grading");
     try {
       const r = await regradeAttempt(attemptId);
       setGradingResults(r.gradingResults);
       setTotalScore(r.totalScore);
       setMaxScore(r.maxScore);
       setScorePct(r.scorePct);
-      setPhase("results");
     } catch (e) {
       console.error("Regrade failed:", e);
-      setSubmitError(true);
+      throw e;
     } finally {
       submittingRef.current = false;
     }
@@ -429,18 +436,24 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
   useEffect(() => {
     if (phase !== "exam") return;
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "TEXTAREA" || tag === "INPUT") return;
+      // Escape is owned by the exam player even while a textarea is focused, so
+      // it closes the top tool / toggles the exit modal instead of bubbling to
+      // the app-shell's global "Esc -> dashboard" handler (which now also skips
+      // this route). stopPropagation is a belt-and-suspenders guard.
       if (e.key === "Escape") {
         e.preventDefault();
+        e.stopPropagation();
         if (showCheatSheet) setShowCheatSheet(false);
         else if (showCalculator) setShowCalculator(false);
         else if (showScratchpad) setShowScratchpad(false);
-        else setShowExit(true);
+        else setShowExit((v) => !v);
+        return;
       }
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "TEXTAREA" || tag === "INPUT") return;
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [phase, showCheatSheet, showScratchpad, showCalculator]);
 
   // ─── beforeunload ───
@@ -576,20 +589,22 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
     <>
       <button
         type="button"
-        onClick={() => setShowScratchpad(true)}
+        onClick={() => { setShowScratchpad((v) => !v); bringToFront("scratch"); }}
         title={t("exam.scratchpad_open")}
         aria-label={t("exam.scratchpad_open")}
-        className="hs-press flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+        aria-pressed={showScratchpad}
+        className={`hs-press flex h-8 w-8 items-center justify-center rounded-lg border ${showScratchpad ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"}`}
       >
         <Pen className="h-4 w-4" />
       </button>
       {exam.calculator && (
         <button
           type="button"
-          onClick={() => setShowCalculator(true)}
+          onClick={() => { setShowCalculator((v) => !v); bringToFront("calc"); }}
           title={t("exam.calculator_open")}
           aria-label={t("exam.calculator_open")}
-          className="hs-press flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+          aria-pressed={showCalculator}
+          className={`hs-press flex h-8 w-8 items-center justify-center rounded-lg border ${showCalculator ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"}`}
         >
           <Calculator className="h-4 w-4" />
         </button>
@@ -597,10 +612,11 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
       {exam.cheatSheet && (
         <button
           type="button"
-          onClick={() => setShowCheatSheet(true)}
+          onClick={() => { setShowCheatSheet((v) => !v); bringToFront("cheat"); }}
           title={t("exam.cheatsheet_open")}
           aria-label={t("exam.cheatsheet_open")}
-          className="hs-press flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+          aria-pressed={showCheatSheet}
+          className={`hs-press flex h-8 w-8 items-center justify-center rounded-lg border ${showCheatSheet ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"}`}
         >
           <BookMarked className="h-4 w-4" />
         </button>
@@ -765,6 +781,8 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
             attemptId={attemptId}
             onClose={() => setShowScratchpad(false)}
             onLayout={setScratchLayout}
+            zIndex={zOf("scratch")}
+            onFocus={() => bringToFront("scratch")}
           />
         )}
       </AnimatePresence>
@@ -774,13 +792,19 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
           <ExamCheatSheet
             cheatSheet={exam.cheatSheet}
             onClose={() => setShowCheatSheet(false)}
+            zIndex={zOf("cheat")}
+            onFocus={() => bringToFront("cheat")}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {showCalculator && exam.calculator && (
-          <ExamCalculator onClose={() => setShowCalculator(false)} />
+          <ExamCalculator
+            onClose={() => setShowCalculator(false)}
+            zIndex={zOf("calc")}
+            onFocus={() => bringToFront("calc")}
+          />
         )}
       </AnimatePresence>
 
