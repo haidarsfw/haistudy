@@ -79,7 +79,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           if (
             srv.licenseKey !== stored.licenseKey ||
             !!srv.isPreview !== !!stored.isPreview ||
-            srv.scopeKey !== stored.scopeKey
+            srv.scopeKey !== stored.scopeKey ||
+            srv.loginMethod !== stored.loginMethod
           ) {
             applyEmbeddedSettings(data.settings);
             setSession(srv);

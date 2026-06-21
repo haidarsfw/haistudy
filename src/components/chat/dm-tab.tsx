@@ -34,7 +34,9 @@ function dmToChatMessage(
   conv: DmConversation | undefined
 ): ChatMessage {
   const mine = m.senderKey.toUpperCase() === myKey;
-  const authorName = mine ? myName : m.senderName ?? conv?.otherName ?? "";
+  // 1:1 DM → the other party is always conv.otherName (freshly resolved). Prefer
+  // it over the per-message senderName, which can be a stale "Pengguna" fallback.
+  const authorName = mine ? myName : conv?.otherName ?? m.senderName ?? "";
   const licenseKey = mine ? myKey : conv?.otherKey ?? null;
   const isAdmin = mine ? false : conv?.otherIsAdmin ?? false;
   const packageTier = mine ? undefined : conv?.otherTier ?? undefined;

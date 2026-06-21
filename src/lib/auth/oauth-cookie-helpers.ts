@@ -20,6 +20,9 @@ export interface SessionPayload {
   selectedClass: string;
   isPreview?: boolean;
   packageTier: "share" | "normal" | "vip" | "diamond";
+  // 'key' = license-key login (30-day activation + idle timeout); 'email' =
+  // Google sign-in (no expiry, no idle logout).
+  loginMethod?: "key" | "email";
   scope: ScopeTuple;
   scopeKey: string;
 }
@@ -317,6 +320,9 @@ export async function activateLicense(
     isPreview: license.is_preview || false,
     packageTier:
       (license.package_tier as "share" | "normal" | "vip" | "diamond") || "normal",
+    // 'email' (Google) logins never expire / idle-out; default to 'key'.
+    loginMethod:
+      ((license as { login_method?: string }).login_method === "email" ? "email" : "key"),
     scope: effectiveScope,
     scopeKey: toScopeKey(effectiveScope),
   };

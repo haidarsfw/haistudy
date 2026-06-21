@@ -18,13 +18,27 @@ export function SessionTimeout() {
   const lastResetRef = useRef(Date.now());
   const warningTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const logoutTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Paused while an exam/grading/results screen is up (#15) — long reading or
+  // typing without qualifying events must never log the user out mid-attempt.
+  const examActiveRef = useRef(false);
+
+  // Google (email) logins never idle-out — only license keys carry the 30-day
+  // activation + idle-timeout model. Preview sessions are exempt too.
+  const idleEnabled =
+    !!session && session.loginMethod !== "email" && !session.isPreview;
+
+  const clearTimers = useCallback(() => {
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+  }, []);
 
   const resetTimers = useCallback(() => {
     lastResetRef.current = Date.now();
     setShowWarning(false);
+    clearTimers();
 
-    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
-    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+    // While an exam is active the timers stay paused (no auto-logout).
+    if (examActiveRef.current) return;
 
     warningTimerRef.current = setTimeout(() => {
       setShowWarning(true);
@@ -43,16 +57,30 @@ export function SessionTimeout() {
       logout();
       router.push("/login");
     }, SESSION_TIMEOUT_MS);
-  }, [session?.licenseKey, logout, router]);
+  }, [session?.licenseKey, logout, router, clearTimers]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!idleEnabled) {
+      clearTimers();
+      return;
+    }
 
     resetTimers();
 
-    const events = ["mousedown", "keydown", "scroll", "touchstart"];
+    // Broad activity set + bubbling-friendly events so reading/scrolling inner
+    // panels still counts (scroll doesn't bubble, so include pointer/mouse move).
+    const events = [
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "mousemove",
+      "pointerdown",
+      "click",
+      "wheel",
+    ];
 
-    // Debounce: only reset timer every 30 seconds to avoid excessive resets
+    // Debounce: only reset every 30s to avoid excessive resets.
     const onActivity = () => {
       const now = Date.now();
       if (now - lastResetRef.current > 30_000) {
@@ -62,12 +90,19 @@ export function SessionTimeout() {
 
     events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
 
+    // Exam player broadcasts its active state; pause/resume the idle timers.
+    const onExam = (e: Event) => {
+      examActiveRef.current = (e as CustomEvent).detail === true;
+      resetTimers();
+    };
+    window.addEventListener("hs:exam-active", onExam as EventListener);
+
     return () => {
       events.forEach((e) => window.removeEventListener(e, onActivity));
-      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
-      if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+      window.removeEventListener("hs:exam-active", onExam as EventListener);
+      clearTimers();
     };
-  }, [session, resetTimers]);
+  }, [idleEnabled, resetTimers, clearTimers]);
 
   if (!showWarning) return null;
 

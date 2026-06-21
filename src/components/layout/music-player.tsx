@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Music, Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,6 +14,54 @@ function mmss(ms: number): string {
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Scrolls a long "Artist – Title" horizontally, slowly, ONLY when it overflows
+ * its container (otherwise shows static text). Measurement runs in rAF/ResizeObserver
+ * callbacks (never synchronously in the effect body).
+ */
+function Marquee({ text, className = "" }: { text: string; className?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [overflow, setOverflow] = useState(false);
+  const [dur, setDur] = useState(10);
+
+  useEffect(() => {
+    let raf = 0;
+    const measure = () => {
+      const c = containerRef.current;
+      const m = measureRef.current;
+      if (!c || !m) return;
+      const over = m.scrollWidth > c.clientWidth + 2;
+      setOverflow(over);
+      if (over) setDur(Math.max(6, Math.round(m.scrollWidth / 28))); // ~28px/s
+    };
+    raf = requestAnimationFrame(measure);
+    const ro = new ResizeObserver(measure);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [text]);
+
+  return (
+    <div ref={containerRef} className={`relative overflow-hidden ${className}`}>
+      {/* hidden measurer (full natural width) */}
+      <span ref={measureRef} aria-hidden className="invisible absolute whitespace-nowrap">
+        {text}
+      </span>
+      {overflow ? (
+        <div className="hs-marquee-track" style={{ animationDuration: `${dur}s` }}>
+          <span className="pr-10">{text}</span>
+          <span className="pr-10" aria-hidden>{text}</span>
+        </div>
+      ) : (
+        <span className="block truncate">{text}</span>
+      )}
+    </div>
+  );
 }
 
 export function MusicPlayer() {
@@ -51,13 +99,14 @@ export function MusicPlayer() {
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background animate-pulse" />
           )}
         </div>
-        <span className={`whitespace-nowrap text-xs font-medium transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-width,opacity] ${
-          isPlaying
-            ? "max-w-[120px] opacity-100"
-            : "max-w-0 overflow-hidden opacity-0 group-hover:max-w-[120px] group-hover:opacity-100"
-        }`}>
-          {isPlaying && trackTitle ? trackTitle.slice(0, 15) : t("music.title")}
-        </span>
+        {isPlaying && trackTitle ? (
+          // Playing: full title scrolls (marquee) inside a fixed chip width.
+          <Marquee text={trackTitle} className="w-[120px] text-xs font-medium" />
+        ) : (
+          <span className="whitespace-nowrap text-xs font-medium transition-[max-width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-width,opacity] max-w-0 overflow-hidden opacity-0 group-hover:max-w-[120px] group-hover:opacity-100">
+            {t("music.title")}
+          </span>
+        )}
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3" align="end" sideOffset={8}>
         <div className="space-y-3">
@@ -71,9 +120,13 @@ export function MusicPlayer() {
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
               {t("music.now_playing")}
             </p>
-            <p className="text-xs font-medium truncate mt-0.5">
-              {trackTitle || (isPlaying ? "Loading..." : "No track")}
-            </p>
+            {trackTitle ? (
+              <Marquee text={trackTitle} className="mt-0.5 text-xs font-medium" />
+            ) : (
+              <p className="mt-0.5 truncate text-xs font-medium">
+                {isPlaying ? "Loading..." : "No track"}
+              </p>
+            )}
           </div>
 
           {/* Seek bar - click/drag to scrub */}

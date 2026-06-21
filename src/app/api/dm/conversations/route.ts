@@ -74,13 +74,15 @@ export async function GET(request: Request) {
       ...new Set(convs.map((c) => c.otherKey).filter(Boolean) as string[]),
     ];
 
-    // Enrich: names/tiers/admin from license_keys (scope-guarded).
-    const { data: keyRows } = await scopeEq(scope)(
-      supabase
-        .from("license_keys")
-        .select("key, name, short_name, package_tier, is_admin")
-        .in("key", otherKeys)
-    );
+    // Enrich: names/tiers/admin from license_keys. Looked up BY KEY ONLY (not
+    // scope-gated): an admin's key is bound to its own scope, so a scope filter
+    // would drop it → the partner showed up as "Pengguna" with no tier/crown.
+    // These keys are already conversation partners of the caller, so resolving
+    // their display name/tier here is not a cross-scope leak.
+    const { data: keyRows } = await supabase
+      .from("license_keys")
+      .select("key, name, short_name, package_tier, is_admin")
+      .in("key", otherKeys);
     type KeyRow = {
       key: string;
       name: string | null;

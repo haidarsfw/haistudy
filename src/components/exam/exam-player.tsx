@@ -466,6 +466,20 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
     return () => window.removeEventListener("beforeunload", handler);
   }, [phase]);
 
+  // ─── Pause the idle session-timeout while in the exam flow (#15) ───
+  // The license-key idle logout must never fire while answering (long reads /
+  // typing emit no qualifying events), grading, or reviewing results. Broadcast
+  // active state to SessionTimeout; it resumes once we leave (cleanup → false).
+  useEffect(() => {
+    const active = phase === "exam" || phase === "grading" || phase === "results";
+    window.dispatchEvent(new CustomEvent("hs:exam-active", { detail: active }));
+    return () => {
+      if (active) {
+        window.dispatchEvent(new CustomEvent("hs:exam-active", { detail: false }));
+      }
+    };
+  }, [phase]);
+
   // ─── Track tab-away (anti-exploit audit) ───
   useEffect(() => {
     if (phase !== "exam") return;

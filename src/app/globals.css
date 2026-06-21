@@ -1344,3 +1344,20 @@ html.tts-bar-open .tts-shift-target {
     background-position: 0 center;
   }
 }
+
+/* Music title marquee — scrolls horizontally, slowly, only when the title
+   overflows its container (otherwise the static text is shown). */
+@keyframes hs-marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.hs-marquee-track {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  will-change: transform;
+  animation: hs-marquee-scroll linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs-marquee-track { animation: none; }
+}

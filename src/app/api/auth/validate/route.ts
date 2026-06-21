@@ -176,6 +176,7 @@ function handleMockValidation(key: string, _deviceId: string) {
       | "normal"
       | "vip"
       | "diamond",
+    loginMethod: "key",
     scope: DEFAULT_SCOPE,
     scopeKey: toScopeKey(DEFAULT_SCOPE),
   };

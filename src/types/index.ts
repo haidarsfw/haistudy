@@ -16,6 +16,9 @@ export interface Session {
   selectedClass: string;
   isPreview?: boolean;
   packageTier: "share" | "normal" | "vip" | "diamond";
+  // How the user logs in: 'key' = license key (carries the 30-day activation +
+  // idle timeout), 'email' = Google sign-in (no expiry, no idle logout).
+  loginMethod?: "key" | "email";
   // Bound at activation, immutable per session. Backfilled to (2,uts,bm)
   // for sessions stored before this field existed.
   scope: ScopeTuple;
