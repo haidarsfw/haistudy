@@ -115,9 +115,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   // Location key for presence - subject ID on /subject/[id], else top-level
   // path segment (e.g. "dashboard", "forum", "admin"). Admin sees this on
   // the online-users card to know what page each user is on.
-  const currentLocationKey: string | null =
+  const segments = pathname ? pathname.split("/").filter(Boolean) : [];
+  const currentLocationKey =
     currentSubjectId ||
-    (pathname ? pathname.replace(/^\//, "").split("/")[0] || null : null);
+    (segments.length >= 4 && /^s\d+$/.test(segments[0])
+      ? segments[3]
+      : segments[0]) ||
+    null;
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
   const { notifications, dismissNotification, markAsRead } = useNotifications();
   // Always-on Global/VIP unread (works before the chat panel ever mounts).
