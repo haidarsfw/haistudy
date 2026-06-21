@@ -254,19 +254,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     setArmed(true);
   }, []);
 
-  // ── Pre-warm (C1) ──
-  // Mount the SoundCloud iframe + script shortly after login so the widget is
-  // already READY before the first Play → instant start (kills the "slow / stuck
-  // first play, won't go until I re-enter the link" bug). Does NOT auto-play, and
-  // loads from SoundCloud's CDN (not our server), so it doesn't burden the free
-  // tier. Deferred so it never competes with the dashboard's critical load.
-  useEffect(() => {
-    if (!session || armedRef.current) return;
-    const id = window.setTimeout(() => arm(), 2500);
-    return () => window.clearTimeout(id);
-  }, [session, arm]);
-
-  // READY-timeout fallback flag (effect defined below initWidget).
+  // READY-timeout fallback flag (effects that use it are defined below initWidget).
   const readyRetryRef = useRef(false);
 
   const initWidget = useCallback(() => {
@@ -399,6 +387,18 @@ export function MusicProvider({ children }: { children: ReactNode }) {
 
     document.body.appendChild(script);
   }, [armed, initWidget]);
+
+  // ── Pre-warm (C1) ──
+  // Mount the SoundCloud iframe + script shortly after login so the widget is
+  // already READY before the first Play → instant start (kills the "slow / stuck
+  // first play, won't go until I re-enter the link" bug). Does NOT auto-play, and
+  // loads from SoundCloud's CDN (not our server), so it doesn't burden the free
+  // tier. Deferred so it never competes with the dashboard's critical load.
+  useEffect(() => {
+    if (!session || armedRef.current) return;
+    const id = window.setTimeout(() => arm(), 2500);
+    return () => window.clearTimeout(id);
+  }, [session, arm]);
 
   // ── READY-timeout fallback (C1) ──
   // If the widget never reports READY within ~8s (script raced / first READY
