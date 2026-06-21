@@ -7,21 +7,7 @@ import {
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import { scopeKey } from "@/lib/scope";
 import type { PackageTier } from "@/lib/tier";
-
-function maxAttempts(
-  isAdmin: boolean,
-  tier: PackageTier | null | undefined
-): number {
-  if (isAdmin) return -1; // -1 = unlimited (shown as ∞ on frontend)
-  switch (tier) {
-    case "diamond":
-      return 5;
-    case "vip":
-      return 3;
-    default:
-      return 2;
-  }
-}
+import { computeQuota, quotaCountFrom } from "@/lib/exam/quota";
 
 /**
  * POST /api/exam/start
@@ -78,29 +64,45 @@ export async function POST(request: Request) {
 
     const isAdmin = Boolean(license.is_admin);
     const tier = (license.package_tier as PackageTier) ?? "normal";
-    const max = maxAttempts(isAdmin, tier);
 
-    // Count existing non-abandoned attempts
+    // Per-subject bonus credits (top-ups) + reset marker (credit model).
+    let bonus = 0;
+    let resetAt: string | null = null;
+    const { data: override } = await supabase
+      .from("exam_quota_overrides")
+      .select("bonus, reset_at")
+      .eq("license_key", licenseKey)
+      .eq("scope_key", sk)
+      .eq("subject_id", subjectId)
+      .maybeSingle();
+    if (override) {
+      bonus = (override.bonus as number) ?? 0;
+      resetAt = (override.reset_at as string) ?? null;
+    }
+
+    // Count non-abandoned attempts since the effective reset point (global epoch
+    // or this subject's reset_at, whichever is later). History stays intact.
     const { count, error: countError } = await supabase
       .from("exam_attempts")
       .select("id", { count: "exact", head: true })
       .eq("license_key", licenseKey)
       .eq("scope_key", sk)
       .eq("subject_id", subjectId)
-      .neq("status", "abandoned");
+      .neq("status", "abandoned")
+      .gte("started_at", quotaCountFrom(resetAt));
 
-    // If table doesn't exist yet (migration not run), treat as 0 used
     if (countError) {
       console.error("Exam quota count error (table may not exist):", countError.message);
     }
 
     const used = count ?? 0;
+    const q = computeQuota({ isAdmin, tier, bonus, used });
 
-    if (max !== -1 && used >= max) {
+    if (q.max !== -1 && used >= q.max) {
       return NextResponse.json(
         {
           error: "Kuota latihan soal habis",
-          quota: { used, max, remaining: 0 },
+          quota: { used, max: q.max, remaining: 0 },
         },
         { status: 429 }
       );
@@ -135,8 +137,8 @@ export async function POST(request: Request) {
       startedAt,
       quota: {
         used: used + 1,
-        max,
-        remaining: Math.max(0, max - used - 1),
+        max: q.max,
+        remaining: q.max === -1 ? -1 : Math.max(0, q.max - used - 1),
       },
     });
   } catch (error) {
