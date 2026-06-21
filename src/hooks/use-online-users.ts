@@ -98,7 +98,9 @@ export function useOnlineUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeKey]);
 
-  const effective = users.length > 0 ? users : polled;
+  // Realtime is only considered working if it contains other users besides ourselves.
+  const hasOthersOnRealtime = users.some((u) => u.licenseKey?.toUpperCase() !== session?.licenseKey?.toUpperCase());
+  const effective = hasOthersOnRealtime ? users : (polled.length > 0 ? polled : users);
 
   // Keep the VIP baseline current from the latest list.
   useEffect(() => {
