@@ -142,8 +142,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    // Presence is non-critical. If the request has no/invalid scope cookie
+    // (e.g. preview sessions, or a heartbeat racing login/logout), no-op with
+    // 200 instead of a 401/403 so it doesn't spam the browser console.
     if (error instanceof ScopeError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json({ success: true, skipped: true });
     }
     console.error("Presence API error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

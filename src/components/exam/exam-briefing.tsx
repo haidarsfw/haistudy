@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Clock, FileText, Award, AlertTriangle, Languages, ArrowLeft } from "lucide-react";
+import { PenLine, Clock, FileText, Award, AlertTriangle, Languages, ArrowLeft, Ban, Pen, BookMarked } from "lucide-react";
 import type { ExamData } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
@@ -92,11 +92,16 @@ export function ExamBriefing({
 
   const rules = [
     { icon: AlertTriangle, text: t("exam.briefing_no_ai") },
+    { icon: Ban, text: t("exam.briefing_no_copy") },
     { icon: PenLine, text: t("exam.briefing_fullscreen") },
     { icon: FileText, text: t("exam.briefing_theory") },
     { icon: Clock, text: t("exam.briefing_auto_submit") },
     { icon: Award, text: t("exam.briefing_free_nav") },
     { icon: Languages, text: t("exam.briefing_any_lang") },
+    { icon: Pen, text: t("exam.briefing_scratchpad") },
+    ...(exam.cheatSheet
+      ? [{ icon: BookMarked, text: t("exam.briefing_cheatsheet") }]
+      : []),
   ];
 
   return (

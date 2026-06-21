@@ -47,6 +47,20 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
   const [attemptToDelete, setAttemptToDelete] = useState<string | null>(null);
   const lang = "id"; // Launch screen always uses app language
 
+  // An unfinished (in-progress) attempt → offer "continue" instead of a fresh
+  // start. Resuming reuses the SAME attempt, so it never costs extra quota.
+  const [hasResumable] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = localStorage.getItem("hs-exam-session-" + subjectId);
+      if (!raw) return false;
+      const s = JSON.parse(raw);
+      return !!(s && s.attemptId && s.startedAt);
+    } catch {
+      return false;
+    }
+  });
+
   const totalQuestions = exam.questions.length;
 
   const isUnlimited = quota ? quota.max === -1 : false;
@@ -167,7 +181,15 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
 
       {/* CTA */}
       <motion.div variants={staggerItem}>
-        {hasQuota ? (
+        {hasResumable ? (
+          <button
+            type="button"
+            onClick={onStartExam}
+            className="hs-press w-full rounded-xl bg-primary py-3.5 text-base font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+          >
+            {t("exam.cta_resume")}
+          </button>
+        ) : hasQuota ? (
           <button
             type="button"
             onClick={onStartExam}

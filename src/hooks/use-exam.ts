@@ -36,6 +36,16 @@ interface SubmitResult {
   autoSubmitted: boolean;
 }
 
+interface RegradeResult {
+  attemptId: string;
+  gradingResults: ExamGradingResult[];
+  totalScore: number;
+  maxScore: number;
+  scorePct: number;
+  durationUsedSeconds: number | null;
+  autoSubmitted: boolean;
+}
+
 /**
  * Hook for managing exam lifecycle: quota, start, abandon, submit, history.
  */
@@ -166,6 +176,20 @@ export function useExam(subjectId: string) {
     [fetchQuota]
   );
 
+  const regradeAttempt = useCallback(
+    async (attemptId: string): Promise<RegradeResult> => {
+      const res = await fetch("/api/exam/regrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attemptId, subjectId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to regrade");
+      return data as RegradeResult;
+    },
+    [subjectId]
+  );
+
   return {
     quota,
     history,
@@ -176,6 +200,7 @@ export function useExam(subjectId: string) {
     submitExam,
     fetchAttemptDetail,
     deleteAttempt,
+    regradeAttempt,
     refreshQuota: fetchQuota,
   };
 }

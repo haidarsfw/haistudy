@@ -135,9 +135,11 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
             cropShape="round"
             showGrid
             minZoom={1}
-            maxZoom={3}
+            maxZoom={4}
             zoomSpeed={0.2}
-            restrictPosition
+            // Free-pan: let the image be dragged up/down/left/right (mouse +
+            // touch) to any angle instead of being clamped to the crop frame.
+            restrictPosition={false}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}

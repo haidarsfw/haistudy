@@ -1259,6 +1259,17 @@ html.tts-bar-open .tts-shift-target {
   transform: scale(0.97);
 }
 
+/* Exam scratchpad paper: always-white sheet with a faint grid so colored ink
+   reads on any theme. The canvas bitmap sits transparent on top, so the eraser
+   (destination-out) reveals this grid rather than wiping it. */
+.scratch-paper {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 .hs-lift {
   transition:
     transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),

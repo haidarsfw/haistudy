@@ -115,7 +115,11 @@ const nextConfig: NextConfig = {
               // for MateriTab; YouTube for video lessons). Distinct from
               // frame-ancestors below which controls who can embed US.
               "frame-src 'self' https://docs.google.com https://drive.google.com https://accounts.google.com https://content.googleapis.com https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com",
-              "frame-ancestors 'self'",
+              // 'self' for our own embeds; vercel.live so the Vercel Live
+              // preview toolbar/feedback can frame preview deployments without a
+              // frame-ancestors console error after login. (Vercel Live is off
+              // in production, so this is preview-only in practice.)
+              "frame-ancestors 'self' https://vercel.live",
               "base-uri 'self'",
               "form-action 'self'",
             ].join("; "),

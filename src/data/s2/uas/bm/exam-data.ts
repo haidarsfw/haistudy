@@ -1,5 +1,8 @@
 import type { ExamData } from "@/types/exam";
 import { bizethicsExam } from "./bizethics-exam";
+import { foundaiExam } from "./foundai-exam";
+import { akuntansiExam } from "./akuntansi-exam";
+import { opsmgmtExam } from "./opsmgmt-exam";
 
 /**
  * Exam data registry for S2 UAS BM.
@@ -7,5 +10,7 @@ import { bizethicsExam } from "./bizethics-exam";
  */
 export const examData: Record<string, ExamData> = {
   bizethics: bizethicsExam,
-  // Future: opsmgmt, akuntansi, foundai
+  foundai: foundaiExam,
+  akuntansi: akuntansiExam,
+  opsmgmt: opsmgmtExam,
 };

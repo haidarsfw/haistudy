@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Star, BookOpen, Flame, ArrowLeft, RotateCcw, ChevronDown } from "lucide-react";
+import { Trophy, Star, BookOpen, Flame, ArrowLeft, RotateCcw, ChevronDown, RefreshCw } from "lucide-react";
 import type { ExamData, ExamGradingResult } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { ExamMarkdown } from "./exam-markdown";
 
 interface Props {
   exam: ExamData;
@@ -19,6 +20,9 @@ interface Props {
   examLanguage: "en" | "id";
   onClose: () => void;
   onRetry?: () => void;
+  onRegrade?: () => void;
+  /** Times the user left the exam tab (anti-exploit audit; live attempts only). */
+  awayCount?: number;
 }
 
 function getGrade(pct: number) {
@@ -26,12 +30,6 @@ function getGrade(pct: number) {
   if (pct >= 70) return { icon: Star, label: "exam.results_grade_good", color: "text-blue-500", bg: "bg-blue-500" };
   if (pct >= 55) return { icon: BookOpen, label: "exam.results_grade_average", color: "text-amber-500", bg: "bg-amber-500" };
   return { icon: Flame, label: "exam.results_grade_keep_going", color: "text-orange-500", bg: "bg-orange-500" };
-}
-
-function formatDuration(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}m ${s}s`;
 }
 
 export function ExamResults({
@@ -46,10 +44,29 @@ export function ExamResults({
   examLanguage,
   onClose,
   onRetry,
+  onRegrade,
+  awayCount,
 }: Props) {
   const { t } = useTranslation();
   const [showReview, setShowReview] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<"all" | "wrong" | "partial">("all");
   const [animatedScore, setAnimatedScore] = useState(0);
+  const lang = examLanguage;
+
+  const statusOf = (r: ExamGradingResult): "ok" | "partial" | "wrong" => {
+    const pct = r.maxPoints > 0 ? (r.score / r.maxPoints) * 100 : 0;
+    return pct >= 80 ? "ok" : pct >= 50 ? "partial" : "wrong";
+  };
+  // TOC jump: open the review and scroll to a question's card.
+  const jumpToReview = (id: string) => {
+    setShowReview(true);
+    setReviewFilter("all");
+    setTimeout(() => {
+      document
+        .getElementById(`review-${id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  };
 
   const grade = getGrade(scorePct);
   const GradeIcon = grade.icon;
@@ -61,24 +78,44 @@ export function ExamResults({
     const tick = () => {
       const elapsed = Date.now() - start;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
       setAnimatedScore(Math.round(eased * totalScore * 10) / 10);
       if (progress < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }, [totalScore]);
 
-  // Group results by section
-  const essayResults = gradingResults.filter((r) =>
-    r.questionId.startsWith("essay")
-  );
-  const caseResults = gradingResults.filter((r) =>
-    r.questionId.startsWith("case")
-  );
-  const essayTotal = essayResults.reduce((s, r) => s + r.score, 0);
-  const essayMax = essayResults.reduce((s, r) => s + r.maxPoints, 0);
-  const caseTotal = caseResults.reduce((s, r) => s + r.score, 0);
-  const caseMax = caseResults.reduce((s, r) => s + r.maxPoints, 0);
+  // Map each answer unit -> { section heading, short code } from the exam shape.
+  const unitMeta = useMemo(() => {
+    const meta: Record<string, { section: string; code: string }> = {};
+    exam.questions.forEach((q, i) => {
+      const section = q.sectionLabel[lang].split("(")[0].trim();
+      if (q.subQuestions && q.subQuestions.length > 0) {
+        q.subQuestions.forEach((s, j) => {
+          meta[s.id] = { section, code: `${i + 1}${String.fromCharCode(97 + j)}` };
+        });
+      } else {
+        meta[q.id] = { section, code: `${i + 1}` };
+      }
+    });
+    return meta;
+  }, [exam, lang]);
+
+  // Score breakdown per real section (Type I / II / III ...).
+  const sections = useMemo(() => {
+    const order: string[] = [];
+    const map: Record<string, { score: number; max: number }> = {};
+    for (const r of gradingResults) {
+      const section = unitMeta[r.questionId]?.section ?? "—";
+      if (!map[section]) {
+        map[section] = { score: 0, max: 0 };
+        order.push(section);
+      }
+      map[section].score += r.score;
+      map[section].max += r.maxPoints;
+    }
+    return order.map((s) => ({ label: s, ...map[s] }));
+  }, [gradingResults, unitMeta]);
 
   return (
     <motion.div
@@ -130,6 +167,12 @@ export function ExamResults({
                 {t("exam.results_auto")}
               </p>
             )}
+
+            {awayCount != null && awayCount > 0 && (
+              <p className="mt-1 text-xs font-medium text-amber-500">
+                {t("exam.results_away").replace("{n}", String(awayCount))}
+              </p>
+            )}
           </motion.div>
 
           {/* Score Breakdown */}
@@ -138,39 +181,33 @@ export function ExamResults({
               {t("exam.results_breakdown")}
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              <ScoreBar
-                label={t("exam.results_essay_section")}
-                score={essayTotal}
-                max={essayMax}
-              />
-              <ScoreBar
-                label={t("exam.results_case_section")}
-                score={caseTotal}
-                max={caseMax}
-              />
+              {sections.map((s) => (
+                <ScoreBar key={s.label} label={s.label} score={s.score} max={s.max} />
+              ))}
             </div>
 
-            {/* Per-question mini scores */}
+            {/* Per-unit mini scores — click to jump into the review (TOC) */}
             <div className="mt-3 flex flex-wrap gap-2">
               {gradingResults.map((r) => {
-                const pct = r.maxPoints > 0 ? (r.score / r.maxPoints) * 100 : 0;
-                let dotColor = "bg-red-400";
-                if (pct >= 80) dotColor = "bg-emerald-400";
-                else if (pct >= 50) dotColor = "bg-amber-400";
-
+                const st = statusOf(r);
+                const dotColor =
+                  st === "ok" ? "bg-emerald-400" : st === "partial" ? "bg-amber-400" : "bg-red-400";
                 return (
-                  <div
+                  <button
                     key={r.questionId}
-                    className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1"
+                    type="button"
+                    onClick={() => jumpToReview(r.questionId)}
+                    title={t("exam.review_jump")}
+                    className="hs-press flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 hover:border-primary/50"
                   >
                     <span className={`h-2 w-2 rounded-full ${dotColor}`} />
                     <span className="text-[10px] font-bold text-muted-foreground">
-                      {r.questionId.replace("essay-", "E").replace("case-", "C")}
+                      {unitMeta[r.questionId]?.code ?? r.questionId}
                     </span>
                     <span className="text-[10px] font-semibold text-foreground">
                       {r.score}/{r.maxPoints}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -190,23 +227,62 @@ export function ExamResults({
             </button>
           </motion.div>
 
-          {/* Full review (pembahasan) */}
+          {/* Full review (pembahasan) — TOC jump + filter */}
           {showReview && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="space-y-4 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-4"
             >
-              {gradingResults.map((result) => (
-                <ReviewCard
-                  key={result.questionId}
-                  result={result}
-                  exam={exam}
-                  userAnswer={userAnswers[result.questionId] ?? ""}
-                  examLanguage={examLanguage}
-                  t={t}
-                />
-              ))}
+              {/* Filter bar (sticky) */}
+              <div className="sticky top-0 z-10 -mx-1 flex gap-2 bg-background/90 px-1 py-2 backdrop-blur">
+                {(["all", "wrong", "partial"] as const).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setReviewFilter(f)}
+                    className={`hs-press rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      reviewFilter === f
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-card text-muted-foreground"
+                    }`}
+                  >
+                    {t(`exam.review_filter_${f}`)}
+                  </button>
+                ))}
+              </div>
+
+              {gradingResults
+                .filter((r) => reviewFilter === "all" || statusOf(r) === reviewFilter)
+                .map((result) => (
+                  <div
+                    key={result.questionId}
+                    id={`review-${result.questionId}`}
+                    className="scroll-mt-20"
+                  >
+                    <ReviewCard
+                      result={result}
+                      exam={exam}
+                      userAnswer={userAnswers[result.questionId] ?? ""}
+                      examLanguage={examLanguage}
+                      t={t}
+                    />
+                  </div>
+                ))}
+            </motion.div>
+          )}
+
+          {/* Retry grading button — shown when onRegrade is provided */}
+          {onRegrade && (
+            <motion.div variants={staggerItem}>
+              <button
+                type="button"
+                onClick={onRegrade}
+                className="hs-press flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500/30 bg-amber-500/10 py-3 text-sm font-bold text-amber-500 transition-all hover:border-amber-500/50 hover:bg-amber-500/20"
+              >
+                <RefreshCw className="h-4 w-4" />
+                {t("exam.regrade_btn")}
+              </button>
             </motion.div>
           )}
 
@@ -251,7 +327,9 @@ function ScoreBar({
 
   return (
     <div className="rounded-xl border border-border bg-card p-3">
-      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <p className="truncate text-xs font-semibold text-muted-foreground" title={label}>
+        {label}
+      </p>
       <p className="mt-1 text-lg font-bold text-foreground">
         {Math.round(score * 10) / 10}
         <span className="text-sm text-muted-foreground">/{max}</span>
@@ -281,34 +359,32 @@ function ReviewCard({
   examLanguage: "en" | "id";
   t: (key: string) => string;
 }) {
-  const pct =
-    result.maxPoints > 0 ? (result.score / result.maxPoints) * 100 : 0;
+  const pct = result.maxPoints > 0 ? (result.score / result.maxPoints) * 100 : 0;
   let borderColor = "border-red-300 dark:border-red-800";
-  if (pct >= 80)
-    borderColor = "border-emerald-300 dark:border-emerald-800";
-  else if (pct >= 50)
-    borderColor = "border-amber-300 dark:border-amber-800";
+  if (pct >= 80) borderColor = "border-emerald-300 dark:border-emerald-800";
+  else if (pct >= 50) borderColor = "border-amber-300 dark:border-amber-800";
 
-  // Find question title
+  // Resolve title + question text (handles single questions and sub-questions).
   let title = result.questionId;
+  let questionMd: string | null = null;
+  let contextMd: string | null = null;
   for (const q of exam.questions) {
     if (q.id === result.questionId) {
       title = q.title[examLanguage];
+      questionMd = q.question?.[examLanguage] ?? null;
+      contextMd = q.context?.[examLanguage] ?? null;
       break;
     }
-    if (q.subQuestions) {
-      const sub = q.subQuestions.find((s) => s.id === result.questionId);
-      if (sub) {
-        title = `${q.title[examLanguage]} — ${result.questionId.replace(q.id + "-", "").replace("case-", "")}`;
-        break;
-      }
+    const sub = q.subQuestions?.find((s) => s.id === result.questionId);
+    if (sub) {
+      title = `${q.title[examLanguage]} — ${result.questionId}`;
+      questionMd = sub.question[examLanguage];
+      contextMd = q.context?.[examLanguage] ?? null;
+      break;
     }
   }
 
-  // Find answer key
-  const answerKey = exam.answerKeys.find(
-    (k) => k.questionId === result.questionId
-  );
+  const answerKey = exam.answerKeys.find((k) => k.questionId === result.questionId);
 
   return (
     <div className={`rounded-xl border-2 ${borderColor} bg-card overflow-hidden`}>
@@ -321,49 +397,15 @@ function ReviewCard({
       </div>
 
       <div className="space-y-3 p-4">
-        {/* Original question (soal asli) */}
+        {/* Original question */}
         <div>
           <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             📋 {t("exam.review_question")}
           </p>
-          {(() => {
-            // Find the question text
-            for (const q of exam.questions) {
-              if (q.id === result.questionId) {
-                return (
-                  <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm leading-relaxed text-foreground/90">
-                    {q.question?.[examLanguage] || q.context?.[examLanguage] || "—"}
-                    {q.subQuestions && (
-                      <ul className="mt-2 space-y-1 pl-4 list-disc text-xs text-foreground/70">
-                        {q.subQuestions.map((sub, i) => (
-                          <li key={sub.id}>
-                            <span className="font-semibold">{String.fromCharCode(97 + i)})</span>{" "}
-                            {sub.question[examLanguage]} ({sub.points}p)
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              }
-              if (q.subQuestions) {
-                const sub = q.subQuestions.find((s) => s.id === result.questionId);
-                if (sub) {
-                  return (
-                    <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm leading-relaxed text-foreground/90">
-                      {q.context && (
-                        <p className="mb-2 text-xs italic text-muted-foreground">
-                          {q.context[examLanguage]}
-                        </p>
-                      )}
-                      {sub.question[examLanguage]}
-                    </div>
-                  );
-                }
-              }
-            }
-            return null;
-          })()}
+          <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-foreground/90">
+            {contextMd && <ExamMarkdown content={contextMd} className="mb-2 text-muted-foreground" />}
+            {questionMd ? <ExamMarkdown content={questionMd} /> : <span>—</span>}
+          </div>
         </div>
 
         {/* User's answer */}
@@ -371,7 +413,7 @@ function ReviewCard({
           <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             📝 {t("exam.review_your_answer")}
           </p>
-          <div className="rounded-lg bg-muted/40 p-3 text-sm leading-relaxed text-foreground/80">
+          <div className="whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-sm leading-relaxed text-foreground/80">
             {userAnswer.trim() || (
               <span className="italic text-muted-foreground">
                 {t("exam.review_empty_answer")}
@@ -386,8 +428,8 @@ function ReviewCard({
             <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               ✅ {t("exam.review_reference")}
             </p>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-sm leading-relaxed text-foreground/90 dark:border-emerald-900 dark:bg-emerald-950/20">
-              {answerKey.referenceAnswer}
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-sm text-foreground/90 dark:border-emerald-900 dark:bg-emerald-950/20">
+              <ExamMarkdown content={answerKey.referenceAnswer} />
             </div>
           </div>
         )}
@@ -397,7 +439,7 @@ function ReviewCard({
           <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-primary/70">
             📊 {t("exam.review_ai_feedback")}
           </p>
-          <p className="text-sm leading-relaxed text-foreground/90">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
             {result.feedback}
           </p>
         </div>

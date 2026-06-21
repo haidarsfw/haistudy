@@ -55,20 +55,22 @@ export function ExamExitModal({
           </p>
         )}
 
+        {/* "Keluar" sits LEFT as the secondary/less-prominent action; "Lanjut
+            Ujian" is RIGHT + primary, so a reflex tap keeps the user in. */}
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={onContinue}
-            className="hs-press flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            onClick={onExit}
+            className="hs-press flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400"
           >
-            {t("exam.exit_continue")}
+            {t("exam.exit_leave")}
           </button>
           <button
             type="button"
-            onClick={onExit}
-            className="hs-press flex-1 rounded-xl border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 dark:border-red-800 dark:bg-red-950/40 dark:text-red-400"
+            onClick={onContinue}
+            className="hs-press flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-sm"
           >
-            {t("exam.exit_leave")}
+            {t("exam.exit_continue")}
           </button>
         </div>
       </motion.div>

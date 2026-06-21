@@ -18,6 +18,7 @@ import {
   Settings,
   ShieldCheck,
   LogOut,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { useSession } from "@/components/providers/session-provider";
@@ -63,6 +64,21 @@ export function MobileNav({
   const base = `/${scopePath}`;
   const dashboardHref = `${base}/dashboard`;
   const [moreOpen, setMoreOpen] = useState(false);
+  // Installed PWA (standalone) has no pull-to-refresh, so expose a manual
+  // refresh in the "Lainnya" sheet. Hidden in a normal browser tab.
+  const [isStandalone, setIsStandalone] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia?.("(display-mode: standalone)");
+    const check = () =>
+      setIsStandalone(
+        Boolean(mq?.matches) ||
+          (window.navigator as unknown as { standalone?: boolean }).standalone === true
+      );
+    check();
+    mq?.addEventListener?.("change", check);
+    return () => mq?.removeEventListener?.("change", check);
+  }, []);
 
   const mainItems = useMemo(
     () => [
@@ -84,11 +100,14 @@ export function MobileNav({
       { labelKey: "nav.feedback", icon: MessageSquarePlus, href: `${base}/feedback` },
       { labelKey: "nav.support", icon: HeadphonesIcon, href: "#support" },
       { labelKey: "nav.settings", icon: Settings, href: "#settings" },
+      ...(isStandalone
+        ? [{ labelKey: "mobile_nav.refresh", icon: RefreshCw, href: "#refresh" }]
+        : []),
       ...(session?.isAdmin
         ? [{ labelKey: "nav.admin", icon: ShieldCheck, href: "/admin" }]
         : []),
     ],
-    [base, session?.isAdmin]
+    [base, session?.isAdmin, isStandalone]
   );
 
   // Prefetch nav routes on mount so taps don't wait for chunk download.
@@ -136,6 +155,10 @@ export function MobileNav({
     }
     if (href === "#settings") {
       onSettingsOpen?.();
+      return;
+    }
+    if (href === "#refresh") {
+      window.location.reload();
       return;
     }
     router.push(href);

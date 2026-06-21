@@ -6,22 +6,17 @@ import { ChevronRight, List } from "lucide-react";
 import type { ExamAnswerSlot } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 
+type SlotStatus = "empty" | "partial" | "answered";
+
 interface Props {
   slots: ExamAnswerSlot[];
+  /** Precomputed answered status per slot (parallel to slots). */
+  statuses: SlotStatus[];
   currentIndex: number;
-  answers: Record<string, string>;
   onJump: (index: number) => void;
 }
 
-function getStatus(
-  answer: string | undefined
-): "empty" | "partial" | "answered" {
-  if (!answer || answer.trim().length === 0) return "empty";
-  if (answer.trim().length < 20) return "partial";
-  return "answered";
-}
-
-const statusColors = {
+const statusColors: Record<SlotStatus, string> = {
   empty: "border-border bg-card text-muted-foreground",
   partial:
     "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400",
@@ -31,58 +26,52 @@ const statusColors = {
 
 /**
  * Navigation sidebar (desktop) / bottom sheet FAB (mobile) for jumping
- * between exam questions.
+ * between exam questions. Groups by section (Type I/II/III) and shows each
+ * slot's answered status from the parent player.
  */
-export function ExamNavPanel({ slots, currentIndex, answers, onJump }: Props) {
+export function ExamNavPanel({ slots, statuses, currentIndex, onJump }: Props) {
   const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const answered = slots.filter(
-    (s) => getStatus(answers[s.questionId]) === "answered"
-  ).length;
+  const answered = statuses.filter((s) => s === "answered").length;
 
   const navContent = (
     <div className="space-y-1.5">
-      {/* Section grouping */}
-      {(() => {
-        let lastSection = "";
-        return slots.map((slot, i) => {
-          const showSection = slot.sectionType !== lastSection;
-          lastSection = slot.sectionType;
-          const status = getStatus(answers[slot.questionId]);
-          const isCurrent = i === currentIndex;
+      {slots.map((slot, i) => {
+        const showSection = i === 0 || slots[i - 1].section !== slot.section;
+        const status = statuses[i] ?? "empty";
+        const isCurrent = i === currentIndex;
 
-          return (
-            <div key={slot.questionId}>
-              {showSection && (
-                <p className="mb-1 mt-3 px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground first:mt-0">
-                  {slot.sectionType === "essay" ? "Essay" : "Case Study"}
-                </p>
+        return (
+          <div key={slot.questionId}>
+            {showSection && (
+              <p className="mb-1 mt-3 px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground first:mt-0">
+                {slot.section}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                onJump(i);
+                setMobileOpen(false);
+              }}
+              className={`hs-press flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium transition-all ${
+                isCurrent
+                  ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/30"
+                  : statusColors[status]
+              }`}
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-bold">
+                {slot.label}
+              </span>
+              <span className="truncate">Soal {slot.label}</span>
+              {status === "answered" && (
+                <span className="ml-auto text-emerald-500">✓</span>
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  onJump(i);
-                  setMobileOpen(false);
-                }}
-                className={`hs-press flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium transition-all ${
-                  isCurrent
-                    ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : statusColors[status]
-                }`}
-              >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-bold">
-                  {slot.label}
-                </span>
-                <span className="truncate">Soal {slot.label}</span>
-                {status === "answered" && (
-                  <span className="ml-auto text-emerald-500">✓</span>
-                )}
-              </button>
-            </div>
-          );
-        });
-      })()}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -133,9 +122,7 @@ export function ExamNavPanel({ slots, currentIndex, answers, onJump }: Props) {
               className="fixed inset-x-0 bottom-0 z-[97] max-h-[60vh] overflow-y-auto rounded-t-2xl border-t border-border bg-card p-4 md:hidden"
             >
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted" />
-              <p className="mb-2 text-sm font-semibold">
-                {t("exam.nav_panel")}
-              </p>
+              <p className="mb-2 text-sm font-semibold">{t("exam.nav_panel")}</p>
               <p className="mb-3 text-xs text-muted-foreground">
                 {answered}/{slots.length} {t("exam.progress")}
               </p>
