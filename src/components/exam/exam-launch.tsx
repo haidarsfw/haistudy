@@ -163,10 +163,15 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
             <button
               type="button"
               onClick={() => setShowTopup(true)}
-              className="hs-press mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 py-2 text-xs font-bold text-primary"
+              disabled
+              title="Segera hadir"
+              className="mt-3 flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/40 py-2 text-xs font-bold text-muted-foreground/60"
             >
               <Ticket className="h-3.5 w-3.5" />
               Top-up kuota
+              <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-muted-foreground/70">
+                Segera
+              </span>
             </button>
           )}
         </motion.div>
@@ -215,15 +220,20 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
               {t("exam.cta_no_quota")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Kuota latihan untuk matkul ini habis. Top-up buat lanjut latihan soal.
+              Kuota latihan untuk matkul ini habis. Top-up kuota akan segera hadir.
             </p>
             <button
               type="button"
               onClick={() => setShowTopup(true)}
-              className="hs-press mt-3 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20"
+              disabled
+              title="Segera hadir"
+              className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-xl border border-border bg-muted/40 px-4 py-2.5 text-sm font-bold text-muted-foreground/60"
             >
               <Ticket className="h-4 w-4" />
               Top-up kuota
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">
+                Segera
+              </span>
             </button>
           </div>
         )}

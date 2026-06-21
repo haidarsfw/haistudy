@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, CheckCheck, Megaphone, Sparkles } from "lucide-react";
+import { Bell, CheckCheck, Megaphone, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -43,6 +43,8 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Notification | null>(null);
   const [selectedPatch, setSelectedPatch] = useState<PatchNote | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  // "Update aplikasi" is collapsed to just the latest; expand to see older ones.
+  const [showAllPatches, setShowAllPatches] = useState(false);
 
   // Combined red-dot count: server notifications + unread patch notes.
   const totalUnread = unreadCount + patchUnread;
@@ -137,54 +139,9 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
 
         {/* List - bounded height with scroll */}
         <div className="max-h-[min(60vh,400px)] overflow-y-auto overscroll-contain">
-          {/* Pinned "Update aplikasi" section - always present, dismiss-only */}
-          <div className="px-3 pt-2.5 pb-1">
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              <Sparkles className="h-3 w-3 text-primary" />
-              Update aplikasi
-            </p>
-          </div>
-          <div className="pb-1">
-            {patchNotes.map((note) => {
-              const unread = !patchIsRead(note.version);
-              return (
-                <button
-                  key={note.version}
-                  type="button"
-                  onClick={() => handlePatchClick(note)}
-                  className="flex w-full items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-muted/60"
-                >
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5">
-                      <span className="rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
-                        v{note.version}
-                      </span>
-                      <span className="truncate text-xs font-semibold text-foreground">
-                        {note.title}
-                      </span>
-                    </span>
-                    <span className="mt-0.5 line-clamp-1 block text-[11px] text-muted-foreground">
-                      {note.items[0]}
-                    </span>
-                  </span>
-                  {unread && (
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" aria-label="Belum dibaca" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Server notifications - shown only when present. The patch-notes
-              section above keeps the tab from ever looking empty, so there is no
-              "no notifications yet" line. */}
+          {/* Web notifications FIRST (the priority surface) */}
           {notifications.length > 0 && (
-            <>
-              <Separator />
-              <div className="py-1">
+            <div className="py-1">
               <AnimatePresence initial={false}>
                 {notifications.map((notif) => (
                   <motion.div
@@ -215,7 +172,64 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                   </motion.div>
                 ))}
               </AnimatePresence>
+            </div>
+          )}
+
+          {/* "Update aplikasi" LAST + collapsed to the latest (expand for older). */}
+          {patchNotes.length > 0 && (
+            <>
+              {notifications.length > 0 && <Separator />}
+              <div className="px-3 pt-2.5 pb-1">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  Update aplikasi
+                </p>
               </div>
+              <div className="pb-1">
+                {(showAllPatches ? patchNotes : patchNotes.slice(0, 1)).map((note) => {
+                  const unread = !patchIsRead(note.version);
+                  return (
+                    <button
+                      key={note.version}
+                      type="button"
+                      onClick={() => handlePatchClick(note)}
+                      className="flex w-full items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-muted/60"
+                    >
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
+                            v{note.version}
+                          </span>
+                          <span className="truncate text-xs font-semibold text-foreground">
+                            {note.title}
+                          </span>
+                        </span>
+                        <span className="mt-0.5 line-clamp-1 block text-[11px] text-muted-foreground">
+                          {note.items[0]}
+                        </span>
+                      </span>
+                      {unread && (
+                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" aria-label="Belum dibaca" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {patchNotes.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllPatches((v) => !v)}
+                  className="flex w-full items-center justify-center gap-1 px-3 pb-2.5 pt-0.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {showAllPatches
+                    ? "Tutup"
+                    : `Lihat ${patchNotes.length - 1} update lain`}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAllPatches ? "rotate-180" : ""}`} />
+                </button>
+              )}
             </>
           )}
         </div>

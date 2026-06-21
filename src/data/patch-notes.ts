@@ -26,6 +26,22 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.3.0",
+    date: "2026-06-21",
+    title: "Layar hasil baru, scratchpad lebih enak, & banyak perbaikan",
+    items: [
+      "Layar hasil latihan dirombak: skor dan tombol nempel di atas, bisa lompat antar pembahasan, urut rapi dari soal nomor 1, plus filter Benar / Sebagian / Salah.",
+      "Area coret-coret (scratchpad) bisa diatur ukuran dari segala sisi, dipindah bebas, dan posisinya diingat saat dibuka lagi.",
+      "Cheat sheet lebih enak dibaca: rumus tampil rapi dan ruang lebih lega.",
+      "Tab 'Hafalan & Kuis' kini bernama 'Drill', dan deretan tab di HP lebih ringkas.",
+      "Belajar Kilat dan briefing ujian tampil lebih pas di layar besar.",
+      "Notifikasi DM tampil lebih rapi di lonceng, dan titik merahnya muncul lebih cepat.",
+      "Pusat notifikasi ditata ulang: notifikasi utama di atas, Update Aplikasi di bawah dan bisa dibuka 'lihat lebih banyak'.",
+      "Pemutar musik makin mulus: langsung jalan saat diputar dan judul panjang berjalan otomatis.",
+      "Saat sedang mengerjakan ujian, sesi tidak akan keluar sendiri.",
+    ],
+  },
+  {
     version: "2.2.0",
     date: "2026-06-21",
     title: "Update besar: Latihan Soal lengkap + perbaikan platform",

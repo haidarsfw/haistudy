@@ -56,29 +56,29 @@ export const TabNav = memo(function TabNav({
 }: TabNavProps) {
   return (
     <div className="border-b border-border">
-      {/* Mobile: equal-width grid that fills the row and wraps into tidy rows
-          (no ragged gaps). Desktop (sm+): the original single inline row. */}
-      <div className="relative grid grid-cols-4 sm:flex sm:flex-wrap">
+      {/* Mobile: single inline row that scrolls horizontally (icon + label like
+          desktop — clear widths, no empty gaps, not tall). Desktop (sm+): wraps. */}
+      <div className="relative flex overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
         {SUBJECT_TABS.filter((tab) => !hiddenTabs?.has(tab.id)).map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => { sounds.click(); onTabChange(tab.id); }}
-              className={`hs-press relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-medium leading-none transition-colors sm:flex-row sm:gap-1 sm:px-4 sm:py-2.5 sm:text-sm ${
+              className={`hs-press relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-xs font-medium transition-colors sm:px-4 sm:text-sm ${
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="relative">
-                <tab.icon className="h-[15px] w-[15px] shrink-0 sm:h-4 sm:w-4" />
+                <tab.icon className="h-4 w-4 shrink-0" />
                 {tabDots?.[tab.id] && (
                   <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-destructive" />
                 )}
               </div>
               <span className="hidden sm:inline">{tab.label}</span>
-              <span className="max-w-full truncate sm:hidden">{tab.shortLabel}</span>
+              <span className="sm:hidden">{tab.shortLabel}</span>
               {counts?.[tab.id] !== undefined &&
                 counts[tab.id] > 0 && (
                   <span className="hidden sm:inline text-[10px] text-muted-foreground/70">
