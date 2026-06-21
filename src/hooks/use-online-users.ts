@@ -83,7 +83,9 @@ export function useOnlineUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.licenseKey, settings?.hideStatus, scopeKey]);
 
-  // Fallback poll (only matters when the realtime list is empty).
+  // Fallback poll (only matters when the realtime list is empty/incomplete).
+  // Dynamic polling interval: 30s when tab is visible, 120s when hidden.
+  // Immediate poll when tab returns to visible.
   useEffect(() => {
     const sc = scopeCtx?.scope;
     if (!sc) return;
@@ -92,9 +94,28 @@ export function useOnlineUsers() {
       fetchOnlineUsers(sc)
         .then((d) => { if (!cancelled) setPolled(d); })
         .catch(() => {});
+
     run();
-    const iv = setInterval(run, 120_000);
-    return () => { cancelled = true; clearInterval(iv); };
+
+    let iv = setInterval(run, document.hidden ? 120_000 : 30_000);
+
+    const onVisibilityChange = () => {
+      clearInterval(iv);
+      if (!document.hidden) {
+        run();
+        iv = setInterval(run, 30_000);
+      } else {
+        iv = setInterval(run, 120_000);
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeKey]);
 
