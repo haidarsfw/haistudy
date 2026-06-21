@@ -98,24 +98,10 @@ export function NotificationItem({
             }
           : undefined
       }
-      className={`group/item relative flex w-full items-start gap-3 py-2.5 pl-9 pr-3 text-left transition-colors hover:bg-muted/50 ${
+      className={`group/item relative flex w-full items-start gap-3 py-2.5 pl-3 pr-9 text-left transition-colors hover:bg-muted/50 sm:pr-3 ${
         clickable ? "cursor-pointer" : ""
       } ${notification.read && variant === "center" ? "opacity-60" : ""}`}
     >
-      {/* Dismiss - small, top-left. Always tappable on mobile, hover-reveal on
-          desktop. stopPropagation so dismissing never also activates/routes. */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDismiss(notification.id);
-        }}
-        onPointerDownCapture={(e) => e.stopPropagation()}
-        className="absolute left-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 text-muted-foreground ring-1 ring-border backdrop-blur transition-opacity hover:text-foreground opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100"
-        aria-label={t("notification.dismiss")}
-      >
-        <X className="h-3 w-3" />
-      </button>
-
       {/* Type icon + context corner badge */}
       <div className="relative mt-0.5 shrink-0">
         <div
@@ -153,9 +139,20 @@ export function NotificationItem({
         )}
       </div>
 
-      {!notification.read && (
-        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-      )}
+      {/* Dismiss — right edge, vertically centered. Mobile: always visible;
+          desktop: hover-reveal overlay (matches the toast). stopPropagation so
+          dismissing never also activates/routes. */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDismiss(notification.id);
+        }}
+        onPointerDownCapture={(e) => e.stopPropagation()}
+        className="absolute right-1.5 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-card/80 text-muted-foreground ring-1 ring-border backdrop-blur transition-opacity hover:text-foreground opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100"
+        aria-label={t("notification.dismiss")}
+      >
+        <X className="h-3 w-3" />
+      </button>
     </div>
   );
 }

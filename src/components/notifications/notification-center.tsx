@@ -188,7 +188,7 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                       key={note.version}
                       type="button"
                       onClick={() => handlePatchClick(note)}
-                      className="flex w-full items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-muted/60"
+                      className="flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
                     >
                       <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
                         <Sparkles className="h-3.5 w-3.5 text-primary" />
