@@ -275,25 +275,14 @@ export async function PATCH(request: Request) {
       // re-approve double-crediting (and the row always returns here, so an
       // exam-quota order never falls through to the invoice/contact logic).
       if (!meta0.granted && lk && sk && subjectId && qty > 0) {
-        const { data: ov } = await supabase
-          .from("exam_quota_overrides")
-          .select("bonus")
-          .eq("license_key", lk)
-          .eq("scope_key", sk)
-          .eq("subject_id", subjectId)
-          .maybeSingle();
-        const newBonus = Math.max(0, ((ov?.bonus as number) ?? 0) + qty);
-        const { error: ovErr } = await supabase.from("exam_quota_overrides").upsert(
-          {
-            license_key: lk,
-            scope_key: sk,
-            subject_id: subjectId,
-            bonus: newBonus,
-            updated_at: now,
-            updated_by: "purchase-approve",
-          },
-          { onConflict: "license_key,scope_key,subject_id" }
-        );
+        // Atomic increment via RPC — avoids the read-modify-write race when two
+        // approvals for the same (license, scope, subject) land concurrently.
+        const { error: ovErr } = await supabase.rpc("add_exam_quota_bonus", {
+          p_license_key: lk,
+          p_scope_key: sk,
+          p_subject_id: subjectId,
+          p_qty: qty,
+        });
         if (ovErr) throw ovErr;
 
         // Mark granted so a re-approve can never add the bonus twice.
