@@ -18,9 +18,9 @@ interface Props {
   onDeleteAttempt?: (attemptId: string) => void;
 }
 
-function formatDate(iso: string) {
+function formatDate(iso: string, locale: string) {
   try {
-    return new Date(iso).toLocaleDateString("id-ID", {
+    return new Date(iso).toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -43,7 +43,8 @@ function formatDuration(seconds: number) {
  * Displays exam info, quota, history, and CTA to start.
  */
 export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDeleteAttempt }: Props) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "en" ? "en-US" : "id-ID";
   const { quota, history, loading } = useExam(subjectId);
   const [attemptToDelete, setAttemptToDelete] = useState<string | null>(null);
   const [showTopup, setShowTopup] = useState(false);
@@ -273,7 +274,7 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
                     )}
                   </div>
                   <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <span>{formatDate(attempt.started_at)}</span>
+                    <span>{formatDate(attempt.started_at, dateLocale)}</span>
                     {attempt.duration_used_seconds != null && (
                       <span>
                         · {formatDuration(attempt.duration_used_seconds)}

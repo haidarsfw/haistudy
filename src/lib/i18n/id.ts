@@ -1003,6 +1003,7 @@ const id: Record<string, string> = {
   "exam.review_filter_wrong": "Salah",
   "exam.review_filter_partial": "Sebagian",
   "exam.review_filter_ok": "Benar",
+  "exam.review_filter_empty": "Tidak ada soal di filter ini.",
   "exam.review_question": "Soal Asli",
   "exam.review_your_answer": "Jawabanmu",
   "exam.review_empty_answer": "(Tidak dijawab)",

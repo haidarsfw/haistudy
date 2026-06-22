@@ -91,7 +91,7 @@ export function FileUpload({ value, onChange, invalid }: FileUploadProps) {
       <div className="space-y-2">
         <div className="relative overflow-hidden rounded-xl border border-border bg-muted/30">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl} alt="" className="max-h-56 w-full object-contain" />
+          <img src={previewUrl} alt="Pratinjau bukti pembayaran" className="max-h-56 w-full object-contain" />
           <button
             type="button"
             onClick={clear}

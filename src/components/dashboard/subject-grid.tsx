@@ -53,8 +53,6 @@ export function SubjectGrid() {
           <motion.div key={subject.id} variants={staggerItem}>
             <SubjectCard
               subject={subject}
-              // TODO: Wire up actual progress
-              progress={0}
               hasForumUnread={forumUnread.hasUnread(subject.id)}
             />
           </motion.div>

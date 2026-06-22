@@ -6,6 +6,7 @@ import { X, Check, Upload, Loader2, Copy, Sparkles, Ticket, Download } from "luc
 import { QUOTA_PACKS } from "@/lib/exam/quota";
 import { PAYMENT_ACCOUNTS, WA_ADMIN } from "@/lib/payments";
 import { compressImageToBudget } from "@/lib/image";
+import { useDialogA11y } from "@/hooks/use-dialog-a11y";
 
 interface Props {
   subjectId: string;
@@ -34,6 +35,9 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
   const [done, setDone] = useState(false);
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // This modal is mounted only while open, so wire a11y unconditionally (Esc =
+  // close, focus moves into the sheet, focus restored on unmount).
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   const pack = QUOTA_PACKS.find((p) => p.qty === qty) ?? QUOTA_PACKS[0];
 
@@ -105,11 +109,16 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
       onClick={onClose}
     >
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exam-topup-title"
+        tabIndex={-1}
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 30, opacity: 0 }}
         transition={{ type: "spring", stiffness: 360, damping: 32 }}
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-card p-5 shadow-2xl sm:max-w-md sm:rounded-2xl"
+        className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-card p-5 shadow-2xl outline-none sm:max-w-md sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -119,7 +128,7 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
               <Ticket className="h-5 w-5" />
             </span>
             <div>
-              <h3 className="text-base font-black text-foreground">Top-up Kuota Latihan</h3>
+              <h3 id="exam-topup-title" className="text-base font-black text-foreground">Top-up Kuota Latihan</h3>
               <p className="text-xs text-muted-foreground">{subjectName}</p>
             </div>
           </div>

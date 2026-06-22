@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useDialogA11y } from "@/hooks/use-dialog-a11y";
 
 interface Props {
   open: boolean;
@@ -23,6 +24,8 @@ export function ExamExitModal({
   onExit,
 }: Props) {
   const { t } = useTranslation();
+  // Esc / click-outside both = "continue" (stay in the exam — the safe action).
+  const dialogRef = useDialogA11y<HTMLDivElement>(open, onContinue);
   if (!open) return null;
 
   return (
@@ -34,14 +37,19 @@ export function ExamExitModal({
       onClick={onContinue}
     >
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exam-exit-title"
+        tabIndex={-1}
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className="mx-4 w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        className="mx-4 w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl outline-none"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-2 text-lg font-bold text-foreground">
+        <h3 id="exam-exit-title" className="mb-2 text-lg font-bold text-foreground">
           {t("exam.exit_title")}
         </h3>
 

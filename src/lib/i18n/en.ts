@@ -1003,6 +1003,7 @@ const en: Record<string, string> = {
   "exam.review_filter_wrong": "Wrong",
   "exam.review_filter_partial": "Partial",
   "exam.review_filter_ok": "Correct",
+  "exam.review_filter_empty": "No questions in this filter.",
   "exam.review_question": "Original Question",
   "exam.review_your_answer": "Your Answer",
   "exam.review_empty_answer": "(No answer provided)",

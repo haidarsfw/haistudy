@@ -157,10 +157,13 @@ function renderMarkdown(text: string): ReactNode[] {
       continue;
     }
 
-    // Heading: #, ##, ### (up to 3 leading spaces allowed)
-    const heading = rawLine.match(/^\s{0,3}(#{1,3})\s+(.+)$/);
+    // Heading: # … ###### (up to 3 leading spaces). Also tolerates the
+    // malformed repeated markers some models emit, e.g. "#### ###" or
+    // "## ##" — every leading "#"-run is stripped so none renders as a
+    // literal "#" token. Level comes from the FIRST run (clamped to 6).
+    const heading = rawLine.match(/^\s{0,3}(#+)(?:\s+#+)*\s+(.+)$/);
     if (heading) {
-      const level = heading[1].length;
+      const level = Math.min(heading[1].length, 6);
       const content = heading[2];
       const sizeClass =
         level === 1
@@ -325,7 +328,7 @@ function ImagePreview({ src }: { src: string }) {
     <>
       <img
         src={src}
-        alt="Uploaded"
+        alt="Gambar yang dikirim ke AI"
         className="max-w-full max-h-48 rounded-lg mb-2 cursor-pointer hover:opacity-80 transition-opacity"
         onClick={() => setOpen(true)}
       />
@@ -342,7 +345,7 @@ function ImagePreview({ src }: { src: string }) {
           </button>
           <img
             src={src}
-            alt="Preview"
+            alt="Pratinjau gambar ukuran penuh"
             className="max-w-full max-h-[90vh] rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />

@@ -44,18 +44,21 @@ export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCa
               {subject.description}
             </p>
 
-            {/* Progress bar */}
-            <div className="mt-3 flex items-center gap-2">
-              <div className="h-1.5 flex-1 rounded-full bg-border overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
+            {/* Progress bar — only shown when there's real progress to report,
+                so cards never display a misleading hardcoded 0%. */}
+            {progress > 0 && (
+              <div className="mt-3 flex items-center gap-2">
+                <div className="h-1.5 flex-1 rounded-full bg-border overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
+                  {progress}%
+                </span>
               </div>
-              <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
-                {progress}%
-              </span>
-            </div>
+            )}
           </div>
         </div>
       </Link>
