@@ -265,8 +265,9 @@ function parseMarkdownInline(
   // reject `**` and word-internal stars. Underscore emphasis (__bold__, _italic_)
   // is also supported - the model emits it often - with lookarounds so snake_case
   // (e.g. actual_notice) is left untouched. code + strike unchanged.
+  // Supports markdown links [text](url) and bare URLs https?://... or www....
   const regex =
-    /(\*\*([^\n]+?)\*\*|__([^\n]+?)__|(?<![*\w])\*([^*\n]+?)\*(?![*\w])|(?<![\w_])_([^_\n]+?)_(?![\w_])|`([^`\n]+?)`|~~([^~\n]+?)~~)/g;
+    /(\*\*([^\n]+?)\*\*|__([^\n]+?)__|(?<![*\w])\*([^*\n]+?)\*(?![*\w])|(?<![\w_])_([^_\n]+?)_(?![\w_])|`([^`\n]+?)`|~~([^~\n]+?)~~|\[([^\]\n]+?)\]\(((?:https?:\/\/|www\.)[^\)\s]+?)\)|\b((?:https?:\/\/|www\.)[^\s<>{}|\\^`]+[^\s<>{}|\\^`.,!?;:\'"]))/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let idx = 0;
@@ -311,6 +312,32 @@ function parseMarkdownInline(
         <s key={`${keyPrefix}-s${idx}`}>
           {parseMarkdownInline(match[7], `${keyPrefix}-s${idx}`, mathMap)}
         </s>
+      );
+    } else if (match[8] && match[9]) {
+      const href = match[9].startsWith("www.") ? `https://${match[9]}` : match[9];
+      result.push(
+        <a
+          key={`${keyPrefix}-lnk${idx}`}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 break-all font-medium"
+        >
+          {parseMarkdownInline(match[8], `${keyPrefix}-lnk${idx}`, mathMap)}
+        </a>
+      );
+    } else if (match[10]) {
+      const href = match[10].startsWith("www.") ? `https://${match[10]}` : match[10];
+      result.push(
+        <a
+          key={`${keyPrefix}-url${idx}`}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 break-all font-medium"
+        >
+          {match[10]}
+        </a>
       );
     }
     lastIndex = match.index + match[0].length;
@@ -412,6 +439,28 @@ function ReasoningBlock({
   );
 }
 
+function renderUserMessage(text: string) {
+  const splitRegex = /(\b(?:https?:\/\/|www\.)[^\s<>{}|\\^`]+[^\s<>{}|\\^`.,!?;:\'"])/gi;
+  const parts = text.split(splitRegex);
+  return parts.map((part, i) => {
+    if (/^(?:https?:\/\/|www\.)/i.test(part)) {
+      const href = part.startsWith("www.") ? `https://${part}` : part;
+      return (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 break-all font-medium"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 export const AiMessageBubble = memo(function AiMessageBubble({
   message,
   isStreaming,
@@ -456,7 +505,7 @@ export const AiMessageBubble = memo(function AiMessageBubble({
                 <p className="line-clamp-3">«{message.reference}»</p>
               </div>
             )}
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <p className="whitespace-pre-wrap">{renderUserMessage(message.content)}</p>
           </div>
         ) : (
           <>

@@ -42,7 +42,7 @@ export function SupportMessageRendered({ content }: Props) {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="break-all text-primary underline underline-offset-2"
+              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 break-all font-medium"
               {...props}
             >
               {children}

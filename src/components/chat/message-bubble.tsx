@@ -112,16 +112,32 @@ export function MessageBubble({
   });
 
   const renderContent = (text: string) => {
-    const parts = text.split(/(@\w+)/g);
-    return parts.map((part, i) =>
-      part.startsWith("@") ? (
-        <span key={i} className={getMentionClasses(part)}>
-          {part}
-        </span>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
+    const splitRegex = /(\b(?:https?:\/\/|www\.)[^\s<>{}|\\^`]+[^\s<>{}|\\^`.,!?;:\'"]|@\w+)/gi;
+    const parts = text.split(splitRegex);
+    return parts.map((part, i) => {
+      if (part.startsWith("@")) {
+        return (
+          <span key={i} className={getMentionClasses(part)}>
+            {part}
+          </span>
+        );
+      }
+      if (/^(?:https?:\/\/|www\.)/i.test(part)) {
+        const href = part.startsWith("www.") ? `https://${part}` : part;
+        return (
+          <a
+            key={i}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 break-all font-medium"
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   // ─── DM bubble (WhatsApp/IG style) ───
