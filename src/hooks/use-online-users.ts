@@ -30,7 +30,7 @@ export function useOnlineUsers() {
   const [users, setUsers] = useState<OnlineUser[]>(() => getLiveUsers());
   // Fallback list from the presence TABLE, used only if the Realtime Presence
   // channel yields nobody (e.g. realtime auth blocks the channel in prod). Slow
-  // 120s poll — same cadence as before, so IO is unchanged in the worst case.
+  // safety poll (5 min visible / 10 min hidden) — realtime is the primary path.
   const [polled, setPolled] = useState<OnlineUser[]>([]);
   // Baseline of keys already online, so a join event only toasts genuinely-new
   // VIP/admin arrivals (not everyone present on first sync).
@@ -84,8 +84,10 @@ export function useOnlineUsers() {
   }, [session?.licenseKey, settings?.hideStatus, scopeKey]);
 
   // Fallback poll (only matters when the realtime list is empty/incomplete).
-  // Dynamic polling interval: 30s when tab is visible, 120s when hidden.
-  // Immediate poll when tab returns to visible.
+  // Realtime Presence is the primary, instant source; this DB poll is just a
+  // SAFETY net for when the realtime channel is blocked, so it runs slowly:
+  // 5 min visible / 10 min hidden (was 30s/120s) → ~10x fewer presence reads.
+  // Still does one immediate poll on mount + on tab-return for a quick refresh.
   useEffect(() => {
     const sc = scopeCtx?.scope;
     if (!sc) return;
@@ -97,15 +99,17 @@ export function useOnlineUsers() {
 
     run();
 
-    let iv = setInterval(run, document.hidden ? 120_000 : 30_000);
+    const VISIBLE_MS = 300_000; // 5 min
+    const HIDDEN_MS = 600_000; // 10 min
+    let iv = setInterval(run, document.hidden ? HIDDEN_MS : VISIBLE_MS);
 
     const onVisibilityChange = () => {
       clearInterval(iv);
       if (!document.hidden) {
-        run();
-        iv = setInterval(run, 30_000);
+        run(); // one immediate refresh when the user returns to the tab
+        iv = setInterval(run, VISIBLE_MS);
       } else {
-        iv = setInterval(run, 120_000);
+        iv = setInterval(run, HIDDEN_MS);
       }
     };
 

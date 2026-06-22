@@ -5,6 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
+import { checkCooldown } from "@/lib/auth/cooldown";
 import { loadExamData } from "@/data";
 import type { ExamData } from "@/types/exam";
 import {
@@ -41,6 +42,19 @@ export async function POST(request: Request) {
       cookieStore.get("hs-session")?.value?.trim().toUpperCase() ?? "";
     if (!licenseKey) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Cooldown so the (expensive) AI re-grade can't be spammed on one attempt.
+    // Gates only the trigger — once it runs, grading completes in full. Per
+    // attempt so a user can still re-grade a different attempt right away.
+    const cd = checkCooldown(`regrade:${licenseKey}:${attemptId}`, 30_000);
+    if (!cd.allowed) {
+      return NextResponse.json(
+        {
+          error: `Tunggu ${cd.retryAfter} detik sebelum menilai ulang lagi.`,
+        },
+        { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+      );
     }
 
     if (!isSupabaseServerConfigured) {

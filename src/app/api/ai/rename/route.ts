@@ -5,6 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
+import { getCaller } from "@/lib/auth/session-license";
 
 // ─── Config ───
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -30,19 +31,22 @@ function fallbackTitle(firstUser: string): string {
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
+    // Identity from the hs-session cookie, NOT the body (IDOR fix): only rename
+    // your OWN conversation.
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const licenseKey = caller.licenseKey;
     const body = await request.json();
-    const { id, licenseKey, firstUser = "", firstAssistant = "" } = body as {
+    const { id, firstUser = "", firstAssistant = "" } = body as {
       id?: string;
-      licenseKey?: string;
       firstUser?: string;
       firstAssistant?: string;
     };
 
-    if (!id || !licenseKey) {
-      return NextResponse.json(
-        { error: "id and licenseKey required" },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: "id required" }, { status: 400 });
     }
 
     const userText = String(firstUser).slice(0, 1000);

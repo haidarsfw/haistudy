@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
+import { getCaller } from "@/lib/auth/session-license";
 
 interface ExportMessage {
   role: "user" | "assistant";
@@ -61,14 +62,16 @@ export async function GET(
   try {
     const scope = await requireScope(request);
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const licenseKey = searchParams.get("licenseKey");
+    // Identity from the hs-session cookie, NOT a query param (IDOR fix): only
+    // export your OWN conversation — this returns the full transcript.
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const licenseKey = caller.licenseKey;
 
-    if (!id || !licenseKey) {
-      return NextResponse.json(
-        { error: "id and licenseKey required" },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: "id required" }, { status: 400 });
     }
 
     if (!isSupabaseServerConfigured) {

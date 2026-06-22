@@ -9,6 +9,8 @@ import {
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { AI_ENABLED, AI_DISABLED_MESSAGE } from "@/lib/feature-flags";
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
+import { getCaller } from "@/lib/auth/session-license";
+import { checkCooldown } from "@/lib/auth/cooldown";
 
 // ─── Config ───
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -39,7 +41,6 @@ export async function POST(request: Request) {
       message,
       history = [],
       subjectId = null,
-      licenseKey,
       packageTier = "normal",
       model = "fast",
       image = null,
@@ -49,7 +50,6 @@ export async function POST(request: Request) {
       message: string;
       history: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }>;
       subjectId: string | null;
-      licenseKey: string;
       packageTier?: "share" | "normal" | "vip" | "diamond";
       model?: "fast" | "reasoning";
       image?: string | null; // base64 data URL
@@ -57,10 +57,28 @@ export async function POST(request: Request) {
       userName?: string | null; // in-app nickname so the AI can address the user
     };
 
-    if (!message || !licenseKey) {
+    if (!message) {
       return NextResponse.json(
-        { error: "message and licenseKey are required" },
+        { error: "message is required" },
         { status: 400 }
+      );
+    }
+
+    // Identity from the hs-session cookie, NOT a client-supplied param — a body
+    // licenseKey could be any account's (impersonation / using someone's quota).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const licenseKey = caller.licenseKey;
+
+    // Light cooldown so a runaway loop can't hammer the paid AI endpoint.
+    // Gates only how often a send may START; never affects the response itself.
+    const cd = checkCooldown(`ai-chat:${licenseKey}`, 2_000);
+    if (!cd.allowed) {
+      return NextResponse.json(
+        { error: "Tunggu sebentar sebelum mengirim lagi." },
+        { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
       );
     }
 

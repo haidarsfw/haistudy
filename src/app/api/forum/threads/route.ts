@@ -8,6 +8,37 @@ import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } fro
 import { capitalizeFirst } from "@/lib/name";
 import type { ForumThread, Attachment } from "@/types";
 
+// Bound stored attachment data. Anything outside this shape is dropped rather
+// than persisted raw (URL length cap guards against oversized/abusive values).
+const ALLOWED_ATTACHMENT_TYPES = [
+  "image",
+  "youtube",
+  "google-slides",
+  "google-pdf",
+  "link",
+];
+const MAX_URL_LEN = 2000;
+
+function sanitizeAttachments(input: unknown): Attachment[] | null {
+  if (!Array.isArray(input) || input.length === 0) return null;
+  const cleaned = (input as Attachment[])
+    .filter(
+      (a) =>
+        a &&
+        typeof a.url === "string" &&
+        a.url.length > 0 &&
+        a.url.length <= MAX_URL_LEN &&
+        ALLOWED_ATTACHMENT_TYPES.includes(a.type as string)
+    )
+    .slice(0, 5)
+    .map((a) => ({
+      type: a.type,
+      url: a.url.slice(0, MAX_URL_LEN),
+      ...(typeof a.label === "string" ? { label: a.label.slice(0, 200) } : {}),
+    }));
+  return cleaned.length > 0 ? cleaned : null;
+}
+
 // ─── Mock store for development without Supabase ───
 const mockThreads = new Map<string, ForumThread[]>();
 
@@ -117,11 +148,8 @@ export async function POST(request: Request) {
       attachments,
     } = body;
 
-    // Validate attachments
-    const validAttachments: Attachment[] | null =
-      attachments && Array.isArray(attachments) && attachments.length > 0
-        ? (attachments as Attachment[]).slice(0, 5)
-        : null;
+    // Validate + sanitize attachments (type allowlist + URL length cap).
+    const validAttachments = sanitizeAttachments(attachments);
 
     // Trust cookies, not client-provided flags
     const isAdmin = await isAdminFromCookies();
@@ -136,6 +164,13 @@ export async function POST(request: Request) {
     if (title.length > 200 || (content || "").length > 10_000) {
       return NextResponse.json(
         { error: "Title max 200, content max 10000 characters" },
+        { status: 400 }
+      );
+    }
+
+    if ((imageUrl || "").length > MAX_URL_LEN || (mediaUrl || "").length > MAX_URL_LEN) {
+      return NextResponse.json(
+        { error: "URL too long" },
         { status: 400 }
       );
     }

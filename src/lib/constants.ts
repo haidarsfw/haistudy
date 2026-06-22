@@ -92,9 +92,6 @@ export const SUPPORT_DEFAULT_REACTIONS = ["❤️", "😂", "😮", "😢", "�
 export const MAX_POINTS_PER_SUBJECT = 100;
 export const QUIZ_TIMER_SECONDS = 20;
 
-// Purchase form
-export const PURCHASE_FORM_URL = process.env.NEXT_PUBLIC_PURCHASE_FORM_URL || "";
-
 // SoundCloud Lofi playlist for music player
 export const SOUNDCLOUD_PLAYLIST_URL =
   "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/545610837&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&show_playcount=false";

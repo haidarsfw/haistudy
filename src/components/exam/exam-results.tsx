@@ -247,43 +247,50 @@ export function ExamResults({
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-[90] overflow-y-auto overscroll-none bg-background"
     >
-      {/* Sticky action bar — compact score + always-visible actions (no scroll). */}
-      <div className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-border bg-background/90 px-3 py-2 backdrop-blur sm:px-4">
+      {/* Sticky action bar — compact score + always-visible, LABELLED actions.
+          On phones the buttons wrap to their own full-width row (each equal
+          width + labelled) so the icons are never ambiguous; on sm+ they sit
+          inline to the right of the score. */}
+      <div className="sticky top-0 z-30 flex flex-wrap items-center gap-2.5 border-b border-border bg-background/90 px-3 py-2 backdrop-blur sm:px-4">
         <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${grade.bg}/10`}>
           <GradeIcon className={`h-4 w-4 ${grade.color}`} />
         </span>
-        <p className="min-w-0 truncate text-sm font-bold leading-tight text-foreground">
+        <p className="min-w-0 flex-1 truncate text-sm font-bold leading-tight text-foreground sm:flex-none">
           {totalScore}
           <span className="text-muted-foreground">/{maxScore}</span>
           <span className={`ml-1.5 ${grade.color}`}>{scorePct}%</span>
         </p>
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5 max-sm:order-last max-sm:w-full sm:ml-auto">
           <button
             type="button"
             onClick={onClose}
-            className="hs-press flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-semibold text-foreground sm:px-3"
+            aria-label={t("exam.results_back")}
+            className="hs-press flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-semibold text-foreground max-sm:flex-1 sm:px-3"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("exam.results_back")}</span>
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            <span>{t("exam.results_back")}</span>
           </button>
           {onRegrade && (
             <button
               type="button"
               onClick={doRegrade}
               disabled={regrading}
-              className="hs-press flex h-9 items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 text-xs font-bold text-amber-600 disabled:opacity-60 dark:text-amber-400 sm:px-3"
+              aria-label={t("exam.regrade_btn").replace(/^🔄\s*/, "")}
+              className="hs-press flex h-9 items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 text-xs font-bold text-amber-600 disabled:opacity-60 max-sm:flex-1 dark:text-amber-400 sm:px-3"
             >
-              {regrading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              {regrading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : <RefreshCw className="h-4 w-4 shrink-0" />}
+              <span className="sm:hidden">{t("exam.regrade_btn_short")}</span>
               <span className="hidden sm:inline">{t("exam.regrade_btn").replace(/^🔄\s*/, "")}</span>
             </button>
           )}
           <button
             type="button"
             onClick={onRetry ?? onClose}
-            className="hs-press flex h-9 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-xs font-bold text-primary-foreground sm:px-3"
+            aria-label={t("exam.results_retry")}
+            className="hs-press flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 text-xs font-bold text-primary-foreground max-sm:flex-1 sm:px-3"
           >
-            <RotateCcw className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("exam.results_retry")}</span>
+            <RotateCcw className="h-4 w-4 shrink-0" />
+            <span>{t("exam.results_retry")}</span>
           </button>
         </div>
       </div>

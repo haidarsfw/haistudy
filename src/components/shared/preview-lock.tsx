@@ -38,7 +38,7 @@ export function PreviewLock({ children, title }: PreviewLockProps) {
             Beli akses untuk melihat konten lengkap
           </p>
           <Link
-            href="/login"
+            href="/payments"
             className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Beli Akses

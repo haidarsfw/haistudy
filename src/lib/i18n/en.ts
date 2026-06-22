@@ -992,6 +992,7 @@ const en: Record<string, string> = {
   "exam.results_back": "Back",
   "exam.results_retry": "Try Again",
   "exam.regrade_btn": "🔄 Retry AI Grading",
+  "exam.regrade_btn_short": "Re-grade",
   "exam.regrade_success": "Re-grading complete — score updated.",
   "exam.regrade_loading": "AI is re-grading...",
   "exam.regrade_error_title": "Re-grading failed",

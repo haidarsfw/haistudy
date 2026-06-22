@@ -1,10 +1,9 @@
 "use client";
 
-import { Lock, LogOut, ExternalLink } from "lucide-react";
+import { Lock, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { Button } from "@/components/ui/button";
-import { PURCHASE_FORM_URL } from "@/lib/constants";
 
 const WATERMARK_BG = `url("data:image/svg+xml;utf8,${encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='180' viewBox='0 0 360 180'>` +
@@ -30,9 +29,6 @@ export function PreviewWatermark() {
     logout();
     router.push("/");
   };
-
-  const purchaseHref = PURCHASE_FORM_URL || "/login";
-  const isExternal = !!PURCHASE_FORM_URL;
 
   return (
     <>
@@ -63,26 +59,13 @@ export function PreviewWatermark() {
           <LogOut className="mr-1 h-3 w-3" aria-hidden="true" />
           Keluar
         </Button>
-        {isExternal ? (
-          <a
-            href={purchaseHref}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button size="sm" className="h-7 px-3 text-xs">
-              <ExternalLink className="mr-1 h-3 w-3" aria-hidden="true" />
-              Beli Akses
-            </Button>
-          </a>
-        ) : (
-          <Button
-            size="sm"
-            className="h-7 px-3 text-xs"
-            onClick={() => router.push("/login")}
-          >
-            Beli Akses
-          </Button>
-        )}
+        <Button
+          size="sm"
+          className="h-7 px-3 text-xs"
+          onClick={() => router.push("/payments")}
+        >
+          Beli Akses
+        </Button>
       </div>
     </>
   );

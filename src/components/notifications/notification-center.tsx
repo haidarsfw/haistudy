@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, CheckCheck, Megaphone, Sparkles, ChevronDown } from "lucide-react";
+import { Bell, CheckCheck, Megaphone, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -43,11 +43,32 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Notification | null>(null);
   const [selectedPatch, setSelectedPatch] = useState<PatchNote | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
-  // "Update aplikasi" is collapsed to just the latest; expand to see older ones.
-  const [showAllPatches, setShowAllPatches] = useState(false);
 
   // Combined red-dot count: server notifications + unread patch notes.
   const totalUnread = unreadCount + patchUnread;
+
+  // ONE unified feed: server notifications (mentions, DMs, announcements) and
+  // app-update patch notes interleaved by time, newest first — a patch note
+  // behaves like any other notification (no separate section at the bottom).
+  type FeedItem =
+    | { kind: "notif"; ts: number; notif: Notification }
+    | { kind: "patch"; ts: number; note: PatchNote };
+  const feed = useMemo<FeedItem[]>(() => {
+    const items: FeedItem[] = [
+      ...notifications.map((n) => ({
+        kind: "notif" as const,
+        ts: new Date(n.createdAt).getTime(),
+        notif: n,
+      })),
+      ...patchNotes.map((p) => ({
+        kind: "patch" as const,
+        ts: new Date(p.date).getTime(),
+        note: p,
+      })),
+    ];
+    items.sort((a, b) => b.ts - a.ts);
+    return items;
+  }, [notifications, patchNotes]);
 
   // When user clicks an announcement notification, show the dialog and close the popover
   const handleAnnouncementClick = useCallback((n: Notification) => {
@@ -137,15 +158,20 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
         </div>
         <Separator />
 
-        {/* List - bounded height with scroll. Cards are spaced (space-y + p-2) so
-            the toast-style corner X can float in the gap without clipping. */}
+        {/* ONE list - server notifications + app updates interleaved by time,
+            newest first. Bounded height with scroll. Cards are spaced (space-y
+            + p-2) so the toast-style corner X can float in the gap. */}
         <div className="max-h-[min(60vh,400px)] space-y-2 overflow-y-auto overscroll-contain p-2">
-          {/* Web notifications FIRST (the priority surface) */}
-          {notifications.length > 0 && (
+          {feed.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">
+              {t("notification.empty")}
+            </p>
+          ) : (
             <AnimatePresence initial={false}>
-              {notifications.map((notif) => (
+              {feed.map((item) =>
+                item.kind === "notif" ? (
                   <motion.div
-                    key={notif.id}
+                    key={`n:${item.notif.id}`}
                     variants={notificationSpring}
                     initial="hidden"
                     animate="visible"
@@ -158,11 +184,11 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                       // Swipe a row far enough left/right to dismiss it. framer
                       // suppresses the trailing click, so a swipe never also
                       // activates the row.
-                      if (Math.abs(info.offset.x) > 80) dismissNotification(notif.id);
+                      if (Math.abs(info.offset.x) > 80) dismissNotification(item.notif.id);
                     }}
                   >
                     <NotificationItem
-                      notification={notif}
+                      notification={item.notif}
                       onRead={(id) => markAsRead([id])}
                       onDismiss={dismissNotification}
                       onAnnouncementClick={handleAnnouncementClick}
@@ -170,23 +196,17 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                       onActivate={() => setPopoverOpen(false)}
                     />
                   </motion.div>
-                ))}
-              </AnimatePresence>
-          )}
-
-          {/* App updates merged into the SAME list below the real notifications
-              (no header / separator), collapsed to the latest (expand for older).
-              Real notifications stay on top + persist until dismissed manually. */}
-          {patchNotes.length > 0 && (
-            <>
-              {(showAllPatches ? patchNotes : patchNotes.slice(0, 1)).map((note) => {
-                const unread = !patchIsRead(note.version);
-                return (
-                  <button
-                    key={note.version}
+                ) : (
+                  <motion.button
+                    key={`p:${item.note.version}`}
                     type="button"
-                    onClick={() => handlePatchClick(note)}
-                    className={`flex w-full items-center gap-3 rounded-xl border border-border/40 bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/40 ${unread ? "" : "opacity-60"}`}
+                    variants={notificationSpring}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                    onClick={() => handlePatchClick(item.note)}
+                    className={`flex w-full items-center gap-3 rounded-xl border border-border/40 bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/40 ${patchIsRead(item.note.version) ? "opacity-60" : ""}`}
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
                       <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -194,35 +214,23 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5">
                         <span className="rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
-                          v{note.version}
+                          v{item.note.version}
                         </span>
                         <span className="truncate text-xs font-semibold text-foreground">
-                          {note.title}
+                          {item.note.title}
                         </span>
                       </span>
                       <span className="mt-0.5 line-clamp-1 block text-[11px] text-muted-foreground">
-                        {note.items[0]}
+                        {item.note.items[0]}
                       </span>
                     </span>
-                    {unread && (
+                    {!patchIsRead(item.note.version) && (
                       <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" aria-label="Belum dibaca" />
                     )}
-                  </button>
-                );
-              })}
-              {patchNotes.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllPatches((v) => !v)}
-                  className="flex w-full items-center justify-center gap-1 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {showAllPatches
-                    ? "Tutup"
-                    : `Lihat ${patchNotes.length - 1} update lain`}
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAllPatches ? "rotate-180" : ""}`} />
-                </button>
+                  </motion.button>
+                )
               )}
-            </>
+            </AnimatePresence>
           )}
         </div>
       </PopoverContent>

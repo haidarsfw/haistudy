@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { getCaller } from "@/lib/auth/session-license";
 
 // ─── Mock store ───
 const mockLogs: Array<{
@@ -18,24 +18,36 @@ const mockLogs: Array<{
 // ─── POST /api/analytics ───
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { action, details = "", count = 1 } = body as {
-      action: string;
-      details: string;
-      count: number;
-    };
+    // Require an authenticated session. This endpoint writes to activity_logs
+    // (read by the admin dashboard); without a guard anyone could inject rows.
+    // The only client caller (logActivity) always runs after login.
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!action) {
+    const body = await request.json().catch(() => null);
+    const rawAction =
+      body && typeof body.action === "string" ? body.action.trim() : "";
+    if (!rawAction) {
       return NextResponse.json(
         { error: "action is required" },
         { status: 400 }
       );
     }
 
-    // Get user name from session cookie context
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("hs-session");
-    const userName = sessionCookie ? "User" : "Anonymous";
+    // Bound the free-form fields so a crafted request can't bloat the table.
+    const action = rawAction.slice(0, 64);
+    const details =
+      body && typeof body.details === "string"
+        ? body.details.slice(0, 500)
+        : "";
+    const n = Number(body?.count);
+    const count = Number.isFinite(n)
+      ? Math.min(1000, Math.max(1, Math.floor(n)))
+      : 1;
+
+    const userName = "User";
 
     if (!isSupabaseServerConfigured) {
       mockLogs.push({

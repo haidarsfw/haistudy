@@ -4,6 +4,8 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { checkCooldown } from "@/lib/auth/cooldown";
+import { getCaller } from "@/lib/auth/session-license";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
 import type { PackageTier } from "@/lib/tier";
@@ -26,12 +28,13 @@ const mockStore = new Map<string, Array<{
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
-    const { searchParams } = new URL(request.url);
-    const licenseKey = searchParams.get("licenseKey");
-
-    if (!licenseKey) {
-      return NextResponse.json({ error: "licenseKey required" }, { status: 400 });
+    // Identity from the hs-session cookie, NOT a client param (IDOR fix): a user
+    // must only ever read their OWN AI conversations.
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const licenseKey = caller.licenseKey;
 
     if (!isSupabaseServerConfigured) {
       const convs = mockStore.get(licenseKey) || [];
@@ -67,11 +70,20 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
-    const body = await request.json();
-    const { licenseKey } = body;
+    // Identity from the hs-session cookie, NOT the body (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const licenseKey = caller.licenseKey;
 
-    if (!licenseKey) {
-      return NextResponse.json({ error: "licenseKey required" }, { status: 400 });
+    // Light cooldown so a loop can't spam-create conversations.
+    const cd = checkCooldown(`ai-conv:${licenseKey}`, 2_000);
+    if (!cd.allowed) {
+      return NextResponse.json(
+        { error: "Tunggu sebentar." },
+        { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+      );
     }
 
     if (!isSupabaseServerConfigured) {
@@ -145,6 +157,11 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const scope = await requireScope(request);
+    // Identity from the hs-session cookie (IDOR fix): only edit your OWN convo.
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await request.json();
     const { id, messages, title } = body;
 
@@ -178,6 +195,7 @@ export async function PUT(request: Request) {
         .from("ai_conversations")
         .update(updates)
         .eq("id", id)
+        .eq("license_key", caller.licenseKey)
         .select("id, title, messages, created_at, updated_at")
         .single()
     );
@@ -201,14 +219,17 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const scope = await requireScope(request);
+    // Identity from the hs-session cookie, NOT the body (IDOR fix).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const licenseKey = caller.licenseKey;
     const body = await request.json();
-    const { id, licenseKey } = body;
+    const { id } = body;
 
-    if (!id || !licenseKey) {
-      return NextResponse.json(
-        { error: "id and licenseKey required" },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: "id required" }, { status: 400 });
     }
 
     if (!isSupabaseServerConfigured) {

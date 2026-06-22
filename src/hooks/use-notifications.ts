@@ -109,7 +109,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
               read: row.read,
               createdAt: row.created_at,
             };
-            setNotifications((prev) => [notif, ...prev]);
+            // Dedup by id: a duplicated realtime event (reconnect replay,
+            // double delivery) must not prepend twice or double the unread count.
+            setNotifications((prev) =>
+              prev.some((n) => n.id === notif.id) ? prev : [notif, ...prev]
+            );
             // Play notification sound for mention/announcement
             sounds.notification();
           }

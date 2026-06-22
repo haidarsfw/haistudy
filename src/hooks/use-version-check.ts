@@ -4,6 +4,9 @@ import { useEffect, useRef } from "react";
 import { PWA_EVENTS } from "@/lib/pwa-version";
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000; // Poll every 30 minutes (reduced from 5m to stay under Vercel free invocation limit)
+// Min gap between visibility-triggered checks, so rapid tab switching can't
+// fire /api/version on every refocus (Vercel invocation cost).
+const VISIBILITY_THROTTLE_MS = 10 * 60 * 1000;
 
 /**
  * Polls /api/version to detect new deploys.
@@ -14,9 +17,11 @@ const CHECK_INTERVAL_MS = 30 * 60 * 1000; // Poll every 30 minutes (reduced from
 export function useVersionCheck() {
   const knownBuildId = useRef<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastCheckRef = useRef<number>(0);
 
   useEffect(() => {
     const check = async () => {
+      lastCheckRef.current = Date.now();
       try {
         const res = await fetch("/api/version", { cache: "no-store" });
         if (!res.ok) return;
@@ -45,9 +50,12 @@ export function useVersionCheck() {
     // Periodic check
     intervalRef.current = setInterval(check, CHECK_INTERVAL_MS);
 
-    // Also check when tab becomes visible (user switches back to tab)
+    // Also check when tab becomes visible (user switches back to tab), but at
+    // most once per VISIBILITY_THROTTLE_MS so frequent switching is free.
     const onVisibility = () => {
-      if (!document.hidden) check();
+      if (!document.hidden && Date.now() - lastCheckRef.current >= VISIBILITY_THROTTLE_MS) {
+        check();
+      }
     };
     document.addEventListener("visibilitychange", onVisibility);
 

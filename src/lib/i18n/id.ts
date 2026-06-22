@@ -992,6 +992,7 @@ const id: Record<string, string> = {
   "exam.results_back": "Kembali",
   "exam.results_retry": "Coba Lagi",
   "exam.regrade_btn": "🔄 Nilai Ulang Jawaban (AI)",
+  "exam.regrade_btn_short": "Nilai Ulang",
   "exam.regrade_success": "Penilaian ulang selesai — skor diperbarui.",
   "exam.regrade_loading": "AI sedang menilai ulang...",
   "exam.regrade_error_title": "Gagal menilai ulang",
