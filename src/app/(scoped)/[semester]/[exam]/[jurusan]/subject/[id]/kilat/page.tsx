@@ -6,7 +6,22 @@ import { useScope } from "@/components/providers/scope-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { useSession } from "@/components/providers/session-provider";
-import { KilatPlayer } from "@/components/kilat/kilat-player";
+import dynamic from "next/dynamic";
+
+// Lazy-load the heavy Belajar Kilat player so it stays out of the surrounding
+// bundle. The route's loading.tsx covers the RSC wait; this fallback covers the
+// brief client chunk fetch.
+const KilatPlayer = dynamic(
+  () => import("@/components/kilat/kilat-player").then((m) => ({ default: m.KilatPlayer })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    ),
+  }
+);
 
 export default function KilatPage() {
   const params = useParams();

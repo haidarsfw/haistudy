@@ -26,6 +26,20 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.3.1",
+    date: "2026-06-22",
+    title: "Lebih cepat & mulus di mana-mana",
+    items: [
+      "Pindah halaman dan ganti tab kini terasa jauh lebih cepat dan mulus, dengan animasi loading instan biar layar tidak nge-blank saat berpindah.",
+      "Halaman depan lebih ringan dan ngebut, terutama di laptop dan desktop.",
+      "Latihan Soal dan Belajar Kilat sekarang terbuka lebih ringan.",
+      "Penilaian AI jadi konsisten: skor tidak naik-turun lagi setiap kali kamu Nilai Ulang jawaban yang sama.",
+      "Penilaian AI juga lebih cepat dan tidak nyangkut kelamaan.",
+      "Layar saat AI menilai kini menampilkan progress bar, soal yang sedang dinilai, dan estimasi waktu, jadi kamu tahu progresnya.",
+      "Rincian skor ditata lebih rapi dengan label yang lebih enak dibaca.",
+    ],
+  },
+  {
     version: "2.3.0",
     date: "2026-06-21",
     title: "Layar hasil baru, scratchpad lebih enak, & banyak perbaikan",

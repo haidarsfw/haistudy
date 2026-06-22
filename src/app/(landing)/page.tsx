@@ -397,7 +397,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="relative px-4 py-14 sm:py-18">
+      <section id="faq" className="landing-cv relative px-4 py-14 sm:py-18">
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden sm:block">
           <div className="landing-orb-1 absolute top-20 right-1/4 h-64 w-64 rounded-full bg-primary/10" />
         </div>

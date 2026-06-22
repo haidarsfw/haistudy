@@ -920,19 +920,47 @@ html[data-font="times"] body {
    Landing: Animated dot grid background
    ============================================ */
 
+/* Dots drift via a transform on an oversized ::before (compositor-only) instead
+   of animating background-position (which repaints the whole grid every frame on
+   the main thread — the biggest desktop-only cost on this page). The ::before is
+   inset by one tile (-28px) and the host clips it, so the 28px diagonal drift
+   looks identical but never repaints. */
 .landing-dot-grid {
+  overflow: hidden;
+}
+
+.landing-dot-grid::before {
+  content: "";
+  position: absolute;
+  inset: -28px;
   background-image: radial-gradient(circle, oklch(from var(--primary) l c h / 0.12) 1px, transparent 1px);
   background-size: 28px 28px;
+  will-change: transform;
   animation: dot-grid-drift 25s linear infinite;
 }
 
 @keyframes dot-grid-drift {
-  0% { background-position: 0 0; }
-  100% { background-position: 28px 28px; }
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(28px, 28px); }
 }
 
-.dark .landing-dot-grid {
+.dark .landing-dot-grid::before {
   background-image: radial-gradient(circle, oklch(from var(--primary) l c h / 0.20) 1px, transparent 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-dot-grid::before {
+    animation: none;
+  }
+}
+
+/* Defer layout/paint of a tall, far-below-the-fold section until it's scrolled
+   near. Zero visual change (only applied to sections with no outward glow/shadow
+   that paint-containment could clip); `auto` lets the browser remember the real
+   height after first reveal, so the scrollbar barely shifts. */
+.landing-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
 }
 
 /* ============================================

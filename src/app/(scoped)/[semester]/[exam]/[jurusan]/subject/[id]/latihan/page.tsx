@@ -3,7 +3,22 @@
 import { useParams, useRouter } from "next/navigation";
 import { useScope } from "@/components/providers/scope-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
-import { ExamPlayer } from "@/components/exam/exam-player";
+import dynamic from "next/dynamic";
+
+// Lazy-load the heavy exam player (KaTeX, markdown, scratchpad, cheat sheet) so
+// it stays out of the surrounding bundle. The route's loading.tsx covers the
+// RSC wait; this fallback covers the brief client chunk fetch.
+const ExamPlayer = dynamic(
+  () => import("@/components/exam/exam-player").then((m) => ({ default: m.ExamPlayer })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    ),
+  }
+);
 
 /**
  * Fullscreen exam route: /[scope]/subject/[id]/latihan
