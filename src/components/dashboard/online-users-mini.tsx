@@ -7,7 +7,7 @@ import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
-import { useAvatars } from "@/hooks/use-avatars";
+import { useAvatars, useResolvedNames } from "@/hooks/use-avatars";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { PublicProfilePopover } from "@/components/user/public-profile-popover";
 import type { OnlineUser } from "@/types";
@@ -175,6 +175,7 @@ export function OnlineUsersMini() {
     [users]
   );
   const avatarMap = useAvatars(avatarKeys);
+  const nameMap = useResolvedNames(avatarKeys);
 
   // Sorted list for name rows: sorted by login recency (newest lastSeen first), hidden users last.
   const sortedByName = useMemo(() => {
@@ -216,10 +217,13 @@ export function OnlineUsersMini() {
   // Helper to compute display name for a user
   const getDisplayName = (user: OnlineUser): string => {
     const isSelf = user.licenseKey === myLicenseKey;
-    if (isAdmin) return user.userName || "Anonymous";
-    if (isSelf && user.hideStatus) return `${user.userName || "Anonymous"} (hidden)`;
+    const resolvedName = user.licenseKey ? nameMap.get(user.licenseKey.toUpperCase()) : null;
+    const baseName = resolvedName && resolvedName !== "Pengguna" ? resolvedName : (user.userName || "Anonymous");
+
+    if (isAdmin) return baseName;
+    if (isSelf && user.hideStatus) return `${baseName} (hidden)`;
     if (!isSelf && (user.hideStatus || myHideStatus)) return "Hidden User";
-    return user.userName || "Anonymous";
+    return baseName;
   };
   const isMasked = (user: OnlineUser): boolean => {
     const isSelf = user.licenseKey === myLicenseKey;
@@ -260,18 +264,19 @@ export function OnlineUsersMini() {
             <div className="flex -space-x-1.5">
               {sortedByAvatar.slice(0, 5).map((user, i) => {
                 const masked = isMasked(user);
+                const displayName = getDisplayName(user);
                 const avatarUrl = !masked && user.licenseKey
                   ? avatarMap.get(user.licenseKey.toUpperCase()) ?? null
                   : null;
                 const avatarClass = `h-6 w-6 overflow-hidden rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`;
-                const title = masked ? "Hidden User" : `${user.userName || "?"}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`;
+                const title = masked ? "Hidden User" : `${displayName}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`;
                 const inner = avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={avatarUrl} alt={user.userName || "?"} className="h-full w-full object-cover" />
+                  <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
                 ) : masked ? (
                   "?"
                 ) : (
-                  (user.userName || "?").charAt(0).toUpperCase()
+                  (displayName || "?").charAt(0).toUpperCase()
                 );
                 // Masked users get NO popover (privacy); everyone else is hoverable.
                 if (masked) {

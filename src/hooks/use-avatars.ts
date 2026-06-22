@@ -3,10 +3,15 @@
 import { useEffect, useState } from "react";
 import type { PublicProfile } from "@/types";
 
-// Module-level cache shared across every surface that renders avatars (chat,
-// online list, VIP lounge). Keyed by UPPERCASE license key → avatar_url|null.
+interface CachedProfile {
+  avatarUrl: string | null;
+  name: string | null;
+}
+
+// Module-level cache shared across every surface that renders avatars and profiles.
+// Keyed by UPPERCASE license key → CachedProfile.
 // Persists for the page lifetime so switching surfaces never refetches.
-const cache = new Map<string, string | null>();
+const cache = new Map<string, CachedProfile>();
 // When a key was last resolved to null. Lets us TTL-refetch a key that came
 // back empty once but may have an avatar now (fixes "avatar kadang hilang"
 // after an upload elsewhere) without spamming the endpoint.
@@ -16,15 +21,20 @@ const inFlight = new Set<string>();
 
 const NULL_TTL_MS = 60_000;
 
-function setCache(key: string, url: string | null) {
-  cache.set(key, url);
+function setCache(key: string, url: string | null, name: string | null = null) {
+  const existing = cache.get(key);
+  cache.set(key, {
+    avatarUrl: url,
+    name: name ?? existing?.name ?? null,
+  });
   if (url === null) nullSince.set(key, Date.now());
   else nullSince.delete(key);
 }
 
 // A cached null is "stale" once older than the TTL - eligible for one refetch.
 function isStaleNull(key: string): boolean {
-  if (cache.get(key) !== null) return false;
+  const entry = cache.get(key);
+  if (!entry || entry.avatarUrl !== null) return false;
   const t = nullSince.get(key);
   if (t == null) return false;
   return Date.now() - t > NULL_TTL_MS;
@@ -104,7 +114,7 @@ export function useAvatars(
         const returned = new Set<string>();
         for (const p of data.profiles ?? []) {
           const key = p.licenseKey.toUpperCase();
-          setCache(key, p.avatarUrl ?? null);
+          setCache(key, p.avatarUrl ?? null, p.name);
           returned.add(key);
         }
         // Keys the endpoint didn't return (out-of-scope / unknown / no avatar) →
@@ -128,6 +138,68 @@ export function useAvatars(
 
   // Build the result map from cache for the requested keys.
   const out = new Map<string, string | null>();
-  for (const k of wanted) out.set(k, cache.get(k) ?? null);
+  for (const k of wanted) out.set(k, cache.get(k)?.avatarUrl ?? null);
+  return out;
+}
+
+/**
+ * Resolve names for a set of license keys via the cached public profile map.
+ * Returns a Map(licenseKey → resolvedName|null).
+ */
+export function useResolvedNames(
+  licenseKeys: (string | null | undefined)[]
+): Map<string, string | null> {
+  const [, force] = useState(0);
+
+  useEffect(() => {
+    const fn = () => force((n) => n + 1);
+    subscribers.add(fn);
+    return () => {
+      subscribers.delete(fn);
+    };
+  }, []);
+
+  const wanted = normKeys(licenseKeys);
+  const depKey = wanted.slice().sort().join(",");
+
+  useEffect(() => {
+    const need = wanted.filter(
+      (k) => (!cache.has(k) || isStaleNull(k)) && !inFlight.has(k)
+    );
+    if (need.length === 0) return;
+
+    need.forEach((k) => inFlight.add(k));
+    let cancelled = false;
+
+    fetch("/api/profile/public", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ licenseKeys: need }),
+    })
+      .then((r) => (r.ok ? r.json() : { profiles: [] }))
+      .then((data: { profiles?: PublicProfile[] }) => {
+        const returned = new Set<string>();
+        for (const p of data.profiles ?? []) {
+          const key = p.licenseKey.toUpperCase();
+          setCache(key, p.avatarUrl ?? null, p.name);
+          returned.add(key);
+        }
+        for (const k of need) if (!returned.has(k)) setCache(k, null);
+      })
+      .catch(() => {
+        for (const k of need) if (!cache.has(k)) setCache(k, null);
+      })
+      .finally(() => {
+        need.forEach((k) => inFlight.delete(k));
+        if (!cancelled) force((n) => n + 1);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [depKey]);
+
+  const out = new Map<string, string | null>();
+  for (const k of wanted) out.set(k, cache.get(k)?.name ?? null);
   return out;
 }

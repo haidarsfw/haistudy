@@ -7,7 +7,7 @@ import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
-import { useAvatars } from "@/hooks/use-avatars";
+import { useAvatars, useResolvedNames } from "@/hooks/use-avatars";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 
@@ -94,6 +94,7 @@ export function OnlineUsers() {
     [users]
   );
   const avatarMap = useAvatars(avatarKeys);
+  const nameMap = useResolvedNames(avatarKeys);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -143,15 +144,18 @@ export function OnlineUsers() {
             // - Non-hidden user viewing hidden user: shows "Hidden User"
             const masked = !isAdmin && !isSelf && (user.hideStatus || myHideStatus);
 
+            const resolvedName = user.licenseKey ? nameMap.get(user.licenseKey.toUpperCase()) : null;
+            const baseName = resolvedName && resolvedName !== "Pengguna" ? resolvedName : (user.userName || "Anonymous");
+
             let displayName: string;
             if (isAdmin) {
-              displayName = user.userName || "Anonymous";
+              displayName = baseName;
             } else if (isSelf && user.hideStatus) {
-              displayName = `${user.userName || "Anonymous"} (hidden)`;
+              displayName = `${baseName} (hidden)`;
             } else if (masked) {
               displayName = "Hidden User";
             } else {
-              displayName = user.userName || "Anonymous";
+              displayName = baseName;
             }
 
             const avatarUrl =
