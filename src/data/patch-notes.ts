@@ -26,6 +26,15 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.3.2",
+    date: "2026-06-22",
+    title: "Link chat aktif & urutan daftar online lebih rapi",
+    items: [
+      "Link atau alamat web yang dikirim di chat sekarang otomatis berwarna biru, bergaris bawah, dan bisa langsung diklik.",
+      "Tampilan teman online diurutkan lebih rapi: baris bulatan foto mendahulukan teman yang memasang foto profil, sedangkan daftar nama diurutkan dari yang paling baru aktif.",
+    ],
+  },
+  {
     version: "2.3.1",
     date: "2026-06-22",
     title: "Lebih cepat & mulus di mana-mana",
