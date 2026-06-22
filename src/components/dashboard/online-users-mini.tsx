@@ -168,15 +168,6 @@ export function OnlineUsersMini() {
   const isAdmin = session?.isAdmin ?? false;
   const myLicenseKey = session?.licenseKey ?? "";
   const myHideStatus = users.find((u) => u.licenseKey === myLicenseKey)?.hideStatus ?? false;
-  const visibleUsers = useMemo(() => {
-    return [...users].sort((a, b) => {
-      // Prioritize non-hidden users over hidden users
-      if (a.hideStatus && !b.hideStatus) return 1;
-      if (!a.hideStatus && b.hideStatus) return -1;
-      return 0;
-    });
-  }, [users]);
-
   // Batch-resolve real avatars (cached cross-surface). Masked users render the
   // anonymized placeholder regardless, so we only need keys for unmasked rows.
   const avatarKeys = useMemo(
@@ -184,6 +175,43 @@ export function OnlineUsersMini() {
     [users]
   );
   const avatarMap = useAvatars(avatarKeys);
+
+  // Sorted list for name rows: sorted by login recency (newest lastSeen first), hidden users last.
+  const sortedByName = useMemo(() => {
+    return [...users].sort((a, b) => {
+      // Prioritize non-hidden users over hidden users
+      if (a.hideStatus && !b.hideStatus) return 1;
+      if (!a.hideStatus && b.hideStatus) return -1;
+
+      // Sort by login recency (most recent/newest first)
+      const timeA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+      const timeB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [users]);
+
+  // Sorted list for avatar circles: prioritized by pfp presence (users with pfp first), hidden users last.
+  const sortedByAvatar = useMemo(() => {
+    return [...users].sort((a, b) => {
+      // Prioritize non-hidden users over hidden users
+      if (a.hideStatus && !b.hideStatus) return 1;
+      if (!a.hideStatus && b.hideStatus) return -1;
+
+      // Prioritize users with profile pictures (pfp)
+      const hasPfpA = !!(a.licenseKey && avatarMap.get(a.licenseKey.toUpperCase()));
+      const hasPfpB = !!(b.licenseKey && avatarMap.get(b.licenseKey.toUpperCase()));
+
+      if (hasPfpA && !hasPfpB) return -1;
+      if (!hasPfpA && hasPfpB) return 1;
+
+      // Fallback to login recency (most recent/newest first)
+      const timeA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+      const timeB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [users, avatarMap]);
+
+  const visibleUsers = sortedByName;
 
   // Helper to compute display name for a user
   const getDisplayName = (user: OnlineUser): string => {
@@ -230,7 +258,7 @@ export function OnlineUsersMini() {
         {visibleUsers.length > 0 && (
           <div className="flex items-center gap-2 mt-2">
             <div className="flex -space-x-1.5">
-              {visibleUsers.slice(0, 5).map((user, i) => {
+              {sortedByAvatar.slice(0, 5).map((user, i) => {
                 const masked = isMasked(user);
                 const avatarUrl = !masked && user.licenseKey
                   ? avatarMap.get(user.licenseKey.toUpperCase()) ?? null

@@ -77,7 +77,11 @@ export function OnlineUsers() {
       // Prioritize non-hidden users over hidden users
       if (a.hideStatus && !b.hideStatus) return 1;
       if (!a.hideStatus && b.hideStatus) return -1;
-      return 0;
+
+      // Sort by login recency (most recent/newest first)
+      const timeA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+      const timeB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+      return timeB - timeA;
     });
   }, [users]);
   const { subjects } = useScopedData();
