@@ -70,6 +70,53 @@ function normKeys(keys: (string | null | undefined)[]): string[] {
 }
 
 /**
+ * Shared profile fetcher to fetch public profiles in batches.
+ * Manages deduplication, in-flight tracking, cache updates, and failure cooldowns.
+ */
+async function fetchProfiles(wantedKeys: string[]) {
+  const need = wantedKeys.filter(
+    (k) => (!cache.has(k) || isStaleNull(k)) && !inFlight.has(k)
+  );
+  if (need.length === 0) return;
+
+  need.forEach((k) => inFlight.add(k));
+
+  try {
+    const r = await fetch("/api/profile/public", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ licenseKeys: need }),
+    });
+    
+    const data: { profiles?: PublicProfile[] } = r.ok ? await r.json() : { profiles: [] };
+    const returned = new Set<string>();
+    
+    for (const p of data.profiles ?? []) {
+      const key = p.licenseKey.toUpperCase();
+      setCache(key, p.avatarUrl ?? null, p.name);
+      returned.add(key);
+    }
+    
+    // Any requested keys not returned are cached as null to prevent infinite retries.
+    for (const k of need) {
+      if (!returned.has(k)) {
+        setCache(k, null);
+      }
+    }
+  } catch (err) {
+    console.error("[use-avatars] batch fetch failed", err);
+    // On failure, unconditionally update nullSince cooldown to prevent infinite retry loops.
+    for (const k of need) {
+      const existing = cache.get(k);
+      setCache(k, existing?.avatarUrl ?? null, existing?.name ?? null);
+    }
+  } finally {
+    need.forEach((k) => inFlight.delete(k));
+    notifyAll();
+  }
+}
+
+/**
  * Resolve avatar URLs for a set of license keys via the batched
  * /api/profile/public endpoint. Returns a Map(licenseKey → avatar_url|null);
  * a key maps to null when the user has no uploaded avatar (caller falls back
@@ -81,8 +128,8 @@ export function useAvatars(
 ): Map<string, string | null> {
   const [, force] = useState(0);
 
-  // Subscribe to out-of-band cache updates so an avatar uploaded on another
-  // surface repaints this one without a reload.
+  // Subscribe to cache updates so when cache resolves or updates out-of-band,
+  // we paint the new values immediately.
   useEffect(() => {
     const fn = () => force((n) => n + 1);
     subscribers.add(fn);
@@ -91,54 +138,19 @@ export function useAvatars(
     };
   }, []);
 
-  // Stable dependency: the sorted, de-duped key set.
   const wanted = normKeys(licenseKeys);
   const depKey = wanted.slice().sort().join(",");
 
   useEffect(() => {
-    const need = wanted.filter(
-      (k) => (!cache.has(k) || isStaleNull(k)) && !inFlight.has(k)
-    );
-    if (need.length === 0) return;
-
-    need.forEach((k) => inFlight.add(k));
-    let cancelled = false;
-
-    fetch("/api/profile/public", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ licenseKeys: need }),
-    })
-      .then((r) => (r.ok ? r.json() : { profiles: [] }))
-      .then((data: { profiles?: PublicProfile[] }) => {
-        const returned = new Set<string>();
-        for (const p of data.profiles ?? []) {
-          const key = p.licenseKey.toUpperCase();
-          setCache(key, p.avatarUrl ?? null, p.name);
-          returned.add(key);
-        }
-        // Keys the endpoint didn't return (out-of-scope / unknown / no avatar) →
-        // null. Refreshes the TTL timestamp so a stale-null retry doesn't spin.
-        for (const k of need) if (!returned.has(k)) setCache(k, null);
-      })
-      .catch(() => {
-        // On failure, mark null so a transient error doesn't spin forever.
-        for (const k of need) if (!cache.has(k)) setCache(k, null);
-      })
-      .finally(() => {
-        need.forEach((k) => inFlight.delete(k));
-        if (!cancelled) force((n) => n + 1);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    fetchProfiles(wanted);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [depKey]);
 
   // Build the result map from cache for the requested keys.
   const out = new Map<string, string | null>();
-  for (const k of wanted) out.set(k, cache.get(k)?.avatarUrl ?? null);
+  for (const k of wanted) {
+    out.set(k, cache.get(k)?.avatarUrl ?? null);
+  }
   return out;
 }
 
@@ -163,43 +175,13 @@ export function useResolvedNames(
   const depKey = wanted.slice().sort().join(",");
 
   useEffect(() => {
-    const need = wanted.filter(
-      (k) => (!cache.has(k) || isStaleNull(k)) && !inFlight.has(k)
-    );
-    if (need.length === 0) return;
-
-    need.forEach((k) => inFlight.add(k));
-    let cancelled = false;
-
-    fetch("/api/profile/public", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ licenseKeys: need }),
-    })
-      .then((r) => (r.ok ? r.json() : { profiles: [] }))
-      .then((data: { profiles?: PublicProfile[] }) => {
-        const returned = new Set<string>();
-        for (const p of data.profiles ?? []) {
-          const key = p.licenseKey.toUpperCase();
-          setCache(key, p.avatarUrl ?? null, p.name);
-          returned.add(key);
-        }
-        for (const k of need) if (!returned.has(k)) setCache(k, null);
-      })
-      .catch(() => {
-        for (const k of need) if (!cache.has(k)) setCache(k, null);
-      })
-      .finally(() => {
-        need.forEach((k) => inFlight.delete(k));
-        if (!cancelled) force((n) => n + 1);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    fetchProfiles(wanted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [depKey]);
 
   const out = new Map<string, string | null>();
-  for (const k of wanted) out.set(k, cache.get(k)?.name ?? null);
+  for (const k of wanted) {
+    out.set(k, cache.get(k)?.name ?? null);
+  }
   return out;
 }
