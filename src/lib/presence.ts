@@ -59,7 +59,9 @@ export async function setupPresence(opts: {
   hasSentOffline = false;
 
   // ── Simple heartbeat - no time tracking on client ──
+  let lastHeartbeatAt = 0;
   const sendHeartbeat = async () => {
+    lastHeartbeatAt = Date.now();
     try {
       await fetch("/api/presence", {
         method: "POST",
@@ -82,7 +84,7 @@ export async function setupPresence(opts: {
   // Initial heartbeat
   await sendHeartbeat();
 
-  // Heartbeat interval - 30s when visible, 5m when hidden
+  // Heartbeat interval - 5m when visible, 15m when hidden (free-tier headroom)
   const startHeartbeat = () => {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     const ms = document.hidden
@@ -95,8 +97,9 @@ export async function setupPresence(opts: {
 
   const onVisibilityChange = () => {
     startHeartbeat();
-    if (!document.hidden) {
-      // Immediate heartbeat when tab becomes visible
+    // Immediate heartbeat on tab-return, but throttled: rapid tab switching
+    // must not spam /api/presence (each call is a Vercel invocation).
+    if (!document.hidden && Date.now() - lastHeartbeatAt > 60_000) {
       sendHeartbeat();
     }
   };

@@ -66,10 +66,13 @@ export const RATE_LIMITS = {
 // Session
 export const SESSION_TIMEOUT_MS = 1_800_000; // 30 minutes
 export const SESSION_WARNING_MS = 1_500_000; // 25 minutes (5 min before timeout)
-// Heartbeat cadence — widened to cut presence write/WAL churn (top Disk IO
-// source). Online-list poll is 120s, so a 120s visible beat keeps it accurate.
-export const PRESENCE_HEARTBEAT_VISIBLE_MS = 120_000; // 120 seconds (was 60s)
-export const PRESENCE_HEARTBEAT_HIDDEN_MS = 600_000; // 10 minutes (was 5m)
+// Heartbeat cadence — widened again to cut Vercel function invocations +
+// Supabase writes (free-tier headroom). The online LIST is realtime (presence
+// channel, instant), so the DB heartbeat only backs study-minute accounting +
+// the slow fallback list; 5 min visible is plenty. Accounting already handles
+// a variable interval (visible vs hidden), so widening is safe.
+export const PRESENCE_HEARTBEAT_VISIBLE_MS = 300_000; // 5 minutes (was 120s)
+export const PRESENCE_HEARTBEAT_HIDDEN_MS = 900_000; // 15 minutes (was 10m)
 export const MAX_DEVICES = 2;
 
 // Chat
