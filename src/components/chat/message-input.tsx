@@ -285,6 +285,7 @@ export function MessageInput({
             </Button>
 
             <Textarea
+              autoFocus
               ref={textareaRef}
               value={text}
               onChange={handleChange}

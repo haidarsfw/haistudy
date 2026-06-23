@@ -620,6 +620,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
                 </div>
               )}
               <AiInput
+                key={activeConversationId}
                 onSend={handleSend}
                 isStreaming={isStreaming}
                 onStop={stopStreaming}

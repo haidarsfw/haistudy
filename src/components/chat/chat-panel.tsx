@@ -478,6 +478,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
 
                 {/* Input */}
                 <MessageInput
+                  key={channel}
                   onSend={handleSend}
                   onSendImage={handleSendImage}
                   onSendAudio={handleSendAudio}

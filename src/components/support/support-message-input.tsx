@@ -126,6 +126,7 @@ export function SupportMessageInput({
       return [];
     });
     setEditError(null);
+    textareaRef.current?.focus();
   }, [licenseKey]);
 
   const removeImage = useCallback((idx: number) => {
@@ -634,6 +635,7 @@ export function SupportMessageInput({
         )}
 
         <textarea
+          autoFocus
           ref={textareaRef}
           rows={1}
           value={text}

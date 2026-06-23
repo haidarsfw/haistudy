@@ -333,6 +333,7 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
 
         {/* Composer - reused global MessageInput (image + voice + reply) */}
         <MessageInput
+          key={activeId}
           onSend={handleSend}
           onSendImage={handleSendImage}
           onSendAudio={handleSendAudio}

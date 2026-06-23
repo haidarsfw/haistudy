@@ -212,6 +212,7 @@ export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, f
           <ImagePlus className="h-4 w-4" />
         </button>
         <textarea
+          autoFocus
           ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}

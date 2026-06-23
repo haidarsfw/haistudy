@@ -26,6 +26,18 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.3.3",
+    date: "2026-06-23",
+    title: "Autofocus kolom chat, scroll mulus balasan, & sinkronisasi profil",
+    items: [
+      "Autofocus kotak input: ketika membuka chat global, VIP, DM, AI, maupun bantuan/support, kursor otomatis aktif di kolom ketik pesan tanpa perlu diklik dulu.",
+      "Scroll mulus balasan chat: ketika kamu mengetuk pesan pin atau pesan balasan (reply), layar akan bergeser dengan animasi scroll yang mulus ke pesan tujuan.",
+      "Nama panggilan daftar online: nama teman-teman di daftar online dan chat kini selalu sinkron secara otomatis mengikuti perubahan profil terbaru mereka.",
+      "Perbaikan performa profil: perbaikan masalah sistem yang terkadang memuat profil berulang-ulang saat terjadi gangguan sinyal.",
+      "Indikator belajar: progres belajar di halaman depan kini ter-reset rapi kembali dari 0%.",
+    ],
+  },
+  {
     version: "2.3.2",
     date: "2026-06-22",
     title: "Link chat aktif & urutan daftar online lebih rapi",
