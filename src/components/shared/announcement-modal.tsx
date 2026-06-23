@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Megaphone, ArrowRight, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { parseAnnouncementCta } from "@/lib/announcement-cta";
+import { useAnnouncements } from "@/hooks/use-announcements";
 import type { Announcement } from "@/types";
 
 // Shows the newest active announcement in a centered modal once per user.
@@ -34,30 +35,22 @@ function markSeen(id: string) {
 }
 
 export function AnnouncementModal() {
+  const announcements = useAnnouncements();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const pickedRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch("/api/announcements")
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        const list = (data.announcements || []) as Announcement[];
-        const seen = getSeenSet();
-        // Never auto-pop "info" (welcome/general) announcements — those live in
-        // the header banner + notification bell only. Reserve the modal for
-        // higher-urgency warning/maintenance notices.
-        const next =
-          list.find((a) => a.type !== "info" && !seen.has(a.id)) ?? null;
-        if (next) setAnnouncement(next);
-      })
-      .catch(() => {
-        // silent fail
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    // Auto-pop at most once per session, when the shared list first arrives.
+    if (pickedRef.current || announcements.length === 0) return;
+    pickedRef.current = true;
+    const seen = getSeenSet();
+    // Never auto-pop "info" (welcome/general) announcements — those live in the
+    // header banner + notification bell only. Reserve the modal for
+    // higher-urgency warning/maintenance notices.
+    const next =
+      announcements.find((a) => a.type !== "info" && !seen.has(a.id)) ?? null;
+    if (next) setAnnouncement(next);
+  }, [announcements]);
 
   const dismiss = () => {
     if (announcement) markSeen(announcement.id);

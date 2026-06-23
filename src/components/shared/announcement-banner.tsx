@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { X, Info, AlertTriangle, Wrench, ArrowRight } from "lucide-react";
-import type { Announcement } from "@/types";
 import { parseAnnouncementCta } from "@/lib/announcement-cta";
+import { useAnnouncements } from "@/hooks/use-announcements";
 
 const TYPE_CONFIG = {
   info: {
@@ -28,21 +28,8 @@ const TYPE_CONFIG = {
 };
 
 export function AnnouncementBanner() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const announcements = useAnnouncements();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    fetch("/api/announcements")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.announcements) {
-          setAnnouncements(data.announcements);
-        }
-      })
-      .catch(() => {
-        // Silently fail
-      });
-  }, []);
 
   const visible = announcements.filter((a) => !dismissed.has(a.id));
   if (visible.length === 0) return null;
