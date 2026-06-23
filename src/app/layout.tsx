@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter, Geist_Mono, Poppins } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
+import { SettingsProvider } from "@/components/providers/settings-provider";
 import { LanguageProvider } from "@/components/providers/language-provider";
 import { MotionProvider } from "@/components/providers/motion-provider";
 import { MusicProvider } from "@/components/providers/music-provider";
@@ -176,17 +177,19 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider>
           <SessionProvider>
-            <LanguageProvider>
-              <MotionProvider>
-                {/* MusicProvider here (under SessionProvider) so playback
-                    survives navigation between the scoped app and /admin, and
-                    only stops on logout. */}
-                <MusicProvider>{children}</MusicProvider>
-                <Toaster />
-              </MotionProvider>
-              <Analytics />
-              <SpeedInsights />
-            </LanguageProvider>
+            <SettingsProvider>
+              <LanguageProvider>
+                <MotionProvider>
+                  {/* MusicProvider here (under SessionProvider) so playback
+                      survives navigation between the scoped app and /admin, and
+                      only stops on logout. */}
+                  <MusicProvider>{children}</MusicProvider>
+                  <Toaster />
+                </MotionProvider>
+                <Analytics />
+                <SpeedInsights />
+              </LanguageProvider>
+            </SettingsProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>
