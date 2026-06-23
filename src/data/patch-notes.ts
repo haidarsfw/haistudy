@@ -26,6 +26,16 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.3.5",
+    date: "2026-06-24",
+    title: "Lebih stabil, ringan, & rapi",
+    items: [
+      "Memperbaiki penyebab aplikasi sesekali melambat atau susah dibuka saat sedang ramai. Sekarang terasa lebih stabil dan ringan.",
+      "Berpindah halaman dan membuka fitur jadi lebih hemat di belakang layar, tanpa mengurangi kemulusan dan kecepatan yang kamu rasakan.",
+      "Notifikasi update aplikasi kini menyatu rapi dengan notifikasi lain dan urut dari yang terbaru, biar tidak membingungkan.",
+    ],
+  },
+  {
     version: "2.3.4",
     date: "2026-06-23",
     title: "Mention voice room (#), kartu undangan voice, & SFX baru",
