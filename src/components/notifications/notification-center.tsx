@@ -26,6 +26,22 @@ import { NotificationItem } from "./notification-item";
 import type { Notification } from "@/types";
 import type { PatchNote } from "@/data/patch-notes";
 
+/**
+ * Helper to parse patch note date strings.
+ * Prevents timezone shifting for date-only formats (like "2026-06-23") by parsing them in local time.
+ * If endOfDay is true, sets the time to 23:59:59.999 local time so it sorts at the top of that day's feed.
+ */
+function parsePatchDate(dateStr: string, endOfDay = false): Date {
+  if (dateStr.length === 10 && !dateStr.includes("T")) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    if (endOfDay) {
+      return new Date(year, month - 1, day, 23, 59, 59, 999);
+    }
+    return new Date(year, month - 1, day);
+  }
+  return new Date(dateStr);
+}
+
 interface NotificationCenterProps {
   hoverExpand?: boolean;
 }
@@ -62,7 +78,7 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
       })),
       ...patchNotes.map((p) => ({
         kind: "patch" as const,
-        ts: new Date(p.date).getTime(),
+        ts: parsePatchDate(p.date, true).getTime(),
         note: p,
       })),
     ];
@@ -289,7 +305,7 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
               ))}
             </ul>
             <p className="text-xs text-muted-foreground">
-              {format(new Date(selectedPatch.date), "d MMMM yyyy", { locale: idLocale })}
+              {format(parsePatchDate(selectedPatch.date), "d MMMM yyyy", { locale: idLocale })}
             </p>
           </div>
         )}

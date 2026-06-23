@@ -30,6 +30,20 @@ export function UpdateBanner() {
 
     // Also catch a waiting SW that appears via the browser's own update cycle.
     if ("serviceWorker" in navigator) {
+      // Remember if we had a controller when the component mounted
+      const hasController = !!navigator.serviceWorker.controller;
+
+      const onControllerChange = () => {
+        // Only show update banner if we already had a controller.
+        // If hasController was false, this is the initial service worker registration for a new user/session,
+        // so they already have the latest assets and don't need to reload.
+        if (hasController) {
+          setShow(true);
+        }
+      };
+
+      navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
+
       navigator.serviceWorker.getRegistration().then((reg) => {
         if (!reg) return;
         if (reg.waiting) setShow(true);
@@ -43,6 +57,11 @@ export function UpdateBanner() {
           });
         });
       });
+
+      return () => {
+        window.removeEventListener(PWA_EVENTS.VERSION_CHANGED, onChanged);
+        navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+      };
     }
 
     return () => window.removeEventListener(PWA_EVENTS.VERSION_CHANGED, onChanged);

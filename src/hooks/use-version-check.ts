@@ -3,10 +3,10 @@
 import { useEffect, useRef } from "react";
 import { PWA_EVENTS } from "@/lib/pwa-version";
 
-const CHECK_INTERVAL_MS = 30 * 60 * 1000; // Poll every 30 minutes (reduced from 5m to stay under Vercel free invocation limit)
+const CHECK_INTERVAL_MS = 2 * 60 * 1000; // Poll every 2 minutes (static route, served from CDN with zero function invocation cost)
 // Min gap between visibility-triggered checks, so rapid tab switching can't
-// fire /api/version on every refocus (Vercel invocation cost).
-const VISIBILITY_THROTTLE_MS = 10 * 60 * 1000;
+// fire /api/version on every refocus.
+const VISIBILITY_THROTTLE_MS = 1 * 60 * 1000; // 1 minute throttle on refocus
 
 /**
  * Polls /api/version to detect new deploys.
@@ -38,6 +38,13 @@ export function useVersionCheck() {
           // instead of reloading; user applies it when ready.
           knownBuildId.current = remoteBuildId;
           window.dispatchEvent(new Event(PWA_EVENTS.VERSION_CHANGED));
+
+          // Force the service worker to check for updates immediately
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+              reg?.update().catch(() => {});
+            });
+          }
         }
       } catch {
         // Network error - ignore, will retry next interval
