@@ -67,6 +67,9 @@ export function useProgress(subjectId: string) {
 
         // Debounced sync to Supabase — only THIS scope's subtree is sent; the
         // server merges it under progress[scopeKey], never touching other scopes.
+        // 6s (was 2s): localStorage already saved instantly above, so a longer
+        // window just coalesces rapid changes into fewer server writes /
+        // function invocations (free-tier headroom) with no data-loss risk.
         if (syncRef.current) clearTimeout(syncRef.current);
         syncRef.current = setTimeout(async () => {
           try {
@@ -90,7 +93,7 @@ export function useProgress(subjectId: string) {
               window.dispatchEvent(new Event("hs-progress-synced"));
             }
           } catch {}
-        }, 2000);
+        }, 6000);
 
         return next;
       });
@@ -144,7 +147,7 @@ export function useProgress(subjectId: string) {
 
   // Belajar Kilat: persist the whole feed state. The player accumulates state
   // in memory and calls this on meaningful events (answer, chapter clear, exit);
-  // the existing 2s debounce + server merge handles sync.
+  // the existing 6s debounce + server merge handles sync.
   const saveKilatState = useCallback(
     (kilat: KilatProgress) => {
       update((prev) => ({ ...prev, kilat }));
