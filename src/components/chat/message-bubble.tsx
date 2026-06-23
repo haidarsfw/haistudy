@@ -56,6 +56,7 @@ interface MessageBubbleProps {
   dmReadState?: "sent" | "read";
   // When read, the other participant's read time (shown on hover/tap).
   dmReadAt?: string | null;
+  onReplyQuoteClick?: (messageId: string) => void;
 }
 
 export function MessageBubble({
@@ -74,6 +75,7 @@ export function MessageBubble({
   grouped = false,
   dmReadState,
   dmReadAt,
+  onReplyQuoteClick,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -144,6 +146,7 @@ export function MessageBubble({
   if (variant === "dm") {
     return (
       <motion.div
+        data-message-id={message.id}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springSmooth}
@@ -167,8 +170,10 @@ export function MessageBubble({
           >
             {/* Reply preview */}
             {message.replyToId && message.replyToName && (
-              <div
-                className={`mb-1 flex items-center gap-1.5 rounded border-l-2 px-2 py-1 text-xs ${
+              <button
+                type="button"
+                onClick={() => onReplyQuoteClick?.(message.replyToId!)}
+                className={`mb-1 flex w-full text-left items-center gap-1.5 rounded border-l-2 px-2 py-1 text-xs transition-colors hover:bg-white/10 ${
                   isOwn
                     ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/80"
                     : "border-muted-foreground/30 bg-background/40 text-muted-foreground"
@@ -177,7 +182,7 @@ export function MessageBubble({
                 <Reply className="h-3 w-3 shrink-0" />
                 <span className="font-medium">{message.replyToName}</span>
                 <span className="truncate">{message.replyToContent || "..."}</span>
-              </div>
+              </button>
             )}
 
             {message.type === "text" && (
@@ -303,6 +308,7 @@ export function MessageBubble({
 
   return (
     <motion.div
+      data-message-id={message.id}
       initial={{ opacity: 0, x: isOwn ? 12 : -12 }}
       animate={{ opacity: 1, x: 0 }}
       transition={springSmooth}
@@ -405,13 +411,17 @@ export function MessageBubble({
 
         {/* Reply preview */}
         {message.replyToId && message.replyToName && (
-          <div className="mt-0.5 flex items-center gap-1.5 rounded border-l-2 border-muted-foreground/30 bg-muted/40 px-2 py-1 text-xs text-muted-foreground">
+          <button
+            type="button"
+            onClick={() => onReplyQuoteClick?.(message.replyToId!)}
+            className="mt-0.5 flex w-full text-left items-center gap-1.5 rounded border-l-2 border-muted-foreground/30 bg-muted/40 px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/60"
+          >
             <Reply className="h-3 w-3 shrink-0" />
             <span className="font-medium">{message.replyToName}</span>
             <span className="truncate">
               {message.replyToContent || "..."}
             </span>
-          </div>
+          </button>
         )}
 
         {/* Message body */}

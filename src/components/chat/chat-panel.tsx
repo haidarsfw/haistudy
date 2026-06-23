@@ -31,6 +31,7 @@ import type { ChatChannel, ChatMessage } from "@/types";
 import { toast } from "@/components/ui/toast";
 import { sounds } from "@/lib/sounds";
 import { isCropLocked } from "@/lib/crop-lock";
+import { APP_EVENTS } from "@/lib/events";
 
 interface ChatPanelProps {
   isOpen: boolean;
@@ -205,6 +206,12 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
         error instanceof Error ? error.message : "Gagal unpin pesan"
       );
     }
+  };
+
+  const handlePinnedJump = (messageId: string) => {
+    window.dispatchEvent(
+      new CustomEvent(APP_EVENTS.SCROLL_TO_MESSAGE, { detail: { messageId } })
+    );
   };
 
   const onlineUserNames = users
@@ -436,7 +443,7 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
             ) : (
               <>
                 {/* Pinned messages */}
-                <PinnedMessages messages={pinnedMessages} />
+                <PinnedMessages messages={pinnedMessages} onJump={handlePinnedJump} />
 
                 {/* Message list */}
                 {isLoading ? (

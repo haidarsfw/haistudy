@@ -7,6 +7,7 @@
 import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
+import { displayName } from "@/lib/name";
 import type {
   SupportMessage,
   SupportReaction,
@@ -42,12 +43,12 @@ export async function resolveSupportSender(opts?: {
     const supabase = createServerClient()!;
     const { data } = await supabase
       .from("license_keys")
-      .select("name, is_admin")
+      .select("name, short_name, is_admin")
       .eq("key", licenseKey)
       .maybeSingle();
 
     if (data) {
-      name = (data.name as string) || null;
+      name = displayName({ shortName: data.short_name, name: data.name });
       if (opts?.validateAdmin) {
         isAdmin = Boolean(data.is_admin) && isAdmin;
       }

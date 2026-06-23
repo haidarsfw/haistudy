@@ -560,6 +560,21 @@ export async function PUT(request: Request) {
       );
     }
 
+    if (updates.name !== undefined || updates.shortName !== undefined) {
+      const actUpdates: Record<string, unknown> = {};
+      if (updates.name !== undefined) actUpdates.user_name = updates.name.trim();
+      if (updates.shortName !== undefined) {
+        actUpdates.short_name =
+          typeof updates.shortName === "string" && updates.shortName.trim()
+            ? updates.shortName.trim().slice(0, 24)
+            : null;
+      }
+      await supabase
+        .from("activations")
+        .update(actUpdates)
+        .eq("license_key", key);
+    }
+
     // OAuth link management: linkedEmail present (non-empty) = upsert, null/"" = delete.
     let linkedEmailOut: string | null = null;
     if (Object.prototype.hasOwnProperty.call(updates, "linkedEmail")) {

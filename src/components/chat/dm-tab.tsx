@@ -89,6 +89,18 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleJumpToMessage = (messageId: string) => {
+    const el = scrollContainerRef.current?.querySelector(`[data-message-id="${messageId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary/50", "bg-primary/5", "rounded-lg");
+      setTimeout(() => {
+        el.classList.remove("ring-2", "ring-primary/50", "bg-primary/5", "rounded-lg");
+      }, 2500);
+    }
+  };
 
   const activeConv = conversations.find((c) => c.id === activeId);
   const myName = session?.shortName ?? t("dm.you");
@@ -252,19 +264,22 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
 
         {/* Pinned banner */}
         {pinned.length > 0 && (
-          <div className="flex items-start gap-1.5 border-b border-border bg-primary/5 px-3 py-1.5">
+          <button
+            onClick={() => handleJumpToMessage(pinned[pinned.length - 1].id)}
+            className="flex w-full text-left items-start gap-1.5 border-b border-border bg-primary/5 hover:bg-primary/10 transition-colors px-3 py-1.5 cursor-pointer"
+          >
             <Pin className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
-            <p className="truncate text-[11px] text-muted-foreground">
+            <p className="truncate text-[11px] text-muted-foreground flex-1">
               {pinned[pinned.length - 1].body ||
                 (pinned[pinned.length - 1].type === "image"
                   ? t("dm.image")
                   : t("dm.voice"))}
             </p>
-          </div>
+          </button>
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto py-2">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto py-2">
           {isLoadingMessages ? (
             <div className="flex flex-col gap-2 px-3">
               {[...Array(4)].map((_, i) => (
@@ -308,6 +323,7 @@ export function DmTab({ pendingDmKey, onDmKeyConsumed }: DmTabProps = {}) {
                   grouped={grouped}
                   dmReadState={readState}
                   dmReadAt={otherLastReadAt}
+                  onReplyQuoteClick={handleJumpToMessage}
                 />
               );
             })

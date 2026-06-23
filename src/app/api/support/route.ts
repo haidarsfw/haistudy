@@ -8,6 +8,7 @@ import {
 } from "@/lib/support/server";
 import { notifyOnSupportMessage } from "@/lib/notifications/fan-out";
 import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { displayName } from "@/lib/name";
 import type { SupportConversationSummary, SupportMessage } from "@/types";
 
 /* ─────────────────────────── Legacy in-memory fallback ──────────────── */
@@ -86,18 +87,26 @@ export async function GET(req: NextRequest) {
     const licenseKeys = Array.from(grouped.keys());
     const roleMap = new Map<
       string,
-      { isAdmin: boolean; isTester: boolean; packageTier: string | null }
+      {
+        isAdmin: boolean;
+        isTester: boolean;
+        packageTier: string | null;
+        name?: string | null;
+        shortName?: string | null;
+      }
     >();
     if (licenseKeys.length > 0) {
       const { data: licenses } = await supabase
         .from("license_keys")
-        .select("key, is_admin, is_tester, package_tier")
+        .select("key, name, short_name, is_admin, is_tester, package_tier")
         .in("key", licenseKeys);
       for (const l of licenses || []) {
         roleMap.set(l.key as string, {
           isAdmin: Boolean(l.is_admin),
           isTester: Boolean(l.is_tester),
           packageTier: (l.package_tier as string) ?? null,
+          name: (l.name as string) ?? null,
+          shortName: (l.short_name as string) ?? null,
         });
       }
     }
@@ -138,6 +147,17 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createServerClient()!;
+
+  const { data: license } = await supabase
+    .from("license_keys")
+    .select("name, short_name")
+    .eq("key", licenseKey)
+    .maybeSingle();
+
+  const resolvedName = license
+    ? displayName({ shortName: license.short_name, name: license.name })
+    : null;
+
   let query = scopeEq(scope)(
     supabase
       .from("support_messages")
@@ -153,7 +173,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const messages = (data || []).map(rowToSupportMessage);
+  const messages = (data || []).map((row: any) => {
+    const msg = rowToSupportMessage(row);
+    if (!msg.isAdmin && !msg.isSystem && resolvedName) {
+      msg.senderName = resolvedName;
+    }
+    return msg;
+  });
   return NextResponse.json({ messages });
   } catch (error) {
     if (error instanceof ScopeError) {
@@ -452,7 +478,13 @@ export async function PATCH(req: NextRequest) {
 function buildSummary(
   key: string,
   msgs: SupportMessage[],
-  role?: { isAdmin: boolean; isTester: boolean; packageTier: string | null }
+  role?: {
+    isAdmin: boolean;
+    isTester: boolean;
+    packageTier: string | null;
+    name?: string | null;
+    shortName?: string | null;
+  }
 ): SupportConversationSummary {
   // Last preview: skip deleted + internal notes (those don't represent
   // conversation surface activity for the admin sidebar).
@@ -488,7 +520,10 @@ function buildSummary(
 
   return {
     licenseKey: key,
-    userName: userMsgs[0]?.senderName || key.slice(0, 8),
+    userName:
+      (role ? displayName({ shortName: role.shortName, name: role.name }) : undefined) ||
+      userMsgs[0]?.senderName ||
+      key.slice(0, 8),
     lastMessage: lastPreview,
     lastTime: last.createdAt,
     messageCount: msgs.length,

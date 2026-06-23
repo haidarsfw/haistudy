@@ -113,6 +113,17 @@ export function MessageList({
     }
   }, []);
 
+  const handleReplyQuoteClick = useCallback((messageId: string) => {
+    const el = scrollAreaRef.current?.querySelector(`[data-message-id="${messageId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary/50", "bg-primary/5", "rounded-lg");
+      setTimeout(() => {
+        el.classList.remove("ring-2", "ring-primary/50", "bg-primary/5", "rounded-lg");
+      }, 2500);
+    }
+  }, []);
+
   useEffect(() => {
     window.addEventListener(APP_EVENTS.SCROLL_TO_MESSAGE, scrollToMessage);
     return () => window.removeEventListener(APP_EVENTS.SCROLL_TO_MESSAGE, scrollToMessage);
@@ -225,6 +236,7 @@ export function MessageList({
                   onImageClick={onImageClick}
                   userRoleMap={userRoleMap}
                   avatarUrl={msg.licenseKey ? avatarMap.get(msg.licenseKey.toUpperCase()) ?? null : null}
+                  onReplyQuoteClick={handleReplyQuoteClick}
                 />
               </div>
             ))}
