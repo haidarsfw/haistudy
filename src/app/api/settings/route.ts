@@ -233,11 +233,15 @@ export async function PUT(request: Request) {
           }
         }
       }
-      // Update license_keys.total_quiz_score (fire-and-forget)
+      // Update license_keys.total_quiz_score (fire-and-forget). Only write when
+      // it actually changed — most settings/progress saves don't touch the quiz
+      // score, so the `.or(...)` makes those a 0-row no-op (no write, no WAL/IO).
+      // The `is.null` arm still covers the first-ever set.
       supabase
         .from("license_keys")
         .update({ total_quiz_score: totalScore })
         .eq("key", licenseKey)
+        .or(`total_quiz_score.is.null,total_quiz_score.neq.${totalScore}`)
         .then(() => {});
     }
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
-import { dmMessagesChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
+import { dmMessagesChannel } from "@/lib/realtime/channels";
 import { DEFAULT_SCOPE } from "@/lib/scope";
 import { RATE_LIMITS } from "@/lib/constants";
 import { uploadToCloudinary } from "@/lib/cloudinary";
@@ -351,11 +351,15 @@ export function useDmChat() {
           event: "INSERT",
           schema: "public",
           table: "dm_messages",
-          filter: scopeRealtimeFilter(scope),
+          // No postgres_changes `filter`: dm_messages has default (PK-only)
+          // replica identity, so a semester filter is rejected ("invalid column
+          // for filter semester") and the client retries forever. RLS
+          // (dm_is_participant) already scopes delivery to this user's
+          // conversations; we cross-check exam_period/jurusan client-side below.
         },
         (payload) => {
           const row = payload.new;
-          // Realtime filter narrows by semester only; cross-check the rest.
+          // Cross-check scope client-side (no server-side realtime filter).
           if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan) {
             return;
           }
@@ -380,7 +384,7 @@ export function useDmChat() {
           event: "UPDATE",
           schema: "public",
           table: "dm_messages",
-          filter: scopeRealtimeFilter(scope),
+          // No filter (see INSERT binding above) — RLS scopes delivery.
         },
         (payload) => {
           const row = payload.new;

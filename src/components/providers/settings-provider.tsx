@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useSession } from "@/components/providers/session-provider";
 import { useTheme } from "@/components/providers/theme-provider";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
@@ -224,68 +223,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(SETTINGS_SYNC_EVENT, handler);
   }, [applyToTheme]);
 
-  // Supabase Realtime subscription
-  useEffect(() => {
-    if (!isSupabaseConfigured || !session) return;
-    const supabase = createClient();
-    if (!supabase) return;
-
-    const channel = supabase
-      .channel(`settings-${session.licenseKey}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "user_settings",
-          filter: `license_key=eq.${session.licenseKey}`,
-        },
-        (payload) => {
-          const row = payload.new;
-          const serverUpdated = row.updated_at;
-          const localUpdated = localStorage.getItem("hs-settings-updated");
-
-          if (
-            serverUpdated &&
-            localUpdated &&
-            new Date(serverUpdated) > new Date(localUpdated)
-          ) {
-            const incoming: UserSettings = {
-              darkMode: row.dark_mode ?? DEFAULT_SETTINGS.darkMode,
-              theme: row.theme ?? DEFAULT_SETTINGS.theme,
-              font: row.font ?? DEFAULT_SETTINGS.font,
-              language: row.language ?? DEFAULT_SETTINGS.language,
-              selectedClass: row.selected_class ?? "",
-              reminder: row.reminder ?? null,
-              hideStatus: row.hide_status ?? false,
-              hideStatusChangedAt: row.hide_status_changed_at ?? null,
-              darkModeSchedule:
-                row.dark_mode_schedule ?? DEFAULT_SETTINGS.darkModeSchedule,
-              progress: row.progress ?? {},
-              notes: row.notes ?? {},
-              recentSubjects: row.recent_subjects ?? [],
-              countdownDetailed: row.countdown_detailed ?? true,
-              streak: row.streak ?? null,
-              notifSoundEnabled: row.notif_sound_enabled ?? true,
-              notifBrowserEnabled: row.notif_browser_enabled ?? true,
-              notifPushEnabled: row.notif_push_enabled ?? true,
-              notifEmailEnabled: row.notif_email_enabled ?? true,
-              customAccent: row.custom_accent ?? null,
-              highlights: row.highlights ?? {},
-            };
-            setSettingsState(incoming);
-            saveLocalSettings(incoming);
-            applyToTheme(incoming);
-            updatedAtRef.current = serverUpdated;
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [session, applyToTheme]);
+  // NOTE: We intentionally do NOT subscribe to user_settings over Realtime.
+  // user_settings has default (PK-only) replica identity, so a
+  // `filter: license_key=...` postgres_changes binding is rejected by Postgres
+  // ("invalid column for filter license_key") and the client library retries
+  // forever — for EVERY logged-in user. That retry storm flooded Supabase (WAL
+  // + subscription churn) and was a primary cause of free-tier downtime.
+  // Settings still load on mount + refetch; cross-device changes appear on the
+  // next load instead of live. See also: user_settings removed from the
+  // realtime publication (migration 056).
 
   // Cleanup debounce on unmount
   useEffect(() => {
