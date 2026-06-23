@@ -26,6 +26,18 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.3.4",
+    date: "2026-06-23",
+    title: "Mention voice room (#), kartu undangan voice, & SFX baru",
+    items: [
+      "Mentions voice room (#): kamu sekarang bisa menyebut/me-quote nama voice room dengan mengetik tanda pagar (#) di chat global, VIP, maupun DM.",
+      "Autocomplete kompak: tampilan daftar saran voice room diselaraskan agar rapi, kompak, dan berukuran kecil seperti autocomplete mentions (@).",
+      "Kartu undangan voice: me-quote room otomatis digantikan dengan kartu undangan interaktif di bawah pesan. Tampilannya otomatis adaptif mengikuti light/dark mode dan warna tema pilihanmu.",
+      "Tombol Join & Leave langsung: gabung atau keluar dari voice room kini bisa langsung dilakukan dari kartu undangan di balon chat tanpa harus membuka sidebar.",
+      "SFX join baru: suara chime yang lebih merdu dan jelas ketika berhasil bergabung ke voice room, serta perbaikan sistem agar suara stabil di semua browser.",
+    ],
+  },
+  {
     version: "2.3.3",
     date: "2026-06-23",
     title: "Autofocus kolom chat, scroll mulus balasan, & sinkronisasi profil",

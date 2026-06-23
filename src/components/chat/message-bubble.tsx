@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
 import { motion } from "framer-motion";
@@ -14,11 +14,16 @@ import {
   Crown,
   Gem,
   CheckCheck,
+  Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AudioPlayer } from "./audio-player";
 import { springSmooth } from "@/lib/motion";
+import { useSession } from "@/components/providers/session-provider";
+import { useVoice } from "@/components/providers/voice-provider";
+import { canUseVipFeatures } from "@/lib/tier";
+import { toast } from "@/components/ui/toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { PublicProfilePopover } from "@/components/user/public-profile-popover";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, VoiceRoom } from "@/types";
 import {
   ROLE_COLORS,
   resolveRole,
@@ -78,6 +83,139 @@ export function MessageBubble({
   onReplyQuoteClick,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
+  const { session } = useSession();
+  const { rooms: voiceRooms, joinRoom, leaveRoom, activeRoom } = useVoice();
+
+  // Sort room names by length descending so longer room names match first
+  const roomNames = useMemo(() => {
+    return (voiceRooms || []).map((r) => r.name).sort((a, b) => b.length - a.length);
+  }, [voiceRooms]);
+
+  const splitRegex = useMemo(() => {
+    if (roomNames.length === 0) {
+      return /(\b(?:https?:\/\/|www\.)[^\s<>{}|\\^`]+[^\s<>{}|\\^`.,!?;:\'"]|@\w+)/gi;
+    }
+    const escapedNames = roomNames
+      .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("|");
+    return new RegExp(
+      `(\\b(?:https?:\/\/|www\\.)[^\\s<>{}|\\\\^\`]+[^\\s<>{}|\\\\^\`.,!?;:\\'"]|@\\w+|#(?:${escapedNames}))`,
+      "gi"
+    );
+  }, [roomNames]);
+
+  const quotedRooms = useMemo(() => {
+    if (!message.content || message.deleted || !voiceRooms || voiceRooms.length === 0) return [];
+    
+    return voiceRooms.filter(room => {
+      const escapedName = room.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`#${escapedName}\\b`, "i");
+      return regex.test(message.content);
+    });
+  }, [message.content, message.deleted, voiceRooms]);
+
+  const renderVoiceRoomCards = (rooms: VoiceRoom[]) => {
+    if (rooms.length === 0) return null;
+
+    return (
+      <div className="mt-2.5 space-y-2">
+        {rooms.map((room) => {
+          const isVipRoom = room.name.toLowerCase().includes("vip");
+          const isVipUser = canUseVipFeatures(session);
+          const isLocked = isVipRoom && !isVipUser;
+          const isActive = activeRoom?.id === room.id;
+          const participantCount = room.participants?.length || 0;
+
+          // Adaptive colors based on message sender (isOwn) and theme variables (no hardcoded dark values)
+          const cardBg = isOwn
+            ? "bg-white/10 border-white/20 text-white shadow-sm"
+            : "bg-background/65 dark:bg-background/40 border border-border/50 text-foreground shadow-sm";
+          
+          const countBg = isOwn
+            ? "bg-white/20 text-white"
+            : "bg-muted text-muted-foreground border border-border/20";
+          
+          const titleColor = isOwn
+            ? "text-white"
+            : "text-foreground";
+          
+          const subtitleColor = isOwn
+            ? "text-white/70"
+            : "text-muted-foreground";
+
+          const iconColor = isOwn
+            ? "text-white/80"
+            : "text-muted-foreground/80 dark:text-muted-foreground/90";
+
+          return (
+            <div key={room.id} className="w-full max-w-[340px] md:max-w-[380px] select-none text-left font-sans">
+              {/* Card Body */}
+              <div className={`flex items-center justify-between rounded-xl border p-2.5 shadow-sm transition-all duration-200 ${cardBg}`}>
+                {/* Left/Middle Column info */}
+                <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                  {/* Participant count box */}
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${countBg}`}>
+                    {participantCount}
+                  </div>
+                  
+                  {/* Channel details */}
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1 min-w-0">
+                      <Volume2 className={`h-3.5 w-3.5 shrink-0 ${iconColor}`} />
+                      <span className={`text-xs font-bold truncate ${titleColor}`}>
+                        {room.name}
+                        {isVipRoom && (
+                          <span className="ml-1 text-[9px] text-amber-500 font-bold shrink-0">
+                            🔒 VIP
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] truncate ${subtitleColor}`}>
+                      in haistudy
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isLocked) {
+                      toast.error("Hanya anggota VIP yang dapat mengakses room VIP!");
+                      return;
+                    }
+                    if (isActive) {
+                      leaveRoom();
+                      toast.success(`Meninggalkan voice room: ${room.name}`);
+                      return;
+                    }
+                    joinRoom(room.id);
+                    toast.success(`Bergabung ke voice room: ${room.name}`);
+                  }}
+                  className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all shrink-0 select-none cursor-pointer active:scale-95 ${
+                    isActive
+                      ? isOwn
+                        ? "bg-white/20 hover:bg-white/30 text-white"
+                        : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                      : isLocked
+                        ? isOwn
+                          ? "bg-white/10 text-white/50 cursor-not-allowed active:scale-100"
+                          : "bg-muted/50 text-muted-foreground/50 cursor-not-allowed active:scale-100"
+                        : isOwn
+                          ? "bg-white text-primary hover:bg-white/95"
+                          : "bg-primary text-primary-foreground hover:bg-primary/95"
+                  }`}
+                >
+                  {isActive ? "Joined" : "Join"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   if (message.deleted) {
     return (
@@ -114,15 +252,22 @@ export function MessageBubble({
   });
 
   const renderContent = (text: string) => {
-    const splitRegex = /(\b(?:https?:\/\/|www\.)[^\s<>{}|\\^`]+[^\s<>{}|\\^`.,!?;:\'"]|@\w+)/gi;
     const parts = text.split(splitRegex);
     return parts.map((part, i) => {
+      if (!part) return null;
       if (part.startsWith("@")) {
         return (
           <span key={i} className={getMentionClasses(part)}>
             {part}
           </span>
         );
+      }
+      if (part.startsWith("#")) {
+        const roomName = part.slice(1);
+        const room = voiceRooms.find((r) => r.name.toLowerCase() === roomName.toLowerCase());
+        if (room) {
+          return null;
+        }
       }
       if (/^(?:https?:\/\/|www\.)/i.test(part)) {
         const href = part.startsWith("www.") ? `https://${part}` : part;
@@ -215,6 +360,8 @@ export function MessageBubble({
                 <AudioPlayer src={message.mediaUrl} />
               </div>
             )}
+
+            {quotedRooms.length > 0 && renderVoiceRoomCards(quotedRooms)}
 
             {/* Time + pin */}
             <div
@@ -455,6 +602,8 @@ export function MessageBubble({
             <AudioPlayer src={message.mediaUrl} />
           </div>
         )}
+
+        {quotedRooms.length > 0 && renderVoiceRoomCards(quotedRooms)}
       </div>
 
       {/* Actions - always rendered, visibility toggled to prevent layout shift */}

@@ -58,7 +58,6 @@ export function VoicePanel({
     async (roomId: string) => {
       try {
         await joinRoom(roomId);
-        sounds.join();
         toast.success("Bergabung ke voice room!");
       } catch (e) {
         toast.error(
@@ -71,7 +70,6 @@ export function VoicePanel({
 
   const handleLeave = useCallback(async () => {
     await leaveRoom();
-    sounds.leave();
     toast.success("Keluar dari voice room");
   }, [leaveRoom]);
 

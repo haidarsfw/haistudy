@@ -10,6 +10,7 @@ import { DEFAULT_SCOPE } from "@/lib/scope";
 import { whenIdle } from "@/lib/defer";
 import type { VoiceRoom } from "@/types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { sounds } from "@/lib/sounds";
 
 const JOIN_TIMEOUT_MS = 10_000;
 
@@ -205,6 +206,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
 
         setActiveRoomId(roomId);
         setIsMuted(false);
+        sounds.join();
         fetchRooms();
       } catch (error) {
         console.error("Join room error:", error);
@@ -238,6 +240,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
     setLivekitToken(null);
     setLivekitUrl(null);
     setIsMuted(false);
+    sounds.leave();
     fetchRooms();
   }, [session, activeRoomId, fetchRooms]);
 

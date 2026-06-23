@@ -40,6 +40,10 @@ function playTone(
   const ctx = getAudioContext();
   if (!ctx) return;
 
+  if (ctx.state === "suspended") {
+    ctx.resume().catch(console.error);
+  }
+
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.connect(gain);
@@ -55,8 +59,10 @@ function playTone(
 export const sounds = {
   /** Warm ascending chime for joining (triangle) */
   join: () => {
-    playTone(523, 0.15, 0.15, "triangle");
-    setTimeout(() => playTone(659, 0.15, 0.15, "triangle"), 90);
+    playTone(523.25, 0.12, 0.15, "triangle");
+    setTimeout(() => playTone(659.25, 0.12, 0.15, "triangle"), 80);
+    setTimeout(() => playTone(783.99, 0.12, 0.15, "triangle"), 160);
+    setTimeout(() => playTone(1046.50, 0.2, 0.2, "triangle"), 240);
   },
   /** Gentle departure tone (sine) */
   leave: () => {
