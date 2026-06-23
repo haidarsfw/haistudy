@@ -110,21 +110,11 @@ export function MobileNav({
     [base, session?.isAdmin, isStandalone]
   );
 
-  // Prefetch nav routes on mount so taps don't wait for chunk download.
-  // Touch devices have no hover signal, so prefetch eagerly.
-  useEffect(() => {
-    const hrefs = [
-      dashboardHref,
-      `${base}/subjects`,
-      `${base}/jadwal`,
-      `${base}/analytics`,
-      `${base}/notes`,
-      `${base}/library`,
-      `${base}/feedback`,
-      ...(session?.isAdmin ? ["/admin"] : []),
-    ];
-    hrefs.forEach((href) => router.prefetch(href));
-  }, [base, dashboardHref, session?.isAdmin, router]);
+  // NOTE: We intentionally do NOT eager-prefetch every nav route. These are
+  // dynamic (server-rendered) routes, so prefetching all of them on mount fired
+  // one server invocation PER route PER user — a top Vercel free-tier CPU drain.
+  // Each page has a loading.tsx skeleton, so a tap still feels instant; the
+  // route loads on demand (only pages actually visited cost an invocation).
 
   const handleMainNav = (href: string) => {
     sounds.click();

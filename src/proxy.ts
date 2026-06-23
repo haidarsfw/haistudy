@@ -122,9 +122,11 @@ export const config = {
      * Match all request paths except:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - api/version (static version check endpoint)
+     * - api (ALL /api/* routes — the proxy only ever returns next() for them,
+     *   and each API route self-guards via requireScope/getCaller. Running
+     *   middleware on every API call was a wasted Vercel function invocation.)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    "/((?!_next/static|_next/image|api/version|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!_next/static|_next/image|api|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
