@@ -63,12 +63,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     };
 
     const stored = getStoredSession();
-    if (stored) {
+
+    // FAST PATH — a real (non-preview) stored session. Paint instantly, then
+    // reconcile in the background against the httpOnly cookie (source of truth).
+    // The reconcile may switch account / scope / upgrade preview→real, but must
+    // NEVER silently downgrade a real session to preview: the only way the
+    // server reports preview for a key we believe is real is a stale/leftover
+    // PREVIEW cookie, and trapping a paying user in preview is the exact bug
+    // being fixed. A genuine downgrade still applies on the next fresh login.
+    if (stored && !stored.isPreview) {
       setSession(stored);
       setIsLoading(false);
-      // Background reconcile: if the cookie names a different account / preview
-      // flag / scope than localStorage, the server wins (fixes "stuck in preview"
-      // after Google login without needing a logout).
       (async () => {
         try {
           const res = await fetch("/api/auth/me", { credentials: "same-origin" });
@@ -76,12 +81,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           const data = await res.json();
           const srv = data.session as Session | undefined;
           if (!srv || cancelled) return;
-          if (
+          const downgradeToPreview = !!srv.isPreview && !stored.isPreview;
+          const changed =
             srv.licenseKey !== stored.licenseKey ||
             !!srv.isPreview !== !!stored.isPreview ||
             srv.scopeKey !== stored.scopeKey ||
-            srv.loginMethod !== stored.loginMethod
-          ) {
+            srv.loginMethod !== stored.loginMethod;
+          if (changed && !downgradeToPreview) {
             applyEmbeddedSettings(data.settings);
             setSession(srv);
             storeSession(srv);
@@ -95,22 +101,41 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
+    // SLOW PATH — no stored session, OR a stored PREVIEW session (ambiguous /
+    // possibly stale). BLOCK on /api/auth/me before first paint so the cookie
+    // decides: a real user whose localStorage still says PREVIEW (tried preview,
+    // then logged in with Google — the callback can't write localStorage)
+    // renders their REAL session with no preview flash and no "refresh again"
+    // loop. Same single fetch as before, just awaited.
     (async () => {
       try {
         const res = await fetch("/api/auth/me", { credentials: "same-origin" });
-        if (!res.ok) {
-          if (!cancelled) setIsLoading(false);
-          return;
-        }
-        const data = await res.json();
         if (cancelled) return;
-        if (data.session) {
-          applyEmbeddedSettings(data.settings);
-          setSession(data.session);
-          storeSession(data.session);
+        if (res.ok) {
+          const data = await res.json();
+          if (cancelled) return;
+          if (data.session) {
+            applyEmbeddedSettings(data.settings);
+            setSession(data.session);
+            storeSession(data.session);
+          } else {
+            // 200 but no session — drop any stale local copy.
+            clearStoredSession();
+            setSession(null);
+          }
+        } else if (res.status === 401) {
+          // No/expired cookie → genuinely logged out. Clear the stale PREVIEW
+          // localStorage so it can't trap the next visit; AppShell sends to /.
+          clearStoredSession();
+          setSession(null);
+        } else if (stored) {
+          // Transient server error (5xx): fall back to the stored session so the
+          // user isn't stuck on a spinner. A refresh retries the reconcile.
+          setSession(stored);
         }
       } catch {
-        /* network error - leave session null, AppShell will redirect to / */
+        // Network error: keep whatever we had (may be a stored preview); refresh retries.
+        if (stored) setSession(stored);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
