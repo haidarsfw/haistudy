@@ -1,0 +1,21 @@
+-- 058_dm_messages_replica_identity_full.sql
+-- Guardrail: make the Realtime replica-identity retry-loop structurally impossible.
+--
+-- BACKGROUND: a Realtime postgres_changes `filter:` is REJECTED by Postgres
+-- unless the filtered column is covered by the table's REPLICA IDENTITY. A
+-- rejected subscription retries forever — this is what took production down
+-- (the user_settings/dm_messages loop, fixed in 4e8f57b + migration 057).
+--
+-- dm_messages is the LAST published table still on default (PK-only) replica
+-- identity. Its channel currently carries NO `filter:`, so it is safe today —
+-- but that safety is a convention a future edit could silently break. Setting
+-- FULL means any future filter on dm_messages (semester/license_key/etc) is
+-- ACCEPTED instead of looping.
+--
+-- COST: negligible. dm_messages is insert-heavy, and INSERTs log the full new
+-- row regardless of replica identity; FULL only enlarges UPDATE/DELETE WAL,
+-- which are rare for this table.
+--
+-- ROLLBACK: ALTER TABLE public.dm_messages REPLICA IDENTITY DEFAULT;
+
+ALTER TABLE public.dm_messages REPLICA IDENTITY FULL;
