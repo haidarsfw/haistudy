@@ -95,6 +95,27 @@ export interface QuizQuestion {
   category: string; // Module/category name for weighted scoring
 }
 
+/**
+ * Standalone, view-only protected cheat sheet (image pages served by a gated
+ * route, NOT public assets). Distinct from the in-exam `CheatSheet` (markdown +
+ * png in `@/types/exam`). The viewer toggles between versions and builds the
+ * gated page URL `/api/cheatsheet/<subject>/<version.id>/<page>` itself.
+ */
+export interface CheatsheetVersion {
+  /** URL + folder segment, e.g. "grafik" | "tulis". */
+  id: string;
+  /** Human label shown on the toggle. */
+  label: string;
+  /** 1-based page count (the viewer / route clamp to this). */
+  pageCount: number;
+}
+
+export interface CheatsheetFull {
+  /** Subject key used in the gated route path. */
+  subject: string;
+  versions: CheatsheetVersion[];
+}
+
 export interface SubjectContent {
   materi: MateriItem[];
   kisiKisi: KisiKisiItem[];
@@ -103,6 +124,8 @@ export interface SubjectContent {
   kisiKisiAttachments?: KisiKisiAttachment[];
   flashcards: FlashcardItem[];
   quiz: QuizQuestion[];
+  /** Optional protected cheat-sheet (view-only, watermarked, gated images). */
+  cheatsheetFull?: CheatsheetFull;
 }
 
 // ============================================

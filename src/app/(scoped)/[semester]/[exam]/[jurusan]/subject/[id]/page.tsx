@@ -14,6 +14,7 @@ import { TabNav } from "@/components/subject/tab-nav";
 import { MateriTab } from "@/components/subject/materi-tab";
 import { RangkumanTab } from "@/components/subject/rangkuman-tab";
 import { KisiKisiTab } from "@/components/subject/kisi-kisi-tab";
+import { CheatsheetViewer } from "@/components/subject/cheatsheet-viewer";
 import { sounds } from "@/lib/sounds";
 import { FlashcardsTab } from "@/components/subject/flashcards-tab";
 import { QuizTab } from "@/components/subject/quiz-tab";
@@ -189,6 +190,8 @@ export default function SubjectPage() {
     } else {
       h.add(11);
     }
+    // Cheatsheet (12) only shows for subjects that ship a protected cheat sheet.
+    if (!content.cheatsheetFull) h.add(12);
     return h;
   }, [content, rangkuman, rangkumanLoaded, subjectId, hasKilat, hasExam, mergeHafalanKuis]);
 
@@ -450,6 +453,17 @@ export default function SubjectPage() {
                 info={content.kisiKisiInfo}
                 attachments={content.kisiKisiAttachments}
                 subjectId={subjectId}
+              />
+            </PreviewLock>
+          )}
+        </div>
+
+        <div className="tab-panel" hidden={activeTab !== 12}>
+          {visited.has(12) && content.cheatsheetFull && (
+            <PreviewLock title="Cheatsheet">
+              <CheatsheetViewer
+                data={content.cheatsheetFull}
+                active={activeTab === 12}
               />
             </PreviewLock>
           )}

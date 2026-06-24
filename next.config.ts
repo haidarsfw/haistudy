@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Ship the gated cheat-sheet page images into the /api/cheatsheet/* serverless
+  // bundle. They live OUTSIDE public/ on purpose (no open URL) and are read with
+  // fs.readFile at runtime, so file-tracing must be told to include them. The
+  // key is picomatch-matched (contains:true) against the normalized route path;
+  // brackets in the literal route would be misread as a glob class, so use the
+  // stable substring "/api/cheatsheet".
+  outputFileTracingIncludes: {
+    "/api/cheatsheet": ["./src/content/cheatsheets/**/*"],
+  },
   // Strip console.log/info/debug in production while keeping console.error
   // and console.warn for runtime visibility in Vercel function logs.
   compiler: {

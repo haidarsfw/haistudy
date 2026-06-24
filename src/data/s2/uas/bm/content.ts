@@ -7,6 +7,7 @@ import { bizethicsFlashcards } from "./bizethics-flashcards";
 import { bizethicsQuiz } from "./bizethics-quiz";
 import { foundaiFlashcards } from "./foundai-flashcards";
 import { foundaiQuiz } from "./foundai-quiz";
+import { opsmgmtCheatsheetFull } from "./opsmgmt-cheatsheet-full";
 
 /**
  * UAS S2 BM content. Official lecture slides only (materi[]) — sourced from the
@@ -66,6 +67,7 @@ export const content: Record<string, SubjectContent> = {
     ],
     flashcards: opsmgmtFlashcards,
     quiz: opsmgmtQuiz,
+    cheatsheetFull: opsmgmtCheatsheetFull,
   },
 
   akuntansi: {

@@ -1389,3 +1389,23 @@ html.tts-bar-open .tts-shift-target {
 @media (prefers-reduced-motion: reduce) {
   .hs-marquee-track { animation: none; }
 }
+
+/* Protected cheat sheet: never render to print / "Save as PDF". Cmd/Ctrl+P
+   would otherwise capture the pages — hide the children (keep the container so
+   its ::before can print a notice instead). */
+@media print {
+  [data-cheatsheet-protected] {
+    position: relative !important;
+    min-height: 60px;
+  }
+  [data-cheatsheet-protected] > * {
+    display: none !important;
+  }
+  [data-cheatsheet-protected]::before {
+    content: "Konten dilindungi haistudy — tidak dapat dicetak.";
+    display: block;
+    padding: 2rem;
+    font: 700 14px system-ui, sans-serif;
+    color: #000;
+  }
+}
