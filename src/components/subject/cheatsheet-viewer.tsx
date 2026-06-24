@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Lock,
+  Unlock,
   ChevronLeft,
   ChevronRight,
   ZoomIn,
   ZoomOut,
   Loader2,
+  Download,
+  Copy,
+  Check,
+  X,
 } from "lucide-react";
 import type { CheatsheetFull } from "@/types";
 import { useSession } from "@/components/providers/session-provider";
@@ -70,6 +75,15 @@ export function CheatsheetViewer({ data, active = true }: Props) {
   const [zoom, setZoom] = useState(1);
   const [loaded, setLoaded] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
+
+  const isAdmin = !!session?.isAdmin;
+  const [access, setAccess] = useState<{ unlocked: boolean; password: string | null }>({
+    unlocked: false,
+    password: null,
+  });
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const ver = versions[verIdx] ?? versions[0];
   const total = ver?.pageCount ?? 0;
@@ -171,6 +185,57 @@ export function CheatsheetViewer({ data, active = true }: Props) {
     return () => stage.removeEventListener("wheel", onWheel);
   }, [active]);
 
+  // Download access (lock state + password) — fetched when the tab is active.
+  const refreshAccess = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/cheatsheet/${data.subject}/access`, {
+        credentials: "same-origin",
+      });
+      if (!res.ok) return;
+      const j = (await res.json()) as {
+        downloadUnlocked?: boolean;
+        password?: string | null;
+      };
+      setAccess({ unlocked: !!j.downloadUnlocked, password: j.password ?? null });
+    } catch {
+      /* leave as-is on network error */
+    }
+  }, [data.subject]);
+
+  useEffect(() => {
+    if (active) refreshAccess();
+  }, [active, refreshAccess]);
+
+  // Admin-only: flip the download lock for this subject.
+  const toggleLock = useCallback(async () => {
+    setToggling(true);
+    try {
+      const res = await fetch(`/api/cheatsheet/${data.subject}/lock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !access.unlocked }),
+        credentials: "same-origin",
+      });
+      if (res.ok) await refreshAccess();
+      else toast.error(t("subject.cheatsheet_lock_failed"));
+    } catch {
+      toast.error(t("subject.cheatsheet_lock_failed"));
+    } finally {
+      setToggling(false);
+    }
+  }, [access.unlocked, data.subject, refreshAccess, t]);
+
+  const copyPassword = useCallback(async () => {
+    if (!access.password) return;
+    try {
+      await navigator.clipboard.writeText(access.password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked */
+    }
+  }, [access.password]);
+
   // Block copy / cut / context-menu / drag for EVERYONE (no admin bypass).
   const block = useCallback(
     (e: React.SyntheticEvent) => {
@@ -194,11 +259,39 @@ export function CheatsheetViewer({ data, active = true }: Props) {
     >
       {/* Header: title + version toggle (no notice / no badge). */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:px-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Lock className="h-4 w-4 shrink-0 text-primary" />
           <span className="text-sm font-bold text-foreground">
             {t("subject.cheatsheet_title")}
           </span>
+          {access.unlocked && (
+            <button
+              type="button"
+              onClick={() => setPopupOpen(true)}
+              className="hs-press inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {t("subject.cheatsheet_download")}
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={toggleLock}
+              disabled={toggling}
+              className="hs-press inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
+              title={t("subject.cheatsheet_admin_hint")}
+            >
+              {access.unlocked ? (
+                <Unlock className="h-3.5 w-3.5 text-primary" />
+              ) : (
+                <Lock className="h-3.5 w-3.5" />
+              )}
+              {access.unlocked
+                ? t("subject.cheatsheet_lock_close")
+                : t("subject.cheatsheet_lock_open")}
+            </button>
+          )}
         </div>
         {versions.length > 1 && (
           <div className="flex rounded-lg border border-border p-0.5 text-[11px] font-semibold">
@@ -317,6 +410,85 @@ export function CheatsheetViewer({ data, active = true }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Download popup — version chooser + copy-able password + disclaimer. */}
+      {popupOpen && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            aria-label={t("subject.cheatsheet_close")}
+            onClick={() => setPopupOpen(false)}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setPopupOpen(false)}
+              aria-label={t("subject.cheatsheet_close")}
+              className="hs-press absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="mb-1 flex items-center gap-2">
+              <Download className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-bold text-foreground">
+                {t("subject.cheatsheet_dl_title")}
+              </h3>
+            </div>
+            <p className="mb-4 text-[11px] leading-snug text-muted-foreground">
+              {t("subject.cheatsheet_dl_disclaimer")}
+            </p>
+
+            {/* Password card — click to copy. */}
+            {access.password && (
+              <button
+                type="button"
+                onClick={copyPassword}
+                className="hs-press mb-4 w-full rounded-xl border border-border bg-muted/40 px-3 py-2 text-left transition-colors hover:bg-muted"
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("subject.cheatsheet_dl_password")}
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <code className="font-mono text-sm font-bold tracking-wide text-foreground">
+                    {access.password}
+                  </code>
+                  {copied ? (
+                    <Check className="h-4 w-4 shrink-0 text-primary" />
+                  ) : (
+                    <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="mt-0.5 text-[10px] text-muted-foreground/80">
+                  {copied
+                    ? t("subject.cheatsheet_dl_copied")
+                    : t("subject.cheatsheet_dl_click_copy")}
+                </div>
+              </button>
+            )}
+
+            {/* Version chooser — each is a direct download of the locked PDF. */}
+            <div className="grid gap-2">
+              {versions.map((v) => (
+                <a
+                  key={v.id}
+                  href={`/api/cheatsheet/${data.subject}/download?v=${v.id}`}
+                  download
+                  className="hs-press flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+                >
+                  <Download className="h-4 w-4" />
+                  {t("subject.cheatsheet_dl_get")} — {v.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
