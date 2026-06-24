@@ -14,6 +14,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { useVoice } from "@/components/providers/voice-provider";
 import { canUseVipFeatures } from "@/lib/tier";
 import { toast } from "@/components/ui/toast";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface MessageInputProps {
   onSend: (
@@ -46,6 +47,9 @@ export function MessageInput({
   const isVipUser = canUseVipFeatures(session);
 
   const { isPreview, guard } = usePreviewGuard();
+  // Desktop autofocuses the box on open; on mobile that pops the keyboard before
+  // the user even taps — so mobile users must tap the box first.
+  const isMobile = useIsMobile();
   const [text, setText] = useState("");
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
@@ -398,7 +402,7 @@ export function MessageInput({
             </Button>
 
             <Textarea
-              autoFocus
+              autoFocus={!isMobile}
               ref={textareaRef}
               value={text}
               onChange={handleChange}

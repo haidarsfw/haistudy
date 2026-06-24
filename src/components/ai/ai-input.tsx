@@ -5,6 +5,7 @@ import { Send, ImagePlus, X, Square, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { sounds } from "@/lib/sounds";
 
 interface AiInputProps {
@@ -50,6 +51,8 @@ export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, f
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const { isPreview, guard } = usePreviewGuard();
+  // Mobile must tap to type — don't pop the keyboard just by opening AI chat.
+  const isMobile = useIsMobile();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -212,7 +215,7 @@ export function AiInput({ onSend, isStreaming, onStop, aiModel, onModelChange, f
           <ImagePlus className="h-4 w-4" />
         </button>
         <textarea
-          autoFocus
+          autoFocus={!isMobile}
           ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}

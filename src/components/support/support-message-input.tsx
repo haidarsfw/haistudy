@@ -95,6 +95,11 @@ export function SupportMessageInput({
   const [internalNote, setInternalNote] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Live mirror of isMobile so the on-switch focus below can skip mobile
+  // without adding isMobile to the reset effect's deps (which would wipe a
+  // half-typed draft on a resize across the 640px breakpoint).
+  const isMobileRef = useRef(isMobile);
+  isMobileRef.current = isMobile;
 
   // ── Voice recorder (hold-to-record) ──
   const recorder = useAudioRecorder();
@@ -126,7 +131,7 @@ export function SupportMessageInput({
       return [];
     });
     setEditError(null);
-    textareaRef.current?.focus();
+    if (!isMobileRef.current) textareaRef.current?.focus();
   }, [licenseKey]);
 
   const removeImage = useCallback((idx: number) => {
@@ -635,7 +640,7 @@ export function SupportMessageInput({
         )}
 
         <textarea
-          autoFocus
+          autoFocus={!isMobile}
           ref={textareaRef}
           rows={1}
           value={text}
