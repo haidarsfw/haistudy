@@ -111,18 +111,28 @@ async function ensureSeedRooms() {
   seedsEnsured = true;
   try {
     const supabase = createServerClient()!;
-    for (const room of SEED_ROOMS) {
-      await supabase.from("voice_rooms").upsert(
-        {
-          id: room.id,
-          name: room.name,
-          description: room.description,
-          max_participants: room.maxParticipants,
-          is_custom: false,
-        },
-        { onConflict: "id" }
-      );
-    }
+    // Seeds never change. On every serverless cold start `seedsEnsured` resets,
+    // so the old per-room UPSERT loop rewrote unchanged rows on each new instance
+    // (every UPSERT is a WAL write even when values are identical) — pure Disk IO
+    // waste. Read once; insert only the rooms that are actually missing. Steady
+    // state = one cheap cached SELECT, zero writes.
+    const ids = SEED_ROOMS.map((r) => r.id);
+    const { data: existing } = await supabase
+      .from("voice_rooms")
+      .select("id")
+      .in("id", ids);
+    const have = new Set((existing ?? []).map((r: { id: string }) => r.id));
+    const missing = SEED_ROOMS.filter((r) => !have.has(r.id));
+    if (missing.length === 0) return;
+    await supabase.from("voice_rooms").insert(
+      missing.map((room) => ({
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        max_participants: room.maxParticipants,
+        is_custom: false,
+      }))
+    );
   } catch (error) {
     console.error("ensureSeedRooms error:", error);
     seedsEnsured = false; // Retry next request

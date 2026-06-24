@@ -8,17 +8,13 @@ import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scop
 /**
  * POST /api/presence
  *
- * v4 - Optimized: single UPSERT per heartbeat (no SELECT first).
- * Time tracking is handled purely client-side: the heartbeat interval
- * is 60s visible / 5m hidden. Server just upserts the row and does the
- * minutes flush in one pass using the returned `last_seen` from the DB
- * via a smarter UPSERT that returns the previous value.
- *
- * DB column required:
- *   ALTER TABLE presence ADD COLUMN IF NOT EXISTS online_seconds_accumulator integer DEFAULT 0;
+ * v5 - Heartbeat = ONE upsert, no prior read. The client beats every 5m
+ * (visible) / 15m (hidden); the server just refreshes last_seen/online so the
+ * row stays "online". Online-minute accumulation is intentionally OFF (the beat
+ * interval far exceeds any active-elapsed window, so it counted ~nothing), which
+ * means there is nothing to read first — a lone UPSERT is the lightest per-beat
+ * write for the Supabase free-tier Disk IO budget (no SELECT, no license flush).
  */
-
-const MAX_ACTIVE_ELAPSED_S = 180;
 
 export async function POST(request: Request) {
   try {
@@ -76,36 +72,13 @@ export async function POST(request: Request) {
     }
 
     // ═══════════════════════════════════════════
-    // HEARTBEAT - single SELECT+UPSERT merged
-    // Read + compute + write in one round-trip using a DB function
+    // HEARTBEAT - single UPSERT, no prior read
     // ═══════════════════════════════════════════
-
-    // Use RPC if available (single round-trip), fallback to 2-query path
     try {
-      const { data: existing } = await scopeEq(scope)(
-        supabase
-          .from("presence")
-          .select("last_seen, online_seconds_accumulator")
-          .eq("user_id", userId)
-          .maybeSingle()
-      );
-
-      let newAccumulator = existing?.online_seconds_accumulator ?? 0;
-      let minutesToFlush = 0;
-
-      if (existing?.last_seen) {
-        const elapsedS = Math.floor(
-          (now.getTime() - new Date(existing.last_seen).getTime()) / 1000
-        );
-        if (elapsedS >= 5 && elapsedS <= MAX_ACTIVE_ELAPSED_S) {
-          newAccumulator += elapsedS;
-        }
-      }
-
-      minutesToFlush = Math.floor(newAccumulator / 60);
-      newAccumulator = newAccumulator % 60;
-
-      // Single UPSERT - PK is now (user_id, semester, exam_period, jurusan)
+      // PK is (user_id, semester, exam_period, jurusan). Omitting
+      // online_seconds_accumulator keeps any existing value on conflict and the
+      // column default (0) on insert — accumulation is disabled, so we never
+      // read it back.
       await supabase.from("presence").upsert(
         {
           user_id: userId,
@@ -116,28 +89,13 @@ export async function POST(request: Request) {
           current_subject: currentSubject ?? null,
           online: true,
           last_seen: nowISO,
-          online_seconds_accumulator: newAccumulator,
           ...scopeColumns(scope),
         },
         { onConflict: "user_id,semester,exam_period,jurusan" }
       );
-
-      // Flush minutes - fire-and-forget (don't await, don't block response)
-      if (minutesToFlush > 0 && licenseKey) {
-        void supabase
-          .rpc("increment_license_field", {
-            p_key: licenseKey,
-            p_field: "total_online_minutes",
-            p_amount: minutesToFlush,
-          })
-          .then(
-            () => {},
-            () => {}
-          );
-      }
     } catch {
-      // Graceful degradation: if presence table errors, just return success
-      // Don't throw - presence failure shouldn't break the app
+      // Graceful degradation: if presence table errors, just return success.
+      // Don't throw - presence failure shouldn't break the app.
     }
 
     return NextResponse.json({ success: true });
