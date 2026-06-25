@@ -14,12 +14,14 @@ import type { ScopeTuple } from "@/types/scope";
  * a single tiny SELECT; flipped by an admin UPSERT — NOT realtime, so it cannot
  * trigger the subscription retry-loop that caused past outages.
  *
- * CHEATSHEET_PASSWORD is the open password baked into the encrypted PDFs. It is
- * meant to be shown in-app to logged-in users; `import "server-only"` keeps this
- * module (and the password) out of any client bundle — the viewer receives it
- * via the gated /access response, never by importing this file.
+ * CHEATSHEET_PASSWORD is the open password baked into the encrypted PDFs, read
+ * from the environment (NOT hardcoded — must stay out of the public repo). Set
+ * `CHEATSHEET_PASSWORD` in Vercel env + local `.env.local`; it must match the
+ * password the encrypted PDFs (under src/content/cheatsheets) were made with.
+ * Shown in-app only to logged-in users via the gated /access response; this
+ * module is imported solely by route handlers, so it never reaches client JS.
  */
-export const CHEATSHEET_PASSWORD = "cxWQdU7PrfJJiaFQ";
+export const CHEATSHEET_PASSWORD = process.env.CHEATSHEET_PASSWORD ?? "";
 
 export const cheatsheetFeatureKey = (subject: string) =>
   `cheatsheet_dl_${subject}`;

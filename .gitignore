@@ -40,3 +40,20 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .github/mcp.json
+
+# internal — kept locally, never published to the public repo
+/CLAUDE.md
+/AGENTS.md
+/DISK-IO-CHANGES.md
+/FREE-TIER-GUARDRAILS.md
+/logobinus.png
+/cowork/
+
+# stale internal docs / scratch — stay out even if recreated
+/*BROADCAST*.md
+/MARKETING-*.md
+/LAUNCH-CHECKLIST.md
+/TEST-CHECKLIST-*.md
+/TESTING.md
+/r11-*.png
+/r11b-*.png
