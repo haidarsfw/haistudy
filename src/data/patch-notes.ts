@@ -26,6 +26,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.4.0",
+    date: "2026-06-25",
+    title: "Cheatsheet Operations Management",
+    items: [
+      "Ada Cheatsheet Operations Management baru! Buka mata kuliah Operations Management lalu pilih tab Cheatsheet.",
+      "Tersedia dua versi: Lengkap (penjelasan mudah plus gambar) dan Ringkas (versi padat untuk disalin ke lembar contekan). Tinggal geser halaman, perbesar, atau pakai tombol panah dan spasi di keyboard.",
+      "Cheatsheet ini eksklusif untuk pengguna haistudy dan dilindungi watermark, jadi aman dari penyebaran.",
+      "Chat di HP: keyboard tidak lagi langsung terbuka saat kamu membuka chat global, VIP, DM, AI, atau bantuan. Cukup ketuk kolom pesan saat ingin mengetik.",
+    ],
+  },
+  {
     version: "2.3.5",
     date: "2026-06-24",
     title: "Lebih stabil, ringan, & rapi",

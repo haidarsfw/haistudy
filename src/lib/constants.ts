@@ -8,7 +8,7 @@ export const APP_NAME = "haistudy";
 // Bump on every release. Drives the patch-notes popup (src/data/patch-notes.ts
 // must have a matching top entry). Rule: new feature ⇒ bump middle (2.1.0);
 // light fixes only ⇒ bump last (2.0.x).
-export const APP_VERSION = "2.3.5";
+export const APP_VERSION = "2.4.0";
 export const APP_DESCRIPTION = "Platform belajar all-in-one untuk mahasiswa BINUS. Materi, quiz, AI, dan komunitas.";
 
 // Classes (label/tag only - same content for all)
