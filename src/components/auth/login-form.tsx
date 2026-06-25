@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "@/components/providers/session-provider";
 import { getDeviceId, getDeviceType } from "@/lib/auth/device";
+import { clearRealtimeToken } from "@/lib/supabase/realtime-token";
 import { LATEST_SCOPE, scopeKey } from "@/lib/scope";
 import {
   checkRateLimit,
@@ -315,6 +316,9 @@ function LicenseKeyLoginForm() {
         } catch {}
 
         login(sessionWithClass);
+        // Reset the realtime-token back-off so the new session mints a token
+        // immediately (a prior logged-out cooldown must not delay realtime).
+        clearRealtimeToken();
         sounds.loginSuccess();
 
         const base = `/s${sessionWithClass.scope.semester}/${sessionWithClass.scope.examPeriod}/${sessionWithClass.scope.jurusan}`;
