@@ -1068,6 +1068,7 @@ const en: Record<string, string> = {
   "subject.cheatsheet_dl_disclaimer":
     "The PDF is password-locked — for you only, do not share. Every download is logged.",
   "subject.cheatsheet_dl_password": "PDF password",
+  "subject.cheatsheet_dl_reveal": "Click to reveal password",
   "subject.cheatsheet_dl_click_copy": "Click to copy",
   "subject.cheatsheet_dl_copied": "Copied!",
   "subject.cheatsheet_dl_get": "Download",

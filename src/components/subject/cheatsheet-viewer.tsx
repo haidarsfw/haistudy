@@ -13,6 +13,7 @@ import {
   Copy,
   Check,
   X,
+  Eye,
 } from "lucide-react";
 import type { CheatsheetFull } from "@/types";
 import { useSession } from "@/components/providers/session-provider";
@@ -84,6 +85,7 @@ export function CheatsheetViewer({ data, active = true }: Props) {
   const [popupOpen, setPopupOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [revealed, setRevealed] = useState(false); // password hidden until clicked
 
   const ver = versions[verIdx] ?? versions[0];
   const total = ver?.pageCount ?? 0;
@@ -267,7 +269,11 @@ export function CheatsheetViewer({ data, active = true }: Props) {
           {access.unlocked && (
             <button
               type="button"
-              onClick={() => setPopupOpen(true)}
+              onClick={() => {
+                setRevealed(false);
+                setCopied(false);
+                setPopupOpen(true);
+              }}
               className="hs-press inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
             >
               <Download className="h-3.5 w-3.5" />
@@ -448,7 +454,7 @@ export function CheatsheetViewer({ data, active = true }: Props) {
             {access.password && (
               <button
                 type="button"
-                onClick={copyPassword}
+                onClick={() => (revealed ? copyPassword() : setRevealed(true))}
                 className="hs-press mb-4 w-full rounded-xl border border-border bg-muted/40 px-3 py-2 text-left transition-colors hover:bg-muted"
               >
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -456,18 +462,22 @@ export function CheatsheetViewer({ data, active = true }: Props) {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <code className="font-mono text-sm font-bold tracking-wide text-foreground">
-                    {access.password}
+                    {revealed ? access.password : "•".repeat(access.password.length)}
                   </code>
-                  {copied ? (
+                  {!revealed ? (
+                    <Eye className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  ) : copied ? (
                     <Check className="h-4 w-4 shrink-0 text-primary" />
                   ) : (
                     <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
                   )}
                 </div>
                 <div className="mt-0.5 text-[10px] text-muted-foreground/80">
-                  {copied
-                    ? t("subject.cheatsheet_dl_copied")
-                    : t("subject.cheatsheet_dl_click_copy")}
+                  {!revealed
+                    ? t("subject.cheatsheet_dl_reveal")
+                    : copied
+                      ? t("subject.cheatsheet_dl_copied")
+                      : t("subject.cheatsheet_dl_click_copy")}
                 </div>
               </button>
             )}

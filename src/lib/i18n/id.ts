@@ -1068,6 +1068,7 @@ const id: Record<string, string> = {
   "subject.cheatsheet_dl_disclaimer":
     "PDF terkunci password — hanya untuk kamu, dilarang menyebarkan. Tiap unduhan tercatat.",
   "subject.cheatsheet_dl_password": "Password PDF",
+  "subject.cheatsheet_dl_reveal": "Klik untuk lihat password",
   "subject.cheatsheet_dl_click_copy": "Klik untuk salin",
   "subject.cheatsheet_dl_copied": "Tersalin!",
   "subject.cheatsheet_dl_get": "Unduh",
