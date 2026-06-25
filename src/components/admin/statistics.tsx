@@ -23,6 +23,8 @@ import {
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { adminFetch } from "@/lib/admin/admin-fetch";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
+import { ExamScoreLeaderboard } from "@/components/admin/exam-score-leaderboard";
+import { InlineSearch } from "@/components/admin/inline-search";
 
 interface UserStat {
   licenseKey: string;
@@ -45,6 +47,8 @@ export function Statistics() {
   const [reloadToken, setReloadToken] = useState(0);
   const [showAllQuiz, setShowAllQuiz] = useState(false);
   const [showAllActive, setShowAllActive] = useState(false);
+  const [quizSearch, setQuizSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
 
   useEffect(() => {
     if (!hydrated) return;
@@ -89,15 +93,19 @@ export function Statistics() {
         )
       : 0;
 
-  // Leaderboard: top 10 by quiz score (all users)
+  // Leaderboard: top 10 by quiz score (all users), optionally name-filtered
+  const qq = quizSearch.trim().toLowerCase();
   const quizRankedAll = [...users]
     .filter((u) => u.totalQuizScore > 0)
+    .filter((u) => !qq || u.userName.toLowerCase().includes(qq))
     .sort((a, b) => b.totalQuizScore - a.totalQuizScore);
   const leaderboard = quizRankedAll.slice(0, 10);
 
-  // Most active: top 10 by online minutes (all users)
+  // Most active: top 10 by online minutes (all users), optionally name-filtered
+  const aq = activeSearch.trim().toLowerCase();
   const activeRankedAll = [...users]
     .filter((u) => u.totalOnlineMinutes > 0)
+    .filter((u) => !aq || u.userName.toLowerCase().includes(aq))
     .sort((a, b) => b.totalOnlineMinutes - a.totalOnlineMinutes);
   const mostActive = activeRankedAll.slice(0, 10);
 
@@ -172,15 +180,18 @@ export function Statistics() {
         {/* Quiz Leaderboard */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Trophy className="h-4 w-4 text-yellow-500" />
-              Quiz Leaderboard
-            </CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                Quiz Leaderboard
+              </CardTitle>
+              <InlineSearch value={quizSearch} onChange={setQuizSearch} />
+            </div>
           </CardHeader>
           <CardContent>
             {leaderboard.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Belum ada data
+                {quizSearch.trim() ? "Tidak ada yang cocok" : "Belum ada data"}
               </p>
             ) : (
               <div className="space-y-2">
@@ -235,15 +246,18 @@ export function Statistics() {
         {/* Most Active */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="h-4 w-4 text-blue-500" />
-              Most Active
-            </CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BarChart3 className="h-4 w-4 text-blue-500" />
+                Most Active
+              </CardTitle>
+              <InlineSearch value={activeSearch} onChange={setActiveSearch} />
+            </div>
           </CardHeader>
           <CardContent>
             {mostActive.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Belum ada data
+                {activeSearch.trim() ? "Tidak ada yang cocok" : "Belum ada data"}
               </p>
             ) : (
               <div className="space-y-2">
@@ -284,6 +298,9 @@ export function Statistics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Top Latihan Soal Score — below the two leaderboards above */}
+      <ExamScoreLeaderboard />
 
       {/* Show All Quiz Leaderboard Dialog */}
       <Dialog open={showAllQuiz} onOpenChange={setShowAllQuiz}>

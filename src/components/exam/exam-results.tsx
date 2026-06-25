@@ -563,7 +563,7 @@ function ScoreBar({
   );
 }
 
-function ReviewCard({
+export function ReviewCard({
   result,
   exam,
   userAnswer,

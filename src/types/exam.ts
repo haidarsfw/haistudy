@@ -144,6 +144,53 @@ export interface ExamQuota {
   remaining: number;
 }
 
+// --- Admin: practice-exam leaderboard DTOs (served by /api/admin/exam-attempts) ---
+
+/** One row in the admin "Top Latihan Soal Score" leaderboard (summary only). */
+export interface AdminAttemptSummary {
+  id: string;
+  licenseKey: string;
+  scopeKey: string;
+  subjectId: string;
+  examId: string;
+  userName: string;
+  totalScore: number | null;
+  maxScore: number | null;
+  scorePct: number | null;
+  startedAt: string | null;
+  submittedAt: string | null;
+  durationUsedSeconds: number | null;
+  autoSubmitted: boolean;
+  examLanguage: string;
+  status: string;
+  createdAt: string;
+  semester: number | null;
+  examPeriod: string | null;
+  jurusan: string | null;
+}
+
+/** Full attempt detail for the admin drill-down (snake_case = raw DB row + userName). */
+export interface AdminAttemptDetail {
+  id: string;
+  license_key: string;
+  scope_key: string;
+  subject_id: string;
+  exam_id: string;
+  userName: string;
+  answers: UserExamAnswer[];
+  grading_results: ExamGradingResult[];
+  total_score: number | null;
+  max_score: number | null;
+  score_pct: number | null;
+  started_at: string | null;
+  submitted_at: string | null;
+  duration_used_seconds: number | null;
+  exam_language: "en" | "id";
+  auto_submitted: boolean;
+  status: string;
+  created_at: string;
+}
+
 export interface ExamSessionState {
   attemptId: string;
   examId: string;
