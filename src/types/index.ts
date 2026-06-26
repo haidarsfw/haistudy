@@ -72,6 +72,10 @@ export interface KisiKisiAttachment {
 export interface KisiKisiItem {
   topic: string;
   items: string[];
+  /** Sub-groups rendered inside the SAME card — each is a labeled sub-heading
+   * with its own bullet list. When present, `items` is ignored for display
+   * (set it to []). Lets one card hold several titled blocks. */
+  groups?: { label: string; items: string[] }[];
   attachments?: KisiKisiAttachment[];
   /** Section group label (e.g. "A. TOPIK STUDI KASUS"). Consecutive items
    * sharing a section render under one section header. */

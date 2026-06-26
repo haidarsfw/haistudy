@@ -210,7 +210,10 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
                   {item.topic}
                 </span>
                 <span className="text-[10px] text-muted-foreground shrink-0">
-                  {item.items.length} item
+                  {(item.groups
+                    ? item.groups.reduce((n, g) => n + g.items.length, 0)
+                    : item.items.length)}{" "}
+                  item
                 </span>
                 <div onClick={(e) => e.stopPropagation()} className="shrink-0">
                   <BookmarkButton
@@ -227,17 +230,38 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
               {/* Items */}
               {isExpanded && (
                 <div className="border-t border-border px-4 py-2">
-                  {item.items.map((subItem, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-2 py-2"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-primary/40 shrink-0" />
-                      <span className="text-sm text-foreground/80">
-                        {subItem}
-                      </span>
-                    </div>
-                  ))}
+                  {item.groups && item.groups.length > 0 ? (
+                    item.groups.map((g, gi) => (
+                      <div
+                        key={gi}
+                        className="py-2.5 first:pt-1 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border/60"
+                      >
+                        <p className="font-heading text-sm font-semibold text-foreground">
+                          {g.label}
+                        </p>
+                        <div className="mt-1">
+                          {g.items.map((subItem, si) => (
+                            <div key={si} className="flex items-start gap-2 py-1.5">
+                              <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-primary/40 shrink-0" />
+                              <span className="text-sm text-foreground/80">{subItem}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    item.items.map((subItem, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2 py-2"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-primary/40 shrink-0" />
+                        <span className="text-sm text-foreground/80">
+                          {subItem}
+                        </span>
+                      </div>
+                    ))
+                  )}
 
                   {/* Attachments */}
                   {item.attachments && item.attachments.length > 0 && (

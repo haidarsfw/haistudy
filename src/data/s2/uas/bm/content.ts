@@ -79,29 +79,31 @@ export const content: Record<string, SubjectContent> = {
       { id: 5, title: "Budgetary Control & Responsibility Accounting", driveId: "13Mi65ojCwJavEeErRJOYFTc-1-XuZ_DP", type: "drive-pptx", session: "25–26", xp: 10 },
     ],
     kisiKisi: [
-      { topic: "CVP", section: "Case (60%)", number: "1", items: [
-        "Sesi 17, 18, 19, 20 / Chapter 18, 19",
+      { topic: "Case (60%)", items: [], groups: [
+        { label: "CVP", items: [
+          "Sesi 17, 18, 19, 20 / Chapter 18, 19",
+        ] },
+        { label: "Incremental Analysis", items: [
+          "Chapter 20",
+          "Special order ❗",
+          "Make or buy ❗",
+          "Sale or process further",
+          "Keep or stop",
+          "Repair",
+          "Retain",
+        ] },
+        { label: "Master Budget", items: [
+          "Sesi 23–24 / Chapter 22",
+          "Selling",
+          "Production",
+          "Material",
+          "Cash",
+          "Furniture",
+          "Balance sheet",
+          "Budgeting income statement",
+        ] },
       ] },
-      { topic: "Incremental Analysis", section: "Case (60%)", number: "2", items: [
-        "Chapter 20",
-        "Special order ❗",
-        "Make or buy ❗",
-        "Sale or process further",
-        "Keep or stop",
-        "Repair",
-        "Retain",
-      ] },
-      { topic: "Master Budget", section: "Case (60%)", number: "3", items: [
-        "Sesi 23–24 / Chapter 22",
-        "Selling",
-        "Production",
-        "Material",
-        "Cash",
-        "Furniture",
-        "Balance sheet",
-        "Budgeting income statement",
-      ] },
-      { topic: "Materi Essay", section: "Essay (40%)", items: [
+      { topic: "Essay (40%)", items: [
         "Sesi 15–16",
         "Sesi 25–26",
       ] },
