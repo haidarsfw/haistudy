@@ -92,10 +92,16 @@ export function useOnlineUsers() {
     const sc = scopeCtx?.scope;
     if (!sc) return;
     let cancelled = false;
-    const run = () =>
+    const run = () => {
+      // Realtime is primary; only hit the DB fallback (which calls
+      // /api/presence/roles, a Vercel function) when realtime yielded NOBODY
+      // (channel blocked). Healthy realtime shows at least ourselves → skip,
+      // cutting ~12 redundant invocations/hr/user of Active CPU.
+      if (getLiveUsers().length > 0) return;
       fetchOnlineUsers(sc)
         .then((d) => { if (!cancelled) setPolled(d); })
         .catch(() => {});
+    };
 
     run();
 
