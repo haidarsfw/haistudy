@@ -26,6 +26,15 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.5.1",
+    date: "2026-06-26",
+    title: "Kisi-kisi Accounting for Business",
+    items: [
+      "Kisi-kisi UAS Accounting for Business sekarang tersedia. Buka mata kuliah Accounting for Business lalu pilih tab Kisi-Kisi.",
+      "Sudah dirapikan per bagian: Case (60%) berisi CVP, Incremental Analysis, dan Master Budget, plus Essay (40%) untuk sesi 15-16 dan 25-26.",
+    ],
+  },
+  {
     version: "2.5.0",
     date: "2026-06-26",
     title: "Statistik Belajar lebih lengkap",
