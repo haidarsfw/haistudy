@@ -22,7 +22,10 @@ export async function GET(request: Request) {
     const subjectId = searchParams.get("subjectId");
     const attemptId = searchParams.get("attemptId");
 
-    if (!subjectId) {
+    // subjectId is required only for the LIST branch. The detail branch
+    // (?attemptId=) is already scoped by license_key + id, so it doesn't need
+    // one — the caller's own analytics page fetches detail by attemptId alone.
+    if (!subjectId && !attemptId) {
       return NextResponse.json(
         { error: "subjectId is required" },
         { status: 400 }

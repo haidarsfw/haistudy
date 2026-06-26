@@ -26,6 +26,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.5.0",
+    date: "2026-06-26",
+    title: "Statistik Belajar lebih lengkap",
+    items: [
+      "Halaman Statistik Belajar kini jauh lebih detail: ada total waktu latihan soal, sejak kapan kamu bergabung, dan jumlah hari aktif belajarmu.",
+      "Bagian baru Nilai Latihan Soal: ringkasan total percobaan, nilai terbaik, dan rata-rata, lengkap dengan rincian nilai terbaik per mata kuliah.",
+      "Riwayat pengerjaan dibuat ringkas, satu baris per mata kuliah. Ketuk 'Tampilkan Semua' untuk melihat semua percobaan, lalu ketuk salah satu untuk membuka detail lengkap: soal, jawabanmu, kunci, dan feedback AI.",
+      "Tata letak dirapikan supaya progres mata kuliah tetap di atas dan tidak memakan banyak tempat.",
+    ],
+  },
+  {
     version: "2.4.0",
     date: "2026-06-25",
     title: "Cheatsheet Operations Management",

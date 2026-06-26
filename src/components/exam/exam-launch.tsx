@@ -7,6 +7,7 @@ import type { ExamData } from "@/types/exam";
 import { useExam } from "@/hooks/use-exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { formatDuration } from "@/lib/format";
 import { ExamConfirmModal } from "./exam-confirm-modal";
 import { ExamTopupModal } from "./exam-topup-modal";
 
@@ -32,11 +33,6 @@ function formatDate(iso: string, locale: string) {
   }
 }
 
-function formatDuration(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}m ${s}s`;
-}
 
 /**
  * Launch screen shown inside the "Latihan Soal" tab.
