@@ -24,6 +24,7 @@ const ACTION_COLORS: Record<string, string> = {
   logout: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
   quiz_complete: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
   system: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+  cheatsheet_download: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
 };
 
 interface GroupedLog extends ScopedActivityLog {

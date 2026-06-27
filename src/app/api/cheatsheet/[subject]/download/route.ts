@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { cookies } from "next/headers";
-import { requireScope, ScopeError } from "@/lib/auth/scope-check";
+import { requireScope, ScopeError, scopeColumns } from "@/lib/auth/scope-check";
 import {
   createServerClient,
   isSupabaseServerConfigured,
@@ -57,7 +57,59 @@ export async function GET(
     );
     const bytes = await readFile(file);
 
-    // Audit (no full key): who/what/when. console.warn is kept in prod logs.
+    // Persistent audit trail → admin panel Activity Logs (who/what/when).
+    // Resolve the student name from the license key (cheap single-row lookup;
+    // downloads are admin-gated + rare). Awaited so the row reliably lands on
+    // Vercel; wrapped so a log failure never blocks the actual download.
+    const ua = req.headers.get("user-agent") || "";
+    const deviceType = /mobile|android|iphone|ipad|ipod/i.test(ua)
+      ? "mobile"
+      : "desktop";
+    const deviceLabel = /iphone/i.test(ua)
+      ? "iPhone"
+      : /ipad/i.test(ua)
+        ? "iPad"
+        : /android/i.test(ua)
+          ? "Android"
+          : /macintosh|mac os/i.test(ua)
+            ? "Mac"
+            : /windows/i.test(ua)
+              ? "Windows"
+              : /linux/i.test(ua)
+                ? "Linux"
+                : "Unknown";
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+
+    let userName = `Key ${sess.slice(0, 6)}`;
+    try {
+      const { data: lk } = await supabase
+        .from("license_keys")
+        .select("name")
+        .eq("key", sess)
+        .maybeSingle();
+      if (lk?.name) userName = lk.name as string;
+    } catch {
+      /* fall back to the key prefix */
+    }
+
+    try {
+      await supabase.from("activity_logs").insert({
+        user_name: userName,
+        action: "cheatsheet_download",
+        details: `Cheatsheet ${subject} • ${ver.label}`,
+        ip_address: ip,
+        device_type: deviceType,
+        device_label: deviceLabel,
+        ...scopeColumns(scope),
+      });
+    } catch {
+      /* non-critical: never block the download on a log failure */
+    }
+
+    // Console breadcrumb too (no full key) — kept in prod logs.
     console.warn(
       `[cheatsheet-download] subject=${subject} v=${ver.id} key=${sess.slice(0, 6)} scope=${scope.semester}-${scope.examPeriod}-${scope.jurusan}`
     );
