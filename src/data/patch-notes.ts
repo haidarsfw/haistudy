@@ -26,6 +26,15 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.5.2",
+    date: "2026-06-27",
+    title: "Modul Belajar UAS Akuntansi di Forum",
+    items: [
+      "Modul belajar interaktif UAS Accounting for Business sekarang ada di Forum mata kuliah. Buka mata kuliah Accounting for Business lalu pilih tab Forum.",
+      "Isinya rangkuman sesuai kisi-kisi (CVP, Incremental Analysis, Master Budget, plus Managerial Accounting dan Budgetary Control), lengkap dengan latihan soal dan pembahasan. Buka di browser untuk fitur penuh.",
+    ],
+  },
+  {
     version: "2.5.1",
     date: "2026-06-26",
     title: "Kisi-kisi Accounting for Business",

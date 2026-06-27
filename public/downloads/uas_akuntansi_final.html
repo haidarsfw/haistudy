@@ -1,0 +1,1700 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modul UAS Akuntansi - Accounting for Business</title>
+<style>
+:root[data-theme="light"]{
+  --bg:#fafaf8; --bg-card:#ffffff; --bg-soft:#f5f4ef; --bg-hover:#f0eee8;
+  --border:#e3e0d8; --border-soft:#ebe8df; --border-strong:#c8c4b8;
+  --text:#1c1c1a; --text-soft:#555551; --text-mute:#8a867d;
+  --accent:#2b5cc4; --accent-bg:#eef3fc; --accent-bd:#cddbf3;
+  --success:#1a7f3e; --success-bg:#ecf6ef; --success-bd:#c9e4d1;
+  --warn:#9a6700; --warn-bg:#fcf4e0; --warn-bd:#ecdfb3;
+  --danger:#b9403e; --danger-bg:#fbeceb; --danger-bd:#ecc9c7;
+  --on-accent:#ffffff; --shadow:0 1px 2px rgba(0,0,0,.04);
+}
+:root[data-theme="dark"]{
+  --bg:#17181b; --bg-card:#1e2024; --bg-soft:#23262b; --bg-hover:#2a2d33;
+  --border:#2d3138; --border-soft:#262a30; --border-strong:#3a3f47;
+  --text:#e8e6e0; --text-soft:#b0ada4; --text-mute:#7d7970;
+  --accent:#7ca8f5; --accent-bg:#1b2638; --accent-bd:#2e4470;
+  --success:#5dc282; --success-bg:#142820; --success-bd:#234a35;
+  --warn:#e5b76e; --warn-bg:#2d2517; --warn-bd:#4d3e22;
+  --danger:#e88682; --danger-bg:#2c1b1b; --danger-bd:#4d2c2a;
+  --on-accent:#15171b; --shadow:0 1px 2px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;display:flex;min-height:100vh;
+  transition:background .2s,color .2s;-webkit-font-smoothing:antialiased}
+.num,.acc-table td,.acc-table th,.acc-table input{font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+
+/* SIDEBAR */
+.sidebar{width:268px;flex-shrink:0;background:var(--bg-card);border-right:1px solid var(--border);
+  position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:50;display:flex;flex-direction:column}
+.sb-head{padding:20px 20px 18px;border-bottom:1px solid var(--border);display:flex;
+  justify-content:space-between;align-items:flex-start;gap:10px}
+.sb-head .brand{font-size:14px;font-weight:700;color:var(--text);line-height:1.3}
+.sb-head .sub{font-size:11.5px;color:var(--text-mute);margin-top:2px}
+.theme-toggle{background:var(--bg-soft);border:1px solid var(--border);border-radius:6px;padding:5px 9px;
+  cursor:pointer;font-size:13px;color:var(--text-soft);flex-shrink:0;transition:background .15s,border-color .15s}
+.theme-toggle:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.nav-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mute);padding:16px 20px 6px}
+.nav-item{display:flex;align-items:flex-start;gap:10px;padding:8px 20px;cursor:pointer;
+  border-left:2px solid transparent;transition:background .12s;text-decoration:none}
+.nav-item:hover{background:var(--bg-soft)}
+.nav-item.active{background:var(--accent-bg);border-left-color:var(--accent)}
+.nav-item.active .nav-num{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.nav-item.active .nav-txt{color:var(--accent);font-weight:600}
+.nav-num{font-size:10px;font-weight:700;color:var(--text-mute);background:var(--bg-soft);border:1px solid var(--border);
+  border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.nav-item.ref .nav-num{background:var(--success-bg);color:var(--success);border-color:var(--success-bd)}
+.nav-item.active.ref .nav-num{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.nav-txt{font-size:12.5px;color:var(--text-soft);line-height:1.45}
+.nav-divider{height:1px;background:var(--border-soft);margin:8px 0}
+
+/* MAIN */
+.main{margin-left:268px;flex:1;padding:0}
+section.tab{display:none;max-width:860px;padding:40px 48px}
+section.tab.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-mute);margin-bottom:7px}
+h2.sec{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.tab .sub{font-size:14.5px;color:var(--text-soft);line-height:1.65;max-width:660px;
+  padding-bottom:22px;margin-bottom:22px;border-bottom:1px solid var(--border)}
+h3{font-size:17px;font-weight:700;margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h4{font-size:12.5px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 7px}
+p{font-size:14px;color:var(--text-soft);line-height:1.72;margin:10px 0}
+p strong{color:var(--text);font-weight:700}
+ul,ol{padding-left:20px;margin:9px 0}
+li{font-size:14px;color:var(--text-soft);line-height:1.72;padding:2px 0}
+li strong{color:var(--text);font-weight:700}
+
+/* pill sub-nav */
+.pillnav{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 8px}
+.pillnav a{font-size:12px;text-decoration:none;color:var(--text-soft);background:var(--bg-soft);
+  border:1px solid var(--border);padding:5px 11px;border-radius:20px;font-weight:600}
+.pillnav a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* cards + callouts */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin:14px 0;box-shadow:var(--shadow)}
+.card.tight{padding:13px 15px}
+.callout{border-radius:7px;padding:11px 15px;margin:13px 0;font-size:13.5px;line-height:1.65;
+  border-left:3px solid var(--accent);background:var(--accent-bg);color:var(--text)}
+.callout .lbl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;color:var(--accent)}
+.callout.key{background:var(--warn-bg);border-left-color:var(--warn)} .callout.key .lbl{color:var(--warn)}
+.callout.tip{background:var(--success-bg);border-left-color:var(--success)} .callout.tip .lbl{color:var(--success)}
+.callout.warn{background:var(--danger-bg);border-left-color:var(--danger)} .callout.warn .lbl{color:var(--danger)}
+
+/* inline accents */
+.k{background:var(--accent-bg);color:var(--accent);font-weight:600;padding:.02em .32em;border-radius:4px}
+.pos{color:var(--success);font-weight:700}
+.neg{color:var(--danger);font-weight:700}
+b.term,.term{font-weight:600;color:var(--text);border-bottom:1px dotted var(--border-strong)}
+code.f{font-family:"SF Mono",ui-monospace,Consolas,Monaco,monospace;font-size:.92em;background:var(--bg-soft);border:1px solid var(--border);border-radius:5px;padding:.05em .4em}
+.mini{font-size:12.5px;color:var(--text-mute);line-height:1.55}
+.lead{font-size:15px;color:var(--text-soft)}
+.kbd{font-family:"SF Mono",ui-monospace,monospace;font-size:12px;color:var(--text-soft);background:var(--bg-soft);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.hr{height:1px;background:var(--border);border:0;margin:24px 0}
+
+/* formula */
+.formula{background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:7px;padding:13px 18px;margin:13px 0;font-size:14px;color:var(--text);line-height:1.85}
+.formula .eq{font-weight:600}
+.formula .eq .mini{font-weight:400}
+
+/* example */
+.example{background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:14px 0}
+.example .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);background:var(--accent-bg);padding:2px 9px;border-radius:20px;margin-bottom:8px}
+
+/* steps */
+ol.steps{counter-reset:s;list-style:none;padding-left:0;margin:10px 0}
+ol.steps>li{position:relative;padding:3px 0 3px 38px;margin:7px 0}
+ol.steps>li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:1px;width:24px;height:24px;border-radius:50%;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bd);display:grid;place-items:center;font-size:12px;font-weight:700}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--bg-card)}
+table.acc-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:380px}
+.acc-table caption{caption-side:top;text-align:left;font-weight:700;padding:10px 12px 0;font-size:13px;color:var(--text-soft)}
+.acc-table th{padding:9px 12px;text-align:right;font-weight:700;font-size:12px;color:var(--text-soft);background:var(--bg-soft);border-bottom:1.5px solid var(--border);white-space:nowrap}
+.acc-table td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--border-soft);color:var(--text);line-height:1.5}
+.acc-table th.lbl,.acc-table td.lbl{text-align:left}
+.acc-table tr:last-child td{border-bottom:none}
+.acc-table tr.total td{font-weight:700;border-top:2px solid var(--text);background:var(--bg-soft)}
+.acc-table tr.sub td{background:var(--bg-soft);font-weight:600}
+.acc-table input{width:96px;border:1px solid var(--border-strong);background:var(--bg);color:var(--text);border-radius:5px;padding:5px 7px;text-align:right;font-size:13px;font-family:inherit}
+.acc-table input:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+.acc-table input.ok{border-color:var(--success);background:var(--success-bg)}
+.acc-table input.bad{border-color:var(--danger);background:var(--danger-bg)}
+
+/* practice */
+.practice{border:1px solid var(--border);border-radius:8px;margin:16px 0;overflow:hidden;background:var(--bg-card);box-shadow:var(--shadow)}
+.practice>.head{padding:11px 16px;background:var(--bg-soft);border-bottom:1px solid var(--border);font-weight:700;font-size:13.5px;color:var(--text);display:flex;gap:9px;align-items:center}
+.practice>.head .badge{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--on-accent);background:var(--accent);padding:2px 9px;border-radius:20px;text-transform:uppercase}
+.practice>.body{padding:15px 16px}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0 0}
+button.act{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:7px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit}
+button.act.ghost{background:transparent;color:var(--accent)}
+button.act:hover{filter:brightness(1.05)} button.act:active{transform:translateY(1px)}
+.feedback{font-size:13px;font-weight:600;margin-top:9px;min-height:1px}
+.feedback.good{color:var(--success)} .feedback.bad{color:var(--danger)}
+
+/* reveal */
+.reveal{border:1px solid var(--border);border-radius:8px;margin:12px 0;overflow:hidden;background:var(--bg-card)}
+.reveal>summary{list-style:none;cursor:pointer;padding:12px 16px;font-weight:600;font-size:14px;color:var(--text);display:flex;align-items:center;gap:10px}
+.reveal>summary::-webkit-details-marker{display:none}
+.reveal>summary:hover{background:var(--bg-soft)}
+.reveal[open]>summary{background:var(--bg-soft);border-bottom:1px solid var(--border)}
+.reveal .chev{margin-left:auto;color:var(--text-mute);transition:transform .2s}
+.reveal[open] .chev{transform:rotate(180deg)}
+.reveal .pin{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--success);background:var(--success-bg);border:1px solid var(--success-bd);padding:2px 8px;border-radius:20px}
+.reveal .rb{padding:14px 16px}
+
+/* term cards */
+.termcard{background:var(--bg-card);border:1px solid var(--border);border-radius:7px;padding:11px 14px;margin:9px 0;font-size:13.5px;color:var(--text-soft);line-height:1.6}
+.termcard .t{font-weight:700;color:var(--text)}
+.termcard .en{font-size:12px;color:var(--text-mute);font-style:italic}
+
+/* back to top */
+.totop{position:fixed;right:16px;bottom:16px;z-index:40;border:1px solid var(--border);background:var(--bg-card);color:var(--text);width:40px;height:40px;border-radius:50%;cursor:pointer;box-shadow:var(--shadow);font-size:17px;display:none}
+.totop.show{display:block}
+
+/* footer */
+footer{max-width:860px;padding:22px 48px 50px;color:var(--text-mute);font-size:12.5px;line-height:1.6;border-top:1px solid var(--border);margin-left:0}
+
+/* mobile */
+.hamburger{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:7px 11px;cursor:pointer;font-size:17px;color:var(--text);box-shadow:var(--shadow)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;opacity:0;pointer-events:none;transition:opacity .22s}
+.overlay.open{opacity:1;pointer-events:all}
+@media(max-width:860px){
+  .sidebar{transform:translateX(-100%);transition:transform .22s;width:280px}
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 20px rgba(0,0,0,.15)}
+  .main{margin-left:0}
+  section.tab{padding:60px 20px 40px}
+  footer{padding:20px 20px 40px}
+  .hamburger{display:flex;align-items:center}
+  .overlay{display:block}
+}
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-mute)}
+</style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div>
+      <div class="brand">Modul UAS Akuntansi</div>
+      <div class="sub">Accounting for Business</div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Ganti mode terang/gelap">☀</button>
+  </div>
+
+  <div class="nav-item active" data-tab="overview"><span class="nav-num">◎</span><span class="nav-txt">Kisi-kisi UAS</span></div>
+
+  <div class="nav-divider"></div>
+  <div class="nav-label">Case · 60%</div>
+  <div class="nav-item" data-tab="cvp"><span class="nav-num">1</span><span class="nav-txt">CVP (Cost-Volume-Profit)</span></div>
+  <div class="nav-item" data-tab="inc"><span class="nav-num">2</span><span class="nav-txt">Incremental Analysis</span></div>
+  <div class="nav-item" data-tab="budget"><span class="nav-num">3</span><span class="nav-txt">Master Budget</span></div>
+
+  <div class="nav-divider"></div>
+  <div class="nav-label">Essay · 40%</div>
+  <div class="nav-item" data-tab="esai1"><span class="nav-num">4</span><span class="nav-txt">Sesi 15-16: Managerial Accounting</span></div>
+  <div class="nav-item" data-tab="esai2"><span class="nav-num">5</span><span class="nav-txt">Sesi 25-26: Budgetary Control</span></div>
+
+  <div class="nav-divider"></div>
+  <div class="nav-label">Referensi</div>
+  <div class="nav-item ref" data-tab="rumus"><span class="nav-num">★</span><span class="nav-txt">Semua Rumus</span></div>
+  <div class="nav-item ref" data-tab="istilah"><span class="nav-num">★</span><span class="nav-txt">Istilah &amp; Kata Kunci</span></div>
+</nav>
+
+<main class="main">
+  <section class="tab active" id="tab-overview">
+    <div class="eyebrow">Modul UAS · Accounting for Business</div>
+    <h2 class="sec">Kisi-kisi UAS</h2>
+    <p class="sub">Materi ujian dibagi dua: Case 60% (hitungan) dan Essay 40% (konsep). Pilih topik lewat panel di kiri. Tiap topik berisi penjelasan, contoh, dan latihan dengan jawaban yang bisa dibuka.</p>
+
+    <h3>Case · 60% (menghitung)</h3>
+    <div class="tbl-wrap">
+    <table class="acc-table">
+      <tr><th class="lbl">Topik</th><th class="lbl">Materi</th><th class="lbl">Isi</th></tr>
+      <tr><td class="lbl"><b class="term">CVP</b></td><td class="lbl">Sesi 17-20 / Ch. 18-19</td><td class="lbl">Biaya tetap/variabel, break-even, target laba, sales mix, leverage</td></tr>
+      <tr><td class="lbl"><b class="term">Incremental Analysis</b></td><td class="lbl">Ch. 20</td><td class="lbl">Special order, make-or-buy, proses lanjut, tutup lini, ganti mesin</td></tr>
+      <tr><td class="lbl"><b class="term">Master Budget</b></td><td class="lbl">Sesi 23-24 / Ch. 22</td><td class="lbl">Anggaran penjualan, produksi, bahan, kas, neraca, laba rugi</td></tr>
+    </table>
+    </div>
+
+    <h3>Essay · 40% (konsep)</h3>
+    <div class="tbl-wrap">
+    <table class="acc-table">
+      <tr><th class="lbl">Bagian</th><th class="lbl">Materi</th><th class="lbl">Isi</th></tr>
+      <tr><td class="lbl"><b class="term">Sesi 15-16</b></td><td class="lbl">Ch. 14 Managerial Accounting</td><td class="lbl">Akuntansi manajemen, jenis biaya, harga pokok produksi, tren</td></tr>
+      <tr><td class="lbl"><b class="term">Sesi 25-26</b></td><td class="lbl">Ch. 23 Budgetary Control</td><td class="lbl">Static/flexible budget, responsibility accounting, ROI, balanced scorecard</td></tr>
+    </table>
+    </div>
+
+    <div class="callout key">
+      <span class="lbl">Dua topik bertanda penting di kisi-kisi</span>
+      <b>Special order</b> dan <b>Make or buy</b> (di bagian Incremental) diberi tanda seru di kisi-kisi, jadi dua ini harus benar-benar lancar.
+    </div>
+    <div class="callout">
+      <span class="lbl">Cara pakai latihan</span>
+      Isi angka di tabel latihan, klik "Cek isian" untuk menandai benar/salah, lalu buka "Lihat pembahasan" untuk langkah lengkapnya. Jawaban selalu tersembunyi sampai dibuka.
+    </div>
+  </section>
+  <section class="tab" id="tab-cvp">
+    <div class="eyebrow">Case · 60% · CVP</div>
+    <h2 class="sec">CVP: Cost-Volume-Profit</h2>
+    <p class="sub">Hubungan antara biaya, jumlah barang yang terjual, dan laba. Inti CVP: kalau jualan naik/turun sekian, laba jadi berapa?</p>
+
+    <div class="pillnav">
+      <a class="jump" href="#cvp-biaya">Jenis biaya</a>
+      <a class="jump" href="#cvp-highlow">High-Low</a>
+      <a class="jump" href="#cvp-cm">Contribution margin</a>
+      <a class="jump" href="#cvp-bep">Break-even</a>
+      <a class="jump" href="#cvp-target">Target laba</a>
+      <a class="jump" href="#cvp-mos">Margin of safety</a>
+      <a class="jump" href="#cvp-mix">Sales mix</a>
+      <a class="jump" href="#cvp-limit">Sumber daya terbatas</a>
+      <a class="jump" href="#cvp-leverage">Operating leverage</a>
+    </div>
+
+    <!-- 1. JENIS BIAYA -->
+    <h3 id="cvp-biaya">1. Tiga jenis biaya menurut perilakunya</h3>
+    <p>Sebelum hitung apa pun, biaya harus dipisah dulu. Patokannya: <b class="term">apa yang terjadi kalau jumlah produksi berubah?</b></p>
+
+    <div class="card tight">
+      <p><span class="k">Biaya variabel (variable cost)</span> = total ikut naik-turun mengikuti aktivitas, tapi <b>per unitnya tetap</b>. Contoh: bahan baku. Bikin 1 HP butuh kamera $10, bikin 1.000 HP butuh $10.000. Per unit selalu $10.</p>
+      <p><span class="k">Biaya tetap (fixed cost)</span> = total <b>tidak berubah</b> berapa pun produksinya, tapi <b>per unitnya mengecil</b> kalau produksi banyak. Contoh: sewa pabrik $10.000/bulan. Kalau bikin 2.000 unit, sewa per unit $5; kalau 10.000 unit, cuma $1.</p>
+      <p><span class="k">Biaya campuran (mixed cost)</span> = ada bagian tetap + bagian variabel. Contoh: tagihan listrik (ada abonemen tetap + pemakaian).</p>
+    </div>
+
+    <div class="callout">
+      <span class="lbl">Cara cepat membedakan</span>
+      Lihat <b>total biaya</b> di dua tingkat produksi. Kalau totalnya naik proporsional → <b>variabel</b>. Kalau totalnya sama persis → <b>tetap</b>. Kalau naik tapi tidak proporsional → <b>campuran</b>.
+    </div>
+
+    <div class="example">
+      <span class="tag">Contoh (Helena Company)</span>
+      <p>Biaya pada 2 tingkat produksi. Klasifikasikan tiap biaya:</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl">Biaya</th><th>10.000 unit</th><th>20.000 unit</th><th class="lbl">Jenis</th></tr>
+        <tr><td class="lbl">Bahan langsung</td><td>$20.000</td><td>$40.000</td><td class="lbl"><span class="pos">Variabel</span> (2x lipat persis)</td></tr>
+        <tr><td class="lbl">Pemeliharaan</td><td>$8.000</td><td>$10.000</td><td class="lbl"><span class="neg">Campuran</span> (naik tapi tak 2x)</td></tr>
+        <tr><td class="lbl">Tenaga kerja langsung</td><td>$17.000</td><td>$34.000</td><td class="lbl"><span class="pos">Variabel</span></td></tr>
+        <tr><td class="lbl">Penyusutan</td><td>$4.000</td><td>$4.000</td><td class="lbl"><b class="term">Tetap</b> (sama persis)</td></tr>
+        <tr><td class="lbl">Sewa</td><td>$6.000</td><td>$6.000</td><td class="lbl"><b class="term">Tetap</b></td></tr>
+      </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="lbl">Relevant range</span>
+      <b>Relevant range</b> = rentang produksi normal yang biasa dijalani perusahaan dalam setahun. Aturan "biaya tetap ya tetap, variabel ya proporsional" cuma berlaku di dalam rentang ini. Di luar itu polanya bisa berubah.
+    </div>
+
+    <!-- 2. HIGH-LOW -->
+    <h3 id="cvp-highlow">2. Metode High-Low (memisah biaya campuran)</h3>
+    <p>Biaya campuran harus dipecah jadi bagian tetap dan variabel sebelum dipakai di CVP. Cara paling gampang: metode <b class="term">high-low</b>. Ambil titik <b>tertinggi</b> dan <b>terendah</b> dari segi <u>aktivitas</u> (bukan biaya), lalu hitung.</p>
+
+    <div class="formula">
+      <div class="eq">Biaya variabel per unit = (Biaya tertinggi − Biaya terendah) ÷ (Aktivitas tertinggi − Aktivitas terendah)</div>
+      <div class="eq" style="margin-top:6px">Biaya tetap = Total biaya − (Biaya variabel per unit × Aktivitas) <span class="mini">(pakai titik tertinggi atau terendah, hasilnya sama)</span></div>
+    </div>
+
+    <div class="example">
+      <span class="tag">Contoh (Byrnes Company)</span>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl">Bulan</th><th>Unit diproduksi</th><th>Total biaya</th></tr>
+        <tr><td class="lbl">Maret</td><td>9.800 <span class="mini">(tertinggi)</span></td><td>$14.740</td></tr>
+        <tr><td class="lbl">April</td><td>8.500</td><td>$13.250</td></tr>
+        <tr><td class="lbl">Mei</td><td>7.000 <span class="mini">(terendah)</span></td><td>$11.100</td></tr>
+        <tr><td class="lbl">Juni</td><td>7.600</td><td>$12.000</td></tr>
+        <tr><td class="lbl">Juli</td><td>8.100</td><td>$12.460</td></tr>
+      </table>
+      </div>
+      <ol class="steps">
+        <li>VC per unit = ($14.740 − $11.100) ÷ (9.800 − 7.000) = $3.640 ÷ 2.800 = <span class="pos">$1,30 per unit</span></li>
+        <li>Biaya tetap = $14.740 − ($1,30 × 9.800) = $14.740 − $12.740 = <span class="pos">$2.000</span></li>
+        <li>Persamaan biaya: <code class="f">Total biaya = $2.000 + ($1,30 × unit)</code></li>
+        <li>Kalau produksi 8.000 unit: $2.000 + ($1,30 × 8.000) = <b class="term">$12.400</b></li>
+      </ol>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 1</span> High-Low: Toko Roti "Manis"</div>
+      <div class="body">
+        <p>Toko Roti Manis mencatat <b>biaya listrik</b> (biaya campuran) dibanding jumlah roti yang dipanggang:</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl">Bulan</th><th>Roti dipanggang</th><th>Total biaya listrik</th></tr>
+          <tr><td class="lbl">Januari</td><td>1.000</td><td>$2.000</td></tr>
+          <tr><td class="lbl">Februari</td><td>800</td><td>$1.700</td></tr>
+          <tr><td class="lbl">Maret</td><td>1.500</td><td>$2.750</td></tr>
+          <tr><td class="lbl">April</td><td>1.200</td><td>$2.300</td></tr>
+        </table>
+        </div>
+        <p>Isi jawabanmu (ketik angka tanpa titik/koma ribuan, contoh <span class="kbd">1.5</span> atau <span class="kbd">500</span>):</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><td class="lbl">Biaya variabel per roti ($)</td><td><input data-ans="1.5" inputmode="decimal"></td></tr>
+          <tr><td class="lbl">Biaya tetap per bulan ($)</td><td><input data-ans="500" inputmode="decimal"></td></tr>
+          <tr><td class="lbl">Total biaya saat memanggang 1.100 roti ($)</td><td><input data-ans="2150" inputmode="decimal"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <p>Titik tertinggi = Maret (1.500 roti), titik terendah = Februari (800 roti). Patokannya <b>aktivitas</b>, bukan biaya.</p>
+            <ol class="steps">
+              <li>VC per roti = ($2.750 − $1.700) ÷ (1.500 − 800) = $1.050 ÷ 700 = <span class="pos">$1,50</span></li>
+              <li>Biaya tetap = $1.700 − ($1,50 × 800) = $1.700 − $1.200 = <span class="pos">$500</span></li>
+              <li>Persamaan: Total = $500 + ($1,50 × roti). Saat 1.100 roti: $500 + ($1,50 × 1.100) = $500 + $1.650 = <b class="term">$2.150</b></li>
+            </ol>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- 3. CONTRIBUTION MARGIN -->
+    <h3 id="cvp-cm">3. Contribution margin &amp; laporan laba rugi CVP</h3>
+    <p><b class="term">Contribution margin (CM)</b> = sisa uang setelah harga jual dikurangi biaya variabel. Sisa inilah yang dipakai untuk <b>menutup biaya tetap</b>, dan kalau masih ada lebihnya, itu jadi <b>laba</b>.</p>
+
+    <div class="formula">
+      <div class="eq">CM per unit = Harga jual per unit − Biaya variabel per unit</div>
+      <div class="eq" style="margin-top:6px">CM ratio = CM per unit ÷ Harga jual per unit <span class="mini">(berapa persen dari tiap dolar penjualan yang jadi CM)</span></div>
+    </div>
+
+    <p>Laporan laba rugi CVP itu susunannya khusus: <b>biaya variabel dipisah dari biaya tetap</b> supaya CM kelihatan.</p>
+
+    <div class="example">
+      <span class="tag">Contoh (Vargo Electronics)</span>
+      <p>Harga jual HP $500, biaya variabel $300 per unit, biaya tetap $200.000. Saat menjual 1.400 unit:</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl">Laporan Laba Rugi CVP</th><th>Total</th><th>Per unit</th></tr>
+        <tr><td class="lbl">Penjualan (1.400 × $500)</td><td>$700.000</td><td>$500</td></tr>
+        <tr><td class="lbl">Dikurangi: Biaya variabel (1.400 × $300)</td><td>$420.000</td><td>$300</td></tr>
+        <tr class="sub"><td class="lbl">Contribution margin</td><td>$280.000</td><td>$200</td></tr>
+        <tr><td class="lbl">Dikurangi: Biaya tetap</td><td>$200.000</td><td></td></tr>
+        <tr class="total"><td class="lbl">Laba bersih</td><td>$80.000</td><td></td></tr>
+      </table>
+      </div>
+      <p class="mini">CM per unit = $500 − $300 = $200. CM ratio = $200 ÷ $500 = <b>40%</b>. Artinya tiap $1 penjualan menyumbang $0,40 untuk menutup biaya tetap dan laba.</p>
+    </div>
+
+    <!-- 4. BREAK-EVEN -->
+    <h3 id="cvp-bep">4. Break-even point (titik impas)</h3>
+    <p><b class="term">Break-even</b> = titik di mana total pendapatan = total biaya, jadi laba = $0. Tidak untung, tidak rugi. Logikanya: berapa unit yang harus dijual supaya CM-nya pas menutup semua biaya tetap?</p>
+
+    <div class="formula">
+      <div class="eq">BEP (unit) = Biaya tetap ÷ CM per unit</div>
+      <div class="eq" style="margin-top:6px">BEP (dolar) = Biaya tetap ÷ CM ratio</div>
+    </div>
+
+    <div class="example">
+      <span class="tag">Contoh (Vargo)</span>
+      <p>Biaya tetap $200.000, CM per unit $200, CM ratio 40%.</p>
+      <ul>
+        <li>BEP unit = $200.000 ÷ $200 = <span class="pos">1.000 unit</span></li>
+        <li>BEP dolar = $200.000 ÷ 40% = <span class="pos">$500.000</span></li>
+      </ul>
+      <p class="mini">Cek: 1.000 unit × $500 = $500.000 penjualan. Cocok.</p>
+    </div>
+
+    <!-- 5. TARGET LABA -->
+    <h3 id="cvp-target">5. Penjualan untuk mencapai target laba</h3>
+    <p>Kalau perusahaan mau laba tertentu (bukan cuma impas), tinggal tambahkan target laba ke biaya tetap.</p>
+    <div class="formula">
+      <div class="eq">Unit utk target laba = (Biaya tetap + Target laba) ÷ CM per unit</div>
+      <div class="eq" style="margin-top:6px">Dolar utk target laba = (Biaya tetap + Target laba) ÷ CM ratio</div>
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Vargo)</span>
+      <p>Target laba $250.000. Biaya tetap $200.000, CM per unit $200, CM ratio 40%.</p>
+      <ul>
+        <li>Unit = ($200.000 + $250.000) ÷ $200 = <span class="pos">2.250 unit</span></li>
+        <li>Dolar = $450.000 ÷ 40% = <span class="pos">$1.125.000</span></li>
+      </ul>
+    </div>
+
+    <!-- 6. MARGIN OF SAFETY -->
+    <h3 id="cvp-mos">6. Margin of safety (jarak aman)</h3>
+    <p><b class="term">Margin of safety</b> = jarak antara penjualan sekarang dengan titik impas. Ini "bantalan" pengaman: seberapa banyak penjualan boleh turun sebelum mulai rugi.</p>
+    <div class="formula">
+      <div class="eq">Margin of safety ($) = Penjualan aktual − Penjualan impas</div>
+      <div class="eq" style="margin-top:6px">Margin of safety ratio = Margin of safety ($) ÷ Penjualan aktual</div>
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Vargo)</span>
+      <p>Penjualan aktual $800.000, penjualan impas $500.000.</p>
+      <ul>
+        <li>MOS $ = $800.000 − $500.000 = <span class="pos">$300.000</span></li>
+        <li>MOS ratio = $300.000 ÷ $800.000 = <span class="pos">37,5%</span></li>
+      </ul>
+      <p class="mini">Artinya penjualan boleh turun sampai 37,5% sebelum Vargo mulai rugi. Makin besar makin aman.</p>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 2</span> Paket CVP: PT Sinar (lampu)</div>
+      <div class="body">
+        <p>PT Sinar menjual lampu. Harga jual <b>$80</b> per unit, biaya variabel <b>$50</b> per unit, biaya tetap <b>$120.000</b> per bulan.</p>
+        <p><b>Bagian A.</b> Lengkapi laporan laba rugi CVP saat menjual <b>5.000 unit</b>:</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl">Keterangan</th><th>Total ($)</th></tr>
+          <tr><td class="lbl">Penjualan</td><td><input data-ans="400000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Dikurangi: Biaya variabel</td><td><input data-ans="250000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Contribution margin</td><td><input data-ans="150000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Dikurangi: Biaya tetap</td><td><input data-ans="120000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Laba bersih</td><td><input data-ans="30000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <p><b>Bagian B.</b> Hitung nilai-nilai berikut:</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><td class="lbl">CM per unit ($)</td><td><input data-ans="30" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Break-even (unit)</td><td><input data-ans="4000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Break-even (dolar)</td><td><input data-ans="320000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Unit utk target laba $60.000</td><td><input data-ans="6000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Margin of safety ($) jika jual 5.000 unit</td><td><input data-ans="80000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <p><b>CM per unit</b> = $80 − $50 = <span class="pos">$30</span>. &nbsp; <b>CM ratio</b> = $30 ÷ $80 = <b>37,5%</b>.</p>
+            <p><b>Bagian A (5.000 unit):</b></p>
+            <ul>
+              <li>Penjualan = 5.000 × $80 = $400.000</li>
+              <li>Biaya variabel = 5.000 × $50 = $250.000</li>
+              <li>CM = $400.000 − $250.000 = $150.000</li>
+              <li>Laba = $150.000 − $120.000 = <span class="pos">$30.000</span></li>
+            </ul>
+            <p><b>Bagian B:</b></p>
+            <ul>
+              <li>BEP unit = $120.000 ÷ $30 = <span class="pos">4.000 unit</span></li>
+              <li>BEP dolar = $120.000 ÷ 37,5% = <span class="pos">$320.000</span></li>
+              <li>Unit target laba = ($120.000 + $60.000) ÷ $30 = <span class="pos">6.000 unit</span></li>
+              <li>MOS $ = penjualan aktual − impas = $400.000 − $320.000 = <span class="pos">$80.000</span></li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- 7. SALES MIX -->
+    <h3 id="cvp-mix">7. Sales mix (jual lebih dari satu produk)</h3>
+    <p>Kalau perusahaan jual beberapa produk, tiap produk punya CM beda. <b class="term">Sales mix</b> = perbandingan (persentase) jumlah unit tiap produk yang dijual. Untuk cari break-even, kita pakai <b class="term">weighted-average CM</b> (rata-rata CM yang ditimbang sesuai mix).</p>
+    <div class="formula">
+      <div class="eq">Weighted-average CM = Σ (CM per unit produk × persentase mix produk)</div>
+      <div class="eq" style="margin-top:6px">BEP total unit = Biaya tetap ÷ Weighted-average CM</div>
+      <div class="eq" style="margin-top:6px">Unit tiap produk = BEP total unit × persentase mix produk</div>
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Manzeck Bicycles)</span>
+      <p>Tiga model sepeda. Biaya tetap $7.500.000.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Pro</th><th>Intermediate</th><th>Standard</th><th>Total</th></tr>
+        <tr><td class="lbl">Unit terjual</td><td>5.000</td><td>10.000</td><td>25.000</td><td>40.000</td></tr>
+        <tr><td class="lbl">Harga jual</td><td>$800</td><td>$500</td><td>$350</td><td></td></tr>
+        <tr><td class="lbl">Biaya variabel</td><td>$500</td><td>$300</td><td>$250</td><td></td></tr>
+        <tr class="sub"><td class="lbl">CM per unit</td><td>$300</td><td>$200</td><td>$100</td><td></td></tr>
+        <tr><td class="lbl">Mix (unit)</td><td>12,5%</td><td>25%</td><td>62,5%</td><td>100%</td></tr>
+      </table>
+      </div>
+      <ol class="steps">
+        <li>Weighted-average CM = ($300 × 12,5%) + ($200 × 25%) + ($100 × 62,5%) = $37,50 + $50 + $62,50 = <span class="pos">$150</span></li>
+        <li>BEP total unit = $7.500.000 ÷ $150 = <span class="pos">50.000 unit</span></li>
+        <li>Pecah per produk: Pro 50.000 × 12,5% = 6.250; Intermediate 50.000 × 25% = 12.500; Standard 50.000 × 62,5% = 31.250</li>
+      </ol>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 3</span> Sales mix: PT Rasa (snack)</div>
+      <div class="body">
+        <p>PT Rasa menjual dua produk. Biaya tetap <b>$48.000</b>. Mix berdasarkan unit: <b>Keripik 60%</b>, <b>Kacang 40%</b>.</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Keripik</th><th>Kacang</th></tr>
+          <tr><td class="lbl">Harga jual</td><td>$20</td><td>$10</td></tr>
+          <tr><td class="lbl">Biaya variabel</td><td>$12</td><td>$6</td></tr>
+        </table>
+        </div>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><td class="lbl">Weighted-average CM ($)</td><td><input data-ans="6.4" inputmode="decimal"></td></tr>
+          <tr><td class="lbl">BEP total (unit)</td><td><input data-ans="7500" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Keripik untuk impas (unit)</td><td><input data-ans="4500" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Kacang untuk impas (unit)</td><td><input data-ans="3000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ol class="steps">
+              <li>CM Keripik = $20 − $12 = $8. CM Kacang = $10 − $6 = $4.</li>
+              <li>Weighted-average CM = ($8 × 60%) + ($4 × 40%) = $4,80 + $1,60 = <span class="pos">$6,40</span></li>
+              <li>BEP total = $48.000 ÷ $6,40 = <span class="pos">7.500 unit</span></li>
+              <li>Keripik = 7.500 × 60% = 4.500 unit. Kacang = 7.500 × 40% = 3.000 unit.</li>
+            </ol>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- 8. LIMITED RESOURCES -->
+    <h3 id="cvp-limit">8. Sumber daya terbatas</h3>
+    <p>Kadang ada batasan, misalnya jam mesin terbatas. Produk mana yang diprioritaskan? <b>Bukan</b> yang CM per unitnya paling besar, tapi yang <b class="term">CM per unit sumber daya terbatas</b> paling besar.</p>
+    <div class="formula">
+      <div class="eq">CM per unit sumber daya = CM per unit ÷ Jumlah sumber daya terbatas yang dipakai per unit</div>
+    </div>
+    <div class="callout key">
+      <span class="lbl">Sering jadi jebakan</span>
+      Produk dengan CM per unit besar belum tentu menang. Yang menentukan adalah CM per <b>jam mesin</b> (atau sumber daya yang langka). Produksi diarahkan ke yang CM per jam-nya paling tinggi.
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 4</span> Sumber daya terbatas: PT Logam</div>
+      <div class="body">
+        <p>PT Logam membuat dua produk. Jam mesin terbatas. Data:</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Produk A</th><th>Produk B</th></tr>
+          <tr><td class="lbl">CM per unit</td><td>$24</td><td>$30</td></tr>
+          <tr><td class="lbl">Jam mesin per unit</td><td>2 jam</td><td>3 jam</td></tr>
+        </table>
+        </div>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><td class="lbl">CM per jam mesin: Produk A ($)</td><td><input data-ans="12" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">CM per jam mesin: Produk B ($)</td><td><input data-ans="10" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Tambahan CM jika ada 600 jam ekstra, dipakai untuk produk terbaik ($)</td><td><input data-ans="7200" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ol class="steps">
+              <li>Produk A: $24 ÷ 2 = <span class="pos">$12 per jam</span>. Produk B: $30 ÷ 3 = $10 per jam.</li>
+              <li>Walau CM per unit B lebih besar ($30 &gt; $24), <b>Produk A menang</b> karena CM per jam mesinnya lebih tinggi.</li>
+              <li>600 jam ekstra dipakai untuk A: 600 × $12 = <span class="pos">$7.200</span> tambahan CM.</li>
+            </ol>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- 9. OPERATING LEVERAGE -->
+    <h3 id="cvp-leverage">9. Operating leverage</h3>
+    <p><b class="term">Operating leverage</b> = seberapa sensitif laba terhadap perubahan penjualan. Perusahaan dengan biaya tetap besar (mesin otomatis) punya leverage tinggi: kalau penjualan naik, laba meledak; kalau turun, laba anjlok cepat.</p>
+    <div class="formula">
+      <div class="eq">Degree of operating leverage (DOL) = Contribution margin ÷ Laba bersih</div>
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Rexfield)</span>
+      <p>Membandingkan teknologi lama vs baru:</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>CM</th><th>Laba bersih</th><th>DOL</th></tr>
+        <tr><td class="lbl">Teknologi lama</td><td>$600.000</td><td>$200.000</td><td><span class="pos">3,0</span></td></tr>
+        <tr><td class="lbl">Teknologi baru</td><td>$1.400.000</td><td>$200.000</td><td><span class="pos">7,0</span></td></tr>
+      </table>
+      </div>
+      <p class="mini">DOL 7,0 berarti: kalau penjualan (CM) naik 10%, laba naik 70%. Tapi kalau penjualan turun 10%, laba juga anjlok 70%. Leverage tinggi = potensi besar, risiko besar.</p>
+    </div>
+
+    <details class="reveal">
+      <summary><span class="pin">Latihan singkat</span> Coba hitung DOL <span class="chev">▾</span></summary>
+      <div class="rb">
+        <p>Perusahaan X: CM $500.000, laba $100.000. Perusahaan Y: CM $800.000, laba $100.000. Mana yang lebih berisiko kalau penjualan turun?</p>
+        <p><b>Jawab:</b> DOL X = 500.000 ÷ 100.000 = <span class="pos">5,0</span>. DOL Y = 800.000 ÷ 100.000 = <span class="pos">8,0</span>. Perusahaan <b>Y</b> lebih sensitif/berisiko karena DOL lebih tinggi. Jika penjualan turun 10%, laba Y anjlok 80%, sedangkan X "hanya" 50%.</p>
+      </div>
+    </details>
+  </section>
+  <section class="tab" id="tab-inc">
+    <div class="eyebrow">Case · 60% · Incremental Analysis</div>
+    <h2 class="sec">Incremental Analysis</h2>
+    <p class="sub">Cara manajer memilih di antara dua pilihan: cukup lihat angka yang <b>berubah</b> antara pilihan A dan B. Yang tidak berubah, abaikan.</p>
+
+    <div class="pillnav">
+      <a class="jump" href="#inc-konsep">Konsep dasar</a>
+      <a class="jump" href="#inc-special">Special order ❗</a>
+      <a class="jump" href="#inc-make">Make or buy ❗</a>
+      <a class="jump" href="#inc-process">Sell / process further</a>
+      <a class="jump" href="#inc-drop">Keep or stop</a>
+      <a class="jump" href="#inc-replace">Repair / replace</a>
+    </div>
+
+    <!-- KONSEP -->
+    <h3 id="inc-konsep">Konsep dasar (wajib paham dulu)</h3>
+    <p><b class="term">Incremental analysis</b> (disebut juga <i>differential analysis</i>) = membandingkan data keuangan yang <b>berbeda</b> antar pilihan. Fokusnya cuma pada angka yang ikut berubah.</p>
+
+    <div class="card tight">
+      <p><span class="k">Relevant cost</span> = biaya yang <b>berubah</b> tergantung pilihan. Ini yang dihitung.</p>
+      <p><span class="k">Sunk cost</span> = biaya yang <b>sudah terlanjur keluar</b> di masa lalu dan tidak bisa diubah lagi apa pun pilihannya. <b>Selalu diabaikan.</b> Contoh: uang yang sudah dikeluarkan untuk beli/servis mesin lama.</p>
+      <p><span class="k">Opportunity cost</span> = potensi keuntungan yang <b>hilang</b> karena memilih satu opsi dan melepas opsi lain. Contoh: kalau kapasitas pabrik dipakai bikin produk A, kita kehilangan kesempatan menyewakan/membuat produk B. Nilai yang hilang itu dihitung sebagai biaya.</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="lbl">Jebakan paling sering</span>
+      Biaya tetap <b>tidak otomatis tidak relevan</b>. Kalau biaya tetap <b>berubah</b> antar pilihan, dia relevan. Sebaliknya, sunk cost walaupun angkanya besar tetap diabaikan.
+    </div>
+
+    <div class="callout tip">
+      <span class="lbl">Format jawaban incremental</span>
+      Hampir semua soal incremental dijawab dengan tabel 3 kolom: <b>Pilihan 1</b>, <b>Pilihan 2</b>, dan <b>Selisih (naik/turun laba)</b>. Kalau total selisih positif → ambil pilihan kedua. Kalau negatif → tetap di pilihan pertama.
+    </div>
+
+    <!-- SPECIAL ORDER -->
+    <h3 id="inc-special">1. Special order (pesanan khusus) ❗</h3>
+    <p>Ada pembeli menawar harga lebih murah dari biasanya untuk pesanan sekali. Diterima atau tidak? Syaratnya: pesanan ini <b>tidak mengganggu penjualan normal</b> dan pabrik <b>masih punya kapasitas kosong</b>.</p>
+    <div class="callout key">
+      <span class="lbl">Kunci special order</span>
+      Karena kapasitas masih ada, <b>biaya tetap tidak berubah → tidak relevan</b>. Yang dibandingkan cuma <b>tambahan pendapatan</b> vs <b>tambahan biaya variabel</b>. Terima kalau harga tawaran &gt; biaya variabel per unit.
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Cobb Company)</span>
+      <p>Biaya $28/unit ($18 variabel + $10 tetap). Harga normal $42. Pembeli luar negeri menawar <b>5.000 unit @ $25</b>. Ada tambahan ongkos kirim $1/unit. Kapasitas masih ada.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Tolak</th><th>Terima</th><th>Selisih (naik/turun laba)</th></tr>
+        <tr><td class="lbl">Pendapatan (5.000 × $25)</td><td>$0</td><td>$125.000</td><td><span class="pos">$125.000</span></td></tr>
+        <tr><td class="lbl">Biaya variabel (5.000 × ($18+$1))</td><td>$0</td><td>$95.000</td><td><span class="neg">($95.000)</span></td></tr>
+        <tr class="total"><td class="lbl">Laba bersih</td><td>$0</td><td>$30.000</td><td><span class="pos">$30.000</span></td></tr>
+      </table>
+      </div>
+      <p class="mini">Biaya tetap $10/unit <b>diabaikan</b> karena tidak berubah. Laba naik $30.000 → <b class="term">terima pesanan</b>.</p>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 1 ❗</span> Special order: PT Sepatu</div>
+      <div class="body">
+        <p>PT Sepatu biasanya produksi 50.000 sandal/bulan (80% kapasitas, jadi masih ada ruang). Biaya variabel <b>$12</b>/unit, biaya tetap $200.000 ($4/unit), harga normal $25. Ada tawaran <b>5.000 unit @ $16</b> dari pembeli luar negeri. Ada tambahan biaya kemasan <b>$1</b>/unit. Tidak mengganggu penjualan normal.</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Tolak</th><th>Terima</th><th>Selisih</th></tr>
+          <tr><td class="lbl">Pendapatan</td><td>$0</td><td><input data-ans="80000" inputmode="numeric"></td><td><input data-ans="80000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Biaya variabel + kemasan</td><td>$0</td><td><input data-ans="65000" inputmode="numeric"></td><td><input data-ans="65000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Perubahan laba</td><td>$0</td><td><input data-ans="15000" inputmode="numeric"></td><td><input data-ans="15000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ol class="steps">
+              <li>Pendapatan tambahan = 5.000 × $16 = <span class="pos">$80.000</span></li>
+              <li>Biaya variabel tambahan = 5.000 × ($12 + $1 kemasan) = 5.000 × $13 = <span class="neg">$65.000</span></li>
+              <li>Biaya tetap diabaikan (kapasitas masih ada, tidak berubah).</li>
+              <li>Laba naik $80.000 − $65.000 = <span class="pos">$15.000</span> → <b>terima pesanan</b>.</li>
+            </ol>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- MAKE OR BUY -->
+    <h3 id="inc-make">2. Make or buy (bikin sendiri atau beli) ❗</h3>
+    <p>Perusahaan bisa <b>membuat sendiri</b> komponen atau <b>membeli</b> dari pemasok. Bandingkan total biaya kedua pilihan. Hati-hati: tidak semua biaya tetap hilang kalau memilih beli.</p>
+    <div class="callout key">
+      <span class="lbl">Kunci make or buy</span>
+      Saat "beli": biaya variabel hilang semua, tapi biaya tetap <b>biasanya hanya sebagian</b> yang bisa dihilangkan. Sisa biaya tetap tetap menempel. Jangan lupa juga <b>opportunity cost</b>: kalau kapasitas yang nganggur bisa menghasilkan uang, itu menambah "biaya membuat sendiri".
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Juanita Company)</span>
+      <p>Membuat 166.000 kabel. Biaya: bahan $90.000, tenaga kerja $20.000, overhead variabel $32.000, overhead tetap $24.000 (total $166.000, atau $1/unit). Bisa <b>beli $0,90/unit</b>. Kalau beli, semua biaya variabel + <b>1/4 biaya tetap</b> hilang.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Buat sendiri</th><th>Beli</th><th>Selisih</th></tr>
+        <tr><td class="lbl">Bahan langsung</td><td>$90.000</td><td>$0</td><td><span class="pos">$90.000</span></td></tr>
+        <tr><td class="lbl">Tenaga kerja langsung</td><td>$20.000</td><td>$0</td><td><span class="pos">$20.000</span></td></tr>
+        <tr><td class="lbl">Overhead variabel</td><td>$32.000</td><td>$0</td><td><span class="pos">$32.000</span></td></tr>
+        <tr><td class="lbl">Overhead tetap</td><td>$24.000</td><td>$18.000</td><td><span class="pos">$6.000</span></td></tr>
+        <tr><td class="lbl">Harga beli (166.000 × $0,90)</td><td>$0</td><td>$149.400</td><td><span class="neg">($149.400)</span></td></tr>
+        <tr class="total"><td class="lbl">Total biaya</td><td>$166.000</td><td>$167.400</td><td><span class="neg">($1.400)</span></td></tr>
+      </table>
+      </div>
+      <p class="mini">Membuat sendiri lebih murah $1.400 (hanya 1/4 fixed yang hilang, sisa $18.000 tetap ada). Jawaban: <b class="term">buat sendiri</b>. Tapi jika kapasitas nganggur bisa menghasilkan $5.000, "buat sendiri" jadi $171.000 → lebih mahal, dan jawaban berubah jadi <b>beli</b>.</p>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 2 ❗</span> Make or buy: PT Mebel</div>
+      <div class="body">
+        <p>PT Mebel membuat 10.000 kenop (pegangan laci) per tahun. Biaya: bahan $20.000, tenaga kerja $15.000, overhead variabel $10.000, overhead tetap $18.000. Bisa <b>beli $5,20/unit</b>. Kalau beli, semua biaya variabel hilang + <b>$8.000 biaya tetap</b> hilang (sisa $10.000 tetap ada).</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Buat sendiri</th><th>Beli</th></tr>
+          <tr><td class="lbl">Bahan + TK + OH variabel</td><td><input data-ans="45000" inputmode="numeric"></td><td>$0</td></tr>
+          <tr><td class="lbl">Overhead tetap</td><td>$18.000</td><td><input data-ans="10000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Harga beli (10.000 × $5,20)</td><td>$0</td><td><input data-ans="52000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Total biaya</td><td><input data-ans="63000" inputmode="numeric"></td><td><input data-ans="62000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <p>Pertanyaan tambahan:</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><td class="lbl">Selisih biaya (buat − beli) ($)</td><td><input data-ans="1000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Jika kapasitas nganggur bisa hasilkan $4.000, total "buat sendiri" jadi ($)</td><td><input data-ans="67000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ol class="steps">
+              <li>Buat sendiri = $20.000 + $15.000 + $10.000 + $18.000 = <span class="pos">$63.000</span></li>
+              <li>Beli = harga beli (10.000 × $5,20 = $52.000) + overhead tetap sisa ($18.000 − $8.000 = $10.000) = <span class="pos">$62.000</span></li>
+              <li>Tanpa opportunity cost: beli lebih murah $1.000 → <b>beli</b>.</li>
+              <li>Dengan opportunity cost $4.000: "buat sendiri" jadi $63.000 + $4.000 = $67.000 vs beli $62.000 → beli unggul $5.000. Tetap <b>beli</b>.</li>
+            </ol>
+            <p class="mini">Catatan: di sini "beli" memang lebih murah dari awal. Inti latihannya: tahu bagian fixed mana yang hilang, dan cara memasukkan opportunity cost.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- SELL OR PROCESS FURTHER -->
+    <h3 id="inc-process">3. Sell or process further (jual sekarang atau olah lebih lanjut)</h3>
+    <p>Produk bisa dijual apa adanya, atau diolah lagi lalu dijual lebih mahal. Aturannya sederhana:</p>
+    <div class="callout key">
+      <span class="lbl">Aturan keputusan</span>
+      Olah lebih lanjut <b>hanya jika tambahan pendapatan &gt; tambahan biaya proses</b>. Biaya yang sudah keluar sebelum titik pemisahan (joint cost) adalah sunk cost → diabaikan.
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Easy Does It)</span>
+      <p>Kursi goyang dijual <b>belum dicat $25</b> (biaya $12 variabel + $8 tetap). Kalau dicat, dijual $35, tapi biaya variabel naik $9 dan biaya tetap naik $2.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Jual (belum dicat)</th><th>Olah (dicat)</th><th>Selisih</th></tr>
+        <tr><td class="lbl">Pendapatan</td><td>$25</td><td>$35</td><td><span class="pos">$10</span></td></tr>
+        <tr><td class="lbl">Biaya variabel</td><td>$12</td><td>$21</td><td><span class="neg">($9)</span></td></tr>
+        <tr><td class="lbl">Biaya tetap</td><td>$8</td><td>$10</td><td><span class="neg">($2)</span></td></tr>
+        <tr class="total"><td class="lbl">Laba per unit</td><td>$5</td><td>$4</td><td><span class="neg">($1)</span></td></tr>
+      </table>
+      </div>
+      <p class="mini">Tambahan pendapatan $10 ternyata lebih kecil dari tambahan biaya $11. Laba turun $1 → <b class="term">jual saja belum dicat</b>. Pelajaran: olah lebih lanjut tidak selalu menguntungkan.</p>
+    </div>
+
+    <details class="reveal">
+      <summary><span class="pin">Latihan 3</span> Sell / process further: PT Kayu <span class="chev">▾</span></summary>
+      <div class="rb">
+        <p><b>Soal:</b> PT Kayu menjual kursi <b>setengah jadi $40</b> (biaya $20 variabel + $8 tetap). Kalau di-<i>finishing</i>, dijual $55 dengan tambahan biaya variabel $10 dan tambahan biaya tetap $3. Olah lebih lanjut atau tidak?</p>
+        <p><b>Jawab:</b></p>
+        <ul>
+          <li>Tambahan pendapatan = $55 − $40 = <span class="pos">$15</span></li>
+          <li>Tambahan biaya = $10 + $3 = <span class="neg">$13</span></li>
+          <li>Selisih = $15 − $13 = <span class="pos">+$2 per unit</span> → <b>olah lebih lanjut (finishing)</b>.</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- KEEP OR DROP -->
+    <h3 id="inc-drop">4. Keep or stop (pertahankan atau tutup lini produk)</h3>
+    <p>Ada lini produk yang rugi. Ditutup saja? Belum tentu. Yang penting: <b>biaya tetap yang bisa dihemat</b> vs <b>contribution margin yang hilang</b>.</p>
+    <div class="callout key">
+      <span class="lbl">Aturan keputusan</span>
+      Pertahankan lini itu <b>kecuali</b> biaya tetap yang benar-benar bisa dihilangkan <b>lebih besar</b> dari CM yang hilang. Banyak biaya tetap tetap ada (cuma pindah ke lini lain), jadi menutup lini rugi bisa malah memperkecil laba.
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Lambert)</span>
+      <p>Lini topi &amp; syal: penjualan $400.000, biaya variabel $310.000, biaya tetap $120.000 → rugi $30.000. Jika ditutup, $20.000 biaya tetap <b>tetap ada</b> (berarti hanya $100.000 yang bisa dihemat).</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Pertahankan</th><th>Tutup</th><th>Selisih</th></tr>
+        <tr><td class="lbl">Penjualan</td><td>$400.000</td><td>$0</td><td><span class="neg">($400.000)</span></td></tr>
+        <tr><td class="lbl">Biaya variabel</td><td>$310.000</td><td>$0</td><td><span class="pos">$310.000</span></td></tr>
+        <tr class="sub"><td class="lbl">Contribution margin</td><td>$90.000</td><td>$0</td><td><span class="neg">($90.000)</span></td></tr>
+        <tr><td class="lbl">Biaya tetap</td><td>$120.000</td><td>$20.000</td><td><span class="pos">$100.000</span></td></tr>
+        <tr class="total"><td class="lbl">Laba bersih</td><td>($30.000)</td><td>($20.000)</td><td><span class="pos">$10.000</span></td></tr>
+      </table>
+      </div>
+      <p class="mini">Menutup lini menaikkan laba $10.000 (rugi mengecil dari $30.000 jadi $20.000), karena hemat fixed $100.000 &gt; CM hilang $90.000 → <b class="term">tutup lini</b>.</p>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 4</span> Keep or stop: PT Busana</div>
+      <div class="body">
+        <p>Lini "Topi" PT Busana: penjualan $150.000, biaya variabel $120.000, biaya tetap $45.000 → rugi $15.000. Jika ditutup, <b>$30.000 biaya tetap tetap ada</b> (jadi hanya $15.000 yang bisa dihemat).</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Pertahankan</th><th>Tutup</th></tr>
+          <tr><td class="lbl">Penjualan</td><td>$150.000</td><td>$0</td></tr>
+          <tr><td class="lbl">Biaya variabel</td><td>$120.000</td><td>$0</td></tr>
+          <tr><td class="lbl">Contribution margin</td><td><input data-ans="30000" inputmode="numeric"></td><td>$0</td></tr>
+          <tr><td class="lbl">Biaya tetap</td><td>$45.000</td><td><input data-ans="30000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Laba bersih</td><td><input data-ans="-15000" inputmode="numeric"></td><td><input data-ans="-30000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ol class="steps">
+              <li>CM saat dipertahankan = $150.000 − $120.000 = $30.000 (CM hilang jika ditutup).</li>
+              <li>Biaya tetap yang bisa dihemat = $45.000 − $30.000 = hanya $15.000.</li>
+              <li>Pertahankan: laba = $30.000 − $45.000 = <span class="neg">($15.000)</span>. Tutup: laba = $0 − $30.000 = <span class="neg">($30.000)</span>.</li>
+              <li>Menutup malah memperburuk laba sebesar $15.000 (CM hilang $30.000 &gt; hemat fixed $15.000) → <b>pertahankan lini Topi</b>.</li>
+            </ol>
+            <p class="mini">Ketik rugi sebagai angka minus, contoh <span class="kbd">-15000</span>.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- REPAIR / REPLACE -->
+    <h3 id="inc-replace">5. Repair, retain, or replace (perbaiki / pertahankan / ganti mesin)</h3>
+    <p>Pilih opsi dengan <b>total biaya terendah</b> selama periode tertentu. Nilai buku mesin lama adalah <b>sunk cost → diabaikan</b>. Yang relevan: biaya operasi ke depan, harga mesin baru, dan hasil jual mesin lama.</p>
+    <div class="example">
+      <span class="tag">Contoh (Rochester Roofing)</span>
+      <p>Lift lama perlu perbaikan $40.000. Atau beli lift baru $170.000. Umur sama 6 tahun. Lift baru menurunkan biaya operasi dari $70.000 jadi $50.000/tahun, dan bisa disewakan $2.000/tahun. Lift lama bisa dijual $25.000.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Pertahankan</th><th>Ganti</th><th>Selisih</th></tr>
+        <tr><td class="lbl">Biaya operasi (6 thn)</td><td>$420.000</td><td>$300.000</td><td><span class="pos">$120.000</span></td></tr>
+        <tr><td class="lbl">Biaya perbaikan</td><td>$40.000</td><td>$0</td><td><span class="pos">$40.000</span></td></tr>
+        <tr><td class="lbl">Pendapatan sewa (6 thn)</td><td>$0</td><td>($12.000)</td><td><span class="pos">$12.000</span></td></tr>
+        <tr><td class="lbl">Harga mesin baru</td><td>$0</td><td>$170.000</td><td><span class="neg">($170.000)</span></td></tr>
+        <tr><td class="lbl">Hasil jual mesin lama</td><td>$0</td><td>($25.000)</td><td><span class="pos">$25.000</span></td></tr>
+        <tr class="total"><td class="lbl">Total biaya</td><td>$460.000</td><td>$433.000</td><td><span class="pos">$27.000</span></td></tr>
+      </table>
+      </div>
+      <p class="mini">Mengganti menghemat $27.000 selama 6 tahun → <b class="term">ganti mesin</b>. Uang $60.000 yang dulu dipakai memperbaiki lift adalah sunk cost, tidak masuk hitungan.</p>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan 5</span> Repair or replace: PT Cetak</div>
+      <div class="body">
+        <p>Mesin cetak lama (nilai buku $30.000: <b>ini sunk cost, abaikan</b>) masih bisa dipakai 5 tahun. Atau beli mesin baru <b>$90.000</b>, umur 5 tahun, tanpa nilai sisa. Mesin baru menurunkan biaya operasi dari <b>$50.000</b> jadi <b>$30.000</b> per tahun. Mesin lama bisa dijual sekarang <b>$8.000</b>.</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Pertahankan</th><th>Ganti</th></tr>
+          <tr><td class="lbl">Biaya operasi (5 tahun)</td><td><input data-ans="250000" inputmode="numeric"></td><td><input data-ans="150000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Harga mesin baru</td><td>$0</td><td><input data-ans="90000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Hasil jual mesin lama</td><td>$0</td><td><input data-ans="-8000" inputmode="numeric"></td></tr>
+          <tr><td class="lbl">Total biaya</td><td><input data-ans="250000" inputmode="numeric"></td><td><input data-ans="232000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ol class="steps">
+              <li>Pertahankan: biaya operasi 5 × $50.000 = <span class="pos">$250.000</span>.</li>
+              <li>Ganti: biaya operasi 5 × $30.000 = $150.000; + mesin baru $90.000; − hasil jual mesin lama $8.000 = <span class="pos">$232.000</span>.</li>
+              <li>Nilai buku $30.000 mesin lama <b>tidak dipakai</b> (sunk cost).</li>
+              <li>Ganti lebih murah $250.000 − $232.000 = <span class="pos">$18.000</span> → <b>ganti mesin</b>.</li>
+            </ol>
+            <p class="mini">Hasil jual mesin lama dicatat minus karena mengurangi biaya: <span class="kbd">-8000</span>.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+  <section class="tab" id="tab-budget">
+    <div class="eyebrow">Case · 60% · Master Budget</div>
+    <h2 class="sec">Master Budget</h2>
+    <p class="sub">Kumpulan anggaran yang saling nyambung. Semua dimulai dari anggaran penjualan, lalu jalan satu per satu sampai jadi laporan laba rugi, kas, dan neraca yang dianggarkan.</p>
+
+    <div class="pillnav">
+      <a class="jump" href="#bud-peta">Urutan &amp; peta</a>
+      <a class="jump" href="#bud-sales">Penjualan</a>
+      <a class="jump" href="#bud-prod">Produksi</a>
+      <a class="jump" href="#bud-dm">Bahan</a>
+      <a class="jump" href="#bud-dl">Tenaga kerja &amp; overhead</a>
+      <a class="jump" href="#bud-is">Laba rugi</a>
+      <a class="jump" href="#bud-cash">Kas</a>
+      <a class="jump" href="#bud-bs">Neraca</a>
+      <a class="jump" href="#bud-latihan">Latihan</a>
+    </div>
+
+    <!-- PETA -->
+    <h3 id="bud-peta">Urutan &amp; peta master budget</h3>
+    <p>Master budget terdiri dari dua kelompok:</p>
+    <div class="card tight">
+      <p><span class="k">Operating budgets</span> (anggaran operasional): penjualan → produksi → bahan → tenaga kerja → overhead → beban penjualan &amp; administrasi → laporan laba rugi yang dianggarkan.</p>
+      <p><span class="k">Financial budgets</span> (anggaran keuangan): anggaran kas dan neraca yang dianggarkan.</p>
+    </div>
+    <div class="callout key">
+      <span class="lbl">Kunci utama</span>
+      <b>Anggaran penjualan adalah titik awal segalanya.</b> Tidak bisa hitung produksi tanpa tahu rencana penjualan. Urutannya berantai: output satu anggaran jadi input anggaran berikutnya.
+    </div>
+    <p class="mini">Semua contoh berikut memakai <b>Hayes Company</b> (membuat jok sepeda "Rightride", harga $60/unit), dianggarkan per kuartal untuk tahun 2025. Angka-angkanya saling nyambung sampai akhir.</p>
+
+    <!-- SALES -->
+    <h3 id="bud-sales">1. Anggaran penjualan (sales budget)</h3>
+    <p>Paling sederhana: perkiraan unit terjual × harga jual.</p>
+    <div class="formula"><div class="eq">Anggaran penjualan = Perkiraan unit terjual × Harga jual per unit</div></div>
+    <div class="example">
+      <span class="tag">Contoh (Hayes)</span>
+      <p>Penjualan Q1 = 3.000 unit, naik 500 unit tiap kuartal. Harga $60.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Setahun</th></tr>
+        <tr><td class="lbl">Unit</td><td>3.000</td><td>3.500</td><td>4.000</td><td>4.500</td><td>15.000</td></tr>
+        <tr><td class="lbl">Harga</td><td>$60</td><td>$60</td><td>$60</td><td>$60</td><td></td></tr>
+        <tr class="total"><td class="lbl">Penjualan</td><td>$180.000</td><td>$210.000</td><td>$240.000</td><td>$270.000</td><td>$900.000</td></tr>
+      </table>
+      </div>
+    </div>
+
+    <!-- PRODUCTION -->
+    <h3 id="bud-prod">2. Anggaran produksi (production budget)</h3>
+    <p>Berapa unit yang harus <b>diproduksi</b>? Bukan cuma sebanyak penjualan, karena perusahaan mau menyimpan stok akhir, dan sudah punya stok awal.</p>
+    <div class="formula">
+      <div class="eq">Unit produksi = Penjualan + Persediaan akhir yang diinginkan − Persediaan awal</div>
+    </div>
+    <div class="callout tip">
+      <span class="lbl">Cara ingat</span>
+      Mau jual segini, mau sisa segini (stok akhir), tapi sudah punya segini (stok awal). Jadi yang perlu dibuat = jual + stok akhir − stok awal.
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Hayes)</span>
+      <p>Persediaan akhir = 20% penjualan kuartal <b>berikutnya</b>. Persediaan akhir Q4 = 1.000 unit.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th></tr>
+        <tr><td class="lbl">Penjualan (unit)</td><td>3.000</td><td>3.500</td><td>4.000</td><td>4.500</td></tr>
+        <tr><td class="lbl">+ Persediaan akhir (20% jual berikutnya)</td><td>700</td><td>800</td><td>900</td><td>1.000</td></tr>
+        <tr><td class="lbl">− Persediaan awal</td><td>600</td><td>700</td><td>800</td><td>900</td></tr>
+        <tr class="total"><td class="lbl">Unit diproduksi</td><td>3.100</td><td>3.600</td><td>4.100</td><td>4.600</td></tr>
+      </table>
+      </div>
+      <p class="mini">Q1: 3.000 + 700 − 600 = 3.100. Persediaan akhir Q1 (700) jadi persediaan awal Q2, begitu seterusnya.</p>
+    </div>
+
+    <!-- DIRECT MATERIALS -->
+    <h3 id="bud-dm">3. Anggaran bahan langsung (direct materials)</h3>
+    <p>Polanya mirip produksi, tapi dua tahap: hitung dulu <b>kebutuhan bahan untuk produksi</b>, lalu hitung <b>bahan yang harus dibeli</b> (dengan logika stok awal-akhir lagi).</p>
+    <div class="formula">
+      <div class="eq">Bahan utk produksi = Unit diproduksi × bahan per unit</div>
+      <div class="eq" style="margin-top:6px">Bahan dibeli = Bahan utk produksi + Persediaan bahan akhir − Persediaan bahan awal</div>
+      <div class="eq" style="margin-top:6px">Biaya pembelian = Bahan dibeli × harga per satuan bahan</div>
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Hayes)</span>
+      <p>Tiap unit butuh 2 pon bahan @ $4/pon. Persediaan bahan akhir = 10% kebutuhan produksi kuartal berikutnya. Akhir Q4 = 1.020 pon.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th></tr>
+        <tr><td class="lbl">Bahan utk produksi (pon)</td><td>6.200</td><td>7.200</td><td>8.200</td><td>9.200</td></tr>
+        <tr><td class="lbl">+ Persediaan akhir (pon)</td><td>720</td><td>820</td><td>920</td><td>1.020</td></tr>
+        <tr><td class="lbl">− Persediaan awal (pon)</td><td>620</td><td>720</td><td>820</td><td>920</td></tr>
+        <tr class="sub"><td class="lbl">Bahan dibeli (pon)</td><td>6.300</td><td>7.300</td><td>8.300</td><td>9.300</td></tr>
+        <tr class="total"><td class="lbl">Biaya pembelian (× $4)</td><td>$25.200</td><td>$29.200</td><td>$33.200</td><td>$37.200</td></tr>
+      </table>
+      </div>
+      <p class="mini">Q1: kebutuhan 3.100 unit × 2 pon = 6.200 pon. Dibeli = 6.200 + 720 − 620 = 6.300 pon × $4 = $25.200.</p>
+    </div>
+
+    <!-- LABOR + OVERHEAD -->
+    <h3 id="bud-dl">4. Tenaga kerja langsung &amp; overhead pabrik</h3>
+    <div class="formula"><div class="eq">Biaya tenaga kerja = Unit diproduksi × jam kerja per unit × tarif per jam</div></div>
+    <div class="example">
+      <span class="tag">Contoh (Hayes)</span>
+      <p>Tiap unit butuh 2 jam kerja @ $10/jam.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl"></th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Setahun</th></tr>
+        <tr><td class="lbl">Unit diproduksi</td><td>3.100</td><td>3.600</td><td>4.100</td><td>4.600</td><td>15.400</td></tr>
+        <tr><td class="lbl">Jam kerja (× 2)</td><td>6.200</td><td>7.200</td><td>8.200</td><td>9.200</td><td>30.800</td></tr>
+        <tr class="total"><td class="lbl">Biaya TK (× $10)</td><td>$62.000</td><td>$72.000</td><td>$82.000</td><td>$92.000</td><td>$308.000</td></tr>
+      </table>
+      </div>
+    </div>
+    <p><b class="term">Anggaran overhead pabrik</b> memisahkan biaya variabel dan tetap. Yang variabel dihitung per jam kerja (Hayes: bahan tak langsung $1,00 + TK tak langsung $1,40 + utilitas $0,40 + pemeliharaan $0,20 = <b>$3 per jam kerja</b>), ditambah overhead tetap (termasuk penyusutan). <b class="term">Anggaran beban penjualan &amp; administrasi</b> juga dipisah variabel (Hayes: komisi $3 + ongkos kirim $1 = $4/unit terjual) dan tetap.</p>
+
+    <!-- INCOME STATEMENT -->
+    <h3 id="bud-is">5. Laporan laba rugi yang dianggarkan</h3>
+    <p>Hasil akhir dari semua anggaran operasional. Untuk hitung HPP (cost of goods sold), cari dulu <b>biaya per unit</b>.</p>
+    <div class="example">
+      <span class="tag">Contoh (Hayes)</span>
+      <p>Biaya produksi per unit jok:</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl">Komponen</th><th>Jumlah</th><th>Biaya</th><th>Total</th></tr>
+        <tr><td class="lbl">Bahan langsung</td><td>2 pon</td><td>$4</td><td>$8</td></tr>
+        <tr><td class="lbl">Tenaga kerja langsung</td><td>2 jam</td><td>$10</td><td>$20</td></tr>
+        <tr><td class="lbl">Overhead pabrik</td><td></td><td></td><td>$16</td></tr>
+        <tr class="total"><td class="lbl">Biaya per unit</td><td></td><td></td><td>$44</td></tr>
+      </table>
+      </div>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl">Laporan Laba Rugi Dianggarkan 2025</th><th></th></tr>
+        <tr><td class="lbl">Penjualan</td><td>$900.000</td></tr>
+        <tr><td class="lbl">HPP (15.000 unit × $44)</td><td>$660.000</td></tr>
+        <tr class="sub"><td class="lbl">Laba kotor</td><td>$240.000</td></tr>
+        <tr><td class="lbl">Beban penjualan &amp; administrasi</td><td>$180.000</td></tr>
+        <tr class="sub"><td class="lbl">Laba operasi</td><td>$60.000</td></tr>
+        <tr><td class="lbl">Beban bunga</td><td>$100</td></tr>
+        <tr><td class="lbl">Pajak penghasilan</td><td>$12.000</td></tr>
+        <tr class="total"><td class="lbl">Laba bersih</td><td>$47.900</td></tr>
+      </table>
+      </div>
+    </div>
+
+    <!-- CASH -->
+    <h3 id="bud-cash">6. Anggaran kas (cash budget)</h3>
+    <p>Memperkirakan aliran kas masuk dan keluar. Punya 3 bagian: <b>penerimaan kas</b>, <b>pengeluaran kas</b>, dan <b>pembiayaan</b> (pinjam/bayar utang kalau kas kurang dari saldo minimum).</p>
+    <div class="formula">
+      <div class="eq">Saldo kas awal + Penerimaan − Pengeluaran = Saldo sebelum pembiayaan</div>
+      <div class="eq" style="margin-top:6px">Lalu sesuaikan dengan pembiayaan agar kas ≥ saldo minimum yang diinginkan.</div>
+    </div>
+    <div class="callout key">
+      <span class="lbl">Yang sering ditanya: jadwal penagihan &amp; pembayaran</span>
+      Penjualan dan pembelian sering tidak langsung jadi kas. Sebagian ditagih/dibayar di kuartal yang sama, sisanya kuartal berikutnya. Ini yang bikin jadwalnya agak tricky.
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Hayes): jadwal penerimaan kas dari pelanggan</span>
+      <p>60% penjualan ditagih di kuartal terjadi, 40% ditagih kuartal berikutnya. Piutang awal $60.000 ditagih penuh di Q1.</p>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl">Sumber</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th></tr>
+        <tr><td class="lbl">Piutang awal</td><td>$60.000</td><td></td><td></td><td></td></tr>
+        <tr><td class="lbl">Penjualan Q1 ($180.000)</td><td>$108.000</td><td>$72.000</td><td></td><td></td></tr>
+        <tr><td class="lbl">Penjualan Q2 ($210.000)</td><td></td><td>$126.000</td><td>$84.000</td><td></td></tr>
+        <tr><td class="lbl">Penjualan Q3 ($240.000)</td><td></td><td></td><td>$144.000</td><td>$96.000</td></tr>
+        <tr><td class="lbl">Penjualan Q4 ($270.000)</td><td></td><td></td><td></td><td>$162.000</td></tr>
+        <tr class="total"><td class="lbl">Total penerimaan</td><td>$168.000</td><td>$198.000</td><td>$228.000</td><td>$258.000</td></tr>
+      </table>
+      </div>
+      <p class="mini">Q1: piutang awal $60.000 + 60% × $180.000 ($108.000) = $168.000. Sisa 40% penjualan Q1 ($72.000) baru masuk di Q2. Piutang akhir tahun = 40% × penjualan Q4 = $108.000 (ini masuk ke neraca).</p>
+    </div>
+    <p class="mini">Pengeluaran kas untuk bahan punya pola serupa (Hayes: 50% dibayar kuartal pembelian, 50% kuartal berikutnya; utang dagang awal $10.600). Tenaga kerja dibayar 100% di kuartal terjadi. Overhead &amp; beban penjualan-administrasi dibayar tunai kecuali penyusutan.</p>
+
+    <!-- BALANCE SHEET -->
+    <h3 id="bud-bs">7. Neraca yang dianggarkan (budgeted balance sheet)</h3>
+    <p>Foto posisi keuangan di akhir periode. Tiap angka diambil dari anggaran sebelumnya. Yang penting: <b>tahu tiap angka asalnya dari mana</b>.</p>
+    <div class="example">
+      <span class="tag">Contoh (Hayes): dari mana tiap angka</span>
+      <div class="tbl-wrap">
+      <table class="acc-table">
+        <tr><th class="lbl">Akun</th><th>Nilai</th><th class="lbl">Asalnya</th></tr>
+        <tr><td class="lbl">Kas</td><td>$37.900</td><td class="lbl">Saldo akhir anggaran kas</td></tr>
+        <tr><td class="lbl">Piutang usaha</td><td>$108.000</td><td class="lbl">40% × penjualan Q4 ($270.000)</td></tr>
+        <tr><td class="lbl">Persediaan barang jadi</td><td>$44.000</td><td class="lbl">1.000 unit × $44 biaya/unit</td></tr>
+        <tr><td class="lbl">Persediaan bahan</td><td>$4.080</td><td class="lbl">1.020 pon × $4</td></tr>
+        <tr><td class="lbl">Bangunan &amp; alat (neto)</td><td>$144.000</td><td class="lbl">$192.000 − akumulasi penyusutan $48.000</td></tr>
+        <tr class="sub"><td class="lbl">Total aset</td><td>$337.980</td><td class="lbl"></td></tr>
+        <tr><td class="lbl">Utang usaha</td><td>$18.600</td><td class="lbl">50% × pembelian Q4 ($37.200)</td></tr>
+        <tr><td class="lbl">Modal saham</td><td>$225.000</td><td class="lbl">Tidak berubah</td></tr>
+        <tr><td class="lbl">Laba ditahan</td><td>$94.380</td><td class="lbl">$46.480 awal + laba bersih $47.900</td></tr>
+        <tr class="total"><td class="lbl">Total utang + ekuitas</td><td>$337.980</td><td class="lbl">Seimbang dengan total aset ✓</td></tr>
+      </table>
+      </div>
+      <p class="mini">Total aset = total utang + ekuitas = $337.980. Kalau neraca seimbang, berarti semua anggaran tadi sudah nyambung dengan benar.</p>
+    </div>
+
+    <!-- LATIHAN -->
+    <h3 id="bud-latihan">Latihan: PT Cahaya (membuat tumbler)</h3>
+    <p>PT Cahaya menganggarkan tahun 2025 per kuartal. Harga jual <b>$50</b>/unit. Penjualan: Q1 4.000, Q2 5.000, Q3 6.000, Q4 7.000 unit. Penjualan Q1 2026 diperkirakan 5.000 unit.</p>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan A</span> Penjualan &amp; Produksi</div>
+      <div class="body">
+        <p>Persediaan barang jadi akhir = <b>25%</b> penjualan kuartal berikutnya. Persediaan awal Q1 = 1.000 unit (25% × 4.000).</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th></tr>
+          <tr><td class="lbl">Penjualan (unit)</td><td>4.000</td><td>5.000</td><td>6.000</td><td>7.000</td></tr>
+          <tr><td class="lbl">+ Persediaan akhir</td><td>1.250</td><td>1.500</td><td>1.750</td><td>1.250</td></tr>
+          <tr><td class="lbl">− Persediaan awal</td><td>1.000</td><td>1.250</td><td>1.500</td><td>1.750</td></tr>
+          <tr><td class="lbl"><b>Unit diproduksi</b></td>
+            <td><input data-ans="4250" inputmode="numeric"></td>
+            <td><input data-ans="5250" inputmode="numeric"></td>
+            <td><input data-ans="6250" inputmode="numeric"></td>
+            <td><input data-ans="6500" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><td class="lbl">Total penjualan setahun ($)</td><td><input data-ans="1100000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ul>
+              <li>Q1: 4.000 + 1.250 − 1.000 = <span class="pos">4.250</span></li>
+              <li>Q2: 5.000 + 1.500 − 1.250 = <span class="pos">5.250</span></li>
+              <li>Q3: 6.000 + 1.750 − 1.500 = <span class="pos">6.250</span></li>
+              <li>Q4: 7.000 + 1.250 − 1.750 = <span class="pos">6.500</span> (akhir Q4 = 25% × 5.000 penjualan Q1-2026)</li>
+              <li>Total penjualan = (4.000+5.000+6.000+7.000) × $50 = 22.000 × $50 = <span class="pos">$1.100.000</span></li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan B</span> Bahan langsung (pembelian)</div>
+      <div class="body">
+        <p>Tiap tumbler butuh <b>2 pon</b> bahan @ <b>$3</b>/pon. Persediaan bahan akhir = 10% kebutuhan produksi kuartal berikutnya. Persediaan bahan akhir Q4 = 900 pon. (Pakai unit produksi dari Latihan A.)</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl"></th><th>Q1</th></tr>
+          <tr><td class="lbl">Kebutuhan bahan (4.250 × 2 pon)</td><td>8.500</td></tr>
+          <tr><td class="lbl">+ Persediaan akhir (10% × 10.500)</td><td>1.050</td></tr>
+          <tr><td class="lbl">− Persediaan awal (10% × 8.500)</td><td>850</td></tr>
+          <tr><td class="lbl"><b>Bahan dibeli (pon)</b></td><td><input data-ans="8700" inputmode="numeric"></td></tr>
+          <tr><td class="lbl"><b>Biaya pembelian Q1 (× $3)</b></td><td><input data-ans="26100" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ol class="steps">
+              <li>Kebutuhan bahan Q1 = 4.250 unit × 2 pon = 8.500 pon.</li>
+              <li>Bahan dibeli = 8.500 + 1.050 − 850 = <span class="pos">8.700 pon</span>.</li>
+              <li>Biaya pembelian = 8.700 × $3 = <span class="pos">$26.100</span>.</li>
+            </ol>
+            <p class="mini">Catatan: persediaan akhir Q1 (1.050) = 10% × kebutuhan produksi Q2 (5.250 × 2 = 10.500 pon).</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="practice">
+      <div class="head"><span class="badge">Latihan C</span> Kas: jadwal penerimaan</div>
+      <div class="body">
+        <p>Penjualan ditagih: <b>70%</b> di kuartal terjadi, <b>30%</b> kuartal berikutnya. Piutang awal $50.000 ditagih penuh di Q1. (Penjualan $: Q1 200.000, Q2 250.000, Q3 300.000, Q4 350.000.)</p>
+        <div class="tbl-wrap">
+        <table class="acc-table">
+          <tr><th class="lbl">Sumber</th><th>Q1</th><th>Q2</th></tr>
+          <tr><td class="lbl">Piutang awal</td><td>$50.000</td><td></td></tr>
+          <tr><td class="lbl">Penjualan Q1 ($200.000)</td><td>70% = $140.000</td><td>30% = $60.000</td></tr>
+          <tr><td class="lbl">Penjualan Q2 ($250.000)</td><td></td><td>70% = $175.000</td></tr>
+          <tr><td class="lbl"><b>Total penerimaan</b></td>
+            <td><input data-ans="190000" inputmode="numeric"></td>
+            <td><input data-ans="235000" inputmode="numeric"></td></tr>
+        </table>
+        </div>
+        <div class="btnrow">
+          <button class="act" type="button" onclick="checkTable(this)">Cek isian</button>
+          <button class="act ghost" type="button" onclick="resetTable(this)">Reset</button>
+        </div>
+        <div class="feedback"></div>
+        <details class="reveal">
+          <summary><span class="pin">Jawaban</span> Lihat pembahasan <span class="chev">▾</span></summary>
+          <div class="rb">
+            <ul>
+              <li>Q1 = piutang awal $50.000 + 70% × $200.000 ($140.000) = <span class="pos">$190.000</span></li>
+              <li>Q2 = 30% × $200.000 ($60.000) + 70% × $250.000 ($175.000) = <span class="pos">$235.000</span></li>
+            </ul>
+            <p class="mini">Piutang akhir tahun = 30% × penjualan Q4 = 30% × $350.000 = $105.000 (akan masuk neraca).</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+  <section class="tab" id="tab-esai1">
+    <div class="eyebrow">Essay · 40% · Sesi 15-16</div>
+    <h2 class="sec">Esai: Sesi 15-16</h2>
+    <p class="sub">Managerial Accounting (Ch. 14). Ini bagian konsep. Pahami idenya, lalu hafal poin-poin kuncinya untuk menjawab esai.</p>
+
+    <div class="pillnav">
+      <a class="jump" href="#e1-def">Akuntansi manajemen</a>
+      <a class="jump" href="#e1-fungsi">Fungsi manajemen</a>
+      <a class="jump" href="#e1-biaya">Biaya manufaktur</a>
+      <a class="jump" href="#e1-pp">Product vs period</a>
+      <a class="jump" href="#e1-cogm">COGM</a>
+      <a class="jump" href="#e1-tren">Tren</a>
+    </div>
+
+    <h3 id="e1-def">Akuntansi manajemen vs akuntansi keuangan</h3>
+    <p><b class="term">Managerial accounting</b> (akuntansi manajemen) = menyediakan informasi keuangan dan ekonomi untuk <b>pihak internal</b> (manajer) supaya bisa mengambil keputusan. Bedanya dengan akuntansi keuangan yang untuk pihak luar (investor, kreditur).</p>
+    <div class="tbl-wrap">
+    <table class="acc-table">
+      <tr><th class="lbl">Hal</th><th class="lbl">Akuntansi Manajemen</th><th class="lbl">Akuntansi Keuangan</th></tr>
+      <tr><td class="lbl">Pengguna</td><td class="lbl">Internal (manajer)</td><td class="lbl">Eksternal (investor, kreditur)</td></tr>
+      <tr><td class="lbl">Jenis laporan</td><td class="lbl">Khusus, sesuai kebutuhan</td><td class="lbl">Laporan keuangan baku</td></tr>
+      <tr><td class="lbl">Seberapa sering</td><td class="lbl">Kapan saja diperlukan</td><td class="lbl">Berkala (kuartal/tahun)</td></tr>
+      <tr><td class="lbl">Patuh GAAP?</td><td class="lbl">Tidak harus</td><td class="lbl">Harus</td></tr>
+      <tr><td class="lbl">Fokus waktu</td><td class="lbl">Masa depan (perencanaan)</td><td class="lbl">Masa lalu (yang sudah terjadi)</td></tr>
+    </table>
+    </div>
+    <div class="callout key"><span class="lbl">Poin hafalan</span> Persamaannya: keduanya membahas peristiwa ekonomi perusahaan dan harus dikuantifikasi lalu dikomunikasikan. Perbedaan utama: <b>pengguna internal vs eksternal</b> dan <b>tidak wajib vs wajib GAAP</b>.</div>
+
+    <h3 id="e1-fungsi">Fungsi manajemen</h3>
+    <ul>
+      <li><span class="k">Planning</span> (perencanaan): menetapkan tujuan ke depan. Tujuan modern yang penting: <i>menambah nilai</i> perusahaan.</li>
+      <li><span class="k">Directing</span> (pengarahan): mengoordinasi orang dan kegiatan agar operasi berjalan lancar.</li>
+      <li><span class="k">Controlling</span> (pengendalian): menjaga kegiatan tetap sesuai rencana; cek apakah target tercapai, cari koreksi kalau melenceng.</li>
+    </ul>
+    <p class="mini"><b>Decision-making</b> bukan fungsi terpisah, melainkan hasil dari menjalankan ketiga fungsi di atas dengan baik.</p>
+
+    <h3 id="e1-biaya">Biaya manufaktur</h3>
+    <p>Biaya untuk mengubah bahan mentah jadi barang jadi. Ada 3:</p>
+    <ul>
+      <li><span class="k">Direct materials</span> (bahan langsung): bahan utama yang bisa ditelusuri langsung ke produk. Contoh: kayu untuk meja.</li>
+      <li><span class="k">Direct labor</span> (tenaga kerja langsung): kerja karyawan yang langsung mengubah bahan jadi produk. Contoh: tukang yang merakit.</li>
+      <li><span class="k">Manufacturing overhead</span> (overhead pabrik): semua biaya pabrik <b>selain</b> bahan langsung dan TK langsung. Contoh: penyusutan mesin, listrik pabrik, gaji mandor, bahan tak langsung (lem, pelumas), TK tak langsung (petugas kebersihan pabrik).</li>
+    </ul>
+    <div class="callout"><span class="lbl">Direct vs Indirect</span> "Langsung" kalau bisa ditelusuri secara fisik dan ekonomis ke produk. Kalau terlalu kecil/tidak praktis untuk ditelusuri (lem, paku), masuk <b>overhead</b> sebagai bahan/TK tak langsung.</div>
+
+    <h3 id="e1-pp">Product cost vs period cost</h3>
+    <div class="card tight">
+      <p><span class="k">Product cost</span> (biaya produk) = semua biaya manufaktur (bahan langsung + TK langsung + overhead). Dicatat dulu di <b>persediaan</b>, baru jadi beban (HPP) saat barang <b>terjual</b>.</p>
+      <p><span class="k">Period cost</span> (biaya periode) = biaya non-manufaktur, yaitu semua beban penjualan dan administrasi. Langsung jadi beban di periode terjadi. Contoh: iklan, komisi penjualan, gaji akuntan, ongkos kirim ke pelanggan.</p>
+    </div>
+    <div class="callout key"><span class="lbl">Poin hafalan</span> Product cost "nempel" di produk dan ikut persediaan; period cost langsung dibebankan. Iklan &amp; komisi penjualan = <b>period cost</b>, bukan product cost (walau kelihatannya penting buat jualan).</div>
+
+    <h3 id="e1-cogm">Cost of Goods Manufactured (COGM)</h3>
+    <p>Harga pokok produksi: total biaya barang yang <b>selesai diproduksi</b> dalam periode. Ini menggantikan "pembelian" pada perusahaan dagang.</p>
+    <div class="formula">
+      <div class="eq">Bahan langsung dipakai = Persediaan bahan awal + Pembelian − Persediaan bahan akhir</div>
+      <div class="eq" style="margin-top:6px">Total biaya manufaktur = Bahan langsung dipakai + TK langsung + Overhead</div>
+      <div class="eq" style="margin-top:6px">Total biaya WIP = Persediaan WIP awal + Total biaya manufaktur</div>
+      <div class="eq" style="margin-top:6px">COGM = Total biaya WIP − Persediaan WIP akhir</div>
+    </div>
+    <p class="mini">WIP = <i>work in process</i> (barang dalam proses). Perusahaan manufaktur punya 3 jenis persediaan: bahan, barang dalam proses, dan barang jadi.</p>
+    <div class="example">
+      <span class="tag">Contoh (Keystone)</span>
+      <p>Bahan awal $12.000, bahan akhir $10.000, pembelian $90.000. WIP awal $2.500, WIP akhir $4.000. TK langsung $75.000, overhead $220.000.</p>
+      <ol class="steps">
+        <li>Bahan dipakai = $12.000 + $90.000 − $10.000 = $92.000</li>
+        <li>Total biaya manufaktur = $92.000 + $75.000 + $220.000 = $387.000</li>
+        <li>Total biaya WIP = $2.500 + $387.000 = $389.500</li>
+        <li>COGM = $389.500 − $4.000 = <span class="pos">$385.500</span></li>
+      </ol>
+    </div>
+    <div class="callout tip"><span class="lbl">Laporan keuangan manufaktur</span> Beda dari perusahaan dagang ada di dua tempat: (1) <b>neraca</b> punya 3 jenis persediaan (bukan satu), dan (2) <b>bagian HPP di laba rugi</b> memakai COGM, bukan pembelian.</div>
+
+    <h3 id="e1-tren">Tren akuntansi manajemen (sering keluar di esai)</h3>
+    <div class="card tight">
+      <p><span class="k">Value chain</span> = seluruh rangkaian proses bisnis dari ide sampai layanan purnajual.</p>
+      <p><span class="k">JIT (Just-in-Time)</span> = bahan/barang dibuat atau dibeli pas saat dibutuhkan, jadi persediaan minim.</p>
+      <p><span class="k">TQM (Total Quality Management)</span> = sistem untuk menekan cacat produk, target nol cacat.</p>
+      <p><span class="k">Theory of Constraints</span> = mengelola "bottleneck" (penghambat) yang membatasi laba.</p>
+      <p><span class="k">ABC (Activity-Based Costing)</span> = membebankan overhead berdasarkan aktivitas tiap produk, jadi biaya lebih akurat.</p>
+      <p><span class="k">Balanced Scorecard</span> = menilai kinerja pakai ukuran keuangan <b>dan</b> non-keuangan secara terpadu.</p>
+      <p><span class="k">Triple bottom line</span> = mengukur kinerja dari 3 sisi: <i>people, planet, profit</i> (tanggung jawab sosial perusahaan/CSR).</p>
+    </div>
+    <div class="callout"><span class="lbl">Etika</span> <b>Sarbanes-Oxley Act (SOX)</b> memperjelas tanggung jawab manajemen, mewajibkan sertifikasi laporan oleh CEO &amp; CFO, dan menambah hukuman untuk pelanggaran. Anggaran yang tidak realistis bisa memicu perilaku tidak etis.</div>
+
+    <details class="reveal">
+      <summary><span class="pin">Cek pemahaman</span> Pertanyaan latihan singkat <span class="chev">▾</span></summary>
+      <div class="rb">
+        <p><b>1. Iklan termasuk product cost atau period cost?</b><br>Period cost (biaya penjualan, langsung dibebankan).</p>
+        <p><b>2. Gaji mandor pabrik masuk ke mana?</b><br>Manufacturing overhead (biaya pabrik, tapi tidak langsung mengolah produk).</p>
+        <p><b>3. Sebutkan 3 jenis persediaan perusahaan manufaktur.</b><br>Bahan baku (raw materials), barang dalam proses (WIP), barang jadi (finished goods).</p>
+        <p><b>4. Apa beda utama akuntansi manajemen dan keuangan?</b><br>Pengguna internal vs eksternal; tidak wajib GAAP vs wajib GAAP; fokus masa depan vs masa lalu.</p>
+      </div>
+    </details>
+  </section>
+  <section class="tab" id="tab-esai2">
+    <div class="eyebrow">Essay · 40% · Sesi 25-26</div>
+    <h2 class="sec">Esai: Sesi 25-26</h2>
+    <p class="sub">Budgetary Control &amp; Responsibility Accounting (Ch. 23). Konsep + poin hafalan, plus rumus ROI dan residual income.</p>
+
+    <div class="pillnav">
+      <a class="jump" href="#e2-control">Budgetary control</a>
+      <a class="jump" href="#e2-flex">Flexible budget</a>
+      <a class="jump" href="#e2-resp">Responsibility accounting</a>
+      <a class="jump" href="#e2-center">Pusat pertanggungjawaban</a>
+      <a class="jump" href="#e2-roi">ROI</a>
+      <a class="jump" href="#e2-ri">Residual income</a>
+      <a class="jump" href="#e2-bsc">Balanced scorecard</a>
+    </div>
+
+    <h3 id="e2-control">Budgetary control &amp; static budget report</h3>
+    <p><b class="term">Budgetary control</b> = memakai anggaran untuk mengendalikan operasi, dengan membandingkan <b>hasil aktual vs rencana</b> dan mencari penyebab selisihnya.</p>
+    <p><b class="term">Static budget</b> = anggaran pada <b>satu tingkat aktivitas</b> saja. Cocok untuk menilai biaya tetap atau saat aktivitas aktual mendekati rencana, tapi <b>tidak cocok</b> untuk biaya variabel kalau aktivitasnya berubah jauh.</p>
+    <div class="callout key">
+      <span class="lbl">Favorable vs Unfavorable</span>
+      Selisih (variance) disebut <span class="pos">favorable</span> kalau menguntungkan laba, <span class="neg">unfavorable</span> kalau merugikan. Untuk <b>pendapatan</b>: aktual &gt; anggaran = favorable. Untuk <b>biaya</b>: aktual &lt; anggaran = favorable.
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Chase Company)</span>
+      <p>Anggaran penjualan $76.000, aktual $77.200. Selisih = $77.200 − $76.000 = $1.200, dan karena ini pendapatan yang lebih tinggi → <span class="pos">$1.200 favorable</span>.</p>
+    </div>
+
+    <h3 id="e2-flex">Flexible budget</h3>
+    <p><b class="term">Flexible budget</b> = anggaran untuk <b>berbagai tingkat aktivitas</b>, bukan cuma satu. Lebih adil untuk menilai kinerja karena biaya variabel disesuaikan dengan aktivitas sebenarnya.</p>
+    <div class="formula"><div class="eq">Total biaya dianggarkan = Biaya tetap + (Biaya variabel per unit aktivitas × Tingkat aktivitas)</div></div>
+    <div class="example">
+      <span class="tag">Contoh (Fox Company)</span>
+      <p>Biaya tetap $30.000/bulan, biaya variabel $4 per jam kerja langsung. Saat aktivitas 9.000 jam: $30.000 + ($4 × 9.000) = <span class="pos">$66.000</span>.</p>
+    </div>
+
+    <h3 id="e2-resp">Responsibility accounting</h3>
+    <p><b class="term">Responsibility accounting</b> = mengumpulkan dan melaporkan biaya/pendapatan berdasarkan <b>manajer yang bertanggung jawab</b> atas hal itu. Manajer hanya dinilai dari hal yang <b>bisa dia kendalikan</b>.</p>
+    <div class="card tight">
+      <p><span class="k">Controllable cost</span> = biaya yang bisa dikendalikan manajer pada level tertentu. Makin tinggi jabatan, makin banyak biaya yang bisa dikendalikan.</p>
+      <p><span class="k">Noncontrollable cost</span> = biaya yang dialokasikan dari atas, di luar kendali manajer itu.</p>
+    </div>
+    <div class="callout"><span class="lbl">Management by exception</span> Manajemen atas fokus hanya pada selisih yang <b>signifikan</b> (material) dan yang bisa dikendalikan, bukan memeriksa semua selisih kecil.</div>
+
+    <h3 id="e2-center">Tiga jenis pusat pertanggungjawaban</h3>
+    <div class="tbl-wrap">
+    <table class="acc-table">
+      <tr><th class="lbl">Pusat</th><th class="lbl">Tanggung jawab</th><th class="lbl">Dinilai dari</th></tr>
+      <tr><td class="lbl"><b class="term">Cost center</b></td><td class="lbl">Hanya menimbulkan biaya, tidak hasilkan pendapatan</td><td class="lbl">Kemampuan mengendalikan biaya</td></tr>
+      <tr><td class="lbl"><b class="term">Profit center</b></td><td class="lbl">Menimbulkan biaya + menghasilkan pendapatan</td><td class="lbl">Profitabilitas (laba)</td></tr>
+      <tr><td class="lbl"><b class="term">Investment center</b></td><td class="lbl">Biaya + pendapatan + punya dana investasi</td><td class="lbl">Laba dan tingkat pengembalian (ROI)</td></tr>
+    </table>
+    </div>
+    <p class="mini">Contoh: departemen produksi = cost center; departemen/toko cabang = profit center; anak perusahaan atau lini produk besar = investment center.</p>
+
+    <h3 id="e2-roi">Return on Investment (ROI)</h3>
+    <p>Dasar utama menilai manajer <b>investment center</b>: seberapa efektif dia memakai aset untuk menghasilkan laba.</p>
+    <div class="formula">
+      <div class="eq">Controllable margin = Contribution margin − Biaya tetap terkendali</div>
+      <div class="eq" style="margin-top:6px">ROI = Controllable margin ÷ Rata-rata aset operasi</div>
+    </div>
+    <div class="example">
+      <span class="tag">Contoh (Taco Town)</span>
+      <p>Contribution margin $186.400, biaya tetap terkendali $102.000, rata-rata aset operasi $800.000.</p>
+      <ul>
+        <li>Controllable margin = $186.400 − $102.000 = $84.400</li>
+        <li>ROI = $84.400 ÷ $800.000 = <span class="pos">10,55%</span></li>
+      </ul>
+    </div>
+    <div class="callout tip"><span class="lbl">Cara menaikkan ROI</span> Ada tiga: (1) naikkan penjualan, (2) turunkan biaya, (3) kurangi rata-rata aset operasi. Dua pertama menaikkan controllable margin; yang ketiga memperkecil penyebut.</div>
+
+    <h3 id="e2-ri">Residual income</h3>
+    <p>Kelemahan ROI: dia mengabaikan <b>tingkat pengembalian minimum</b>. Manajer bisa menolak proyek bagus hanya karena menurunkan ROI rata-rata. <b class="term">Residual income</b> memperbaiki ini.</p>
+    <div class="formula"><div class="eq">Residual income = Controllable margin − (Tingkat pengembalian minimum × Rata-rata aset operasi)</div></div>
+    <div class="example">
+      <span class="tag">Contoh (East Division)</span>
+      <p>Controllable margin $300.000, rata-rata aset operasi $2.200.000, tingkat pengembalian minimum 8%.</p>
+      <ul>
+        <li>Residual income = $300.000 − (8% × $2.200.000) = $300.000 − $176.000 = <span class="pos">$124.000</span></li>
+        <li>ROI = $300.000 ÷ $2.200.000 = <span class="pos">13,64%</span></li>
+      </ul>
+      <p class="mini">Kelemahan residual income: hasil dalam angka rupiah/dolar, jadi sulit membandingkan divisi yang ukurannya beda.</p>
+    </div>
+
+    <h3 id="e2-bsc">Balanced scorecard</h3>
+    <p>Menggabungkan ukuran keuangan dan non-keuangan dalam satu sistem yang terhubung ke tujuan strategis. Menilai kinerja dari <b>empat perspektif</b>:</p>
+    <div class="tbl-wrap">
+    <table class="acc-table">
+      <tr><th class="lbl">Perspektif</th><th class="lbl">Menilai apa</th><th class="lbl">Contoh ukuran</th></tr>
+      <tr><td class="lbl"><b class="term">Financial</b></td><td class="lbl">Kinerja keuangan</td><td class="lbl">ROI, laba bersih, harga saham</td></tr>
+      <tr><td class="lbl"><b class="term">Customer</b></td><td class="lbl">Pandangan pelanggan</td><td class="lbl">Retensi pelanggan, brand recognition</td></tr>
+      <tr><td class="lbl"><b class="term">Internal process</b></td><td class="lbl">Proses operasi internal</td><td class="lbl">% produk bebas cacat, pengurangan limbah</td></tr>
+      <tr><td class="lbl"><b class="term">Learning &amp; growth</b></td><td class="lbl">Pengembangan &amp; retensi karyawan</td><td class="lbl">Jam pelatihan, kepuasan karyawan</td></tr>
+    </table>
+    </div>
+    <div class="callout key"><span class="lbl">Poin hafalan</span> Empat perspektif: <b>Financial, Customer, Internal Process, Learning &amp; Growth</b>. Tujuan finansial biasanya ditetapkan dulu, lalu perspektif lain disusun untuk mendukungnya. Earnings per share = perspektif <b>financial</b>, bukan customer.</div>
+
+    <details class="reveal">
+      <summary><span class="pin">Cek pemahaman</span> Pertanyaan latihan singkat <span class="chev">▾</span></summary>
+      <div class="rb">
+        <p><b>1. Penjualan aktual $90.000, anggaran $85.000. Favorable atau unfavorable?</b><br>$5.000 favorable (pendapatan aktual lebih tinggi).</p>
+        <p><b>2. Departemen perakitan pabrik termasuk pusat apa?</b><br>Cost center.</p>
+        <p><b>3. Controllable margin $50.000, aset operasi $400.000. Berapa ROI?</b><br>$50.000 ÷ $400.000 = 12,5%.</p>
+        <p><b>4. Kenapa flexible budget lebih adil dari static budget?</b><br>Karena menyesuaikan biaya variabel dengan tingkat aktivitas sebenarnya, jadi perbandingannya apple-to-apple.</p>
+      </div>
+    </details>
+  </section>
+  <section class="tab" id="tab-rumus">
+    <div class="eyebrow">Referensi · Rumus</div>
+    <h2 class="sec">Kumpulan Rumus &amp; Struktur</h2>
+    <p class="sub">Semua rumus penting dalam satu tempat. Cocok untuk review cepat sebelum ujian.</p>
+
+    <h3>CVP</h3>
+    <div class="card tight">
+      <div class="formula"><div class="eq">CM per unit = Harga jual − Biaya variabel per unit</div></div>
+      <div class="formula"><div class="eq">CM ratio = CM per unit ÷ Harga jual</div></div>
+      <div class="formula"><div class="eq">Break-even (unit) = Biaya tetap ÷ CM per unit</div></div>
+      <div class="formula"><div class="eq">Break-even ($) = Biaya tetap ÷ CM ratio</div></div>
+      <div class="formula"><div class="eq">Unit target laba = (Biaya tetap + Target laba) ÷ CM per unit</div></div>
+      <div class="formula"><div class="eq">$ target laba = (Biaya tetap + Target laba) ÷ CM ratio</div></div>
+      <div class="formula"><div class="eq">Margin of safety ($) = Penjualan aktual − Penjualan impas</div></div>
+      <div class="formula"><div class="eq">Margin of safety ratio = MOS ($) ÷ Penjualan aktual</div></div>
+      <div class="formula"><div class="eq">High-low VC/unit = (Biaya tertinggi − terendah) ÷ (Aktivitas tertinggi − terendah)</div></div>
+      <div class="formula"><div class="eq">High-low biaya tetap = Total biaya − (VC/unit × Aktivitas)</div></div>
+      <div class="formula"><div class="eq">Weighted-average CM = Σ (CM produk × % mix)</div></div>
+      <div class="formula"><div class="eq">CM per unit sumber daya = CM per unit ÷ Sumber daya dipakai per unit</div></div>
+      <div class="formula"><div class="eq">Degree of operating leverage = CM ÷ Laba bersih</div></div>
+    </div>
+
+    <h3>Incremental Analysis</h3>
+    <div class="card tight">
+      <p>Semua keputusan: bandingkan <b>angka yang berubah</b> saja (Pilihan 1 vs Pilihan 2 vs Selisih). Abaikan <b>sunk cost</b>. Masukkan <b>opportunity cost</b> bila ada.</p>
+      <div class="formula"><div class="eq">Special order: Terima jika Harga tawaran &gt; Biaya variabel per unit (kapasitas masih ada → fixed diabaikan)</div></div>
+      <div class="formula"><div class="eq">Make or buy: bandingkan total biaya buat sendiri vs (harga beli + fixed yang tetap ada) + opportunity cost</div></div>
+      <div class="formula"><div class="eq">Sell / process further: Olah jika Tambahan pendapatan &gt; Tambahan biaya proses</div></div>
+      <div class="formula"><div class="eq">Keep / stop: Tutup jika Fixed yang dihemat &gt; CM yang hilang</div></div>
+      <div class="formula"><div class="eq">Repair / replace: pilih total biaya terendah selama periode (nilai buku lama = sunk, abaikan)</div></div>
+    </div>
+
+    <h3>Master Budget</h3>
+    <div class="card tight">
+      <div class="formula"><div class="eq">Anggaran penjualan = Unit terjual × Harga jual</div></div>
+      <div class="formula"><div class="eq">Unit produksi = Penjualan + Persediaan akhir − Persediaan awal</div></div>
+      <div class="formula"><div class="eq">Bahan dibeli = Bahan utk produksi + Persediaan bahan akhir − Persediaan bahan awal</div></div>
+      <div class="formula"><div class="eq">Biaya tenaga kerja = Unit diproduksi × Jam per unit × Tarif per jam</div></div>
+      <div class="formula"><div class="eq">Merchandiser: Pembelian = HPP dianggarkan + Persediaan akhir − Persediaan awal</div></div>
+      <div class="formula"><div class="eq">Kas: Saldo awal + Penerimaan − Pengeluaran = Saldo sebelum pembiayaan</div></div>
+    </div>
+
+    <h3>Budgetary Control &amp; ROI</h3>
+    <div class="card tight">
+      <div class="formula"><div class="eq">Variance = Aktual − Anggaran (pendapatan: lebih tinggi = favorable; biaya: lebih rendah = favorable)</div></div>
+      <div class="formula"><div class="eq">Flexible budget = Biaya tetap + (VC per unit aktivitas × Aktivitas)</div></div>
+      <div class="formula"><div class="eq">Controllable margin = Contribution margin − Biaya tetap terkendali</div></div>
+      <div class="formula"><div class="eq">ROI = Controllable margin ÷ Rata-rata aset operasi</div></div>
+      <div class="formula"><div class="eq">Residual income = Controllable margin − (Tingkat pengembalian minimum × Rata-rata aset operasi)</div></div>
+    </div>
+
+    <h3>Harga Pokok Produksi (COGM)</h3>
+    <div class="card tight">
+      <div class="formula"><div class="eq">Bahan dipakai = Bahan awal + Pembelian − Bahan akhir</div></div>
+      <div class="formula"><div class="eq">Total biaya manufaktur = Bahan dipakai + TK langsung + Overhead</div></div>
+      <div class="formula"><div class="eq">COGM = (WIP awal + Total biaya manufaktur) − WIP akhir</div></div>
+    </div>
+
+    <div class="callout key">
+      <span class="lbl">Struktur laporan laba rugi CVP (hafalkan urutannya)</span>
+      Penjualan − Biaya variabel = <b>Contribution margin</b> − Biaya tetap = <b>Laba bersih</b>.
+    </div>
+    <div class="callout tip">
+      <span class="lbl">Urutan master budget</span>
+      Penjualan → Produksi → Bahan / TK / Overhead → Beban penjualan-administrasi → Laba rugi → Kas → Neraca. Penjualan selalu pertama.
+    </div>
+  </section>
+  <section class="tab" id="tab-istilah">
+    <div class="eyebrow">Referensi · Istilah</div>
+    <h2 class="sec">Istilah &amp; Kata Kunci</h2>
+    <p class="sub">Daftar istilah penting beserta arti gampangnya. Istilah Inggris sengaja dipertahankan karena itu yang dipakai di soal.</p>
+
+    <div class="pillnav">
+      <a class="jump" href="#i-cvp">CVP</a>
+      <a class="jump" href="#i-inc">Incremental</a>
+      <a class="jump" href="#i-bud">Master Budget</a>
+      <a class="jump" href="#i-man">Akuntansi Manajemen</a>
+      <a class="jump" href="#i-ctrl">Budgetary Control</a>
+    </div>
+
+    <h3 id="i-cvp">CVP</h3>
+    <div class="termcard"><span class="t">Variable cost</span> <span class="en">biaya variabel</span><br>Total naik-turun ikut produksi, tapi per unit tetap. Contoh: bahan baku.</div>
+    <div class="termcard"><span class="t">Fixed cost</span> <span class="en">biaya tetap</span><br>Total tidak berubah berapa pun produksi, tapi per unit mengecil kalau produksi banyak. Contoh: sewa.</div>
+    <div class="termcard"><span class="t">Mixed cost</span> <span class="en">biaya campuran</span><br>Punya bagian tetap + bagian variabel. Contoh: tagihan listrik.</div>
+    <div class="termcard"><span class="t">Relevant range</span> <span class="en">rentang relevan</span><br>Rentang produksi normal di mana pola biaya tetap/variabel berlaku.</div>
+    <div class="termcard"><span class="t">High-low method</span><br>Cara memisah biaya campuran jadi tetap &amp; variabel pakai titik aktivitas tertinggi dan terendah.</div>
+    <div class="termcard"><span class="t">Contribution margin (CM)</span> <span class="en">margin kontribusi</span><br>Harga jual − biaya variabel. Sisa untuk menutup biaya tetap dan jadi laba.</div>
+    <div class="termcard"><span class="t">Break-even point</span> <span class="en">titik impas</span><br>Tingkat penjualan saat laba = $0 (pendapatan = total biaya).</div>
+    <div class="termcard"><span class="t">Margin of safety</span> <span class="en">jarak aman</span><br>Selisih penjualan aktual dengan penjualan impas. Bantalan sebelum mulai rugi.</div>
+    <div class="termcard"><span class="t">Sales mix</span> <span class="en">bauran penjualan</span><br>Perbandingan persentase unit tiap produk yang dijual.</div>
+    <div class="termcard"><span class="t">Operating leverage</span><br>Seberapa sensitif laba terhadap perubahan penjualan. Fixed cost besar = leverage tinggi.</div>
+
+    <h3 id="i-inc">Incremental Analysis</h3>
+    <div class="termcard"><span class="t">Incremental analysis</span> <span class="en">analisis tambahan / differential</span><br>Membandingkan hanya data keuangan yang berbeda antar pilihan.</div>
+    <div class="termcard"><span class="t">Relevant cost</span> <span class="en">biaya relevan</span><br>Biaya yang berubah tergantung pilihan; ini yang dihitung.</div>
+    <div class="termcard"><span class="t">Sunk cost</span> <span class="en">biaya tertanam</span><br>Biaya yang sudah terlanjur keluar dan tak bisa diubah. Selalu diabaikan.</div>
+    <div class="termcard"><span class="t">Opportunity cost</span> <span class="en">biaya kesempatan</span><br>Keuntungan yang hilang karena memilih satu opsi dan melepas opsi lain.</div>
+    <div class="termcard"><span class="t">Special order</span> <span class="en">pesanan khusus</span><br>Pesanan sekali dengan harga lebih murah. Terima jika harga &gt; biaya variabel dan kapasitas masih ada.</div>
+    <div class="termcard"><span class="t">Make or buy</span> <span class="en">buat sendiri atau beli</span><br>Pilih membuat komponen sendiri atau membelinya dari pemasok.</div>
+    <div class="termcard"><span class="t">Sell or process further</span><br>Jual produk sekarang atau olah lagi lalu jual lebih mahal.</div>
+    <div class="termcard"><span class="t">Joint products / joint cost</span> <span class="en">produk gabungan / biaya gabungan</span><br>Beberapa produk dari satu proses; biaya sebelum titik pisah adalah sunk cost.</div>
+    <div class="termcard"><span class="t">Qualitative factors</span> <span class="en">faktor kualitatif</span><br>Hal yang sulit diangkakan tapi memengaruhi keputusan: moral karyawan, citra perusahaan.</div>
+
+    <h3 id="i-bud">Master Budget</h3>
+    <div class="termcard"><span class="t">Budget</span> <span class="en">anggaran</span><br>Rencana manajemen yang ditulis formal dalam angka, untuk periode tertentu.</div>
+    <div class="termcard"><span class="t">Master budget</span><br>Kumpulan anggaran yang saling terkait untuk satu periode.</div>
+    <div class="termcard"><span class="t">Operating budgets</span><br>Anggaran operasional: penjualan, produksi, bahan, TK, overhead, beban, sampai laba rugi.</div>
+    <div class="termcard"><span class="t">Financial budgets</span><br>Anggaran keuangan: anggaran kas dan neraca yang dianggarkan.</div>
+    <div class="termcard"><span class="t">Sales forecast</span> <span class="en">ramalan penjualan</span><br>Perkiraan penjualan industri dan bagian perusahaan; dasar anggaran penjualan.</div>
+    <div class="termcard"><span class="t">Participative budgeting</span> <span class="en">anggaran partisipatif</span><br>Semua level manajemen ikut menyusun anggaran (pendekatan bawah ke atas).</div>
+    <div class="termcard"><span class="t">Budgetary slack</span><br>Sengaja membuat target anggaran terlalu longgar agar gampang dicapai. Risiko anggaran partisipatif.</div>
+    <div class="termcard"><span class="t">Zero-based budgeting</span><br>Menyusun anggaran dari nol; tiap biaya harus dibenarkan ulang, bukan meneruskan tahun lalu.</div>
+    <div class="termcard"><span class="t">Work in process (WIP)</span> <span class="en">barang dalam proses</span><br>Barang yang masih setengah jadi di pabrik.</div>
+
+    <h3 id="i-man">Akuntansi Manajemen (15-16)</h3>
+    <div class="termcard"><span class="t">Managerial accounting</span> <span class="en">akuntansi manajemen</span><br>Informasi keuangan untuk pihak internal (manajer) guna mengambil keputusan.</div>
+    <div class="termcard"><span class="t">Direct materials / labor</span> <span class="en">bahan / TK langsung</span><br>Bahan dan tenaga kerja yang bisa ditelusuri langsung ke produk.</div>
+    <div class="termcard"><span class="t">Manufacturing overhead</span> <span class="en">overhead pabrik</span><br>Semua biaya pabrik selain bahan langsung dan TK langsung.</div>
+    <div class="termcard"><span class="t">Product cost</span> <span class="en">biaya produk</span><br>Biaya manufaktur; masuk persediaan dulu, jadi beban (HPP) saat terjual.</div>
+    <div class="termcard"><span class="t">Period cost</span> <span class="en">biaya periode</span><br>Biaya non-manufaktur (penjualan &amp; administrasi); langsung jadi beban. Contoh: iklan.</div>
+    <div class="termcard"><span class="t">Cost of goods manufactured (COGM)</span> <span class="en">harga pokok produksi</span><br>Total biaya barang yang selesai diproduksi dalam periode.</div>
+    <div class="termcard"><span class="t">Value chain</span> <span class="en">rantai nilai</span><br>Seluruh proses bisnis dari ide sampai layanan purnajual.</div>
+    <div class="termcard"><span class="t">JIT (Just-in-Time)</span><br>Produksi/pembelian pas saat dibutuhkan, persediaan minim.</div>
+    <div class="termcard"><span class="t">TQM (Total Quality Management)</span><br>Sistem menekan cacat produk, target nol cacat.</div>
+    <div class="termcard"><span class="t">Activity-Based Costing (ABC)</span><br>Membebankan overhead berdasarkan aktivitas, jadi biaya produk lebih akurat.</div>
+    <div class="termcard"><span class="t">Triple bottom line</span><br>Mengukur kinerja dari people, planet, profit (CSR).</div>
+
+    <h3 id="i-ctrl">Budgetary Control (25-26)</h3>
+    <div class="termcard"><span class="t">Budgetary control</span> <span class="en">pengendalian anggaran</span><br>Memakai anggaran untuk mengendalikan operasi (aktual vs rencana).</div>
+    <div class="termcard"><span class="t">Static budget</span><br>Anggaran pada satu tingkat aktivitas saja.</div>
+    <div class="termcard"><span class="t">Flexible budget</span><br>Anggaran untuk berbagai tingkat aktivitas; lebih adil menilai kinerja.</div>
+    <div class="termcard"><span class="t">Favorable / Unfavorable variance</span><br>Selisih yang menguntungkan / merugikan laba.</div>
+    <div class="termcard"><span class="t">Responsibility accounting</span><br>Melaporkan biaya/pendapatan per manajer yang bertanggung jawab.</div>
+    <div class="termcard"><span class="t">Controllable cost</span> <span class="en">biaya terkendali</span><br>Biaya yang bisa dikendalikan manajer pada level tertentu.</div>
+    <div class="termcard"><span class="t">Management by exception</span><br>Fokus hanya pada selisih yang signifikan dan terkendali.</div>
+    <div class="termcard"><span class="t">Cost / Profit / Investment center</span><br>Pusat biaya / laba / investasi. Investment center dinilai dengan ROI.</div>
+    <div class="termcard"><span class="t">ROI (Return on Investment)</span><br>Controllable margin ÷ rata-rata aset operasi.</div>
+    <div class="termcard"><span class="t">Residual income</span><br>Controllable margin − (tingkat pengembalian minimum × aset operasi).</div>
+    <div class="termcard"><span class="t">Balanced scorecard</span><br>Menilai kinerja dari 4 perspektif: financial, customer, internal process, learning &amp; growth.</div>
+  </section>
+<footer>
+    Disusun dari 5 materi resmi: Managerial Accounting (Ch.14), Cost-Volume-Profit (Ch.18-19),
+    Incremental Analysis (Ch.20), Budgetary Planning (Ch.22), serta Budgetary Control &amp; Responsibility Accounting (Ch.23).
+    Angka contoh memakai simbol Dollar ($) mengikuti materi asli. Semua soal latihan adalah kasus baru untuk latihan mandiri.
+  </footer>
+</main>
+
+<button class="totop" id="totop" title="Ke atas">↑</button>
+
+<script>
+// ---- navigation ----
+function go(tab, el){
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('active', s.id==='tab-'+tab));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+  if(window.innerWidth<=860) closeSidebar();
+  try{location.hash=tab}catch(_){}
+}
+document.querySelectorAll('.nav-item').forEach(n=>{
+  n.addEventListener('click',()=>go(n.dataset.tab,n));
+});
+if(location.hash){
+  const t=location.hash.slice(1);
+  const el=document.querySelector('.nav-item[data-tab="'+t+'"]');
+  if(el) go(t,el);
+}
+// in-page jump links
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a.jump'); if(!a)return;
+  e.preventDefault();
+  const el=document.getElementById(a.getAttribute('href').slice(1));
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+// ---- theme ----
+function setThemeIcon(t){ document.getElementById('themeBtn').textContent = t==='dark' ? '☾' : '☀'; }
+function toggleTheme(){
+  const h=document.documentElement;
+  const next=(h.getAttribute('data-theme')==='dark')?'light':'dark';
+  h.setAttribute('data-theme',next); setThemeIcon(next);
+  try{localStorage.setItem('uas-akun-theme',next)}catch(_){}
+}
+try{const s=localStorage.getItem('uas-akun-theme'); if(s) document.documentElement.setAttribute('data-theme',s);}catch(_){}
+setThemeIcon(document.documentElement.getAttribute('data-theme')||'light');
+
+// ---- sidebar (mobile) ----
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ---- robust number parser ----
+function parseNum(raw){
+  raw=(raw||'').replace(/[\s$]/g,'');
+  if(raw==='')return NaN;
+  const neg=/^-/.test(raw); raw=raw.replace(/-/g,'');
+  if(!/[0-9]/.test(raw))return NaN;
+  let n;
+  const lastSep=Math.max(raw.lastIndexOf(','),raw.lastIndexOf('.'));
+  if(lastSep===-1){ n=parseFloat(raw); }
+  else{
+    const after=raw.length-lastSep-1;
+    const tail=raw.slice(lastSep+1);
+    if(after>=1&&after<=2&&/^[0-9]+$/.test(tail)){
+      n=parseFloat(raw.slice(0,lastSep).replace(/[.,]/g,'')+'.'+tail);
+    } else {
+      n=parseFloat(raw.replace(/[.,]/g,''));
+    }
+  }
+  return neg?-n:n;
+}
+function checkTable(btn){
+  const wrap=btn.closest('.practice')||document;
+  const inputs=wrap.querySelectorAll('input[data-ans]');
+  let right=0,total=0,filled=0;
+  inputs.forEach(inp=>{
+    total++;
+    const ans=parseFloat(inp.dataset.ans);
+    const raw=(inp.value||'').trim();
+    inp.classList.remove('ok','bad');
+    if(raw==='')return;
+    filled++;
+    const v=parseNum(raw);
+    if(!isNaN(v)&&Math.abs(v-ans)<=Math.max(0.5,Math.abs(ans)*0.001)){inp.classList.add('ok');right++;}
+    else inp.classList.add('bad');
+  });
+  const fb=wrap.querySelector('.feedback');
+  if(fb){
+    if(filled===0){fb.textContent='Isi dulu tabelnya, lalu klik Cek isian.';fb.className='feedback';}
+    else if(right===total){fb.textContent='Mantap. Semua '+total+' isian benar.';fb.className='feedback good';}
+    else {fb.textContent='Benar '+right+' dari '+total+'. Yang merah masih salah, coba lagi atau lihat pembahasan.';fb.className='feedback bad';}
+  }
+}
+function resetTable(btn){
+  const wrap=btn.closest('.practice')||document;
+  wrap.querySelectorAll('input[data-ans]').forEach(i=>{i.value='';i.classList.remove('ok','bad')});
+  const fb=wrap.querySelector('.feedback'); if(fb){fb.textContent='';fb.className='feedback';}
+}
+
+// ---- back to top ----
+const totop=document.getElementById('totop');
+addEventListener('scroll',()=>{totop.classList.toggle('show',scrollY>500)});
+totop.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
+</script>
+</body>
+</html>
