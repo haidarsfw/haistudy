@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
   // stable substring "/api/cheatsheet".
   outputFileTracingIncludes: {
     "/api/cheatsheet": ["./src/content/cheatsheets/**/*"],
+    "/api/downloads": ["./src/content/downloads/**/*"],
   },
   // Strip console.log/info/debug in production while keeping console.error
   // and console.warn for runtime visibility in Vercel function logs.

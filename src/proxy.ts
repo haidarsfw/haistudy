@@ -13,7 +13,7 @@ import type { NextRequest } from "next/server";
  *  5. Already-scoped paths pass through untouched.
  */
 
-const publicPaths = ["/", "/login", "/preview", "/payments", "/api", "/privacy", "/terms", "/auth/callback"];
+const publicPaths = ["/", "/login", "/preview", "/payments", "/api", "/privacy", "/terms", "/auth/callback", "/unavailable"];
 
 const LEGACY_APP_ROUTES = new Set([
   "dashboard",
@@ -49,6 +49,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/api/")) return true;
   if (pathname.startsWith("/_next/")) return true;
   if (pathname.startsWith("/favicon")) return true;
+  // /downloads/* files are auth-gated — never treat as public static
+  if (pathname.startsWith("/downloads/")) return false;
   if (/\.\w+$/.test(pathname)) return true; // static files
   return false;
 }

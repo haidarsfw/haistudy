@@ -45,7 +45,7 @@ export const PINNED_THREADS: Record<string, ForumThread[]> = {
       attachments: [
         {
           type: "link",
-          url: "/downloads/uts_akuntansi_final.html",
+          url: "/api/downloads/uts_akuntansi_final.html",
           label: "UTS Akuntansi - Modul Belajar Interaktif",
         },
       ],
