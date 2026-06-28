@@ -26,6 +26,14 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.5.3",
+    date: "2026-06-28",
+    title: "Perbaikan rumus matematika di AI",
+    items: [
+      "Rumus matematika di haistudy AI sekarang tampil dengan benar. Sebelumnya rumus bisa muncul sebagai teks aneh seperti 'MATH_0' - sekarang sudah diperbaiki dan ditampilkan rapi.",
+    ],
+  },
+  {
     version: "2.5.2",
     date: "2026-06-27",
     title: "Modul Belajar UAS Akuntansi di Forum",

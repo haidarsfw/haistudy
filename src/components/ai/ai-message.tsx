@@ -74,22 +74,22 @@ function renderMarkdown(text: string): ReactNode[] {
   // 1. Replace all math with placeholders (unchanged)
   const processed = sanitized
     .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => {
-      const id = `__MATH_${counter++}__`;
+      const id = `\u2039MATH:${counter++}\u203a`;
       mathMap.set(id, { latex, display: true });
       return id;
     })
     .replace(/\\\[([\s\S]+?)\\\]/g, (_, latex) => {
-      const id = `__MATH_${counter++}__`;
+      const id = `\u2039MATH:${counter++}\u203a`;
       mathMap.set(id, { latex, display: true });
       return id;
     })
     .replace(/\$([^$\n]+?)\$/g, (_, latex) => {
-      const id = `__MATH_${counter++}__`;
+      const id = `\u2039MATH:${counter++}\u203a`;
       mathMap.set(id, { latex, display: false });
       return id;
     })
     .replace(/\\\((.+?)\\\)/g, (_, latex) => {
-      const id = `__MATH_${counter++}__`;
+      const id = `\u2039MATH:${counter++}\u203a`;
       mathMap.set(id, { latex, display: false });
       return id;
     });
@@ -234,13 +234,13 @@ function renderMarkdown(text: string): ReactNode[] {
   return elements;
 }
 
-/** Replace __MATH_N__ placeholders in a string with rendered KaTeX nodes */
+/** Replace ‹MATH:N› placeholders in a string with rendered KaTeX nodes */
 function expandMath(
   text: string,
   mathMap: Map<string, { latex: string; display: boolean }>,
   keyPrefix: string
 ): ReactNode[] {
-  const parts = text.split(/(__MATH_\d+__)/g);
+  const parts = text.split(/(\u2039MATH:\d+\u203a)/g);
   const result: ReactNode[] = [];
   for (let i = 0; i < parts.length; i++) {
     const math = mathMap.get(parts[i]);
