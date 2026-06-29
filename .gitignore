@@ -57,3 +57,6 @@ next-env.d.ts
 /TESTING.md
 /r11-*.png
 /r11b-*.png
+
+# CPU optimization changelog (local reference only)
+CPU-OPTIMIZATION-CHANGELOG.md

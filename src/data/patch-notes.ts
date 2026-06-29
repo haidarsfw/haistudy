@@ -26,6 +26,16 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.5.4",
+    date: "2026-06-29",
+    title: "Optimasi performa & kestabilan",
+    items: [
+      "Beberapa fitur di balik layar sudah dioptimasi supaya server lebih hemat dan website tetap stabil, terutama saat banyak yang pakai bareng di masa UAS.",
+      "AI Chat tetap bisa dipakai seperti biasa, cuma sedikit lebih irit di belakang layar biar nggak membebani server.",
+      "Semangat UAS-nya, semoga lancar dan hasilnya memuaskan! \uD83D\uDCAA\uD83C\uDF1F",
+    ],
+  },
+  {
     version: "2.5.3",
     date: "2026-06-28",
     title: "Perbaikan rumus matematika di AI",

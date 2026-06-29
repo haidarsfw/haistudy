@@ -151,7 +151,7 @@ export function useDmChat() {
     if (!activeId) return;
     const iv = setInterval(() => {
       if (!document.hidden) fetchConversations();
-    }, 40000); // widened from 20s to cut Active CPU (dm_reads has no realtime)
+    }, 90_000); // widened to 90s to cut Active CPU (dm_reads has no realtime)
     return () => clearInterval(iv);
   }, [activeId, fetchConversations]);
 

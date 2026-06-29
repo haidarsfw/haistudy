@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { SupportPresenceState, SupportReaderKind } from "@/types";
 
-const POLL_INTERVAL_MS = 45_000; // widened from 15s to cut Active CPU; online-dot latency slightly slower
+const POLL_INTERVAL_MS = 120_000; // widened from 45s to cut Active CPU; online-dot latency ~2min
 
 /**
  * Read presence of the OTHER side of a support conversation.

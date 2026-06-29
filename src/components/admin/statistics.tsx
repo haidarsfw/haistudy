@@ -69,7 +69,7 @@ export function Statistics() {
     // license_keys/activations — neither is in the realtime publication, so it
     // never fired; it only churned realtime.subscription. Admin stats is a
     // low-traffic page, polling is plenty.)
-    const interval = setInterval(fetchUsers, 30_000);
+    const interval = setInterval(fetchUsers, 120_000);
     return () => clearInterval(interval);
   }, [hydrated, adminScopeKey, adminScope, isAllPeriods, scopeQuery, reloadToken]);
 

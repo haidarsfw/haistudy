@@ -20,7 +20,7 @@ const isDeepSeekConfigured = DEEPSEEK_API_KEY.length > 0;
 const GEMINI_MODEL = "gemini-2.5-flash"; // images only - DeepSeek V4 has no vision
 const DEEPSEEK_FLASH = "deepseek-v4-flash"; // FREE tier text
 const DEEPSEEK_PRO = "deepseek-v4-pro"; // VIP/diamond/admin text
-const MAX_HISTORY = 40; // max conversation turns to send
+const MAX_HISTORY = 20; // max conversation turns to send (was 40; reduced to cut CPU)
 
 // ─── Mock response for dev without API key ───
 const MOCK_RESPONSES = [
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
 
     // Light cooldown so a runaway loop can't hammer the paid AI endpoint.
     // Gates only how often a send may START; never affects the response itself.
-    const cd = checkCooldown(`ai-chat:${licenseKey}`, 2_000);
+    const cd = checkCooldown(`ai-chat:${licenseKey}`, 3_000);
     if (!cd.allowed) {
       return NextResponse.json(
         { error: "Tunggu sebentar sebelum mengirim lagi." },
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
           { role: "user", content: image ? userContent : anchoredMessage },
         ],
         stream: true,
-        max_tokens: 8192,
+        max_tokens: 5000,
         thinking: { type: thinkingEnabled ? "enabled" : "disabled" },
       } as unknown as Parameters<typeof deepseek.chat.completions.create>[0];
 
@@ -248,7 +248,7 @@ export async function POST(request: Request) {
       generationConfig: {
         temperature: 0.7,
         topP: 0.9,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 5000,
       },
     });
 

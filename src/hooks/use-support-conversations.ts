@@ -80,7 +80,7 @@ export function useSupportConversations(
   useEffect(() => {
     setLoading(true);
     refresh();
-    const interval = setInterval(refresh, 60_000);
+    const interval = setInterval(refresh, 120_000);
     return () => {
       clearInterval(interval);
       if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
