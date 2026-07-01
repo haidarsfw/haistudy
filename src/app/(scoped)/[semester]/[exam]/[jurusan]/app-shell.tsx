@@ -147,23 +147,30 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (isSettingsOpen) setSettingsMounted(true); }, [isSettingsOpen]);
   useEffect(() => { if (isSupportOpen) setSupportMounted(true); }, [isSupportOpen]);
 
-  // Deep-link: open the voice panel when a ?voice=1 CTA lands here (e.g. the
-  // "Study Bareng" announcement). Strip the param afterward so a refresh/back
-  // does not reopen it.
+  // Deep-link: ?voice=<value> opens the voice panel (e.g. the "Study Bareng"
+  // announcement CTA). value "1" = just open the panel; a room id = open the
+  // panel AND join that room directly. Strip the param + run once so a
+  // refresh/back or a re-render does not reopen/rejoin.
   const searchParams = useSearchParams();
+  const voiceDeepLinkRef = useRef(false);
   useEffect(() => {
-    if (searchParams.get("voice") === "1") {
-      setIsVoiceOpen(true);
-      const params = new URLSearchParams(Array.from(searchParams.entries()));
-      params.delete("voice");
-      const qs = params.toString();
-      window.history.replaceState(
-        null,
-        "",
-        window.location.pathname + (qs ? `?${qs}` : "")
-      );
+    const v = searchParams.get("voice");
+    if (!v || voiceDeepLinkRef.current) return;
+    voiceDeepLinkRef.current = true;
+    setIsVoiceOpen(true);
+    // Anything other than the legacy "1" is treated as a room id → auto-join.
+    if (v !== "1" && v.length >= 8) {
+      voiceRoom.joinRoom(v).catch(() => {});
     }
-  }, [searchParams]);
+    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    params.delete("voice");
+    const qs = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + (qs ? `?${qs}` : "")
+    );
+  }, [searchParams, voiceRoom]);
 
   // Auto-reload when a new deploy is detected
   useVersionCheck();
