@@ -58,7 +58,7 @@ export function AnnouncementModal() {
   };
 
   if (!announcement) return null;
-  const { message, cta } = parseAnnouncementCta(announcement.message);
+  const { message, cta, title } = parseAnnouncementCta(announcement.message);
 
   return (
     <AnimatePresence>
@@ -97,7 +97,7 @@ export function AnnouncementModal() {
                   id="announcement-modal-title"
                   className="font-heading text-base font-semibold leading-snug"
                 >
-                  Pengumuman baru
+                  {title ?? "Pengumuman baru"}
                 </h2>
                 <p className="mt-2 whitespace-pre-line break-words text-sm leading-relaxed text-foreground">
                   {message}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useParams, usePathname } from "next/navigation";
+import { useRouter, useParams, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { useScope } from "@/components/providers/scope-provider";
 import { Header } from "@/components/layout/header";
@@ -146,6 +146,24 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (isVoiceOpen || voiceRoom.activeRoom) setVoiceMounted(true); }, [isVoiceOpen, voiceRoom.activeRoom]);
   useEffect(() => { if (isSettingsOpen) setSettingsMounted(true); }, [isSettingsOpen]);
   useEffect(() => { if (isSupportOpen) setSupportMounted(true); }, [isSupportOpen]);
+
+  // Deep-link: open the voice panel when a ?voice=1 CTA lands here (e.g. the
+  // "Study Bareng" announcement). Strip the param afterward so a refresh/back
+  // does not reopen it.
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("voice") === "1") {
+      setIsVoiceOpen(true);
+      const params = new URLSearchParams(Array.from(searchParams.entries()));
+      params.delete("voice");
+      const qs = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + (qs ? `?${qs}` : "")
+      );
+    }
+  }, [searchParams]);
 
   // Auto-reload when a new deploy is detected
   useVersionCheck();

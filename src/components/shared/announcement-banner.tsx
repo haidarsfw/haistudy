@@ -39,9 +39,11 @@ export function AnnouncementBanner() {
     // doesn't eat vertical space, while keeping all of its content.
     <div className="space-y-1 px-4 pt-1.5">
       {visible.map((ann) => {
+        const { message, cta, modalOnly } = parseAnnouncementCta(ann.message);
+        // Modal-only announcements pop in the center modal, never the banner.
+        if (modalOnly) return null;
         const config = TYPE_CONFIG[ann.type];
         const Icon = config.icon;
-        const { message, cta } = parseAnnouncementCta(ann.message);
 
         return (
           <div
