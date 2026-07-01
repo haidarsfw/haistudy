@@ -112,6 +112,9 @@ export interface CheatsheetVersion {
   label: string;
   /** 1-based page count (the viewer / route clamp to this). */
   pageCount: number;
+  /** Download-only: excluded from the in-app WebP viewer tabs (no page images
+   * exist for it) but still offered in the password-PDF download chooser. */
+  downloadOnly?: boolean;
 }
 
 export interface CheatsheetFull {

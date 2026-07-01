@@ -21,6 +21,10 @@ export const opsmgmtCheatsheetFull: CheatsheetFull = {
     // handwritten-style for copying onto 5 A4 sheets (10 pages).
     { id: "grafik", label: "Lengkap", pageCount: 11 },
     { id: "tulis", label: "Ringkas", pageCount: 10 },
+    // "Teori Esai" = essay-theory-only cheat sheet (4 pages). Download-only
+    // (password PDF); no in-app WebP viewer pages, so downloadOnly hides it
+    // from the viewer tabs while keeping it in the download chooser.
+    { id: "teori", label: "Teori Esai", pageCount: 4, downloadOnly: true },
   ],
 };
 

@@ -71,6 +71,10 @@ export function CheatsheetViewer({ data, active = true }: Props) {
   const { session } = useSession();
 
   const versions = data.versions;
+  // Viewable versions = those with in-app WebP pages. Download-only versions
+  // (e.g. the essay-theory PDF) are excluded from the viewer tabs/pages but
+  // still appear in the download chooser below.
+  const viewVersions = versions.filter((v) => !v.downloadOnly);
   const [verIdx, setVerIdx] = useState(0);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
@@ -87,7 +91,7 @@ export function CheatsheetViewer({ data, active = true }: Props) {
   const [copied, setCopied] = useState(false);
   const [revealed, setRevealed] = useState(false); // password hidden until clicked
 
-  const ver = versions[verIdx] ?? versions[0];
+  const ver = viewVersions[verIdx] ?? viewVersions[0];
   const total = ver?.pageCount ?? 0;
   const src = `/api/cheatsheet/${data.subject}/${ver?.id}/${page}`;
 
@@ -299,9 +303,9 @@ export function CheatsheetViewer({ data, active = true }: Props) {
             </button>
           )}
         </div>
-        {versions.length > 1 && (
+        {viewVersions.length > 1 && (
           <div className="flex rounded-lg border border-border p-0.5 text-[11px] font-semibold">
-            {versions.map((v, i) => (
+            {viewVersions.map((v, i) => (
               <button
                 key={v.id}
                 type="button"

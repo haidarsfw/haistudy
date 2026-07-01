@@ -26,6 +26,15 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "2.5.5",
+    date: "2026-07-01",
+    title: "Cheat Sheet Teori Esai - Operations Management",
+    items: [
+      "Ada cheat sheet baru untuk Operations Management: versi Teori Esai (4 halaman). Ini KHUSUS untuk soal teori/esai, bukan untuk soal hitungan.",
+      "Cara ambil: buka mata kuliah Operations Management, tab Cheat Sheet, lalu tombol Download dan pilih Teori Esai. File-nya terkunci dan berpassword sama seperti cheat sheet lainnya.",
+    ],
+  },
+  {
     version: "2.5.4",
     date: "2026-06-29",
     title: "Optimasi performa & kestabilan",
