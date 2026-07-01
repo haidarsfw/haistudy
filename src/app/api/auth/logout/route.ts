@@ -4,6 +4,13 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import {
+  recordActivity,
+  clientIp,
+  deviceTypeFromUA,
+  deviceLabelFromUA,
+} from "@/lib/admin/activity";
+import type { ScopeTuple } from "@/types/scope";
 
 /**
  * POST /api/auth/logout
@@ -67,6 +74,32 @@ export async function POST(request: Request) {
             online_seconds_accumulator: 0,
           })
           .eq("license_key", licenseKey);
+      }
+
+      // Audit → admin Activity Logs. Name + scope come from the license row.
+      try {
+        const { data: lk } = await supabase
+          .from("license_keys")
+          .select("name, semester, exam_period, jurusan")
+          .eq("key", licenseKey)
+          .maybeSingle();
+        const ua = request.headers.get("user-agent") || "";
+        await recordActivity(supabase, {
+          action: "logout",
+          userName: (lk?.name as string) || null,
+          ip: clientIp(request),
+          deviceType: deviceTypeFromUA(ua),
+          deviceLabel: deviceLabelFromUA(ua),
+          scope: lk
+            ? ({
+                semester: Number(lk.semester),
+                examPeriod: lk.exam_period as ScopeTuple["examPeriod"],
+                jurusan: String(lk.jurusan),
+              } as ScopeTuple)
+            : null,
+        });
+      } catch {
+        /* non-critical */
       }
     }
 

@@ -2,13 +2,19 @@ import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { cookies } from "next/headers";
-import { requireScope, ScopeError, scopeColumns } from "@/lib/auth/scope-check";
+import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { cheatsheetManifest } from "@/data/s2/uas/bm/opsmgmt-cheatsheet-full";
 import { getDownloadUnlocked } from "@/lib/cheatsheet/access";
+import {
+  recordActivity,
+  clientIp,
+  deviceTypeFromUA,
+  deviceLabelFromUA,
+} from "@/lib/admin/activity";
 
 /**
  * GET /api/cheatsheet/[subject]/download?v=<version>
@@ -59,30 +65,8 @@ export async function GET(
 
     // Persistent audit trail → admin panel Activity Logs (who/what/when).
     // Resolve the student name from the license key (cheap single-row lookup;
-    // downloads are admin-gated + rare). Awaited so the row reliably lands on
-    // Vercel; wrapped so a log failure never blocks the actual download.
-    const ua = req.headers.get("user-agent") || "";
-    const deviceType = /mobile|android|iphone|ipad|ipod/i.test(ua)
-      ? "mobile"
-      : "desktop";
-    const deviceLabel = /iphone/i.test(ua)
-      ? "iPhone"
-      : /ipad/i.test(ua)
-        ? "iPad"
-        : /android/i.test(ua)
-          ? "Android"
-          : /macintosh|mac os/i.test(ua)
-            ? "Mac"
-            : /windows/i.test(ua)
-              ? "Windows"
-              : /linux/i.test(ua)
-                ? "Linux"
-                : "Unknown";
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-
+    // downloads are admin-gated + rare). recordActivity never throws, so a log
+    // failure can't block the actual download.
     let userName = `Key ${sess.slice(0, 6)}`;
     try {
       const { data: lk } = await supabase
@@ -95,19 +79,16 @@ export async function GET(
       /* fall back to the key prefix */
     }
 
-    try {
-      await supabase.from("activity_logs").insert({
-        user_name: userName,
-        action: "cheatsheet_download",
-        details: `Cheatsheet ${subject} • ${ver.label}`,
-        ip_address: ip,
-        device_type: deviceType,
-        device_label: deviceLabel,
-        ...scopeColumns(scope),
-      });
-    } catch {
-      /* non-critical: never block the download on a log failure */
-    }
+    const ua = req.headers.get("user-agent") || "";
+    await recordActivity(supabase, {
+      action: "cheatsheet_download",
+      userName,
+      details: `Cheatsheet ${subject} • ${ver.label}`,
+      ip: clientIp(req),
+      deviceType: deviceTypeFromUA(ua),
+      deviceLabel: deviceLabelFromUA(ua),
+      scope,
+    });
 
     // Console breadcrumb too (no full key) — kept in prod logs.
     console.warn(

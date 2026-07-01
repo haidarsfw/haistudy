@@ -8,6 +8,7 @@ import { scopeColumns } from "@/lib/auth/scope-check";
 import { parseScopeKey, isAvailableScope, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { rateLimit } from "@/lib/support/server";
 import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, type PurchasablePackageId } from "@/lib/payments";
+import { recordActivity } from "@/lib/admin/activity";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
 import { firstWord, capitalizeFirst } from "@/lib/name";
@@ -202,6 +203,15 @@ export async function POST(request: Request) {
       .select("id")
       .single();
     if (insErr) throw insErr;
+
+    // Audit → admin Activity Logs (low-freq, high-value student event).
+    await recordActivity(supabase, {
+      action: "purchase_request",
+      userName: name,
+      details: `${PACKAGE_LABELS[pkg] ?? pkg} • ${scopeFullLabel(scope)}`,
+      ip: clientIp(request),
+      scope,
+    });
 
     // Background: alert admins (push + email). Never blocks the buyer response.
     waitUntil(

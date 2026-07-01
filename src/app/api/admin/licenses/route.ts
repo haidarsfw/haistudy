@@ -8,6 +8,8 @@ import { resolveAdminScope, requireScopedMode } from "@/lib/auth/admin-scope";
 import { scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import { isAvailableScope, parseScopeKey } from "@/lib/scope";
 import type { LicenseKey, Activation, Device } from "@/types";
+import type { ScopeTuple } from "@/types/scope";
+import { recordActivity } from "@/lib/admin/activity";
 
 function scopeErrorResponse(error: unknown) {
   if (error instanceof ScopeError) {
@@ -560,6 +562,33 @@ export async function PUT(request: Request) {
       );
     }
 
+    // Audit → admin Activity Logs (which key changed + what). user_name = the
+    // affected student; the action label makes clear it was an admin edit.
+    {
+      const changes: string[] = [];
+      if (updates.suspendedUntil !== undefined)
+        changes.push(updates.suspendedUntil ? "suspend" : "aktifkan");
+      if (updates.fixedExpiry !== undefined)
+        changes.push(updates.fixedExpiry ? "extend" : "hapus-expiry");
+      if (updates.name !== undefined || updates.shortName !== undefined)
+        changes.push("ganti-nama");
+      if (updates.maxDevices !== undefined || updates.unlimitedDevices !== undefined)
+        changes.push("limit-device");
+      if (Object.prototype.hasOwnProperty.call(updates, "linkedEmail"))
+        changes.push("email-login");
+      if (scopeMoveTo) changes.push("pindah-scope");
+      await recordActivity(supabase, {
+        action: "license_update",
+        userName: (data.name as string) || key,
+        details: `${key} • ${changes.length ? changes.join(", ") : "edit"}`,
+        scope: {
+          semester: Number(data.semester),
+          examPeriod: data.exam_period as ScopeTuple["examPeriod"],
+          jurusan: String(data.jurusan),
+        } as ScopeTuple,
+      });
+    }
+
     if (updates.name !== undefined || updates.shortName !== undefined) {
       const actUpdates: Record<string, unknown> = {};
       if (updates.name !== undefined) actUpdates.user_name = updates.name.trim();
@@ -677,6 +706,19 @@ export async function DELETE(request: Request) {
       .eq("jurusan", resolved.scope.jurusan);
 
     if (error) throw error;
+
+    // Audit → admin Activity Logs (license deleted = student access removed).
+    await recordActivity(supabase, {
+      action: "license_delete",
+      userName: key,
+      details: `Key ${key} dihapus`,
+      scope: {
+        semester: resolved.scope.semester,
+        examPeriod: resolved.scope.examPeriod as ScopeTuple["examPeriod"],
+        jurusan: resolved.scope.jurusan,
+      } as ScopeTuple,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     const r = scopeErrorResponse(error);

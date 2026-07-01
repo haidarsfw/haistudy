@@ -4,6 +4,7 @@ import { validateAdmin } from "@/lib/auth/admin-guard";
 import { createServerClient } from "@/lib/supabase/server";
 import { cheatsheetManifest } from "@/data/s2/uas/bm/opsmgmt-cheatsheet-full";
 import { setDownloadUnlocked } from "@/lib/cheatsheet/access";
+import { recordActivity } from "@/lib/admin/activity";
 
 /**
  * POST /api/cheatsheet/[subject]/lock   body: { enabled: boolean }
@@ -31,6 +32,12 @@ export async function POST(
 
     const supabase = createServerClient()!;
     await setDownloadUnlocked(supabase, scope, subject, enabled);
+    await recordActivity(supabase, {
+      action: enabled ? "cheatsheet_unlock" : "cheatsheet_lock",
+      userName: "Admin",
+      details: `Cheatsheet ${subject} ${enabled ? "dibuka" : "dikunci"}`,
+      scope,
+    });
     return NextResponse.json({ ok: true, enabled });
   } catch (error) {
     if (error instanceof ScopeError) {

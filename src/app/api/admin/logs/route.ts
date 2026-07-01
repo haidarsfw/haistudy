@@ -122,7 +122,12 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "activity";
-    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 500);
+    // Optional filters (activity only): pagination cursor + action/name search.
+    const before = searchParams.get("before"); // ISO created_at cursor (load more)
+    const actionFilter = searchParams.get("action"); // exact action match
+    const userFilter = searchParams.get("user"); // exact user_name (detail "by user")
+    const qFilter = searchParams.get("q"); // fuzzy name search
 
     if (!isSupabaseServerConfigured) {
       const inScope = <T extends { semester: number; examPeriod: "uts" | "uas"; jurusan: string }>(
@@ -174,6 +179,10 @@ export async function GET(request: Request) {
         .eq("exam_period", resolved.scope.examPeriod)
         .eq("jurusan", resolved.scope.jurusan);
     }
+    if (before) q = q.lt("created_at", before);
+    if (actionFilter) q = q.eq("action", actionFilter);
+    if (userFilter) q = q.eq("user_name", userFilter);
+    if (qFilter) q = q.ilike("user_name", `%${qFilter}%`);
     const { data, error } = await q;
     if (error) throw error;
     return NextResponse.json({
@@ -249,7 +258,7 @@ export async function DELETE(request: Request) {
 
     const resolved = await resolveAdminScope(request);
     const body = await request.json();
-    const { type } = body;
+    const { type, olderThanDays } = body;
 
     if (!type || !["activity", "error"].includes(type)) {
       return NextResponse.json(
@@ -282,17 +291,26 @@ export async function DELETE(request: Request) {
 
     const supabase = createServerClient()!;
     const table = type === "error" ? "error_logs" : "activity_logs";
-    let q = supabase.from(table).delete().neq("id", "");
+    let q = supabase.from(table).delete();
+    // Retention delete: only rows older than N days. Absent → clear everything
+    // (legacy "wipe" behaviour, kept for the error-log clear button).
+    const days = Number(olderThanDays);
+    if (Number.isFinite(days) && days > 0) {
+      const cutoff = new Date(Date.now() - days * 86_400_000).toISOString();
+      q = q.lt("created_at", cutoff);
+    } else {
+      q = q.neq("id", "00000000-0000-0000-0000-000000000000"); // match all
+    }
     if (resolved.mode === "scoped") {
       q = q
         .eq("semester", resolved.scope.semester)
         .eq("exam_period", resolved.scope.examPeriod)
         .eq("jurusan", resolved.scope.jurusan);
     }
-    const { error } = await q;
+    const { data, error } = await q.select("id");
 
     if (error) throw error;
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, deleted: data?.length ?? 0 });
   } catch (error) {
     const r = scopeErrorResponse(error);
     if (r) return r;

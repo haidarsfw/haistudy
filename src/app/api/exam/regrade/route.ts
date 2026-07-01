@@ -5,6 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
+import { recordActivity } from "@/lib/admin/activity";
 import { checkCooldown } from "@/lib/auth/cooldown";
 import { loadExamData } from "@/data";
 import type { ExamData } from "@/types/exam";
@@ -138,6 +139,23 @@ export async function POST(request: Request) {
         .eq("id", attemptId);
     } catch (e) {
       console.error("Exam regrade: failed to persist (non-fatal):", e);
+    }
+
+    // Audit → admin Activity Logs (re-grade of a student's attempt).
+    try {
+      const { data: lk } = await supabase
+        .from("license_keys")
+        .select("name")
+        .eq("key", licenseKey)
+        .maybeSingle();
+      await recordActivity(supabase, {
+        action: "exam_regrade",
+        userName: (lk?.name as string) || null,
+        details: `${subjectId} • ${scorePct}%`,
+        scope,
+      });
+    } catch {
+      /* non-critical */
     }
 
     return NextResponse.json({
