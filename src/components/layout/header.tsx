@@ -9,8 +9,10 @@ import {
   Sun,
   Settings,
   Mic,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FEEDBACK_FORM_URL } from "@/lib/feedback-form";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useTheme } from "@/components/providers/theme-provider";
 import { NotificationCenter } from "@/components/notifications/notification-center";
@@ -23,9 +25,11 @@ interface HeaderProps {
   onSettingsOpen?: () => void;
   onVoiceToggle?: () => void;
   activeVoiceRoom?: { id: string; name: string } | null;
+  /** Post-UAS feedback drive CTA — shown only for the s2-uas-bm cohort. */
+  showFeedbackCta?: boolean;
 }
 
-export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: HeaderProps) {
+export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom, showFeedbackCta }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useTranslation();
@@ -102,8 +106,33 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Right: actions - Order: Voice → Pomodoro → Dark mode → Notifications (rightmost) */}
+      {/* Right: actions - Order: Feedback → Voice → Pomodoro → Dark mode → Notifications (rightmost) */}
       <div className="flex items-center gap-1.5">
+        {/* Post-UAS feedback drive CTA — opens the Google Form in a new tab.
+            Desktop: accent pill with text; mobile: icon-only. s2-uas-bm only. */}
+        {showFeedbackCta && (
+          <>
+            <a
+              href={FEEDBACK_FORM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Isi form masukan haistudy, dapat voucher diskon 15%"
+              className="hidden sm:flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 hover:border-primary/40 transition-colors cursor-pointer"
+            >
+              <Gift className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap">Isi form, dapat 15%</span>
+            </a>
+            <a
+              href={FEEDBACK_FORM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Isi form masukan haistudy, dapat voucher diskon 15%"
+              className="sm:hidden flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-muted transition-colors"
+            >
+              <Gift className="h-4 w-4" />
+            </a>
+          </>
+        )}
         {/* Voice rooms - glass styling (desktop hover-expand) */}
         <button
           data-onboarding="voice"

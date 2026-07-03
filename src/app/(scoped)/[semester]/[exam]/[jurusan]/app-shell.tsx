@@ -16,6 +16,8 @@ import { ReminderAlarm } from "@/components/shared/reminder-alarm";
 import { PreviewWatermark } from "@/components/shared/preview-watermark";
 import { ClassSelector } from "@/components/auth/class-selector";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
+import { SurveyPopup } from "@/components/shared/survey-popup";
+import { FEEDBACK_FORM_SCOPE } from "@/lib/feedback-form";
 
 // Lazy-loaded panels - fetched on first open so they stay off the dashboard
 // critical path. ssr:false is legal here because app-shell.tsx is "use client".
@@ -86,8 +88,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const pathname = usePathname();
   const { session, isLoading, updateSession } = useSession();
-  const { scopePath } = useScope();
+  const { scopePath, scopeKey } = useScope();
   const dashboardHref = `/${scopePath}/dashboard`;
+  // Post-UAS feedback drive — only the s2-uas-bm cohort sees the popup + header CTA.
+  const showFeedback = scopeKey === FEEDBACK_FORM_SCOPE;
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
@@ -391,7 +395,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       {/* Main content area */}
       <div className="flex min-h-[100dvh] sm:h-[100dvh] flex-1 flex-col min-w-0">
-        <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} />
+        <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} showFeedbackCta={showFeedback} />
         <AnnouncementBanner />
         <EnableNotificationsBanner />
         <SessionTimeout />
@@ -501,6 +505,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
     {/* One-shot announcement popup (per-user, localStorage-gated) */}
     <AnnouncementModal />
+
+    {/* Post-UAS feedback nudge — s2-uas-bm only, once per login session */}
+    {showFeedback && <SurveyPopup />}
 
     {/* PWA install prompt + update pill - both self-gate internally */}
     <InstallBanner />

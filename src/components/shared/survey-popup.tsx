@@ -2,22 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, ArrowRight, X } from "lucide-react";
+import { ClipboardList, Gift, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FEEDBACK_FORM_URL } from "@/lib/feedback-form";
 
-// One-shot survey popup - shows once per login session (sessionStorage-gated,
-// so refreshes don't re-trigger). Clearing the session (closing the tab/window
-// group) resets the gate. Intentionally separate from AnnouncementModal which
-// uses localStorage for permanent dismissal.
-const STORAGE_KEY = "hs-survey-popup-dismissed-session";
+// Post-UAS feedback nudge. Shows once per login session (sessionStorage-gated,
+// so page refreshes and SPA navigation don't re-trigger it) — a new browser
+// session (i.e. a fresh login) surfaces it again, per the owner's intent.
+// Scope-gating (s2-uas-bm only) is done by the caller (app-shell conditional
+// mount), so this component itself carries no scope logic.
+// Purely client-side: no DB / API / realtime → zero free-tier cost.
+const STORAGE_KEY = "hs-feedback-uasbm-session";
 const SHOW_DELAY_MS = 1500;
 
 export function SurveyPopup() {
   const [open, setOpen] = useState(false);
-  const surveyUrl = process.env.NEXT_PUBLIC_SURVEY_URL;
 
   useEffect(() => {
-    if (!surveyUrl) return;
     let seen = false;
     try {
       seen = sessionStorage.getItem(STORAGE_KEY) === "1";
@@ -28,7 +29,7 @@ export function SurveyPopup() {
     if (seen) return;
     const timer = window.setTimeout(() => setOpen(true), SHOW_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [surveyUrl]);
+  }, []);
 
   const markSeen = () => {
     try {
@@ -45,11 +46,9 @@ export function SurveyPopup() {
 
   const handleSubmit = () => {
     markSeen();
-    if (surveyUrl) window.open(surveyUrl, "_blank", "noopener,noreferrer");
+    window.open(FEEDBACK_FORM_URL, "_blank", "noopener,noreferrer");
     setOpen(false);
   };
-
-  if (!surveyUrl) return null;
 
   return (
     <AnimatePresence>
@@ -88,12 +87,27 @@ export function SurveyPopup() {
                   id="survey-popup-title"
                   className="font-heading text-base font-semibold leading-snug"
                 >
-                  Survei Kepuasan haistudy
+                  Masukanmu buat haistudy
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-foreground">
-                  Bantu tim haistudy menentukan kelanjutan aplikasi ini ke UAS dan semester berikutnya. Isi survei singkat (3-5 menit) dan dapatkan voucher diskon untuk pembelian berikutnya.
+                  Makasih udah pakai haistudy selama UAS Semester 2 BM! Bantu kami
+                  jadi lebih baik lewat form singkat, cuma 2–3 menit. Masukanmu —
+                  pujian atau kritik — langsung nentuin fitur mana yang dibenahi
+                  duluan.
                 </p>
               </div>
+            </div>
+
+            {/* Voucher highlight — the sweetener */}
+            <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
+              <Gift className="h-4 w-4 shrink-0 text-primary" />
+              <p className="text-xs leading-snug text-foreground">
+                Yang isi sampai selesai dapat{" "}
+                <span className="font-semibold text-primary">
+                  voucher diskon 15%
+                </span>{" "}
+                untuk pembelian berikutnya.
+              </p>
             </div>
 
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -101,7 +115,7 @@ export function SurveyPopup() {
                 Nanti
               </Button>
               <Button size="sm" onClick={handleSubmit} className="gap-1.5">
-                Isi Survei
+                Isi Form
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </div>
