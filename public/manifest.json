@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "haistudy — Platform belajar all-in-one mahasiswa BINUS",
+  "name": "haistudy - Platform belajar all-in-one mahasiswa BINUS",
   "short_name": "haistudy",
-  "description": "Platform belajar pintar all-in-one untuk mahasiswa BINUS: materi & rangkuman, kisi-kisi, quiz, flashcards, AI study assistant, chat & forum, dan voice room — per periode ujian.",
+  "description": "Platform belajar pintar all-in-one untuk mahasiswa BINUS: materi & rangkuman, kisi-kisi, quiz, flashcards, AI study assistant, chat & forum, dan voice room, per periode ujian.",
   "categories": ["education", "productivity"],
   "start_url": "/dashboard",
   "scope": "/",

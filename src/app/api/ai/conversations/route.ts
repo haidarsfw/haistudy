@@ -197,12 +197,16 @@ export async function PUT(request: Request) {
         .eq("id", id)
         .eq("license_key", caller.licenseKey)
         .select("id, title, messages, created_at, updated_at")
-        .single()
+        .maybeSingle()
     );
 
     if (error) {
       console.error("Update AI conversation error:", error);
       return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+    }
+    // Row gone or not owned by this caller → 404 instead of a 0-row coerce crash.
+    if (!data) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     return NextResponse.json({ conversation: data });

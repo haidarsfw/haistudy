@@ -3,9 +3,12 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { checkCooldown } from "@/lib/auth/cooldown";
 import { capitalizeFirst } from "@/lib/name";
+import { isUuid } from "@/lib/uuid";
 import type { ForumComment } from "@/types";
 
 // ─── Mock store for development without Supabase ───
@@ -36,6 +39,13 @@ export async function GET(request: Request) {
         { error: "threadId is required" },
         { status: 400 }
       );
+    }
+
+    // Pinned/static threads carry a string id (e.g. "pinned-akuntansi-…"), but
+    // forum_comments.thread_id is a uuid column — querying it with a non-uuid
+    // 500s (22P02). These threads live in-repo and hold no DB comments → empty.
+    if (!isUuid(threadId)) {
+      return NextResponse.json({ comments: [] });
     }
 
     if (!isSupabaseServerConfigured) {
@@ -106,6 +116,27 @@ export async function POST(request: Request) {
 
     if ((content || "").length > 5000) {
       return NextResponse.json({ error: "Comment too long (max 5000)" }, { status: 400 });
+    }
+
+    // Static/pinned threads (non-uuid id) are read-only curated content — the
+    // uuid thread_id column can't store their id. Refuse cleanly (no 500).
+    if (!isUuid(threadId)) {
+      return NextResponse.json(
+        { error: "Diskusi ini tidak menerima komentar." },
+        { status: 400 }
+      );
+    }
+
+    // Flood guard: gentle per-user cooldown on comment posting.
+    const _lk = (await cookies()).get("hs-session")?.value?.toUpperCase();
+    if (_lk) {
+      const cd = checkCooldown(`forum-comment:${_lk}`, 1500);
+      if (!cd.allowed) {
+        return NextResponse.json(
+          { error: "Tunggu sebentar." },
+          { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+        );
+      }
     }
 
     // Only accept Cloudinary image URLs (same policy as feedback route)

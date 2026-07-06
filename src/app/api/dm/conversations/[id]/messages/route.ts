@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth/scope-check";
 import { resolveSessionTier } from "@/lib/auth/session-tier";
 import { canUseVip } from "@/lib/tier";
+import { checkCooldown } from "@/lib/auth/cooldown";
 import { waitUntil } from "@vercel/functions";
 import { notifyOnDmMessage } from "@/lib/notifications/fan-out";
 import type { DmMessage } from "@/types";
@@ -156,6 +157,17 @@ export async function POST(
     }
     if (!licenseKey) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // Flood guard: gentle per-user cooldown on DM sends.
+    {
+      const cd = checkCooldown(`dm-msg:${licenseKey}`, 800);
+      if (!cd.allowed) {
+        return NextResponse.json(
+          { error: "Terlalu cepat mengirim pesan." },
+          { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+        );
+      }
     }
 
     const payload = await request.json().catch(() => ({}));

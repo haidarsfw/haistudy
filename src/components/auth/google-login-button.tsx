@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createAuthClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { SITE_URL } from "@/lib/site-url";
 import { toast } from "@/components/ui/toast";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -44,7 +45,14 @@ export function GoogleLoginButton() {
         setLoading(false);
         return;
       }
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      // Use the canonical origin in production so the PKCE verifier cookie is
+      // written AND read on ONE host (haistudy.site). window.location.origin can
+      // be a *.vercel.app alias, which splits the cookie from the callback →
+      // "PKCE code verifier not found" (the login failure hitting real users).
+      // Dev/localhost keeps its own origin so local sign-in still works.
+      const origin =
+        process.env.NODE_ENV === "production" ? SITE_URL : window.location.origin;
+      const redirectTo = `${origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },

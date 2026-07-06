@@ -5,6 +5,8 @@ import type { Subject, SubjectContent, Schedule, SubjectKilat } from "@/types";
 import type { ExamData } from "@/types/exam";
 import { useScope, useOptionalScope } from "@/components/providers/scope-provider";
 import { loadCourses, loadContent, loadSchedule, loadRangkuman, loadKilat, loadExamData } from "@/data";
+import { isChunkLoadError, recoverFromChunkError, markAppHealthy } from "@/lib/chunk-recovery";
+import { logError } from "@/lib/error-logging";
 
 interface ScopedDataValue {
   subjects: Subject[];
@@ -55,37 +57,58 @@ export function ScopedDataProvider({ children }: { children: React.ReactNode }) 
       loadCourses(scope),
       loadContent(scope) as Promise<Record<string, SubjectContent>>,
       loadSchedule(scope),
-    ]).then(([subjects, content, sched]) => {
-      if (cancelled) return;
-      setValue((v) => ({
-        ...v,
-        subjects,
-        content,
-        weeklySchedule: sched.weekly,
-        examSchedule: sched.exam,
-        loaded: true,
-      }));
-    });
+    ])
+      .then(([subjects, content, sched]) => {
+        if (cancelled) return;
+        // Critical scoped data loaded → reset the once-per-session chunk guard.
+        markAppHealthy();
+        setValue((v) => ({
+          ...v,
+          subjects,
+          content,
+          weeklySchedule: sched.weekly,
+          examSchedule: sched.exam,
+          loaded: true,
+        }));
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        // Stale-deploy chunk failure → auto-reload once, then prompt (no loop).
+        if (isChunkLoadError(e)) return recoverFromChunkError();
+        // Genuine load failure → log (now visible; handlers are wired) and leave
+        // `loaded` false so the page shows its spinner instead of a dead crash.
+        logError("scoped-data load failed", e instanceof Error ? e.stack : String(e));
+      });
     // Rangkuman loads separately so it never blocks dashboard readiness
     // (`loaded`). Functional updates keep both results regardless of order.
-    (loadRangkuman(scope) as Promise<Record<string, Record<string, string>>>).then(
-      (rangkuman) => {
+    (loadRangkuman(scope) as Promise<Record<string, Record<string, string>>>)
+      .then((rangkuman) => {
         if (cancelled) return;
         setValue((v) => ({ ...v, rangkuman, rangkumanLoaded: true }));
-      }
-    );
+      })
+      .catch((e) => {
+        if (isChunkLoadError(e)) recoverFromChunkError();
+      });
     // Belajar Kilat feed - same non-blocking pattern. Resolves to {} for scopes
     // without a feed registered (loader is optional).
-    (loadKilat(scope) as Promise<Record<string, SubjectKilat>>).then((kilat) => {
-      if (cancelled) return;
-      setValue((v) => ({ ...v, kilat, kilatLoaded: true }));
-    });
+    (loadKilat(scope) as Promise<Record<string, SubjectKilat>>)
+      .then((kilat) => {
+        if (cancelled) return;
+        setValue((v) => ({ ...v, kilat, kilatLoaded: true }));
+      })
+      .catch((e) => {
+        if (isChunkLoadError(e)) recoverFromChunkError();
+      });
     // Exam data - same non-blocking pattern. Resolves to {} for scopes
     // without exam data registered (loader is optional).
-    (loadExamData(scope) as Promise<Record<string, ExamData>>).then((examData) => {
-      if (cancelled) return;
-      setValue((v) => ({ ...v, examData, examDataLoaded: true }));
-    });
+    (loadExamData(scope) as Promise<Record<string, ExamData>>)
+      .then((examData) => {
+        if (cancelled) return;
+        setValue((v) => ({ ...v, examData, examDataLoaded: true }));
+      })
+      .catch((e) => {
+        if (isChunkLoadError(e)) recoverFromChunkError();
+      });
     return () => {
       cancelled = true;
     };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPollBackoff } from "@/lib/poll-backoff";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,18 +65,27 @@ export function QuickLicense() {
       setInvoiceNumber(null);
       return;
     }
+    const backoff = createPollBackoff(120_000);
     const fetchCounter = () => {
       if (editingRef.current) return;
+      if (!backoff.shouldRun()) return;
       fetch(`/api/admin/invoice-counter?scope=${counterScope}&t=${Date.now()}`)
-        .then((r) => r.json())
+        .then((r) => {
+          if (!r.ok) throw new Error("bad response");
+          return r.json();
+        })
         .then((data) => {
           if (typeof data.value === "number" && !editingRef.current) {
             const next = data.value + 1;
             setInvoiceNumber(next);
             setTempInvoice(String(next));
           }
+          backoff.onSuccess();
         })
-        .catch(console.error);
+        .catch((e) => {
+          console.error(e);
+          backoff.onFailure();
+        });
     };
 
     fetchCounter();

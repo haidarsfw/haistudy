@@ -108,8 +108,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // renders their REAL session with no preview flash and no "refresh again"
     // loop. Same single fetch as before, just awaited.
     (async () => {
+      // Cap the reconcile so a stalled /api/auth/me can never wedge the app on
+      // the loading spinner (finally always runs → isLoading clears).
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
       try {
-        const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+        const res = await fetch("/api/auth/me", {
+          credentials: "same-origin",
+          signal: ctrl.signal,
+        });
         if (cancelled) return;
         if (res.ok) {
           const data = await res.json();
@@ -134,9 +141,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           setSession(stored);
         }
       } catch {
-        // Network error: keep whatever we had (may be a stored preview); refresh retries.
+        // Timeout/abort or network error: fall back to any stored session so the
+        // user isn't stuck on a spinner; a refresh retries the reconcile.
         if (stored) setSession(stored);
       } finally {
+        clearTimeout(timer);
         if (!cancelled) setIsLoading(false);
       }
     })();

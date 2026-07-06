@@ -125,16 +125,25 @@ export function useExam(subjectId: string) {
       answers: UserExamAnswer[],
       autoSubmitted = false
     ): Promise<SubmitResult> => {
-      const res = await fetch("/api/exam/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          attemptId,
-          subjectId,
-          answers,
-          autoSubmitted,
-        }),
-      });
+      // Grading can legitimately run ~1 min server-side, but a stalled
+      // connection must not hang the full-screen grading overlay forever.
+      // Abort after 100s (> the route's maxDuration:60) so a true stall rejects
+      // → the exam player's retry/recover path fires instead of a dead freeze.
+      // Answers are already persisted (autosave + session blob), so a rejected
+      // submit never loses work.
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 100_000);
+      let res: Response;
+      try {
+        res = await fetch("/api/exam/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ attemptId, subjectId, answers, autoSubmitted }),
+          signal: ctrl.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Failed to submit");

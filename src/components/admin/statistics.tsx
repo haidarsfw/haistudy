@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPollBackoff } from "@/lib/poll-backoff";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,13 +53,22 @@ export function Statistics() {
 
   useEffect(() => {
     if (!hydrated) return;
+    const backoff = createPollBackoff(120_000);
     const fetchUsers = () => {
+      if (!backoff.shouldRun()) {
+        setLoading(false);
+        return;
+      }
       adminFetch<{ users?: UserStat[] }>(`/api/admin/users${scopeQuery()}`)
         .then((data) => {
           setUsers(data.users || []);
           setError(null);
+          backoff.onSuccess();
         })
-        .catch((e) => setError(e))
+        .catch((e) => {
+          setError(e);
+          backoff.onFailure();
+        })
         .finally(() => setLoading(false));
     };
 

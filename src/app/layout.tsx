@@ -11,6 +11,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { THEME_INIT_SCRIPT } from "@/lib/theme-init";
 import { JsonLd } from "@/components/seo/json-ld";
+import { GlobalErrorHandler } from "@/components/system/global-error-handler";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
@@ -175,6 +176,7 @@ export default function RootLayout({
         <JsonLd />
       </head>
       <body className="min-h-full flex flex-col font-sans">
+        <GlobalErrorHandler />
         <ThemeProvider>
           <SessionProvider>
             <SettingsProvider>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/components/providers/session-provider";
+import { createPollBackoff } from "@/lib/poll-backoff";
 
 /**
  * Pending-purchase count for the admin red-dot badges (sidebar, mobile "More",
@@ -26,20 +27,27 @@ export function useAdminPurchaseCount(opts?: {
   const scopeQuery = opts?.scopeQuery;
   const pollMs = opts?.pollMs ?? 45_000;
   const [pendingCount, setPendingCount] = useState(0);
+  // Back off if the endpoint starts failing so the 45s poll never storms it.
+  const backoffRef = useRef(createPollBackoff(pollMs));
 
   const refresh = useCallback(async () => {
     if (!isAdmin) return;
+    if (!backoffRef.current.shouldRun()) return;
     try {
       const sq = scopeQuery ? scopeQuery() : "";
       const sep = sq ? "&" : "?";
       const res = await fetch(`/api/admin/purchase${sq}${sep}count=pending`, {
         cache: "no-store",
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        backoffRef.current.onFailure();
+        return;
+      }
       const data = await res.json();
       if (typeof data.pendingCount === "number") setPendingCount(data.pendingCount);
+      backoffRef.current.onSuccess();
     } catch {
-      /* non-critical */
+      backoffRef.current.onFailure();
     }
   }, [isAdmin, scopeQuery]);
 

@@ -30,6 +30,11 @@ const LEGACY_APP_ROUTES = new Set([
 
 const DEFAULT_SCOPE_COOKIE = "s2-uts-bm";
 
+// Production canonical host. All other hosts (Vercel deploy aliases, www) get
+// 308-redirected here so cookies — especially the OAuth PKCE verifier — always
+// live on ONE origin. Preview deploys + localhost are exempt (VERCEL_ENV check).
+const CANONICAL_HOST = "haistudy.site";
+
 // Next metadata routes are extensionless yet must stay crawlable (OG image,
 // favicons, robots, sitemap). Without these, the proxy 307s social/crawler
 // fetches to /login and breaks link previews + indexing.
@@ -62,6 +67,20 @@ function parseScopeCookie(raw: string | undefined): { sem: string; exam: string;
 }
 
 export function proxy(request: NextRequest) {
+  // 0. Canonicalize host in production so OAuth PKCE + all cookies share ONE
+  //    origin. A non-canonical host (e.g. a *.vercel.app alias) 308-redirects to
+  //    haistudy.site. Preview deploys (VERCEL_ENV !== "production") and
+  //    localhost are left untouched so testing still works.
+  if (process.env.VERCEL_ENV === "production") {
+    const host = request.headers.get("host");
+    if (host && host !== CANONICAL_HOST) {
+      const dest = request.nextUrl.clone();
+      dest.protocol = "https:";
+      dest.host = CANONICAL_HOST;
+      return NextResponse.redirect(dest, 308);
+    }
+  }
+
   const url = request.nextUrl.clone();
   const pathname = url.pathname;
   const segs = pathname.split("/").filter(Boolean);

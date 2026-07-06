@@ -19,7 +19,9 @@ function renderKatex(latex: string, key: string, display = false): ReactNode {
     const html = katex.renderToString(latex, {
       throwOnError: false,
       displayMode: display,
-      trust: true,
+      // trust:false (KaTeX default) — block \href/\includegraphics etc. so a
+      // prompt-injected AI answer can't emit a javascript: link via LaTeX.
+      trust: false,
     });
     return display ? (
       <div

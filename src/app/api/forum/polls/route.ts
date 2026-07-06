@@ -3,8 +3,10 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { checkCooldown } from "@/lib/auth/cooldown";
 import { capitalizeFirst } from "@/lib/name";
 import type { ForumPoll, PollOption } from "@/types";
 
@@ -161,6 +163,18 @@ export async function POST(request: Request) {
     for (const opt of options) {
       if (typeof opt === "string" && opt.length > 100) {
         return NextResponse.json({ error: "Option too long (max 100)" }, { status: 400 });
+      }
+    }
+
+    // Flood guard: poll creation is infrequent → a longer cooldown.
+    const _lk = (await cookies()).get("hs-session")?.value?.toUpperCase();
+    if (_lk) {
+      const cd = checkCooldown(`forum-poll:${_lk}`, 3000);
+      if (!cd.allowed) {
+        return NextResponse.json(
+          { error: "Tunggu sebentar sebelum membuat poll lagi." },
+          { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+        );
       }
     }
 

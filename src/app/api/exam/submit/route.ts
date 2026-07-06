@@ -15,6 +15,11 @@ import {
   type GradingResult,
 } from "@/lib/exam/grade";
 
+// Grading runs up to 3 rounds of chunked AI calls; give the function room so a
+// legitimate long grade finishes server-side instead of the platform killing it
+// (which would strand the client on the grading overlay).
+export const maxDuration = 60;
+
 interface SubmitBody {
   attemptId: string;
   subjectId: string;

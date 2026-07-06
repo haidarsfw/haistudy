@@ -3,7 +3,9 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { checkCooldown } from "@/lib/auth/cooldown";
 
 // Shared mock store references - import approach not possible across route files,
 // so vote mock logic is self-contained here
@@ -42,6 +44,19 @@ export async function POST(request: Request) {
         { error: "Invalid optionIndex" },
         { status: 400 }
       );
+    }
+
+    // Flood guard: gentle cooldown on voting (unique constraint already blocks
+    // duplicate votes on the same poll).
+    const _lk = (await cookies()).get("hs-session")?.value?.toUpperCase();
+    if (_lk) {
+      const cd = checkCooldown(`forum-vote:${_lk}`, 800);
+      if (!cd.allowed) {
+        return NextResponse.json(
+          { error: "Terlalu cepat." },
+          { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+        );
+      }
     }
 
     if (!isSupabaseServerConfigured) {

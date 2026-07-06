@@ -1,15 +1,41 @@
 /**
- * Client-side error logging.
- * Sends errors to /api/errors for persistence.
+ * Client-side error logging + global handlers.
+ * Posts to /api/errors (throttled) and recovers from stale-deploy chunk errors.
  */
+
+import { isChunkLoadError, recoverFromChunkError } from "@/lib/chunk-recovery";
+
+// Throttle so a runaway error (e.g. a reconnect loop firing unhandledrejection
+// repeatedly) can never storm /api/errors — every POST is a Vercel invocation +
+// a DB write. Cap per session + dedup identical messages. Console still logs.
+let sentCount = 0;
+const MAX_PER_SESSION = 8;
+const seen = new Set<string>();
+const IGNORE: RegExp[] = [
+  /ResizeObserver loop/i,
+  /^Script error\.?$/i, // cross-origin script error, no actionable detail
+  /Non-Error promise rejection captured/i,
+];
+
+function shouldPost(message: string): boolean {
+  if (!message) return false;
+  if (IGNORE.some((re) => re.test(message))) return false;
+  if (seen.has(message)) return false;
+  if (sentCount >= MAX_PER_SESSION) return false;
+  return true;
+}
 
 export function logError(
   message: string,
   stack?: string,
   context?: Record<string, unknown>
 ) {
-  // Log to console in development
+  // Always log to console (stripped in prod except error/warn by next.config).
   console.error("[haistudy error]", message, stack);
+
+  if (!shouldPost(message)) return;
+  seen.add(message);
+  sentCount++;
 
   // Send to API (fire-and-forget)
   try {
@@ -32,13 +58,20 @@ export function logError(
 }
 
 /**
- * Setup global error handlers.
- * Call once in the app root.
+ * Setup global error handlers. Call once at the app root (GlobalErrorHandler).
+ * Logs uncaught errors + unhandled rejections, and recovers from stale-deploy
+ * chunk-load failures (the dead-UI / "must force-refresh" class of bug).
  */
 export function setupGlobalErrorHandlers() {
   if (typeof window === "undefined") return;
+  const w = window as unknown as { __hsErrHandlers?: boolean };
+  if (w.__hsErrHandlers) return; // idempotent across StrictMode double-mount
+  w.__hsErrHandlers = true;
 
   window.addEventListener("error", (event) => {
+    if (isChunkLoadError(event.error) || isChunkLoadError(event.message)) {
+      recoverFromChunkError();
+    }
     logError(event.message, event.error?.stack, {
       filename: event.filename,
       lineno: event.lineno,
@@ -47,12 +80,11 @@ export function setupGlobalErrorHandlers() {
   });
 
   window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason;
+    if (isChunkLoadError(reason)) recoverFromChunkError();
     const message =
-      event.reason instanceof Error
-        ? event.reason.message
-        : String(event.reason);
-    const stack =
-      event.reason instanceof Error ? event.reason.stack : undefined;
+      reason instanceof Error ? reason.message : String(reason);
+    const stack = reason instanceof Error ? reason.stack : undefined;
     logError(`Unhandled Promise: ${message}`, stack);
   });
 }

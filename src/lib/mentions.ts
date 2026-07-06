@@ -39,17 +39,6 @@ export function hasMentions(text: string): boolean {
 }
 
 /**
- * Highlight @mentions in text by wrapping them in a span.
- * Returns HTML string for dangerouslySetInnerHTML or manual parsing.
- */
-export function highlightMentions(text: string): string {
-  return text.replace(
-    /@(\w+)/g,
-    '<span class="text-primary font-semibold">@$1</span>'
-  );
-}
-
-/**
  * Create notification payloads for mentioned users.
  * @param mentions - parsed mentions from text
  * @param senderName - who sent the message

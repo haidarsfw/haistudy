@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { SupportPresenceState, SupportReaderKind } from "@/types";
+import { createPollBackoff } from "@/lib/poll-backoff";
 
 const POLL_INTERVAL_MS = 120_000; // widened from 45s to cut Active CPU; online-dot latency ~2min
 
@@ -27,22 +28,29 @@ export function useSupportPresence(
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
+    const backoff = createPollBackoff(POLL_INTERVAL_MS);
 
     const fetchOnce = async () => {
+      if (!backoff.shouldRun()) return;
       try {
         const url = licenseKey
           ? `/api/support/presence?licenseKey=${encodeURIComponent(licenseKey)}`
           : "/api/support/presence";
         const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok || cancelled) return;
+        if (cancelled) return;
+        if (!res.ok) {
+          backoff.onFailure();
+          return;
+        }
         const data = await res.json();
         setPresence({
           online: Boolean(data.online),
           lastSeen: data.lastSeen ?? null,
           kind: (data.kind ?? kind) as SupportReaderKind,
         });
+        backoff.onSuccess();
       } catch {
-        // silent
+        backoff.onFailure();
       }
     };
 

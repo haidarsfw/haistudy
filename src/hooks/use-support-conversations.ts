@@ -6,6 +6,7 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { supportAllChannel, scopeRealtimeFilter } from "@/lib/realtime/channels";
 import { DEFAULT_SCOPE, scopeKey } from "@/lib/scope";
+import { createPollBackoff } from "@/lib/poll-backoff";
 import type { ScopeTuple } from "@/types/scope";
 import type { SupportConversationSummary } from "@/types";
 
@@ -57,14 +58,24 @@ export function useSupportConversations(
     };
   }, [allPeriods, scope]);
 
+  // Back off the safety poll if /api/support starts failing (Realtime is primary).
+  const backoffRef = useRef(createPollBackoff(120_000));
   const refresh = useCallback(async () => {
+    if (!backoffRef.current.shouldRun()) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(fetchUrl);
-      if (!res.ok) return;
+      if (!res.ok) {
+        backoffRef.current.onFailure();
+        return;
+      }
       const data = await res.json();
       setConversations(data.conversations || []);
+      backoffRef.current.onSuccess();
     } catch {
-      // silent
+      backoffRef.current.onFailure();
     } finally {
       setLoading(false);
     }

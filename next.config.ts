@@ -119,7 +119,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' data: https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://gvjwxccwuyuhgexypgbn.supabase.co https://lh3.googleusercontent.com https://*.googleusercontent.com https://res.cloudinary.com",
               "media-src 'self' blob: https://gvjwxccwuyuhgexypgbn.supabase.co https://res.cloudinary.com",
-              "connect-src 'self' https://gvjwxccwuyuhgexypgbn.supabase.co wss://gvjwxccwuyuhgexypgbn.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://va.vercel-scripts.com https://vitals.vercel-insights.com https://generativelanguage.googleapis.com https://api.openai.com https://api.cloudinary.com https://w.soundcloud.com",
+              "connect-src 'self' https://gvjwxccwuyuhgexypgbn.supabase.co wss://gvjwxccwuyuhgexypgbn.supabase.co https://*.livekit.cloud wss://*.livekit.cloud https://va.vercel-scripts.com https://vitals.vercel-insights.com https://generativelanguage.googleapis.com https://api.cloudinary.com https://w.soundcloud.com",
               "worker-src 'self' blob:",
               // frame-src controls who WE can embed (Google Slides/Drive viewers
               // for MateriTab; YouTube for video lessons). Distinct from

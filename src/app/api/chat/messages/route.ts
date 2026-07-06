@@ -6,6 +6,7 @@ import {
 import { cookies } from "next/headers";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { parseMentions, hasMentions } from "@/lib/mentions";
+import { checkCooldown } from "@/lib/auth/cooldown";
 import type { ChatChannel, ChatMessage } from "@/types";
 import { CHAT_MAX_MESSAGES } from "@/lib/constants";
 import { requireScope, scopeColumns, scopeEq, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
@@ -217,6 +218,18 @@ export async function POST(request: Request) {
     // resolve PublicProfile. Falls back to null → popover degrades to name/tier.
     const authorLicenseKey =
       (await cookies()).get("hs-session")?.value?.toUpperCase() || null;
+
+    // Flood guard: a gentle per-user cooldown so a runaway client or spammer
+    // can't hammer chat inserts (each message = a DB write + realtime broadcast).
+    if (authorLicenseKey) {
+      const cd = checkCooldown(`chat-msg:${authorLicenseKey}`, 800);
+      if (!cd.allowed) {
+        return NextResponse.json(
+          { error: "Terlalu cepat mengirim pesan." },
+          { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+        );
+      }
+    }
 
     // VIP Lounge is write-gated: only VIP/admin may post there.
     if (channel === "vip-lounge" && !canUseVip(isAdmin, tier)) {

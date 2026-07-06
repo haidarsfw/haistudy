@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local DB backups (contain PII — never publish)
+/backups/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -57,6 +60,10 @@ next-env.d.ts
 /TESTING.md
 /r11-*.png
 /r11b-*.png
+# feedback / form-drive internal docs (per-exam, kept local, never published)
+/Evaluasi-*.md
+/Panduan-*.md
+/Template-*.md
 
 # CPU optimization changelog (local reference only)
 CPU-OPTIMIZATION-CHANGELOG.md

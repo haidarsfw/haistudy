@@ -19,89 +19,87 @@ export default function TermsPage() {
       </Link>
 
       <h1 className="font-heading text-2xl font-bold mb-6">
-        Terms of Service
+        Ketentuan Layanan
       </h1>
       <p className="text-sm text-muted-foreground mb-8">
-        Terakhir diperbarui: 7 April 2026
+        Terakhir diperbarui: 6 Juli 2026
       </p>
 
       <div className="prose prose-sm dark:prose-invert max-w-none space-y-8 prose-headings:font-heading prose-headings:tracking-tight prose-li:my-0.5 text-sm text-foreground/80">
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            1. Penerimaan Ketentuan
+            1. Persetujuan
           </h2>
           <p>
-            Dengan menggunakan haistudy, kamu menyetujui ketentuan layanan ini.
-            Jika tidak setuju, harap berhenti menggunakan platform.
+            Dengan memakai haistudy, kamu setuju dengan ketentuan ini. Kalau
+            kamu tidak setuju, mohon berhenti memakai platform.
           </p>
         </section>
 
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            2. Ketentuan License Key
+            2. Aturan License Key
           </h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              Setiap license key bersifat <strong>personal dan sangat tidak
-              boleh dibagikan</strong> kepada siapa pun dalam alasan apa pun.
+              License key kamu bersifat <strong>pribadi</strong>. Jangan
+              dibagikan ke siapa pun, dengan alasan apa pun.
             </li>
             <li>
-              Maksimal 2 perangkat per license key (1 primary + 1 backup).
-              Perangkat diverifikasi melalui device fingerprinting.
+              Satu license key bisa dipakai maksimal di 2 perangkat (1 utama dan
+              1 cadangan).
             </li>
             <li>
-              Penyalahgunaan license key (berbagi, menjual kembali, meminjamkan)
-              akan mengakibatkan <strong>pemblokiran akses permanen</strong> tanpa
-              pengembalian dana.
+              Kalau license key dibagikan, dijual, atau dipinjamkan, akses kamu
+              akan <strong>diblokir permanen tanpa pengembalian dana</strong>.
             </li>
-            <li>
-              License key berlaku sesuai durasi paket yang dibeli (30 hari sejak
-              aktivasi).
-            </li>
+            <li>License key berlaku 30 hari sejak diaktifkan.</li>
           </ul>
         </section>
 
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            3. Paket Layanan
+            3. Paket dan Pembelian
           </h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              <strong>Share</strong> - Akses penuh dengan syarat membagikan link
+              <strong>Share</strong>: akses penuh dengan syarat membagikan link
               referral ke teman sesuai ketentuan yang berlaku.
             </li>
             <li>
-              <strong>Normal</strong> - Akses penuh tanpa syarat tambahan.
+              <strong>Normal</strong>: akses penuh tanpa syarat tambahan.
             </li>
             <li>
-              <strong>VIP</strong> - Semua fitur Normal ditambah AI prioritas
-              (DeepSeek reasoning), VIP badge, dan support lebih cepat.
+              <strong>VIP</strong>: semua fitur Normal, ditambah AI yang lebih
+              pintar, badge VIP, fitur pesan pribadi, dan bantuan yang lebih
+              cepat.
             </li>
           </ul>
+          <p className="mt-2">
+            Pembelian dicek manual (maksimal 1x24 jam) dan bersifat{" "}
+            <strong>final tanpa pengembalian dana</strong>. Saat membeli, kamu
+            mengisi nama, nomor WhatsApp, dan email untuk proses aktivasi akses.
+          </p>
         </section>
 
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            4. Penggunaan yang Dilarang
+            4. Yang Tidak Boleh Dilakukan
           </h2>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Membagikan license key kepada orang lain.</li>
+            <li>Membagikan license key ke orang lain.</li>
+            <li>Memakai platform untuk mencontek saat ujian yang sebenarnya.</li>
             <li>
-              Menggunakan platform untuk kecurangan akademik (mencontek saat
-              ujian).
+              Mengirim konten yang melanggar hukum, spam, atau menyinggung SARA
+              di chat, forum, maupun layanan bantuan.
             </li>
-            <li>Mengirim konten yang melanggar hukum, spam, atau SARA di forum, chat, maupun support.</li>
-            <li>Menyalahgunakan fitur @mention atau @all untuk spam.</li>
+            <li>Menyalahgunakan fitur mention atau @all untuk spam.</li>
+            <li>Mencoba meretas atau merusak sistem platform.</li>
             <li>
-              Mencoba meretas, mendecompile, atau merusak sistem platform.
-            </li>
-            <li>
-              Menyalin dan mendistribusikan ulang konten (rangkuman, flashcards,
+              Menyalin dan menyebarkan ulang materi (rangkuman, flashcards,
               quiz, kisi-kisi) tanpa izin.
             </li>
-            <li>
-              Menggunakan bot atau automation untuk mengakses platform.
-            </li>
+            <li>Memakai bot atau alat otomatis untuk mengakses platform.</li>
           </ul>
         </section>
 
@@ -109,34 +107,36 @@ export default function TermsPage() {
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
             5. Fitur Platform
           </h2>
-          <p>haistudy menyediakan fitur-fitur berikut:</p>
+          <p>haistudy menyediakan, antara lain:</p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
-            <li>Materi kuliah (slides, rangkuman, kisi-kisi).</li>
-            <li>Flashcards dan quiz interaktif.</li>
-            <li>AI Study Assistant (Gemini untuk user biasa, DeepSeek untuk VIP) dengan dukungan upload gambar.</li>
-            <li>Forum diskusi per mata kuliah dengan polling.</li>
-            <li>Global chat real-time.</li>
-            <li>Voice rooms untuk belajar bersama.</li>
-            <li>Catatan pribadi per mata kuliah.</li>
-            <li>Sistem bookmark, progress tracking, dan analytics belajar.</li>
-            <li>Layanan pelanggan (live chat, WhatsApp, Instagram).</li>
+            <li>Materi kuliah (slide, rangkuman, kisi-kisi).</li>
+            <li>Flashcards, quiz, dan Belajar Kilat.</li>
+            <li>Latihan Soal, yaitu ujian latihan yang dinilai otomatis.</li>
+            <li>Cheat sheet ringkas untuk mata kuliah tertentu.</li>
+            <li>
+              Asisten belajar AI untuk menjelaskan materi dan menjawab
+              pertanyaan, termasuk dari gambar.
+            </li>
+            <li>Forum diskusi dan polling per mata kuliah.</li>
+            <li>Chat bareng seangkatan dan pesan pribadi (untuk VIP).</li>
+            <li>Voice room untuk belajar bersama.</li>
+            <li>Catatan pribadi, bookmark, progress, dan statistik belajar.</li>
+            <li>Layanan bantuan lewat live chat, WhatsApp, dan Instagram.</li>
           </ul>
         </section>
 
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            6. Konten dan Disclaimer
+            6. Tentang Materi dan Jawaban AI
           </h2>
           <p>
             Materi di haistudy bersifat edukatif dan merupakan rangkuman dari
             bahan kuliah. Platform ini <strong>bukan pengganti</strong> materi
-            resmi dari dosen. Selalu rujuk ke materi kuliah resmi dari BINUSMAYA
-            untuk kepastian.
+            resmi dari dosen. Selalu cek kembali ke materi resmi dari kampus.
           </p>
           <p className="mt-2">
-            AI Study Assistant menjawab berdasarkan konten yang sudah di-input
-            (rangkuman, flashcards, kisi-kisi, materi slides). Jawaban AI mungkin
-            tidak selalu akurat - selalu verifikasi dengan materi dosen.
+            Jawaban dari asisten AI belum tentu selalu benar. Selalu periksa
+            ulang dengan materi dari dosen.
           </p>
         </section>
 
@@ -145,27 +145,25 @@ export default function TermsPage() {
             7. Batasan Tanggung Jawab
           </h2>
           <p>
-            haistudy disediakan &ldquo;sebagaimana adanya&rdquo; tanpa jaminan
-            apa pun. Kami tidak bertanggung jawab atas:
+            haistudy disediakan apa adanya. Kami tidak bertanggung jawab atas:
           </p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li>Hasil ujian pengguna.</li>
-            <li>Downtime atau gangguan layanan.</li>
+            <li>Gangguan atau layanan yang sedang tidak bisa diakses.</li>
             <li>Kehilangan data akibat masalah teknis.</li>
-            <li>Kerugian yang timbul dari penggunaan platform.</li>
-            <li>Ketidakakuratan jawaban AI Study Assistant.</li>
+            <li>Kerugian yang muncul dari pemakaian platform.</li>
+            <li>Ketidaktepatan jawaban asisten AI.</li>
           </ul>
         </section>
 
         <section>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            8. Layanan Pelanggan
+            8. Layanan Bantuan
           </h2>
           <p>
-            haistudy menyediakan fitur live chat dalam platform untuk komunikasi
-            langsung dengan admin. Selain itu, kamu bisa menghubungi melalui
-            WhatsApp atau Instagram. Percakapan support disimpan untuk keperluan
-            penyelesaian masalah dan peningkatan layanan.
+            Kamu bisa menghubungi admin lewat fitur live chat di dalam aplikasi,
+            WhatsApp, atau Instagram. Percakapan bantuan kami simpan untuk
+            menyelesaikan masalah dan meningkatkan layanan.
           </p>
         </section>
 
@@ -174,9 +172,9 @@ export default function TermsPage() {
             9. Perubahan Ketentuan
           </h2>
           <p>
-            Kami berhak mengubah ketentuan ini kapan saja. Perubahan akan
-            diumumkan melalui platform. Penggunaan berkelanjutan setelah
-            perubahan berarti kamu menyetujui ketentuan yang baru.
+            Kami bisa mengubah ketentuan ini sewaktu-waktu. Perubahan akan
+            diumumkan lewat platform. Kalau kamu terus memakai haistudy setelah
+            ada perubahan, berarti kamu setuju dengan ketentuan yang baru.
           </p>
         </section>
 
@@ -185,8 +183,8 @@ export default function TermsPage() {
             10. Kontak
           </h2>
           <p>
-            Untuk pertanyaan atau laporan pelanggaran, hubungi admin melalui
-            fitur Live Chat di dalam platform, atau melalui{" "}
+            Untuk pertanyaan atau laporan pelanggaran, hubungi admin lewat fitur
+            Live Chat di dalam platform, atau lewat{" "}
             <a
               href="https://instagram.com/haidarsfw"
               target="_blank"

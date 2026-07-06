@@ -3,8 +3,10 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { checkCooldown } from "@/lib/auth/cooldown";
 import { capitalizeFirst } from "@/lib/name";
 import type { ForumThread, Attachment } from "@/types";
 
@@ -173,6 +175,18 @@ export async function POST(request: Request) {
         { error: "URL too long" },
         { status: 400 }
       );
+    }
+
+    // Flood guard: thread creation is infrequent → a longer cooldown.
+    const _lk = (await cookies()).get("hs-session")?.value?.toUpperCase();
+    if (_lk) {
+      const cd = checkCooldown(`forum-thread:${_lk}`, 3000);
+      if (!cd.allowed) {
+        return NextResponse.json(
+          { error: "Tunggu sebentar sebelum membuat thread lagi." },
+          { status: 429, headers: { "Retry-After": String(cd.retryAfter) } }
+        );
+      }
     }
 
     if (!isSupabaseServerConfigured) {
