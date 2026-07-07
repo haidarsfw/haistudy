@@ -8,6 +8,7 @@ import {
 } from "@/lib/support/server";
 import { notifyOnSupportMessage } from "@/lib/notifications/fan-out";
 import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import type { ExamPeriod } from "@/types/scope";
 import { displayName } from "@/lib/name";
 import type { SupportConversationSummary, SupportMessage } from "@/types";
 
@@ -322,6 +323,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Support messages belong to the CONVERSATION OWNER's cohort, not the
+    // sender's. An admin replying to an older-cohort conversation must tag the
+    // row with the owner's scope, else the owner's scope-filtered queries (and
+    // realtime cross-check) never surface it. Student replying in their own
+    // conversation: owner == sender, so no lookup is needed.
+    let msgScope = scope;
+    if ((licenseKey ?? "").toUpperCase() !== (sender.licenseKey ?? "").toUpperCase()) {
+      const { data: ownerKey } = await supabase
+        .from("license_keys")
+        .select("semester, exam_period, jurusan")
+        .eq("key", licenseKey)
+        .maybeSingle();
+      if (ownerKey) {
+        msgScope = {
+          semester: ownerKey.semester as number,
+          examPeriod: ownerKey.exam_period as ExamPeriod,
+          jurusan: ownerKey.jurusan as string,
+        };
+      }
+    }
+
     const { data, error } = await supabase
       .from("support_messages")
       .insert({
@@ -337,7 +359,7 @@ export async function POST(req: NextRequest) {
         reply_to_content: replyToContent ?? null,
         is_internal: isInternal,
         client_nonce: clientNonce ?? null,
-        ...scopeColumns(scope),
+        ...scopeColumns(msgScope),
       })
       .select()
       .single();
@@ -373,7 +395,7 @@ export async function POST(req: NextRequest) {
         senderLicenseKey: sender.licenseKey ?? "",
         senderName: senderName,
         senderIsAdmin: isAdmin,
-        scope,
+        scope: msgScope,
       }).catch((e) => console.error("[support] fan-out failed", e))
     );
 

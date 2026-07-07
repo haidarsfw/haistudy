@@ -65,7 +65,10 @@ export function useUnreadChatCount() {
           const row = payload.new as Record<string, unknown>;
           // postgres_changes filters semester only — drop other cohorts (global
           // chat has no per-conversation key, so scope is the only cross-check).
-          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+          if (
+            scopeCtx?.scope &&
+            (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+          )
             return;
           const deviceId = localStorage.getItem("hs-device-id");
           // Don't count own messages

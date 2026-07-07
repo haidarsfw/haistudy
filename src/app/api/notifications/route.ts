@@ -78,6 +78,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const scope = await requireScope(request);
+    // Creates notifications targeting arbitrary users — admin-only. No UI calls
+    // this (fan-out uses direct inserts); the gate closes a spoofed-notification
+    // vector where any logged-in user could plant a row in another's bell.
+    if (!(await isAdminFromCookies())) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
     const { notifications } = body as {
       notifications: Array<{

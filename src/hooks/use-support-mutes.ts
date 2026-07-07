@@ -54,6 +54,7 @@ export function useSupportMutes() {
           // events (DELETE has empty new; falls through to a scoped refresh).
           const row = (payload.new ?? {}) as Record<string, unknown>;
           if (
+            scopeCtx?.scope &&
             row.exam_period &&
             (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
           )

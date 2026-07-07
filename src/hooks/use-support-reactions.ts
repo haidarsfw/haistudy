@@ -96,7 +96,10 @@ export function useSupportReactions(
         (payload) => {
           const row = payload.new as Record<string, unknown>;
           // postgres_changes filters semester only — cross-check scope + convo.
-          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+          if (
+            scopeCtx?.scope &&
+            (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+          )
             return;
           if (row.license_key !== licenseKey) return;
           const r = rawToCamel(row);

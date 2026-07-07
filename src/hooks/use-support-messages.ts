@@ -104,7 +104,13 @@ export function useSupportMessages(
           const row = payload.new as Record<string, unknown>;
           // postgres_changes filters semester only — cross-check the rest of
           // the scope + the conversation before applying (defense-in-depth).
-          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+          // Only enforce the scope cross-check when a real scope context
+          // exists (the admin panel has none → useOptionalScope() is null; there
+          // the license_key check below + RLS are the isolation).
+          if (
+            scopeCtx?.scope &&
+            (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+          )
             return;
           if (row.license_key !== licenseKey) return;
           applyInsert(row);

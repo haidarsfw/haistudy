@@ -84,6 +84,7 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
             // postgres_changes filters semester only — ignore other cohorts.
             const row = (payload.new ?? {}) as Record<string, unknown>;
             if (
+              scopeCtx?.scope &&
               row.exam_period &&
               (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
             )
