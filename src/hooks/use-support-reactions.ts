@@ -94,7 +94,12 @@ export function useSupportReactions(
           filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
-          const r = rawToCamel(payload.new as Record<string, unknown>);
+          const row = payload.new as Record<string, unknown>;
+          // postgres_changes filters semester only — cross-check scope + convo.
+          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+            return;
+          if (row.license_key !== licenseKey) return;
+          const r = rawToCamel(row);
           setByMsg((prev) => {
             const next = new Map(prev);
             const list = next.get(r.messageId) ?? [];

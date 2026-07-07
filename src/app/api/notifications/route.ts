@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { isAdminFromCookies } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { getCaller } from "@/lib/auth/session-license";
 import type { Notification } from "@/types";
 
 // ─── Mock store ───
@@ -34,15 +35,13 @@ function mapRowToNotification(row: Record<string, unknown>): Notification {
 export async function GET(request: Request) {
   try {
     const scope = await requireScope(request);
-    const { searchParams } = new URL(request.url);
-    const licenseKey = searchParams.get("licenseKey");
-
-    if (!licenseKey) {
-      return NextResponse.json(
-        { error: "licenseKey is required" },
-        { status: 400 }
-      );
+    // Identity comes from the session cookie, never a client-supplied
+    // licenseKey — otherwise any user could read another's feed (IDOR).
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const licenseKey = caller.licenseKey;
 
     if (!isSupabaseServerConfigured) {
       const notifs = getMockNotifications(licenseKey).sort(
@@ -153,15 +152,13 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const scope = await requireScope(request);
-    const body = await request.json();
-    const { notificationIds, licenseKey, markAll } = body;
-
-    if (!licenseKey) {
-      return NextResponse.json(
-        { error: "licenseKey is required" },
-        { status: 400 }
-      );
+    const caller = await getCaller();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const body = await request.json();
+    const { notificationIds, markAll } = body;
+    const licenseKey = caller.licenseKey;
 
     if (!isSupabaseServerConfigured) {
       const notifs = getMockNotifications(licenseKey);
@@ -193,6 +190,7 @@ export async function PATCH(request: Request) {
           .from("notifications")
           .update({ read: true })
           .in("id", notificationIds)
+          .eq("license_key", licenseKey)
       );
       if (error) throw error;
     }
@@ -213,7 +211,7 @@ export async function DELETE(request: Request) {
   try {
     const scope = await requireScope(request);
     const body = await request.json();
-    const { action, notificationId, licenseKey } = body;
+    const { action, notificationId } = body;
 
     if (action === "clearAnnouncements") {
       // Admin action: clear ALL announcement notifications for ALL users
@@ -241,8 +239,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    // Single notification dismiss
-    if (notificationId && licenseKey) {
+    // Single notification dismiss (caller may only dismiss their own).
+    if (notificationId) {
+      const caller = await getCaller();
+      if (!caller) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const licenseKey = caller.licenseKey;
       if (!isSupabaseServerConfigured) {
         const notifs = getMockNotifications(licenseKey);
         mockNotifications.set(

@@ -6,6 +6,7 @@ import {
   broadcastTyping,
 } from "@/lib/support/server";
 import { SUPPORT_TYPING_DEBOUNCE_MS } from "@/lib/constants";
+import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 
 /**
  * POST /api/support/typing  { licenseKey }
@@ -14,6 +15,7 @@ import { SUPPORT_TYPING_DEBOUNCE_MS } from "@/lib/constants";
  */
 export async function POST(req: NextRequest) {
   try {
+    const scope = await requireScope(req);
     const body = await req.json();
     const licenseKey = String(body?.licenseKey ?? "");
     if (!licenseKey) {
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServerClient()!;
-    await broadcastTyping(supabase, licenseKey, {
+    await broadcastTyping(supabase, scope, licenseKey, {
       kind: sender.isAdmin ? "admin" : "user",
       name: sender.name ?? sender.licenseKey.slice(0, 8),
       startedAt: new Date().toISOString(),
@@ -54,7 +56,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

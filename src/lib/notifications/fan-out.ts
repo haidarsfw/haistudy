@@ -30,6 +30,7 @@ interface FanOutOpts {
   senderLicenseKey: string;
   senderName: string;
   senderIsAdmin: boolean;
+  scope: ScopeTuple;
 }
 
 const COALESCE_WINDOW_MS = 30_000;
@@ -151,7 +152,8 @@ export async function notifyOnSupportMessage(opts: FanOutOpts): Promise<void> {
     if (mutedSet.has(r.lk)) return;
     const settings = settingsMap.get(r.lk);
 
-    // 3a) In-app notification (always - drives bell + toast layer)
+    // 3a) In-app notification (always - drives bell + toast layer).
+    // Scoped so the recipient's scope-filtered bell query surfaces it.
     await supabase.from("notifications").insert({
       license_key: r.lk,
       type: "support_message",
@@ -163,6 +165,7 @@ export async function notifyOnSupportMessage(opts: FanOutOpts): Promise<void> {
       thread_title: opts.senderIsAdmin
         ? "Balasan support"
         : `Support: ${opts.senderName}`,
+      ...scopeColumns(opts.scope),
     });
 
     // 3b) Web Push (skip if disabled or no subs)

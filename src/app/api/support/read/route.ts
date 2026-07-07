@@ -110,6 +110,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing licenseKey" }, { status: 400 });
   }
 
+  // Only the conversation owner or an admin may read its receipts (IDOR fix).
+  const sender = await resolveSupportSender();
+  if (!sender.licenseKey) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!sender.isAdmin && sender.licenseKey !== licenseKey) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   if (!isSupabaseServerConfigured) {
     return NextResponse.json({ receipts: [] });
   }

@@ -100,7 +100,15 @@ export function useSupportMessages(
           table: "support_messages",
           filter: scopeRealtimeFilter(scope),
         },
-        (payload) => applyInsert(payload.new as Record<string, unknown>)
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          // postgres_changes filters semester only — cross-check the rest of
+          // the scope + the conversation before applying (defense-in-depth).
+          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+            return;
+          if (row.license_key !== licenseKey) return;
+          applyInsert(row);
+        }
       )
       .on(
         "postgres_changes",

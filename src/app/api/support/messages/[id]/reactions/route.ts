@@ -138,11 +138,34 @@ export async function GET(
     return NextResponse.json({ error: "Missing message id" }, { status: 400 });
   }
 
+  // Only the conversation owner or an admin may read its reactions (IDOR fix).
+  const sender = await resolveSupportSender();
+  if (!sender.licenseKey) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   if (!isSupabaseServerConfigured) {
     return NextResponse.json({ reactions: [] });
   }
 
   const supabase = createServerClient()!;
+
+  // Authorize against the message's conversation owner.
+  const { data: msg, error: msgErr } = await supabase
+    .from("support_messages")
+    .select("license_key")
+    .eq("id", id)
+    .maybeSingle();
+  if (msgErr) {
+    return NextResponse.json({ error: msgErr.message }, { status: 500 });
+  }
+  if (!msg) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (!sender.isAdmin && msg.license_key !== sender.licenseKey) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { data, error } = await supabase
     .from("support_reactions")
     .select("*")

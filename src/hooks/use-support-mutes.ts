@@ -49,7 +49,15 @@ export function useSupportMutes() {
           table: "support_mutes",
           filter: scopeRealtimeFilter(scope),
         },
-        () => {
+        (payload) => {
+          // postgres_changes filters semester only — ignore other cohorts'
+          // events (DELETE has empty new; falls through to a scoped refresh).
+          const row = (payload.new ?? {}) as Record<string, unknown>;
+          if (
+            row.exam_period &&
+            (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+          )
+            return;
           refresh();
         }
       )

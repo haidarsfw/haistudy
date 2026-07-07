@@ -88,7 +88,12 @@ export function useSupportPins(licenseKey: string | null): UseSupportPinsResult 
           filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
-          const p = rawToCamel(payload.new as Record<string, unknown>);
+          const row = payload.new as Record<string, unknown>;
+          // postgres_changes filters semester only — cross-check scope + convo.
+          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+            return;
+          if (row.license_key !== licenseKey) return;
+          const p = rawToCamel(row);
           setPins((prev) => {
             if (prev.some((x) => x.id === p.id || x.messageId === p.messageId)) {
               return prev;

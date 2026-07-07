@@ -80,7 +80,14 @@ export function useVoiceRoom(): UseVoiceRoomReturn {
             table: "voice_participants",
             filter: scopeRealtimeFilter(scope),
           },
-          () => {
+          (payload) => {
+            // postgres_changes filters semester only — ignore other cohorts.
+            const row = (payload.new ?? {}) as Record<string, unknown>;
+            if (
+              row.exam_period &&
+              (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+            )
+              return;
             // Refetch rooms on any participant change
             fetchRooms();
           }

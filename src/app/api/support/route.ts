@@ -373,6 +373,7 @@ export async function POST(req: NextRequest) {
         senderLicenseKey: sender.licenseKey ?? "",
         senderName: senderName,
         senderIsAdmin: isAdmin,
+        scope,
       }).catch((e) => console.error("[support] fan-out failed", e))
     );
 

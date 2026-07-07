@@ -8,6 +8,8 @@ import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { displayName } from "@/lib/name";
+import { supportTypingChannel } from "@/lib/realtime/channels";
+import type { ScopeTuple } from "@/types/scope";
 import type {
   SupportMessage,
   SupportReaction,
@@ -204,7 +206,9 @@ export function rateLimit(key: string, perMs: number, max = 1): boolean {
 
 /**
  * Broadcast a typing event from the server using service-role.
- * Client subscribes to channel `support:typing:<licenseKey>`.
+ * Client subscribes to channel `<scope>:support:typing:<licenseKey>`
+ * (see supportTypingChannel) — the name MUST match the client, and being
+ * scope-prefixed is the only isolation for a broadcast channel (no RLS).
  *
  * `senderKey` lets the receiving client filter out broadcasts originated by
  * itself even when its `kind` differs from the broadcast's kind (e.g. admin
@@ -212,6 +216,7 @@ export function rateLimit(key: string, perMs: number, max = 1): boolean {
  */
 export async function broadcastTyping(
   supabase: SupabaseClient,
+  scope: ScopeTuple,
   licenseKey: string,
   payload: {
     kind: "user" | "admin";
@@ -220,7 +225,7 @@ export async function broadcastTyping(
     senderKey: string;
   }
 ): Promise<void> {
-  const channel = supabase.channel(`support:typing:${licenseKey}`);
+  const channel = supabase.channel(supportTypingChannel(scope, licenseKey));
   await new Promise<void>((resolve) => {
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") resolve();

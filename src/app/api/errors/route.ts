@@ -3,6 +3,13 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { getCookieScope, scopeColumns } from "@/lib/auth/scope-check";
+
+// scope-exempt: client error reports can fire on pre-login pages (landing,
+// login) where no hs-scope cookie exists yet — so this route uses a SOFT scope
+// read (getCookieScope in try/catch) instead of a hard requireScope, tagging
+// the reporter's scope when present and falling back to the column default
+// otherwise. A throwing guard here would silently drop pre-login errors.
 
 function sanitizeContext(context: unknown): Record<string, unknown> | null {
   if (!context) return null;
@@ -54,12 +61,20 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServerClient()!;
+    // Soft scope: tag the reporter's cohort when the cookie is present.
+    let scopeCols: Record<string, unknown> = {};
+    try {
+      scopeCols = scopeColumns(await getCookieScope());
+    } catch {
+      // no hs-scope cookie (pre-login) — let the DB default stand
+    }
     const { error } = await supabase.from("error_logs").insert({
       message: (message || "").slice(0, 500),
       stack: (stack || "").slice(0, 5000),
       context: sanitizeContext(context),
       user_agent: (userAgent || "").slice(0, 500),
       resolved: false,
+      ...scopeCols,
     });
 
     if (error) throw error;

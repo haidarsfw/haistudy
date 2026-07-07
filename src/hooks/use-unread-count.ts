@@ -62,9 +62,14 @@ export function useUnreadChatCount() {
           filter: scopeRealtimeFilter(scope),
         },
         (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          // postgres_changes filters semester only — drop other cohorts (global
+          // chat has no per-conversation key, so scope is the only cross-check).
+          if (row.exam_period !== scope.examPeriod || row.jurusan !== scope.jurusan)
+            return;
           const deviceId = localStorage.getItem("hs-device-id");
           // Don't count own messages
-          if (payload.new.author_id === deviceId) return;
+          if (row.author_id === deviceId) return;
           // Don't count if chat is open
           if (isOpenRef.current) return;
           setUnreadCount((prev) => prev + 1);
