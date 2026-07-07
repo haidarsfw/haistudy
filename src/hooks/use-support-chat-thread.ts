@@ -79,8 +79,12 @@ export function useSupportChatThread({
   );
   const reactionsHook = useSupportReactions(licenseKey, session?.licenseKey ?? null);
   const receiptsHook = useSupportReadReceipts(licenseKey);
+  // Typing indicator is disabled in the admin panel (product decision). Passing a
+  // null licenseKey no-ops BOTH the subscription and the broadcast, so admins
+  // neither see nor send "typing…" — and it stops the /api/support/typing
+  // invocations that the admin side used to fire on every keystroke.
   const typingHook = useSupportTyping(
-    licenseKey,
+    mode === "admin" ? null : licenseKey,
     myKind,
     session?.licenseKey ?? null
   );

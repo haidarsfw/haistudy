@@ -129,6 +129,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing licenseKey" }, { status: 400 });
   }
 
+  // Only the conversation owner or an admin may read it (IDOR fix). Every other
+  // support endpoint enforces this gate; this handler was the one that didn't —
+  // without it any logged-in user could read another user's support thread.
+  const sender = await resolveSupportSender();
+  if (!sender.licenseKey) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!sender.isAdmin && sender.licenseKey !== licenseKey) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   // Internal-note filter: non-admin requesters never see is_internal=true rows
   const requesterIsAdmin = await isAdminFromCookies();
 
@@ -230,6 +241,15 @@ export async function POST(req: NextRequest) {
     }
 
     const sender = await resolveSupportSender();
+    // Only the conversation owner or an admin may post to it (IDOR/forgery fix).
+    // Without this, any logged-in user could inject a message into another
+    // user's support thread with an arbitrary sender name.
+    if (!sender.licenseKey) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!sender.isAdmin && sender.licenseKey !== licenseKey) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const isAdmin = sender.isAdmin;
 
     // Normalize incoming type/content/media. Backwards compat: if old client

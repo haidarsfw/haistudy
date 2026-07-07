@@ -6,6 +6,7 @@ import {
 } from "@/lib/supabase/server";
 import { VOICE_ENABLED, VOICE_DISABLED_MESSAGE } from "@/lib/feature-flags";
 import { requireScope, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
+import { getCaller } from "@/lib/auth/session-license";
 import { scopeKey } from "@/lib/scope";
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
@@ -43,6 +44,18 @@ export async function POST(request: Request) {
     // Scope enforcement
     const scope = await requireScope(request);
     await assertNotPreview();
+
+    // Bind the token identity to the CALLER, not a client-supplied licenseKey —
+    // otherwise any authenticated user could mint a LiveKit token under another
+    // user's identity (voice impersonation). requireScope already proved a valid
+    // session; getCaller reads the same httpOnly hs-session cookie.
+    const caller = await getCaller();
+    if (
+      !caller ||
+      caller.licenseKey.toUpperCase() !== String(licenseKey).toUpperCase()
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Validate license key against DB (prevents random-string JWT issuance).
     // Identity lookup is scope-agnostic: a key's (semester, exam_period, jurusan)
