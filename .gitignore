@@ -51,6 +51,20 @@ next-env.d.ts
 /FREE-TIER-GUARDRAILS.md
 /logobinus.png
 /cowork/
+/LAPORAN-PELAJARIN.md
+/UX-PELAJARIN.md
+/pelajarin-crawl-*.tgz
+
+# impeccable design tooling — local dev tool, reinstall via `npx impeccable install`
+/.claude/skills/impeccable/
+# local Claude Code guardrails — hooks/subagents/local settings (public repo: keep local)
+/.claude/hooks/
+/.claude/agents/
+/.claude/settings.local.json
+# impeccable design context — kept local (public repo); reinstall/regenerate anytime
+/PRODUCT.md
+/DESIGN.md
+/.impeccable/
 
 # stale internal docs / scratch — stay out even if recreated
 /*BROADCAST*.md
