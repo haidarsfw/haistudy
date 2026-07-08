@@ -148,6 +148,15 @@ function wrapLineRange(
 /**
  * Re-apply all highlights for a module onto the rendered content. Idempotent:
  * first unwraps any existing marks, then re-wraps from the stored anchors.
+ *
+ * Anchoring is resilient to content edits. The fast path uses the stored
+ * data-tts-line index + char offsets (unchanged behaviour for stable content).
+ * But when a module's rangkuman is edited, its lines get re-indexed and the old
+ * offset lands on a different/shorter line - the highlight would silently
+ * vanish. So when the stored slice no longer matches the stored `text`, we
+ * re-anchor by searching for that exact text (original line first, then any
+ * line), taking the first not-yet-consumed match. A repeated phrase therefore
+ * spreads across its occurrences instead of stacking on the first one.
  */
 export function applyHighlightsToDOM(
   container: HTMLElement,
@@ -163,16 +172,69 @@ export function applyHighlightsToDOM(
     parent.normalize();
   });
 
+  const lineEls = Array.from(
+    container.querySelectorAll<HTMLElement>("[data-tts-line]")
+  );
+  const byIndex = new Map<number, HTMLElement>();
+  for (const el of lineEls) {
+    const n = parseInt(el.getAttribute("data-tts-line") ?? "", 10);
+    if (!Number.isNaN(n)) byIndex.set(n, el);
+  }
+
+  // Track consumed spans per line so a phrase that appears more than once does
+  // not pile every matching highlight onto its first occurrence.
+  const consumed = new Map<HTMLElement, Array<[number, number]>>();
+  const overlaps = (el: HTMLElement, s: number, e: number) =>
+    (consumed.get(el) ?? []).some(([cs, ce]) => s < ce && cs < e);
+  const consume = (el: HTMLElement, s: number, e: number) => {
+    const list = consumed.get(el) ?? [];
+    list.push([s, e]);
+    consumed.set(el, list);
+  };
+
   for (const h of highlights) {
-    const lineEl = container.querySelector<HTMLElement>(
-      `[data-tts-line="${h.ttsLine}"]`
-    );
-    if (!lineEl) continue;
-    const lineLen = (lineEl.textContent ?? "").length;
-    const start = Math.max(0, Math.min(h.startOffset, lineLen));
-    const end = Math.max(start, Math.min(h.endOffset, lineLen));
-    if (end <= start) continue;
-    wrapLineRange(lineEl, start, end, h.color, h.id, onClickHighlight);
+    const wanted = (h.text ?? "").trim();
+    const primary = byIndex.get(h.ttsLine) ?? null;
+
+    // Fast path: stored line + offsets still frame the stored text.
+    if (primary) {
+      const lineText = primary.textContent ?? "";
+      const start = Math.max(0, Math.min(h.startOffset, lineText.length));
+      const end = Math.max(start, Math.min(h.endOffset, lineText.length));
+      if (
+        end > start &&
+        (!wanted || lineText.slice(start, end).trim() === wanted) &&
+        !overlaps(primary, start, end)
+      ) {
+        wrapLineRange(primary, start, end, h.color, h.id, onClickHighlight);
+        consume(primary, start, end);
+        continue;
+      }
+    }
+
+    // Re-anchor by text (content was edited / re-indexed). Exact match only, so
+    // a highlight lands on real matching text or is skipped - never guessed.
+    if (!wanted) continue;
+    const order = primary
+      ? [primary, ...lineEls.filter((el) => el !== primary)]
+      : lineEls;
+    for (const el of order) {
+      const hay = el.textContent ?? "";
+      let from = 0;
+      let placed = false;
+      while (from <= hay.length) {
+        const idx = hay.indexOf(wanted, from);
+        if (idx === -1) break;
+        if (!overlaps(el, idx, idx + wanted.length)) {
+          wrapLineRange(el, idx, idx + wanted.length, h.color, h.id, onClickHighlight);
+          consume(el, idx, idx + wanted.length);
+          placed = true;
+          break;
+        }
+        from = idx + 1;
+      }
+      if (placed) break;
+    }
   }
 }
 

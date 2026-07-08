@@ -168,15 +168,33 @@ export function RangkumanTab({
     }
   }, []);
 
+  // rangkumanData is a dep on purpose: the content <div> (and its data-tts-line
+  // nodes) mounts asynchronously AFTER the module import resolves. Without it,
+  // this effect runs once while contentRef is still empty and never re-runs when
+  // the content lands - so stored highlights never paint (the "highlight ilang"
+  // report). Re-running when content becomes available fixes that; the paint is
+  // idempotent (unwrap + re-wrap) so an extra run is harmless.
   useEffect(() => {
-    if (!contentRef.current || !selectedModule) return;
+    if (!selectedModule || !rangkumanData?.[selectedModule]) return;
     const frame = requestAnimationFrame(() => {
       if (contentRef.current) {
         applyHighlightsToDOM(contentRef.current, highlights, onClickHighlight);
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [highlights, selectedModule, onClickHighlight]);
+  }, [highlights, selectedModule, onClickHighlight, rangkumanData]);
+
+  // Fullscreen renders a second copy of the content into fullscreenContentRef;
+  // paint the same highlights there when it opens (they were absent before).
+  useEffect(() => {
+    if (!fullscreen || !selectedModule || !rangkumanData?.[selectedModule]) return;
+    const frame = requestAnimationFrame(() => {
+      if (fullscreenContentRef.current) {
+        applyHighlightsToDOM(fullscreenContentRef.current, highlights, onClickHighlight);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [fullscreen, highlights, selectedModule, onClickHighlight, rangkumanData]);
 
   // Show tooltip on mouseup/touchend when there's a text selection.
   const handleSelectionEnd = useCallback(() => {
