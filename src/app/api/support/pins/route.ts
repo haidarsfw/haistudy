@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { resolveSupportSender, rowToSupportPin } from "@/lib/support/server";
 import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const scope = await requireScope(req);
 
-    if (!(await isAdminFromCookies())) {
+    if (!(await isAdminFromSession())) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
     const sender = await resolveSupportSender();
@@ -149,7 +149,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Missing messageId" }, { status: 400 });
     }
 
-    if (!(await isAdminFromCookies())) {
+    if (!(await isAdminFromSession())) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
 

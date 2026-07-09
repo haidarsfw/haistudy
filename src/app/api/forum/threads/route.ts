@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import { checkCooldown } from "@/lib/auth/cooldown";
 import { capitalizeFirst } from "@/lib/name";
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     const validAttachments = sanitizeAttachments(attachments);
 
     // Trust cookies, not client-provided flags
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
 
     if (!subjectId || !title?.trim() || !authorId || !authorName) {
       return NextResponse.json(
@@ -319,7 +319,7 @@ export async function DELETE(request: Request) {
     await assertNotPreview();
     const body = await request.json();
     const { threadId, requesterId } = body;
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
 
     if (!threadId || !requesterId) {
       return NextResponse.json(
@@ -388,7 +388,7 @@ export async function PATCH(request: Request) {
     await assertNotPreview();
     const body = await request.json();
     const { threadId, closed } = body;
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
 
     if (!threadId || closed === undefined) {
       return NextResponse.json(

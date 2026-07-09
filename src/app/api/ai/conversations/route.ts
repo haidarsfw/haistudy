@@ -6,7 +6,7 @@ import {
 import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import { checkCooldown } from "@/lib/auth/cooldown";
 import { getCaller } from "@/lib/auth/session-license";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
 import type { PackageTier } from "@/lib/tier";
 
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       .eq("key", licenseKey)
       .single();
     const tier = (license as { package_tier?: PackageTier } | null)?.package_tier ?? "normal";
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
     const limit = aiConversationLimit(isAdmin, tier);
 
     // Hard block at the cap (scoped count). Unlike the old eviction behaviour,

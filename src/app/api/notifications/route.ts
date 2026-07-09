@@ -3,7 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 import { getCaller } from "@/lib/auth/session-license";
 import type { Notification } from "@/types";
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     // Creates notifications targeting arbitrary users — admin-only. No UI calls
     // this (fan-out uses direct inserts); the gate closes a spoofed-notification
     // vector where any logged-in user could plant a row in another's bell.
-    if (!(await isAdminFromCookies())) {
+    if (!(await isAdminFromSession())) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await request.json();
@@ -221,7 +221,7 @@ export async function DELETE(request: Request) {
 
     if (action === "clearAnnouncements") {
       // Admin action: clear ALL announcement notifications for ALL users
-      if (!(await isAdminFromCookies())) {
+      if (!(await isAdminFromSession())) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
       if (!isSupabaseServerConfigured) {

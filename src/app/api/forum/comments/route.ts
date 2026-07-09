@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import { checkCooldown } from "@/lib/auth/cooldown";
 import { capitalizeFirst } from "@/lib/name";
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     } = body;
 
     // Trust cookies, not client-provided flags
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
 
     if (!threadId || (!content?.trim() && !imageUrl) || !authorId || !authorName) {
       return NextResponse.json(
@@ -297,7 +297,7 @@ export async function DELETE(request: Request) {
     await assertNotPreview();
     const body = await request.json();
     const { commentId, requesterId } = body;
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
 
     if (!commentId || !requesterId) {
       return NextResponse.json(

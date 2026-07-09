@@ -6,7 +6,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { AI_ENABLED, AI_DISABLED_MESSAGE } from "@/lib/feature-flags";
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import { getCaller } from "@/lib/auth/session-license";
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       if ((license as Record<string, unknown>).suspended_until && new Date((license as Record<string, unknown>).suspended_until as string) > new Date()) {
         return NextResponse.json({ error: "Account suspended" }, { status: 403 });
       }
-      validatedAdmin = await isAdminFromCookies();
+      validatedAdmin = await isAdminFromSession();
     }
 
     // Build system prompt with scope-locked subject context + the user's nickname.

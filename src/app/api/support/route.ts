@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import {
   resolveSupportSender,
   rowToSupportMessage,
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
 
   // ── Admin: list all conversations ──
   if (fetchAll) {
-    if (!(await isAdminFromCookies())) {
+    if (!(await isAdminFromSession())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -141,7 +141,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Internal-note filter: non-admin requesters never see is_internal=true rows
-  const requesterIsAdmin = await isAdminFromCookies();
+  const requesterIsAdmin = await isAdminFromSession();
 
   if (!isSupabaseServerConfigured) {
     const filtered = memoryStore
@@ -437,7 +437,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const scope = await requireScope(req);
-    if (!(await isAdminFromCookies())) {
+    if (!(await isAdminFromSession())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 import { canUseVip, type PackageTier } from "@/lib/tier";
 
@@ -14,7 +14,7 @@ import { canUseVip, type PackageTier } from "@/lib/tier";
 // by the caller's device id (chat_messages.author_id is a device fingerprint).
 
 async function resolveTier(): Promise<{ isAdmin: boolean; tier: PackageTier }> {
-  const isAdmin = await isAdminFromCookies();
+  const isAdmin = await isAdminFromSession();
   if (!isSupabaseServerConfigured) return { isAdmin, tier: "normal" };
   const jar = await cookies();
   const lk = jar.get("hs-session")?.value ?? "";

@@ -3,7 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { resolveAdminScope } from "@/lib/auth/admin-scope";
 import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
 
@@ -34,7 +34,7 @@ const feedbackStore: FeedbackItem[] = [];
 
 export async function GET(req: NextRequest) {
   try {
-    if (!(await isAdminFromCookies())) {
+    if (!(await isAdminFromSession())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
     const resolved = await resolveAdminScope(req);
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
 
     // Admin action: clear all feedback in current admin scope (or cross-scope if allPeriods)
     if (action === "clearAll") {
-      if (!(await isAdminFromCookies())) {
+      if (!(await isAdminFromSession())) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
       const resolved = await resolveAdminScope(req);
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
 
     // Admin actions: mark as read/resolved
     if (action === "updateStatus" && feedbackId) {
-      if (!(await isAdminFromCookies())) {
+      if (!(await isAdminFromSession())) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
       const resolved = await resolveAdminScope(req);

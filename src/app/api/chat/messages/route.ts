@@ -4,7 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { parseMentions, hasMentions } from "@/lib/mentions";
 import { checkCooldown } from "@/lib/auth/cooldown";
 import type { ChatChannel, ChatMessage } from "@/types";
@@ -22,7 +22,7 @@ function normalizeChannel(raw: unknown): ChatChannel {
 async function resolveSessionTier(
   bodyTier?: PackageTier | null
 ): Promise<{ isAdmin: boolean; tier: PackageTier }> {
-  const isAdmin = await isAdminFromCookies();
+  const isAdmin = await isAdminFromSession();
   if (!isSupabaseServerConfigured) {
     return { isAdmin, tier: (bodyTier ?? "normal") as PackageTier };
   }
@@ -408,7 +408,7 @@ export async function DELETE(request: Request) {
     const scope = await requireScope(request);
     await assertNotPreview();
     const body = await request.json();
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
 
     // Admin: clear all messages within this scope
     if (body.clearAll) {

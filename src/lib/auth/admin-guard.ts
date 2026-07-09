@@ -43,9 +43,24 @@ export async function validateAdmin(): Promise<{
 }
 
 /**
- * Check if the current request has a valid admin cookie (lightweight, no DB).
+ * DB-backed admin check for a request's session. Resolves is_admin from the
+ * license key in the hs-session cookie — the hs-admin cookie is a CLIENT HINT
+ * only (forgeable), so it must NOT gate privileged actions. Use this for any
+ * admin-gated action outside the admin panel (the panel uses validateAdmin,
+ * the same DB check). Dev/mock (no Supabase) falls back to the cookie hint.
  */
-export async function isAdminFromCookies(): Promise<boolean> {
+export async function isAdminFromSession(): Promise<boolean> {
   const cookieStore = await cookies();
-  return cookieStore.get("hs-admin")?.value === "1";
+  const key = cookieStore.get("hs-session")?.value?.trim().toUpperCase();
+  if (!key) return false;
+  if (!isSupabaseServerConfigured) {
+    return cookieStore.get("hs-admin")?.value === "1"; // dev/mock fallback
+  }
+  const supabase = createServerClient()!;
+  const { data } = await supabase
+    .from("license_keys")
+    .select("is_admin")
+    .eq("key", key)
+    .maybeSingle();
+  return Boolean(data?.is_admin);
 }

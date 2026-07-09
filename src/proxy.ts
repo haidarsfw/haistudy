@@ -73,7 +73,15 @@ export function proxy(request: NextRequest) {
   //    localhost are left untouched so testing still works.
   if (process.env.VERCEL_ENV === "production") {
     const host = request.headers.get("host");
-    if (host && host !== CANONICAL_HOST) {
+    // Localhost is genuinely exempt (local `next start` against prod env) so the
+    // app is reachable when testing a production build — not just claimed exempt.
+    const isLocalHost =
+      !!host &&
+      (host.startsWith("localhost") ||
+        host.startsWith("127.0.0.1") ||
+        host.startsWith("[::1]") ||
+        host.startsWith("0.0.0.0"));
+    if (host && host !== CANONICAL_HOST && !isLocalHost) {
       const dest = request.nextUrl.clone();
       dest.protocol = "https:";
       dest.host = CANONICAL_HOST;

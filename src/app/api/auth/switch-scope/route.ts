@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { parseScopeKey, isAvailableScope, scopeKey, scopePath } from "@/lib/scope";
 
 /**
@@ -10,7 +10,7 @@ import { parseScopeKey, isAvailableScope, scopeKey, scopePath } from "@/lib/scop
  */
 export async function POST(request: Request) {
   try {
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
     if (!isAdmin) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }

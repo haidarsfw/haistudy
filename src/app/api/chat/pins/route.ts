@@ -3,7 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import type { ChatMessage } from "@/types";
 import { MAX_PINNED_MESSAGES } from "@/lib/constants";
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
     if (!isAdmin) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
@@ -127,7 +127,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const isAdmin = await isAdminFromCookies();
+    const isAdmin = await isAdminFromSession();
     if (!isAdmin) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }

@@ -10,7 +10,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import type { PackageTier } from "@/lib/tier";
 
 export interface SessionTier {
@@ -20,7 +20,7 @@ export interface SessionTier {
 }
 
 export async function resolveSessionTier(): Promise<SessionTier> {
-  const isAdmin = await isAdminFromCookies();
+  const isAdmin = await isAdminFromSession();
   const jar = await cookies();
   const licenseKey = (jar.get("hs-session")?.value ?? "").toUpperCase();
 

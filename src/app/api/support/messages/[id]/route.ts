@@ -9,7 +9,7 @@ import {
   SUPPORT_EDIT_RATE_LIMIT_MS,
   SUPPORT_EDIT_WINDOW_MS,
 } from "@/lib/constants";
-import { isAdminFromCookies } from "@/lib/auth/admin-guard";
+import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 
 /**
@@ -130,7 +130,7 @@ export async function DELETE(
 
     const scope = await requireScope(req);
 
-    if (!(await isAdminFromCookies())) {
+    if (!(await isAdminFromSession())) {
       return NextResponse.json(
         { error: "Admin only" },
         { status: 403 }
