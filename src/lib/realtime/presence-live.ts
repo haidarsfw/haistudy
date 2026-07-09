@@ -188,6 +188,26 @@ export function setLocalDynamic(next: Partial<PresenceDynamic>) {
 }
 
 /**
+ * Leave the live list WITHOUT tearing down the channel — used when the tab is
+ * hidden/backgrounded so others see us go offline instantly. The channel stays
+ * subscribed (cheap), so presenceRetrack() re-announces us with no re-join cost.
+ */
+export function presenceUntrack() {
+  if (channel) {
+    try {
+      void channel.untrack();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** Re-announce this device on the presence channel (tab visible again). */
+export function presenceRetrack() {
+  trackNow();
+}
+
+/**
  * Join the per-scope presence channel. Returns a disposer; the channel is torn
  * down only when the last holder disposes (token refcount).
  */

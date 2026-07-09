@@ -16,7 +16,11 @@ import {
   PRESENCE_HEARTBEAT_HIDDEN_MS,
 } from "@/lib/constants";
 import { capitalizeFirst } from "@/lib/name";
-import { setLocalDynamic } from "@/lib/realtime/presence-live";
+import {
+  setLocalDynamic,
+  presenceUntrack,
+  presenceRetrack,
+} from "@/lib/realtime/presence-live";
 import type { OnlineUser } from "@/types";
 import type { ScopeTuple } from "@/types/scope";
 
@@ -95,12 +99,33 @@ export async function setupPresence(opts: {
 
   startHeartbeat();
 
+  // "Offline when hidden", debounced ~30s so a quick tab-flip doesn't churn.
+  // Hidden ≥30s → leave the realtime list (instant offline for others) + flip the
+  // DB presence row offline, and stop the heartbeat. Back to visible → re-announce
+  // online immediately and resume the heartbeat.
+  let hiddenTimer: ReturnType<typeof setTimeout> | null = null;
+  const OFFLINE_AFTER_HIDDEN_MS = 30_000;
   const onVisibilityChange = () => {
-    startHeartbeat();
-    // Immediate heartbeat on tab-return, but throttled: rapid tab switching
-    // must not spam /api/presence (each call is a Vercel invocation).
-    if (!document.hidden && Date.now() - lastHeartbeatAt > 60_000) {
-      sendHeartbeat();
+    if (document.hidden) {
+      if (hiddenTimer) clearTimeout(hiddenTimer);
+      hiddenTimer = setTimeout(() => {
+        hiddenTimer = null;
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
+        }
+        presenceUntrack(); // realtime: disappear from the live list now
+        sendOfflineBeacon(); // DB: presence.online = false
+      }, OFFLINE_AFTER_HIDDEN_MS);
+    } else {
+      if (hiddenTimer) {
+        clearTimeout(hiddenTimer);
+        hiddenTimer = null;
+      }
+      hasSentOffline = false; // allow going offline again on the next hide
+      presenceRetrack(); // realtime: re-announce online instantly
+      startHeartbeat(); // DB: resume heartbeat
+      if (Date.now() - lastHeartbeatAt > 60_000) sendHeartbeat();
     }
   };
   document.addEventListener("visibilitychange", onVisibilityChange);
@@ -136,6 +161,7 @@ export async function setupPresence(opts: {
   return () => {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     heartbeatInterval = null;
+    if (hiddenTimer) clearTimeout(hiddenTimer);
     document.removeEventListener("visibilitychange", onVisibilityChange);
     window.removeEventListener("beforeunload", onBeforeUnload);
     sendOfflineBeacon();

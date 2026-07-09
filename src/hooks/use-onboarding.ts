@@ -20,18 +20,56 @@ export function useOnboarding() {
     ? `hs-onboarding-${session.licenseKey}`
     : STORAGE_KEY;
 
+  // Mark the tour done: localStorage (instant cache on THIS device) + server
+  // (per-account, so it stays done across ALL of the user's devices).
+  const persistComplete = useCallback(() => {
+    try {
+      localStorage.setItem(storageKey, new Date().toISOString());
+    } catch {}
+    fetch("/api/onboarding", {
+      method: "POST",
+      credentials: "same-origin",
+    }).catch(() => {});
+  }, [storageKey]);
+
   useEffect(() => {
     if (!session) return;
     if (session.isPreview) return;
+    // Tester/QA accounts skip the onboarding tour entirely (it otherwise blocks
+    // automated E2E runs and adds no value for internal accounts).
+    if (session.isTester) return;
 
+    let cancelled = false;
+    // Fast path: already completed on THIS device (instant, no flash/refetch).
     try {
-      const completed = localStorage.getItem(storageKey);
-      if (!completed) {
-        setShouldShow(true);
-      }
+      if (localStorage.getItem(storageKey)) return;
     } catch {
-      // localStorage unavailable
+      // localStorage unavailable — fall through to the server check.
     }
+    // Not cached locally → ask the server whether the ACCOUNT already finished
+    // the tour on another device (cross-device, once-only). Cache the answer.
+    (async () => {
+      try {
+        const res = await fetch("/api/onboarding", { credentials: "same-origin" });
+        if (cancelled) return;
+        if (res.ok) {
+          const { completed } = (await res.json()) as { completed?: boolean };
+          if (completed) {
+            try {
+              localStorage.setItem(storageKey, new Date().toISOString());
+            } catch {}
+            return; // done elsewhere → never show here
+          }
+        }
+        if (!cancelled) setShouldShow(true);
+      } catch {
+        // Network error → show it; localStorage still gates repeats on this device.
+        if (!cancelled) setShouldShow(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [session, storageKey]);
 
   // Track mobile state
@@ -58,16 +96,14 @@ export function useOnboarding() {
         nextStep++;
       }
       if (nextStep >= ONBOARDING_STEPS.length) {
-        try {
-          localStorage.setItem(storageKey, new Date().toISOString());
-        } catch {}
+        persistComplete();
         setShouldShow(false);
         setPostPhase("contact-form");
         return prev;
       }
       return nextStep;
     });
-  }, [shouldSkip]);
+  }, [shouldSkip, persistComplete]);
 
   const prev = useCallback(() => {
     setCurrentStep((p) => {
@@ -80,12 +116,10 @@ export function useOnboarding() {
   }, [shouldSkip]);
 
   const complete = useCallback(() => {
-    try {
-      localStorage.setItem(storageKey, new Date().toISOString());
-    } catch {}
+    persistComplete();
     setShouldShow(false);
     setPostPhase("contact-form");
-  }, [storageKey]);
+  }, [persistComplete]);
 
   const advancePostPhase = useCallback(() => {
     setPostPhase((current) => {

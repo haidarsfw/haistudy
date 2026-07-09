@@ -8,7 +8,6 @@ import { useScope } from "@/components/providers/scope-provider";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
-import { SessionTimeout } from "@/components/layout/session-timeout";
 import { ChatTrigger } from "@/components/chat/chat-trigger";
 import { AiTrigger } from "@/components/ai/ai-trigger";
 import { useVoice } from "@/components/providers/voice-provider";
@@ -398,7 +397,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} showFeedbackCta={showFeedback} />
         <AnnouncementBanner />
         <EnableNotificationsBanner />
-        <SessionTimeout />
         <SWRegister />
         {/* Mobile: no inner overflow — the document/window scrolls so iOS
             Safari retracts its bottom toolbar (reclaims vertical space). The
