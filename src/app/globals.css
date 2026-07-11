@@ -1412,10 +1412,6 @@ html.tts-bar-open .tts-shift-target {
 .hs-float { animation: hs-float 3.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .hs-float { animation: none; } }
 
-/* Rangkuman "normal" focus test: soften the non-highlighted text so the eye
-   lands on the focused sentence. Still readable. */
-.hs-soft-blur { filter: blur(0.7px); opacity: 0.68; }
-
 /* Music title marquee — scrolls horizontally, slowly, only when the title
    overflows its container (otherwise the static text is shown). */
 @keyframes hs-marquee-scroll {

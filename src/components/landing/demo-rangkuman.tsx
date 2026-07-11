@@ -480,15 +480,13 @@ export function DemoRangkumanAI() {
 
             {mode === "normal" && (
               <div className="space-y-2.5">
-                <p className="hs-soft-blur text-[13px] italic opacity-70">
+                <p className="text-[13px] italic opacity-70">
                   Bahas soal privasi karyawan di tempat kerja dan sampai mana perusahaan boleh
                   memantau.
                 </p>
                 <p>
-                  <span className="hs-soft-blur">
-                    Di kantor, perusahaan sering pengin memantau kerja karyawan biar aman dan sesuai
-                    aturan, tapi karyawan juga tetap punya sisi pribadi yang harus dihormatin.
-                  </span>{" "}
+                  Di kantor, perusahaan sering pengin memantau kerja karyawan biar aman dan sesuai
+                  aturan, tapi karyawan juga tetap punya sisi pribadi yang harus dihormatin.{" "}
                   <span ref={sentRef} className="relative inline">
                     {applied ? (
                       <span
@@ -546,9 +544,9 @@ export function DemoRangkumanAI() {
                       </span>
                     )}
                   </span>{" "}
-                  <span className="hs-soft-blur">jadi nggak bisa diambil begitu aja.</span>
+                  jadi nggak bisa diambil begitu aja.
                 </p>
-                <p className="hs-soft-blur opacity-90">Makanya perlu aturan yang jelas dan adil buat dua-duanya.</p>
+                <p className="opacity-90">Makanya perlu aturan yang jelas dan adil buat dua-duanya.</p>
               </div>
             )}
 
