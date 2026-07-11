@@ -207,7 +207,7 @@ function DashboardSurface({ mobile }: { mobile?: boolean }) {
         </StatCard>
         <StatCard>
           <CardLabel icon={StickyNote} tone="text-amber-500">Catatan Cepat</CardLabel>
-          <p className="text-[11px] leading-snug text-muted-foreground">Review bab 5 sebelum ujian Rabu.</p>
+          <p className="text-[9px] leading-snug text-muted-foreground">Review bab 5 sebelum ujian Rabu.</p>
         </StatCard>
         <StatCard>
           <div className="flex items-center justify-between">
@@ -544,13 +544,19 @@ function LibrarySurface({ mobile }: { mobile?: boolean }) {
 
 /* ── slide-over panels (community trio) — slide from the right, like the app ── */
 
-function PanelShell({ title, icon: Icon, children, mobile }: { title: string; icon: typeof Mic; children: React.ReactNode; mobile?: boolean }) {
+function PanelShell({ title, icon: Icon, children, mobile, exiting }: { title: string; icon: typeof Mic; children: React.ReactNode; mobile?: boolean; exiting?: boolean }) {
   return (
     <div
       className={`absolute inset-y-0 right-0 z-20 flex flex-col border-l border-border bg-background shadow-2xl ${
         mobile ? "w-full" : "w-[64%] max-w-[340px]"
       }`}
-      style={{ animation: "hs-panel-in 0.34s cubic-bezier(0.22,1,0.36,1)" }}
+      style={{
+        // open + close mirror each other: same duration, symmetric easing
+        // (easeOutCubic in / easeInCubic out) so both read at the same speed.
+        animation: exiting
+          ? "hs-panel-out 0.28s cubic-bezier(0.32,0,0.67,0) forwards"
+          : "hs-panel-in 0.28s cubic-bezier(0.33,1,0.68,1)",
+      }}
     >
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Icon className="h-4 w-4 text-primary" />
@@ -561,13 +567,13 @@ function PanelShell({ title, icon: Icon, children, mobile }: { title: string; ic
   );
 }
 
-function VoicePanel({ mobile }: { mobile?: boolean }) {
+function VoicePanel({ mobile, exiting }: { mobile?: boolean; exiting?: boolean }) {
   const rooms = [
     { name: "Belajar Bareng UAS", live: true, count: "4/8", who: ["Rina", "Nabil", "Alya", "Fajar"] },
     { name: "Ngoding Found. AI", live: true, count: "2/8", who: ["Dita", "Yoga"] },
   ];
   return (
-    <PanelShell title="Voice Rooms" icon={Mic} mobile={mobile}>
+    <PanelShell title="Voice Rooms" icon={Mic} mobile={mobile} exiting={exiting}>
       <div className="flex-1 space-y-2.5 overflow-hidden p-3">
         {rooms.map((r, i) => (
           <div key={r.name} className={`rounded-xl border bg-card p-3 ${i === 0 ? "border-emerald-500/30" : "border-border"}`}>
@@ -597,9 +603,9 @@ function VoicePanel({ mobile }: { mobile?: boolean }) {
   );
 }
 
-function ChatPanel({ msgs, mobile }: { msgs: Msg[]; mobile?: boolean }) {
+function ChatPanel({ msgs, mobile, exiting }: { msgs: Msg[]; mobile?: boolean; exiting?: boolean }) {
   return (
-    <PanelShell title="Obrolan Kelas" icon={MessageCircle} mobile={mobile}>
+    <PanelShell title="Obrolan Kelas" icon={MessageCircle} mobile={mobile} exiting={exiting}>
       <div className="flex flex-1 flex-col justify-end gap-2 overflow-hidden p-3">
         {msgs.map((m, i) =>
           m.role === "me" ? (
@@ -629,9 +635,9 @@ function ChatPanel({ msgs, mobile }: { msgs: Msg[]; mobile?: boolean }) {
   );
 }
 
-function AiPanel({ msgs, thinking, input, mobile }: { msgs: Msg[]; thinking: boolean; input: string; mobile?: boolean }) {
+function AiPanel({ msgs, thinking, input, mobile, exiting }: { msgs: Msg[]; thinking: boolean; input: string; mobile?: boolean; exiting?: boolean }) {
   return (
-    <PanelShell title="haistudy AI" icon={Bot} mobile={mobile}>
+    <PanelShell title="haistudy AI" icon={Bot} mobile={mobile} exiting={exiting}>
       <div className="flex flex-1 flex-col gap-2.5 overflow-hidden p-3">
         {msgs.length === 0 && !thinking && (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
@@ -688,6 +694,7 @@ export function HeroTour() {
 
   const [surface, setSurface] = useState<Surface>("dashboard");
   const [panel, setPanel] = useState<Panel>(null);
+  const [panelExiting, setPanelExiting] = useState(false);
   const [activeTab, setActiveTab] = useState("materi");
   const [moreOpen, setMoreOpen] = useState(false);
   const [cursor, setCursor] = useState({ x: 0, y: 0, clicking: false, hidden: true });
@@ -829,8 +836,17 @@ export function HeroTour() {
       }
     }
 
+    // Play the panel's slide-out, then unmount it (no instant snap).
+    const closePanel = async () => {
+      setPanelExiting(true);
+      await sleep(390); // ≈ the 0.28s slide-out, then unmount
+      if (cancelled) return;
+      setPanel(null);
+      setPanelExiting(false);
+    };
+
     // Trio open (no zoom): cursor clicks the trigger, the panel slides in, plays
-    // its content, then closes.
+    // its content, then slides back out.
     async function openTrio(
       ref: React.RefObject<HTMLButtonElement | null>,
       name: Exclude<Panel, null>,
@@ -845,8 +861,8 @@ export function HeroTour() {
       await contentFn();
       if (cancelled) return;
       await sleep(760);
-      setPanel(null);
-      await sleep(340);
+      await closePanel();
+      await sleep(200);
     }
 
     /* ── desktop loop ── */
@@ -950,7 +966,7 @@ export function HeroTour() {
         await playAi();
         if (cancelled) return;
         await sleep(850);
-        setPanel(null);
+        await closePanel();
         await sleep(250);
         await click(dockRefs.chat);
         if (cancelled) return;
@@ -958,14 +974,14 @@ export function HeroTour() {
         await playChat();
         if (cancelled) return;
         await sleep(650);
-        setPanel(null);
+        await closePanel();
         await sleep(250);
         await click(mMicRef);
         if (cancelled) return;
         setPanel("voice");
         await sleep(1900);
         if (cancelled) return;
-        setPanel(null);
+        await closePanel();
         setCursor((c) => ({ ...c, hidden: true }));
         await sleep(480);
 
@@ -1061,9 +1077,9 @@ export function HeroTour() {
   };
 
   const renderPanel = (mobile: boolean) => {
-    if (panel === "voice") return <VoicePanel mobile={mobile} />;
-    if (panel === "chat") return <ChatPanel msgs={chatMsgs} mobile={mobile} />;
-    if (panel === "ai") return <AiPanel msgs={aiMsgs} thinking={aiThinking} input={aiInput} mobile={mobile} />;
+    if (panel === "voice") return <VoicePanel mobile={mobile} exiting={panelExiting} />;
+    if (panel === "chat") return <ChatPanel msgs={chatMsgs} mobile={mobile} exiting={panelExiting} />;
+    if (panel === "ai") return <AiPanel msgs={aiMsgs} thinking={aiThinking} input={aiInput} mobile={mobile} exiting={panelExiting} />;
     return null;
   };
 
@@ -1105,7 +1121,7 @@ export function HeroTour() {
               >
                 {renderSurface(true)}
               </div>
-              {panel && <div className="absolute inset-0 z-10 bg-black/25" style={{ animation: "fade-in-css 0.3s ease" }} />}
+              {panel && <div className="absolute inset-0 z-10 bg-black/25" style={{ animation: panelExiting ? "hs-fade-out 0.28s ease forwards" : "fade-in-css 0.28s ease" }} />}
               {renderPanel(true)}
 
               {moreOpen && (
@@ -1255,7 +1271,7 @@ export function HeroTour() {
                   {renderSurface(false)}
                 </div>
 
-                {panel && <div className="absolute inset-0 z-10 bg-black/20" style={{ animation: "fade-in-css 0.3s ease" }} />}
+                {panel && <div className="absolute inset-0 z-10 bg-black/20" style={{ animation: panelExiting ? "hs-fade-out 0.28s ease forwards" : "fade-in-css 0.28s ease" }} />}
                 {renderPanel(false)}
 
                 {/* bottom-right FABs (AI = Bot upper, Chat = lower) */}

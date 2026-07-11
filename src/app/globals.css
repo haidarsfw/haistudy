@@ -1179,6 +1179,15 @@ html.tts-bar-open .tts-shift-target {
   from { opacity: 0; transform: translateX(14%); }
   to   { opacity: 1; transform: translateX(0); }
 }
+/* …and slides back out on close (no instant snap). */
+@keyframes hs-panel-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(16%); }
+}
+@keyframes hs-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
 /* Hero-tour mobile "Lainnya" sheet rises from the bottom. */
 @keyframes hs-sheet-in {
   from { transform: translateY(100%); }
