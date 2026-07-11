@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "#cara-kerja", key: "landing.nav.how" },
   { href: "#fitur", key: "landing.nav.features" },
+  { href: "#banding", key: "landing.nav.compare" },
   { href: "#harga", key: "landing.nav.pricing" },
   { href: "#testimoni", key: "landing.nav.testimonials" },
   { href: "#faq", key: "landing.nav.faq" },
@@ -39,16 +40,63 @@ function IconBtn({
   );
 }
 
-function LanguageToggle() {
+/**
+ * Language toggle. Two visual states crossfade in place (no element swap, no
+ * blink): roomy "globe + code" at the top of the page, tighter "globe with a
+ * transparent knockout + ID/EN badge" once the header condenses into its pill.
+ * The button width animates on the same curve as the header so they move as one.
+ */
+function LanguageToggle({ compact }: { compact: boolean }) {
   const { locale, setLocale } = useTranslation();
+  const onClick = () => setLocale(locale === "id" ? "en" : "id");
+  const label =
+    locale === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia";
+
   return (
-    <IconBtn
-      onClick={() => setLocale(locale === "id" ? "en" : "id")}
-      label={locale === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{ width: compact ? 36 : 54 }}
+      className="relative inline-flex h-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-[width,color] duration-[440ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
-      <Globe className="h-4 w-4" />
-      <span className="uppercase">{locale}</span>
-    </IconBtn>
+      {/* top-of-page variant */}
+      <span
+        aria-hidden={compact}
+        className={cn(
+          "absolute inset-0 flex items-center justify-center gap-1.5 text-xs font-semibold transition-opacity duration-300",
+          compact ? "opacity-0" : "opacity-100"
+        )}
+      >
+        <Globe className="h-4 w-4" />
+        <span className="uppercase">{locale}</span>
+      </span>
+
+      {/* condensed (pill) variant — globe knockout + inset badge */}
+      <span
+        aria-hidden={!compact}
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-opacity duration-300",
+          compact ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <Globe
+          className="h-[18px] w-[18px]"
+          style={{
+            maskImage:
+              "radial-gradient(circle at 80% 82%, transparent 6px, #000 7px)",
+            WebkitMaskImage:
+              "radial-gradient(circle at 80% 82%, transparent 6px, #000 7px)",
+          }}
+        />
+        <span
+          className="pointer-events-none absolute text-[8px] font-bold uppercase leading-none tracking-tight"
+          style={{ left: 24, top: 24, transform: "translate(-50%, -50%)" }}
+        >
+          {locale}
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -86,19 +134,21 @@ export function Header() {
     <header className="fixed inset-x-0 top-0 z-50">
       <div
         className={cn(
-          "relative mx-auto flex items-center gap-3 transition-all duration-[440ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
+          "relative flex items-center gap-3 transition-all duration-[440ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
           scrolled
-            ? "mt-4 h-16 max-w-4xl rounded-full border border-border bg-background/50 px-5 shadow-xl shadow-black/5 backdrop-blur-2xl backdrop-saturate-150 sm:mt-5 sm:px-6"
-            : "mt-0 h-20 max-w-7xl border-b border-transparent px-6 sm:px-10"
+            ? "mx-3 mt-4 h-16 max-w-[60rem] rounded-full border border-border bg-background/50 px-5 shadow-xl shadow-black/5 backdrop-blur-2xl backdrop-saturate-150 sm:mt-5 sm:px-6 lg:mx-auto"
+            : "mx-auto mt-0 h-20 max-w-7xl border-b border-transparent px-6 sm:px-10"
         )}
       >
-        {/* logo (edge) — smooth-scrolls to the top of the page */}
-        <a href="#beranda" aria-label="haistudy" className="shrink-0">
-          <Logo markSize={24} wordClassName="text-lg" />
-        </a>
+        {/* logo (left) — flex-1 mirror of the actions side so the nav centers true */}
+        <div className="flex flex-1 items-center">
+          <a href="#beranda" aria-label="haistudy" className="shrink-0">
+            <Logo markSize={24} wordClassName="text-lg" />
+          </a>
+        </div>
 
         {/* centered nav (lg+; tablet/mobile use the menu to avoid crowding) */}
-        <nav className="hidden flex-1 items-center justify-center gap-0.5 lg:flex">
+        <nav className="hidden items-center justify-center gap-0.5 lg:flex">
           {NAV.map((item) => (
             <a
               key={item.href}
@@ -110,36 +160,39 @@ export function Header() {
           ))}
         </nav>
 
-        {/* actions (lg+) */}
-        <div className="hidden items-center gap-1 lg:flex">
-          <ThemeToggle />
-          <LanguageToggle />
-          <span className="mx-1.5 h-5 w-px bg-border/60" aria-hidden="true" />
-          {loggedIn ? (
-            <UserMenu compact={scrolled} />
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            >
-              {t("landing.cta.masuk")}
-            </Link>
-          )}
-        </div>
+        {/* actions (right) — flex-1 mirror of the logo side */}
+        <div className="flex flex-1 items-center justify-end">
+          {/* lg+ */}
+          <div className="hidden items-center gap-1 lg:flex">
+            <ThemeToggle />
+            <LanguageToggle compact={scrolled} />
+            <span className="mx-1.5 h-5 w-px bg-border/60" aria-hidden="true" />
+            {loggedIn ? (
+              <UserMenu compact={scrolled} />
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                {t("landing.cta.masuk")}
+              </Link>
+            )}
+          </div>
 
-        {/* tablet / mobile (< lg) */}
-        <div className="ml-auto flex items-center gap-0.5 lg:hidden">
-          <ThemeToggle />
-          <LanguageToggle />
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-label={open ? "Tutup menu" : "Buka menu"}
-            aria-expanded={open}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* tablet / mobile (< lg) */}
+          <div className="flex items-center gap-0.5 lg:hidden">
+            <ThemeToggle />
+            <LanguageToggle compact={scrolled} />
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? "Tutup menu" : "Buka menu"}
+              aria-expanded={open}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
       </div>
 

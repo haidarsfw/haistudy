@@ -1,13 +1,4 @@
-import {
-  BookOpen,
-  Brain,
-  ChevronDown,
-  MessageCircle,
-  Headphones,
-  Zap,
-  Bot,
-  Star,
-} from "lucide-react";
+import { ChevronDown, Star } from "lucide-react";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
 import { PricingSection } from "@/components/landing/pricing-section";
@@ -15,39 +6,8 @@ import { Header } from "@/components/landing/header";
 import { Hero } from "@/components/landing/hero";
 import { SocialProof } from "@/components/landing/social-proof";
 import { HowItWorks } from "@/components/landing/how-it-works";
-
-const FEATURES = [
-  {
-    icon: BookOpen,
-    title: "Materi Lengkap",
-    desc: "Rangkuman, kisi-kisi, dan materi per modul untuk semua mata kuliah.",
-  },
-  {
-    icon: Brain,
-    title: "Flashcards Interaktif",
-    desc: "Kartu bolak-balik 3D dengan shuffle dan progress tracking.",
-  },
-  {
-    icon: Zap,
-    title: "Quiz Berbobot",
-    desc: "Soal per kategori dengan scoring otomatis dan leaderboard.",
-  },
-  {
-    icon: Bot,
-    title: "AI Assistant & Live Support",
-    desc: "Tanya materi kapan saja lewat AI, atau hubungi admin langsung via live chat support.",
-  },
-  {
-    icon: MessageCircle,
-    title: "Forum, Chat & Notifikasi",
-    desc: "Global chat real-time, @mention, voice message, reply, dan notifikasi instan.",
-  },
-  {
-    icon: Headphones,
-    title: "Voice Room",
-    desc: "Belajar bareng via voice call langsung dari browser.",
-  },
-];
+import { FeatureShowcase } from "@/components/landing/feature-showcase";
+import { Comparison } from "@/components/landing/comparison";
 
 const FAQ = [
   {
@@ -138,37 +98,14 @@ export default function LandingPage() {
         {/* ── How it works (live demos) ── */}
         <HowItWorks />
 
-        {/* ▼ PENDING redesign (Batches 3-5): retinted to the new teal tokens
+        {/* ▼ PENDING redesign (Batches 4-5): retinted to the new teal tokens
             but still the old layout, rebuilt section by section next. ▼ */}
 
-        {/* ── Features ── */}
-        <section
-          id="fitur"
-          className="relative scroll-mt-20 px-4 py-16 sm:py-20"
-        >
-          <div className="mx-auto max-w-4xl">
-            <h2 className="font-display text-center text-2xl font-bold sm:text-3xl text-foreground">
-              Semua yang Kamu Butuhkan
-            </h2>
-            <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-              Fitur lengkap yang dirancang buat kebutuhan mahasiswa
-            </p>
+        {/* ── Features showcase ── */}
+        <FeatureShowcase />
 
-            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map((f, i) => (
-                <ScrollReveal key={f.title} delay={i * 0.06}>
-                  <div className="group h-full rounded-2xl border border-border bg-card p-5 shadow-card transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-accent transition-transform duration-300 group-hover:scale-105">
-                      <f.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <h3 className="font-display font-semibold">{f.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* ── Comparison ── */}
+        <Comparison />
 
         {/* ── Pricing ── */}
         <div id="harga" className="scroll-mt-20">

@@ -5,6 +5,7 @@ const id: Record<string, string> = {
   "landing.nav.faq": "FAQ",
   "landing.nav.how": "Cara Kerja",
   "landing.nav.testimonials": "Testimoni",
+  "landing.nav.compare": "Banding",
   "landing.cta.masuk": "Masuk",
   "landing.cta.daftar": "Daftar",
   "landing.cta.dashboard": "Dashboard",
@@ -141,6 +142,75 @@ const id: Record<string, string> = {
   "landing.how.latihan.sr":
     "Contoh Latihan Soal: jawaban esai dikoreksi AI lengkap dengan skor, kuis pilihan ganda, dan flashcards istilah yang bisa dibalik.",
   "landing.how.ai.desc": "Tanya materi apa aja, dijawab sesuai bahan kuliahmu.",
+
+  // Landing — feature showcase (setelah live demos)
+  "landing.features.title": "Lengkap dalam satu app",
+  "landing.features.subtitle":
+    "Dari komunitas sampai alat fokus, semua nyatu di satu tempat.",
+  "landing.features.recap_label": "Barusan kamu lihat",
+  "landing.features.recap.rangkuman": "Rangkuman",
+  "landing.features.recap.kilat": "Belajar Kilat",
+  "landing.features.recap.latihan": "Latihan Soal",
+  "landing.features.recap.ai": "haistudy AI",
+
+  "landing.features.announce.title": "Pengumuman real-time",
+  "landing.features.announce.desc": "Info penting dari admin langsung ke notif.",
+  "landing.features.announce.sample": "Kisi-kisi AI terbaru!",
+
+  "landing.features.community.title": "Komunitas",
+  "landing.features.community.desc": "Voice room, chat, forum, DM. Kayak Discord.",
+  "landing.features.community.online": "30+ online",
+
+  "landing.features.music.title": "Musik",
+  "landing.features.music.desc": "Lofi bawaan atau playlist SoundCloud sendiri.",
+
+  "landing.features.custom.title": "Atur sesukamu",
+  "landing.features.custom.desc": "Tema, warna, font, bahasa. Sesukamu.",
+
+  "landing.features.jadwal.title": "Jadwal & countdown",
+  "landing.features.jadwal.desc": "Jadwal kuliah plus hitung mundur ujian.",
+  "landing.features.jadwal.sample": "ke UAS",
+
+  "landing.features.stats.title": "Statistik belajar",
+  "landing.features.stats.desc": "Lacak waktu belajar, skor, dan progres.",
+
+  "landing.features.focus.title": "Alat fokus",
+  "landing.features.focus.desc": "Timer pomodoro dan pengingat belajar.",
+  "landing.features.focus.sample": "pomodoro",
+
+  "landing.features.bookmark.title": "Bookmark & catatan",
+  "landing.features.bookmark.desc": "Simpan materi penting dan catatan cepat.",
+  "landing.features.bookmark.sample": "12 tersimpan",
+
+  "landing.features.more.title": "Cek sendiri sebelum daftar",
+  "landing.features.more.sub":
+    "Preview gratis tanpa login. Rasain langsung gimana haistudy bantu kamu.",
+  "landing.features.more.cta": "Buka preview",
+
+  // Landing — comparison (setelah fitur)
+  "landing.compare.title": "Kenapa haistudy?",
+  "landing.compare.subtitle": "Bandingin sama produk catatan lain atau AI umum.",
+  "landing.compare.col_feature": "Fitur",
+  "landing.compare.col_lain": "Produk lain",
+  "landing.compare.col_ai": "AI umum",
+  "landing.compare.col_hai": "haistudy",
+  "landing.compare.badge": "Paling worth",
+  "landing.compare.r_materi": "Materi sesuai jurusan & mata kuliahmu",
+  "landing.compare.r_kisi": "Kisi-kisi & prediksi soal ujian",
+  "landing.compare.r_ready": "Langsung pakai, tanpa upload/setup dulu",
+  "landing.compare.r_features": "Banyak fitur, interaktif",
+  "landing.compare.r_latihan": "Latihan soal esai & PG, penilaian akurat",
+  "landing.compare.r_ai": "AI dilatih materi resmi, ga halusinasi",
+  "landing.compare.r_komunitas": "Komunitas aktif (sharing, mentoring, dll)",
+  "landing.compare.r_update": "Update tiap periode ujian",
+  "landing.compare.r_reliability": "Stabil & bisa diandalkan",
+  "landing.compare.r_harga": "Harga",
+  "landing.compare.harga_lain": "Per matkul",
+  "landing.compare.harga_ai": "Langganan",
+  "landing.compare.harga_hai": "1x / periode",
+  "landing.compare.legend_yes": "Ada",
+  "landing.compare.legend_partial": "Terbatas",
+  "landing.compare.legend_no": "Ga ada",
 
   // Sidebar
   "nav.dashboard": "Dashboard",
