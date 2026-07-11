@@ -1174,6 +1174,17 @@ html.tts-bar-open .tts-shift-target {
   animation: fade-in-css 250ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Hero-tour slide-over panel (voice / chat / AI) enters from the right. */
+@keyframes hs-panel-in {
+  from { opacity: 0; transform: translateX(14%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+/* Hero-tour mobile "Lainnya" sheet rises from the bottom. */
+@keyframes hs-sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .countdown-digit-anim,
   .fade-in-css { animation: none; }
@@ -1373,6 +1384,29 @@ html.tts-bar-open .tts-shift-target {
   }
 }
 
+/* Demo status text (ok / bad / warn) that must stay readable in the landing's
+   OWN light/dark. The app force-sets html.dark, so Tailwind `dark:` variants
+   fire even when the landing is showing light — washing green-on-green text
+   out. These key off the landing's real theme class instead. */
+.landing-root .hs-demo-ok { color: #047857; }
+.landing-root .hs-demo-bad { color: #be123c; }
+.landing-root .hs-demo-warn { color: #b45309; }
+.landing-root.theme-dark .hs-demo-ok { color: #6ee7b7; }
+.landing-root.theme-dark .hs-demo-bad { color: #fda4af; }
+.landing-root.theme-dark .hs-demo-warn { color: #fbbf24; }
+
+/* Landing demo: gentle floating (skeleton placeholders + their hint). */
+@keyframes hs-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.hs-float { animation: hs-float 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hs-float { animation: none; } }
+
+/* Rangkuman "normal" focus test: soften the non-highlighted text so the eye
+   lands on the focused sentence. Still readable. */
+.hs-soft-blur { filter: blur(0.7px); opacity: 0.68; }
+
 /* Music title marquee — scrolls horizontally, slowly, only when the title
    overflows its container (otherwise the static text is shown). */
 @keyframes hs-marquee-scroll {
@@ -1407,5 +1441,230 @@ html.tts-bar-open .tts-shift-target {
     padding: 2rem;
     font: 700 14px system-ui, sans-serif;
     color: #000;
+  }
+}
+
+/* ============================================================
+   LANDING REVAMP — scoped design tokens (Plan 2 / DESIGN.md)
+   Teal-emerald brand. Follows the visitor's SYSTEM theme via
+   prefers-color-scheme ONLY (the app force-sets html.dark by
+   default, so we deliberately ignore it here). Tokens are
+   overridden inside .landing-root, so every Tailwind color/radius
+   utility used in the landing tree retints automatically and the
+   app's own theme system stays untouched.
+   ============================================================ */
+.landing-root {
+  color-scheme: light;
+  /* (overflow-anchor is set inline in landing-shell — Lightning CSS strips it
+     from here.) */
+  --font-display: var(--font-heading); /* General Sans swaps in when files land */
+
+  --brand-1: #10b981;
+  --brand-2: #047857;
+  --brand-solid: #059669;
+  --brand-gradient: linear-gradient(135deg, #10b981 0%, #047857 100%);
+
+  /* Light theme: a soft, faintly green-warm off-white base (NOT stark white),
+     so white cards + soft shadows create real depth. Deeper borders + text for
+     contrast that reads clean and professional. */
+  /* Light mode = a real, comfortable light theme (soft off-white, NOT stark
+     white) with strong contrast. Dots + green ambient still show (they track
+     --foreground / --brand-*). Default theme stays dark; this is the toggle. */
+  --background: #e6ede8;
+  --foreground: #101a15;
+  --card: #f7faf8;
+  --card-foreground: #121b16;
+  --popover: #f8fbf9;
+  --popover-foreground: #121b16;
+  --primary: #047a56;
+  --primary-foreground: #ffffff;
+  --secondary: #e2e9e4;
+  --secondary-foreground: #123b2b;
+  --muted: #e2e9e4;
+  --muted-foreground: #556159;
+  --accent: #d7ede2;
+  --accent-foreground: #0c3a29;
+  --destructive: #dc2626;
+  --success: #047a56;
+  --success-foreground: #ffffff;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --border: #d5dfd9;
+  --input: #d5dfd9;
+  --ring: #10b981;
+  --section-bg: #e6ece8;
+  --radius: 0.75rem;
+  --hs-glow: 0.4;
+  --hs-wash1: 16%;
+  --hs-wash2: 13%;
+  --binus-text: #101a15;
+  --hs-card-shadow: 0 1px 2px rgb(16 26 21 / 0.08), 0 12px 30px -8px rgb(16 26 21 / 0.18);
+}
+
+/* Constant, subtle abstract background: a fine dot grid + two faint brand-tinted
+   washes bleeding in from the edges. Adapts to both themes via --foreground /
+   --brand-* vars. Static (no fixed-attachment / animation) so it stays light to
+   run and never distracts. */
+/* Ambient glows + dot texture on the page itself (scrolls with content, like
+   before). The glows are anchored at fixed PIXEL depths (not %), so opening an
+   FAQ / clicking never reflows or "grows" them — they just stay put. */
+.landing-root {
+  background-image:
+    radial-gradient(color-mix(in oklab, var(--foreground) 9%, transparent) 1px, transparent 1.7px),
+    radial-gradient(46rem 32rem at 8% 120px, color-mix(in oklab, var(--brand-1) var(--hs-wash1, 18%), transparent), transparent 70%),
+    radial-gradient(42rem 30rem at 96% 900px, color-mix(in oklab, var(--brand-2) var(--hs-wash2, 16%), transparent), transparent 72%),
+    radial-gradient(44rem 30rem at 2% 2100px, color-mix(in oklab, var(--brand-2) var(--hs-wash2, 16%), transparent), transparent 72%),
+    radial-gradient(46rem 32rem at 99% 3400px, color-mix(in oklab, var(--brand-1) var(--hs-wash1, 18%), transparent), transparent 72%),
+    radial-gradient(44rem 30rem at 4% 4700px, color-mix(in oklab, var(--brand-1) var(--hs-wash1, 18%), transparent), transparent 74%);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 24px 24px, auto, auto, auto, auto, auto;
+}
+
+/* System dark = default, but ONLY for .theme-system (no manual choice).
+   Class-based (not attribute) because the CSS pipeline mangles :not([attr]). */
+@media (prefers-color-scheme: dark) {
+  .landing-root.theme-system {
+    color-scheme: dark;
+    --background: #0e1613;
+    --foreground: #e8efeb;
+    --card: #131d19;
+    --card-foreground: #e8efeb;
+    --popover: #131d19;
+    --popover-foreground: #e8efeb;
+    --primary: #10b981;
+    --primary-foreground: #04130d;
+    --secondary: #1c2823;
+    --secondary-foreground: #e8efeb;
+    --muted: #1c2823;
+    --muted-foreground: #94a29b;
+    --accent: #16241e;
+    --accent-foreground: #d7f0e5;
+    --border: #24322c;
+    --input: #24322c;
+    --ring: #34d399;
+    --section-bg: #0b120f;
+    --hs-glow: 0.28;
+    --hs-wash1: 15%;
+    --hs-wash2: 13%;
+    --binus-text: #ffffff;
+    --hs-card-shadow: 0 1px 2px rgb(0 0 0 / 0.25), 0 10px 30px -10px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* Manual dark override (header toggle adds .theme-dark). .theme-light needs no
+   block — the .landing-root base is already light and the media rule above only
+   targets .theme-system. */
+.landing-root.theme-dark {
+  color-scheme: dark;
+  --background: #0e1613;
+  --foreground: #e8efeb;
+  --card: #131d19;
+  --card-foreground: #e8efeb;
+  --popover: #131d19;
+  --popover-foreground: #e8efeb;
+  --primary: #10b981;
+  --primary-foreground: #04130d;
+  --secondary: #1c2823;
+  --secondary-foreground: #e8efeb;
+  --muted: #1c2823;
+  --muted-foreground: #94a29b;
+  --accent: #16241e;
+  --accent-foreground: #d7f0e5;
+  --border: #24322c;
+  --input: #24322c;
+  --ring: #34d399;
+  --section-bg: #0b120f;
+  --hs-glow: 0.28;
+  --hs-wash1: 15%;
+  --hs-wash2: 13%;
+  --binus-text: #ffffff;
+  --hs-card-shadow: 0 1px 2px rgb(0 0 0 / 0.25), 0 10px 30px -10px rgb(0 0 0 / 0.5);
+}
+
+/* Brand gradient helpers */
+.brand-gradient-bg {
+  background-image: var(--brand-gradient);
+}
+.text-brand-gradient {
+  background-image: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.font-display {
+  font-family: var(--font-display), var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+}
+/* Theme-aware soft elevation for surfaces (real depth on light, subtle on dark). */
+.shadow-card {
+  box-shadow: var(--hs-card-shadow);
+}
+
+/* Campus logos: transparent background. The BINUS mark is recoloured so its
+   dark wordmark stays legible — white on dark, near-black on light. */
+.campus-logo {
+  opacity: 1;
+}
+/* The BINUS wordmark colour comes from --binus-text (set per theme); only that
+   text recolours, the emblem keeps its colours. Light mode gets a hair of text
+   shadow so copy stays crisp over the ambient. */
+.landing-root.theme-light {
+  text-shadow: 0 1px 1.5px rgb(16 26 21 / 0.06);
+}
+
+/* TTS equalizer bars */
+@keyframes hs-eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Belajar Kilat demo: "swipe up" hint — a small arrow that rises and fades,
+   telling the eye which way the card moves. */
+@keyframes hs-kilat-rise {
+  0% {
+    transform: translateY(5px);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-7px);
+    opacity: 0;
+  }
+}
+.hs-kilat-rise {
+  animation: hs-kilat-rise 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs-kilat-rise {
+    animation: none;
+  }
+}
+
+/* Smooth, purposeful section entrance — exponential ease-out (no bounce).
+   The hidden state applies ONLY once JS marks the root .reveal-ready, so
+   content is always visible without JS or if the observer is throttled. */
+.landing-root.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.landing-root [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root.reveal-ready [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

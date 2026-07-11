@@ -1,4 +1,147 @@
 const id: Record<string, string> = {
+  // ── Landing revamp (Plan 2) ──
+  "landing.nav.features": "Fitur",
+  "landing.nav.pricing": "Harga",
+  "landing.nav.faq": "FAQ",
+  "landing.nav.how": "Cara Kerja",
+  "landing.nav.testimonials": "Testimoni",
+  "landing.cta.masuk": "Masuk",
+  "landing.cta.daftar": "Daftar",
+  "landing.cta.dashboard": "Dashboard",
+  "landing.menu.profil": "Profil",
+  "landing.menu.logout": "Keluar",
+  "landing.soon": "Segera",
+  "landing.hero.headline_1": "Cara paling gampang buat",
+  "landing.hero.headline_hl": "siap ujian",
+  "landing.hero.sub":
+    "Rangkuman yang to the point, latihan soal plus koreksi AI, Belajar Kilat, dan komunitas kelas. Semua kebutuhan belajarmu ada di satu tempat, tiap periode ujian.",
+  "landing.hero.see_action": "Lihat cara kerjanya",
+  "landing.hero.trusted": "apa kata mereka?",
+  "landing.hero.count": "312+ mahasiswa",
+
+  // ── Social proof strip (single line) ──
+  "landing.social.students": "mahasiswa",
+  "landing.social.from": "dari",
+  "landing.social.binus_detail": "(BM B29 & B30)",
+  "landing.social.unj_detail": "(PBA '25 & '26)",
+  "landing.social.trust": "percaya haistudy",
+
+  // ── How it works (live demos) ──
+  "landing.how.title": "Lihat langsung cara kerjanya",
+  "landing.how.subtitle":
+    "Bukan cuma janji. Coba sendiri fitur yang kamu pakai tiap hari buat siap ujian.",
+  "landing.how.ai.tag": "Tanya haistudy AI",
+  "landing.how.ai.caption": "Tanya apa aja soal materi, dijawab sesuai bahan kuliahmu.",
+  "landing.how.ai.placeholder": "Tanya apa aja soal materi...",
+  "landing.how.ai.question": "Maksudnya gimana ya? Berikan contohnya dong",
+  "landing.how.ai.answer":
+    "Gampangnya, privasi itu hak tiap orang buat jaga hal pribadinya. Contohnya, isi chat atau email pribadimu nggak boleh diintip atau disebar tanpa izin.",
+  "landing.how.ai.quoted": "Dari rangkuman yang kamu sorot",
+  "landing.how.ai.sr":
+    "Contoh interaksi: mahasiswa menanyakan beda FIFO dan LIFO ke haistudy AI, lalu dijawab lengkap sesuai materi.",
+  "landing.how.rangkuman.tag": "Rangkuman",
+  "landing.how.rangkuman.subject": "Business Ethics",
+  "landing.how.rangkuman.caption":
+    "Atur kedalaman, sorot buat stabilo, tanya AI, atau dengerin lewat TTS.",
+  "landing.how.rangkuman.mode_ringkas": "Ringkas",
+  "landing.how.rangkuman.mode_normal": "Normal",
+  "landing.how.rangkuman.mode_mendalam": "Mendalam",
+  "landing.how.rangkuman.ask": "Tanya haistudy AI",
+  "landing.how.rangkuman.sr":
+    "Contoh rangkuman materi Business Ethics dengan tiga tingkat kedalaman, sorot teks (stabilo), tanya AI, dan text to speech.",
+  // upcoming demo teasers (fill in as each is built)
+  "landing.how.soon": "Segera",
+  "landing.how.kilat.tag": "Belajar Kilat",
+  "landing.how.kilat.desc":
+    "Geser kartu materi, jawab skenario, cocokin istilah, sampai keluar nilainya.",
+  "landing.how.kilat.subject": "Foundations of AI",
+  "landing.how.kilat.chapter": "Bab 2",
+  "landing.how.kilat.hint": "Geser ke atas",
+  // card 1 — materi
+  "landing.how.kilat.c1_tag": "Materi",
+  "landing.how.kilat.c1_heading": "Mesin rekomendasi",
+  "landing.how.kilat.c1_body":
+    "Netflix sama Spotify belajar dari kebiasaanmu, terus nyaranin konten yang kemungkinan kamu suka.",
+  // card 2 — skenario
+  "landing.how.kilat.c2_tag": "Skenario",
+  "landing.how.kilat.c2_situation":
+    "Kamu terus dikasih konten yang mirip-mirip. Lama-lama cuma lihat satu sisi. Apa risikonya?",
+  "landing.how.kilat.c2_opt1": "Filter bubble: wawasan nyempit",
+  "landing.how.kilat.c2_opt2": "Nggak masalah",
+  "landing.how.kilat.c2_opt3": "Aplikasi jadi berat",
+  "landing.how.kilat.c2_feedback": "Tepat. Cuma dikasih yang mirip bikin wawasan nyempit.",
+  // card 3 — cocokkan kata
+  "landing.how.kilat.c4_tag": "Cocokkan Kata",
+  "landing.how.kilat.c4_prompt": "Pasangkan istilah sama artinya",
+  "landing.how.kilat.c4_hint": "Tap istilahnya, terus tap artinya.",
+  "landing.how.kilat.c4_t1": "AIoT",
+  "landing.how.kilat.c4_d1": "Gabungan AI + IoT",
+  "landing.how.kilat.c4_t2": "Filter bubble",
+  "landing.how.kilat.c4_d2": "Wawasan nyempit",
+  "landing.how.kilat.c4_t3": "PCG",
+  "landing.how.kilat.c4_d3": "Level game otomatis",
+  "landing.how.kilat.c4_done": "Semua kepasangin!",
+  // card 4 — benar atau salah
+  "landing.how.kilat.c5_tag": "Benar atau Salah",
+  "landing.how.kilat.c5_prompt": "Pakai AI atau bukan?",
+  "landing.how.kilat.c5_s1": "Mobil ngerem sendiri pas ada yang nyebrang.",
+  "landing.how.kilat.c5_s2": "Lampu nyala pas saklarnya dipencet.",
+  "landing.how.kilat.c5_true": "Benar",
+  "landing.how.kilat.c5_false": "Salah",
+  // card 5 — nilai akhir
+  "landing.how.kilat.c6_title": "Lulus!",
+  "landing.how.kilat.c6_msg": "Lolos KKM 90%. Bab ini kelar, lanjut bab berikutnya.",
+  "landing.how.kilat.c6_pass": "Lulus · KKM 90%",
+  "landing.how.kilat.c6_stat_score": "Skor",
+  "landing.how.kilat.c6_stat_correct": "Benar",
+  "landing.how.kilat.sr":
+    "Contoh Belajar Kilat: kartu materi digeser ke atas, skenario dijawab, istilah dicocokkan, sampai keluar nilai kelulusan.",
+  "landing.how.latihan.tag": "Latihan Soal",
+  "landing.how.latihan.desc":
+    "Esai dikoreksi AI plus skornya, kuis pilihan ganda, sama flashcards buat ngafal.",
+  "landing.how.latihan.subject": "Foundations of AI",
+  // toggle
+  "landing.how.latihan.tab_esai": "Esai",
+  "landing.how.latihan.tab_pg": "Pilihan Ganda",
+  // esai (AI-graded)
+  "landing.how.latihan.esai_label": "Studi Kasus",
+  "landing.how.latihan.esai_q":
+    "RS Sehat Nusantara: baca X-ray lambat dan beda antar radiolog. Rekomendasikan solusi AI-nya.",
+  "landing.how.latihan.esai_placeholder": "Tulis jawabanmu di sini...",
+  "landing.how.latihan.esai_answer":
+    "Pakai computer vision (CNN) buat baca X-ray dan CT scan, jadi deteksi lebih cepat dan konsisten.",
+  "landing.how.latihan.esai_grade_label": "Nilai AI",
+  "landing.how.latihan.esai_feedback":
+    "Solusi tepat dan sesuai materi. Tambah manfaat buat pasien biar poin penuh.",
+  "landing.how.latihan.esai_hit1": "Computer vision",
+  "landing.how.latihan.esai_hit2": "CNN",
+  "landing.how.latihan.esai_miss1": "Manfaat pasien",
+  // pilihan ganda (drill konsep)
+  "landing.how.latihan.pg_cat": "Modul 1",
+  "landing.how.latihan.pg_q": "Apa itu Internet of Things (IoT)?",
+  "landing.how.latihan.pg_o1": "Satu komputer besar penyimpan semua data dunia.",
+  "landing.how.latihan.pg_o2": "Program yang cuma bisa dijalankan manual.",
+  "landing.how.latihan.pg_o3": "Jaringan perangkat yang saling terhubung dan tukar data.",
+  "landing.how.latihan.pg_o4": "Aplikasi chatting antar manusia.",
+  "landing.how.latihan.pg_explain_label": "Penjelasan",
+  "landing.how.latihan.pg_explain":
+    "Jaringan perangkat yang saling terhubung, dipasangi sensor, dan tukar data ke perangkat lain maupun cloud.",
+  // flashcards
+  "landing.how.latihan.fc_label": "Flashcards",
+  "landing.how.latihan.fc_front": "Istilah",
+  "landing.how.latihan.fc_back": "Definisi",
+  "landing.how.latihan.fc1_t": "IoT",
+  "landing.how.latihan.fc1_d": "Jaringan perangkat saling terhubung, tukar data lewat cloud.",
+  "landing.how.latihan.fc2_t": "AIoT",
+  "landing.how.latihan.fc2_d": "Gabungan AI dan IoT berbasis cloud, empat lapis.",
+  "landing.how.latihan.fc3_t": "PCG",
+  "landing.how.latihan.fc3_d": "Isi game dibuat otomatis lewat rumus.",
+  "landing.how.latihan.fc4_t": "AlphaGo",
+  "landing.how.latihan.fc4_d": "AI DeepMind, ngalahin juara Go 4-1.",
+  "landing.how.latihan.sr":
+    "Contoh Latihan Soal: jawaban esai dikoreksi AI lengkap dengan skor, kuis pilihan ganda, dan flashcards istilah yang bisa dibalik.",
+  "landing.how.ai.desc": "Tanya materi apa aja, dijawab sesuai bahan kuliahmu.",
+
   // Sidebar
   "nav.dashboard": "Dashboard",
   "nav.subjects": "Mata Kuliah",

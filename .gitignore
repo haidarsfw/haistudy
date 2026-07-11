@@ -66,6 +66,16 @@ next-env.d.ts
 /DESIGN.md
 /.impeccable/
 
+# agent skills + tooling mirrors — kept local (public repo); regenerate via `npx skills add`
+/.agents/
+/.claude/skills/
+/skills-lock.json
+/.github/
+
+# curated user/student data for the revamp (PII — never on public repo)
+*.local.json
+/testimonials*.json
+
 # stale internal docs / scratch — stay out even if recreated
 /*BROADCAST*.md
 /MARKETING-*.md
@@ -81,3 +91,8 @@ next-env.d.ts
 
 # CPU optimization changelog (local reference only)
 CPU-OPTIMIZATION-CHANGELOG.md
+
+testsprite_tests/tmp/config.json
+
+# brand assets WIP — local only until build
+/brand.local/
