@@ -97,7 +97,7 @@ export function Comparison() {
   }
 
   return (
-    <section id="banding" className="scroll-mt-24 px-4 pb-16 pt-4 sm:pb-24 sm:pt-6">
+    <section id="banding" className="scroll-mt-24 px-4 pb-8 pt-4 sm:pb-10 sm:pt-6">
       <div className="mx-auto max-w-4xl">
         <div data-reveal className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

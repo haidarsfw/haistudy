@@ -178,7 +178,7 @@ export function PackageCard({
             selected ? accent.badgeOn : "bg-primary text-primary-foreground"
           )}
         >
-          {t(pkg.badgeKey)}
+          {t("pricing.popular")}
         </span>
       )}
 

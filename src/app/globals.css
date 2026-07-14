@@ -1479,6 +1479,7 @@ html.tts-bar-open .tts-shift-target {
   --foreground: #101a15;
   --card: #f7faf8;
   --card-foreground: #121b16;
+  --hs-surface: var(--card);
   --popover: #f8fbf9;
   --popover-foreground: #121b16;
   --primary: #047a56;
@@ -1565,6 +1566,7 @@ html.tts-bar-open .tts-shift-target {
   --foreground: #e8efeb;
   --card: #131d19;
   --card-foreground: #e8efeb;
+  --hs-surface: #121619;
   --popover: #131d19;
   --popover-foreground: #e8efeb;
   --primary: #10b981;

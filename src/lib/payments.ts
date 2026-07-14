@@ -150,7 +150,6 @@ export const PACKAGES: PackageDef[] = [
         ],
       },
     ],
-    highlight: true,
   },
   {
     id: "vip",
@@ -191,7 +190,7 @@ export const PACKAGES: PackageDef[] = [
         itemKeys: ["pricing.feat_voice_perks", "pricing.feat_vip_badge", "pricing.feat_fast_support"],
       },
     ],
-    bestValue: true,
+    highlight: true,
   },
   {
     id: "diamond",
