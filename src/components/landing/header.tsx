@@ -120,25 +120,51 @@ export function Header() {
   const { t } = useTranslation();
   const { session } = useSession();
   const loggedIn = !!session && !session.isPreview;
-  const [scrolled, setScrolled] = useState(false);
+  // Scroll progress 0→1 over the first ~72px. The header MORPHS continuously with
+  // scroll (not a boolean toggle), so it stays seamless whether you scroll up or
+  // down — no fixed-duration "snap". Every property is interpolated from p, and
+  // the glass (blur) fades in with it, so it never stutters against a size toggle.
+  const [p, setP] = useState(0);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16);
-    onScroll();
+    let raf = 0;
+    const update = () => setP(Math.min(1, Math.max(0, window.scrollY / 72)));
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, []);
+  const scrolled = p > 0.5;
+  const glass = p > 0.01 ? `blur(${p * 12}px) saturate(${100 + p * 50}%)` : "none";
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header
+      className="fixed inset-x-0 top-0 z-50"
+      style={{ paddingLeft: `${p * 12}px`, paddingRight: `${p * 12}px` }}
+    >
       <div
-        className={cn(
-          "relative flex items-center gap-3 transition-all duration-[440ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
-          scrolled
-            ? "mx-3 mt-4 h-16 max-w-[60rem] rounded-full border border-border bg-background/50 px-5 shadow-xl shadow-black/5 backdrop-blur-2xl backdrop-saturate-150 sm:mt-5 sm:px-6 lg:mx-auto"
-            : "mx-auto mt-0 h-20 max-w-7xl border-b border-transparent px-6 sm:px-10"
-        )}
+        className="relative mx-auto flex items-center gap-3 border border-solid"
+        style={{
+          maxWidth: `${80 - p * 20}rem`,
+          height: `${80 - p * 16}px`,
+          marginTop: `${p * 16}px`,
+          paddingLeft: `${28 - p * 6}px`,
+          paddingRight: `${28 - p * 6}px`,
+          borderRadius: `${p * 999}px`,
+          backgroundColor: `color-mix(in oklab, var(--background) ${Math.round(p * 78)}%, transparent)`,
+          backdropFilter: glass,
+          WebkitBackdropFilter: glass,
+          borderColor: `color-mix(in oklab, var(--border) ${Math.round(p * 100)}%, transparent)`,
+          boxShadow: `0 12px 32px -14px rgba(0,0,0,${p * 0.22})`,
+          willChange: "max-width, height",
+        }}
       >
         {/* logo (left) — flex-1 mirror of the actions side so the nav centers true */}
         <div className="flex flex-1 items-center">

@@ -3,10 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Crown, Gem } from "lucide-react";
-import { PACKAGES, formatIDR, type PackageDef } from "@/lib/payments";
+import { PACKAGES, formatIDR } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
 import { Badge } from "@/components/ui/badge";
-import { FeatureGroups } from "@/components/payments/package-card";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +52,49 @@ const CARD_FEATURES: Record<string, Feat[]> = {
     { key: "pricing.feat_diamond_badge", badge: "diamond" },
   ],
 };
+
+// The full "& masih banyak lagi" list — every core feature a user gets, well
+// beyond the four generalised lines on the Normal card. Shown in the popup so it
+// reveals what ISN'T already on the front, not a repeat of it.
+const ALL_FEATURES: { group: string; items: string[] }[] = [
+  {
+    group: "Materi & belajar",
+    items: [
+      "Rangkuman lengkap tiap mata kuliah",
+      "Belajar Kilat (mode swipe)",
+      "Latihan Soal esai & PG + koreksi AI",
+      "Quiz & flashcards interaktif",
+    ],
+  },
+  {
+    group: "AI",
+    items: [
+      "haistudy AI 24/7 (tanya materi apa aja)",
+      "AI dilatih materi resmi, ga halusinasi",
+    ],
+  },
+  {
+    group: "Komunitas",
+    items: [
+      "Forum & chat kelas",
+      "Voice room belajar bareng",
+      "Pengumuman & kisi-kisi real-time",
+    ],
+  },
+  {
+    group: "Produktivitas",
+    items: [
+      "Jadwal kuliah + countdown ujian",
+      "Alat fokus (pomodoro + reminder)",
+      "Statistik belajar",
+      "Bookmark & catatan cepat",
+    ],
+  },
+  {
+    group: "Personalisasi",
+    items: ["Tema, warna & font", "Musik lofi + playlist sendiri"],
+  },
+];
 
 // Per-tier look. Share/Normal neutral; VIP gold, Diamond icy — filled gradient
 // washes + a soft glow (not flat outlines). `cta` colours the selected buy button.
@@ -114,7 +156,7 @@ export function PricingSection() {
   const [selected, setSelected] = useState<string>(
     () => PACKAGES.find((p) => p.highlight)?.id ?? "normal"
   );
-  const [dialogPkg, setDialogPkg] = useState<PackageDef | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <section className="relative px-4 pb-20 pt-8 sm:pb-24 sm:pt-10">
@@ -231,7 +273,7 @@ export function PricingSection() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setDialogPkg(pkg);
+                          setDialogOpen(true);
                         }}
                         className="inline-flex items-center text-[12px] font-semibold text-foreground/70 underline-offset-2 transition-colors hover:text-foreground hover:underline"
                       >
@@ -264,8 +306,9 @@ export function PricingSection() {
                       <span className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/20 to-transparent" aria-hidden="true" />
                       {/* glass edge highlight */}
                       <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" aria-hidden="true" />
-                      {/* liquid shine sweep on hover */}
-                      <span className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-white/25 blur-md transition-all duration-700 ease-out group-hover/cta:left-[150%]" aria-hidden="true" />
+                      {/* liquid shine — sweeps once when the card is selected
+                          (the button mounts), via a CSS class, not only on hover */}
+                      <span className="hs-cta-shine pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent" aria-hidden="true" />
                       <span className="relative z-10 inline-flex items-center gap-1.5 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
                         {t("pricing.buy")}
                         <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/cta:translate-x-0.5" />
@@ -294,17 +337,37 @@ export function PricingSection() {
         </p>
       </div>
 
-      {/* full-feature popup (Normal) */}
-      <Dialog open={!!dialogPkg} onOpenChange={(o) => !o && setDialogPkg(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display">
-              {dialogPkg
-                ? `${t("pricing.all_features")} ${t(dialogPkg.nameKey)}`
-                : ""}
+      {/* full-feature popup — everything every user gets (far more than the card) */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="gap-0 overflow-hidden rounded-2xl border-border/70 p-0 sm:max-w-4xl">
+          <DialogHeader className="border-b border-border/60 px-5 py-4 text-left">
+            <DialogTitle className="font-display text-base font-bold text-foreground">
+              {t("pricing.all_features")} haistudy
             </DialogTitle>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Semua paket dapat semua fitur inti ini.
+            </p>
           </DialogHeader>
-          {dialogPkg && <FeatureGroups pkg={dialogPkg} checkClass="text-primary" />}
+          <div className="grid grid-cols-1 gap-x-6 gap-y-6 px-6 py-5 sm:grid-cols-2 lg:grid-cols-3">
+            {ALL_FEATURES.map((g) => (
+              <div key={g.group}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
+                  {g.group}
+                </p>
+                <ul className="mt-2 space-y-1.5">
+                  {g.items.map((it) => (
+                    <li
+                      key={it}
+                      className="flex items-start gap-2 text-[13px] text-foreground/90"
+                    >
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={2.75} />
+                      <span>{it}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </section>

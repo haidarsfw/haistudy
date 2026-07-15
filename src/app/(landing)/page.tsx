@@ -1,4 +1,4 @@
-import { ChevronDown, Star } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
 import { PricingSection } from "@/components/landing/pricing-section";
@@ -8,6 +8,7 @@ import { SocialProof } from "@/components/landing/social-proof";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { FeatureShowcase } from "@/components/landing/feature-showcase";
 import { Comparison } from "@/components/landing/comparison";
+import { TestimonialMarquee } from "@/components/landing/testimonial-marquee";
 
 const FAQ = [
   {
@@ -33,37 +34,6 @@ const FAQ = [
   {
     q: "Apakah bisa preview dulu sebelum beli?",
     a: 'Bisa! Klik tombol "Preview Gratis" untuk melihat demo platform tanpa login.',
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Cindy Baby Gracia",
-    jurusan: "B29 - Business Management",
-    rating: 5,
-    message:
-      "Sangat terbantu dengan kelengkapan materi di aplikasi inii. Materinya gampang dimengerti dan nggak bikin pusingg. worth it sekalii ✨🙌🏼",
-  },
-  {
-    name: "Reia Avrileamori",
-    jurusan: "B29 - Business Management",
-    rating: 5,
-    message:
-      "Latihan Soal bagus banget, jadi kebayang soal ujian nanti dan bisa simulasi dulu sebelum ujian beneran. Modul interaktif accounting jujur paling ngebantu.",
-  },
-  {
-    name: "Keiza Alma Larasati",
-    jurusan: "B29 - Business Management",
-    rating: 5,
-    message:
-      "the only source i used for study dan materinya lengkap bgt. info tentang materi2 penting dan wajib dipelajarin was very helpful",
-  },
-  {
-    name: "Sutan Jafni Indrayana",
-    jurusan: "B29 - Business Management",
-    rating: 5,
-    message:
-      "Ngebantu bgt buat persiapan ujian, materi yang dikasih lengkap dan mudah aku pahamin, kisi kisi yang dikasih juga banyak yang keluar pas ujian.",
   },
 ];
 
@@ -113,54 +83,7 @@ export default function LandingPage() {
         </div>
 
         {/* ── Testimonials ── */}
-        <section
-          id="testimoni"
-          className="relative scroll-mt-24 px-4 py-16 sm:py-20"
-        >
-          <div className="mx-auto max-w-4xl">
-            <h2 className="font-display text-center text-2xl font-bold sm:text-3xl text-foreground">
-              Apa Kata Mereka
-            </h2>
-            <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
-              Pengalaman mahasiswa yang sudah menggunakan haistudy
-            </p>
-
-            <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 -mx-6 py-6 [scrollbar-width:none]">
-              {TESTIMONIALS.map((t) => (
-                <div
-                  key={t.name}
-                  className="flex w-[280px] shrink-0 snap-center flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card"
-                >
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3.5 w-3.5 ${
-                          i < t.rating
-                            ? "fill-[#f5b301] text-[#f5b301]"
-                            : "text-muted-foreground/40"
-                        }`}
-                        aria-hidden="true"
-                      />
-                    ))}
-                  </div>
-                  <p className="line-clamp-5 text-sm italic leading-relaxed text-muted-foreground">
-                    &ldquo;{t.message}&rdquo;
-                  </p>
-                  <div className="mt-auto flex items-center gap-3 pt-1">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-primary">
-                      {t.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.jurusan}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <TestimonialMarquee />
 
         {/* ── FAQ ── */}
         <section id="faq" className="relative scroll-mt-20 px-4 py-14 sm:py-18">

@@ -121,9 +121,25 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
       const target = document.querySelector(id);
       if (target) {
         ev.preventDefault();
-        lenis.scrollTo(target as HTMLElement, {
-          offset: -96,
-          duration: 1.2,
+        const el = target as HTMLElement;
+        // Anchor on the section's HEADING (not the padded section top or a padless
+        // wrapper like #harga), and land it just below the header — so the content
+        // is in view straight away instead of the heading pinned to the top edge.
+        const heading = el.querySelector("h1, h2, h3") as HTMLElement | null;
+        const anchor = (heading ?? el) as HTMLElement;
+        // offsetTop is layout-based, so it IGNORES the data-reveal translate that
+        // shifts a heading's rect while it is still off-screen — that was the cause
+        // of the inconsistent landing between sections. Sum it up the offsetParent
+        // chain to get the true document position.
+        let y = 0;
+        let node: HTMLElement | null = anchor;
+        while (node) {
+          y += node.offsetTop;
+          node = node.offsetParent as HTMLElement | null;
+        }
+        const dest = y - 120;
+        lenis.scrollTo(dest, {
+          duration: 1.1,
           easing: (t) => 1 - Math.pow(1 - t, 4), // ease-out quart
         });
       }
