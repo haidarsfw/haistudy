@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { DemoCursor } from "@/components/landing/demo-cursor";
-import { useLandingTheme } from "@/components/landing/landing-shell";
 
 type Mode = "ringkas" | "normal" | "mendalam";
 type Reading = "dark" | "light" | "paper";
@@ -119,7 +118,6 @@ function TypingDots() {
  */
 export function DemoRangkumanAI() {
   const { t, locale } = useTranslation();
-  const { resolved } = useLandingTheme();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const ringkasRef = useRef<HTMLButtonElement>(null);
@@ -168,11 +166,6 @@ export function DemoRangkumanAI() {
     io.observe(el);
     return () => io.disconnect();
   }, []);
-
-  // Reading pane follows the site theme; changing the site theme re-syncs it.
-  useEffect(() => {
-    setReading(resolved === "light" ? "light" : "dark");
-  }, [resolved]);
 
   // Keep the AI chat scrolled to the latest message.
   useEffect(() => {

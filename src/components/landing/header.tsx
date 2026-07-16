@@ -2,13 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Menu, X, Globe, Sun, Moon } from "lucide-react";
+import { Menu, X, Globe, Headset } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { Logo } from "@/components/landing/logo";
 import { UserMenu } from "@/components/landing/user-menu";
-import { useLandingTheme } from "@/components/landing/landing-shell";
 import { cn } from "@/lib/utils";
+
+// Support entry (WhatsApp) — anon visitors ask pre-sale questions here. Replaces
+// the old theme toggle (landing is dark-only now).
+const WA_HELP =
+  "https://wa.me/6287839256171?text=" +
+  encodeURIComponent("Halo min, saya mau tanya soal haistudy");
 
 const NAV = [
   { href: "#cara-kerja", key: "landing.nav.how" },
@@ -18,27 +23,6 @@ const NAV = [
   { href: "#testimoni", key: "landing.nav.testimonials" },
   { href: "#faq", key: "landing.nav.faq" },
 ];
-
-function IconBtn({
-  onClick,
-  label,
-  children,
-}: {
-  onClick: () => void;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-    >
-      {children}
-    </button>
-  );
-}
 
 /**
  * Language toggle. Two visual states crossfade in place (no element swap, no
@@ -100,19 +84,32 @@ function LanguageToggle({ compact }: { compact: boolean }) {
   );
 }
 
-function ThemeToggle() {
-  const { resolved, toggle } = useLandingTheme();
+/** Support (WhatsApp) ghost link — used in both the desktop cluster and the
+ *  mobile panel. Opens WhatsApp in a new tab. */
+function BantuanLink({
+  onClick,
+  className,
+  showLabel,
+}: {
+  onClick?: () => void;
+  className?: string;
+  showLabel?: boolean;
+}) {
+  const { t } = useTranslation();
+  const label = t("landing.nav.help");
   return (
-    <IconBtn
-      onClick={toggle}
-      label={resolved === "dark" ? "Mode terang" : "Mode gelap"}
+    <a
+      href={WA_HELP}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={className}
     >
-      {resolved === "dark" ? (
-        <Sun className="h-4 w-4" />
-      ) : (
-        <Moon className="h-4 w-4" />
-      )}
-    </IconBtn>
+      <Headset className="h-4 w-4" />
+      {showLabel && label}
+    </a>
   );
 }
 
@@ -230,7 +227,7 @@ export function Header() {
         <div className="flex flex-1 items-center justify-end">
           {/* lg+ */}
           <div className="hidden items-center gap-1 lg:flex">
-            <ThemeToggle />
+            <BantuanLink className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50" />
             <LanguageToggle compact={scrolled} />
             <span className="mx-1.5 h-5 w-px bg-border/60" aria-hidden="true" />
             {loggedIn ? (
@@ -247,7 +244,6 @@ export function Header() {
 
           {/* tablet / mobile (< lg) */}
           <div className="flex items-center gap-0.5 lg:hidden">
-            <ThemeToggle />
             <LanguageToggle compact={scrolled} />
             <button
               type="button"
@@ -276,6 +272,11 @@ export function Header() {
                 {t(item.key)}
               </a>
             ))}
+            <BantuanLink
+              showLabel
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-accent"
+            />
             <div className="mt-1">
               {loggedIn ? (
                 <Link

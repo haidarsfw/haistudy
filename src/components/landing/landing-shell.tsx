@@ -1,51 +1,19 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect } from "react";
 import Lenis from "lenis";
 
-type Resolved = "light" | "dark";
-type Choice = "light" | "dark";
+type Resolved = "dark";
 
-const LandingThemeCtx = createContext<{ resolved: Resolved; toggle: () => void }>(
-  { resolved: "light", toggle: () => {} }
-);
+const LandingThemeCtx = createContext<{ resolved: Resolved }>({ resolved: "dark" });
 export const useLandingTheme = () => useContext(LandingThemeCtx);
 
 /**
- * Landing runtime + theming. Owns the `.landing-root` scope so it can set
- * `data-theme` for the manual light/dark toggle (default = follow system via
- * CSS media query, no attr). Also mounts Lenis smooth scroll + a scroll-reveal
- * observer. All disabled under prefers-reduced-motion.
+ * Landing runtime. Dark-only (light mode removed) — the `.landing-root` scope is
+ * pinned to `.theme-dark`. Mounts Lenis smooth scroll (desktop) + a scroll-reveal
+ * observer. All motion disabled under prefers-reduced-motion.
  */
 export function LandingShell({ children }: { children: React.ReactNode }) {
-  // Default = dark for every visitor; a manual toggle choice persists.
-  const [choice, setChoice] = useState<Choice>("dark");
-
-  useEffect(() => {
-    try {
-      const s = localStorage.getItem("hs-landing-theme");
-      if (s === "light" || s === "dark") setChoice(s);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const resolved: Resolved = choice;
-  const toggle = () => {
-    const next: Choice = choice === "dark" ? "light" : "dark";
-    setChoice(next);
-    try {
-      localStorage.setItem("hs-landing-theme", next);
-    } catch {
-      /* ignore */
-    }
-  };
-
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -166,10 +134,8 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <LandingThemeCtx.Provider value={{ resolved, toggle }}>
-      <div
-        className={`landing-root theme-${choice} min-h-screen bg-background text-foreground`}
-      >
+    <LandingThemeCtx.Provider value={{ resolved: "dark" }}>
+      <div className="landing-root theme-dark min-h-screen bg-background text-foreground">
         {children}
       </div>
     </LandingThemeCtx.Provider>

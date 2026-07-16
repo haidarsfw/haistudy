@@ -6,6 +6,7 @@ const id: Record<string, string> = {
   "landing.nav.how": "Cara Kerja",
   "landing.nav.testimonials": "Testimoni",
   "landing.nav.compare": "Banding",
+  "landing.nav.help": "Bantuan",
   "landing.cta.masuk": "Masuk",
   "landing.cta.daftar": "Daftar",
   "landing.cta.dashboard": "Dashboard",
