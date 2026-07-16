@@ -96,21 +96,16 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
   },
 ];
 
-// Per-tier look — RESTRAINED (option A). All cards share one neutral dark
-// surface + a neutral hairline border; only VIP (the popular tier) carries a
-// subtle brand-emerald tint + border. No per-tier neon outlines, no glossy CTA
-// — colour comes only from the single brand accent (emerald) + the small in-app
-// tier badges. Differentiation is price + features + the popular ring, not hue.
+// Per-tier look — FULLY NEUTRAL (monochrome). No colour on the cards at all,
+// not even on VIP: every card is the same dark surface + neutral border + neutral
+// checks. Tiers are told apart by price + features + the "Paling Populer" badge
+// and the (neutral) selection ring, never by hue. The buy CTA is colourless too.
 const NEUTRAL = "#131a16";
 const TIER: Record<string, { surface: string; border: string; check: string }> = {
-  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-emerald-500" },
-  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-emerald-500" },
-  vip: {
-    surface: "color-mix(in oklab, #131a16 84%, #10b981)",
-    border: "border-emerald-500/55",
-    check: "text-emerald-500",
-  },
-  diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-emerald-500" },
+  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
+  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
+  vip: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
+  diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
 };
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
@@ -173,10 +168,10 @@ export function PricingSection() {
                 className={cn(
                   "group relative flex cursor-pointer flex-col rounded-2xl border p-5 shadow-xl shadow-black/30 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                   tier.border,
-                  // the SELECTED card rises with a restrained brand ring (default = VIP)
+                  // the SELECTED card rises with a neutral ring (default = VIP)
                   isSelected
-                    ? "shadow-2xl ring-2 ring-emerald-500/50 lg:-translate-y-2"
-                    : "hover:-translate-y-1 hover:border-white/15 hover:shadow-2xl"
+                    ? "shadow-2xl ring-2 ring-white/30 lg:-translate-y-2"
+                    : "hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl"
                 )}
               >
                 {/* name + quiet populer badge (neutral, recommended tier only) */}
@@ -270,7 +265,7 @@ export function PricingSection() {
                     <Link
                       href={`/payments?pkg=${pkg.id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="group/cta mt-2 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-700/40 bg-emerald-900 text-[13px] font-semibold text-white shadow-[0_10px_24px_-8px_rgba(0,0,0,0.75)] transition-colors duration-200 hover:bg-emerald-800 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="group/cta mt-2 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.10] text-[13px] font-semibold text-white shadow-[0_10px_24px_-8px_rgba(0,0,0,0.75)] transition-colors duration-200 hover:bg-white/[0.16] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {t("pricing.buy")}
                       <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/cta:translate-x-0.5" />
