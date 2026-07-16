@@ -11,28 +11,33 @@ const WA_HELP =
   encodeURIComponent("Halo min, saya mau tanya soal haistudy");
 
 /**
- * FAQ accordion — hairline list (Linear/Vercel/Stripe style): no cards, just
- * thin dividers, airy rhythm. Single-open; the answer slides open on a fluid
- * grid-rows transition (see `.faq-panel` in globals.css). A `+` rotates 45° into
- * an `×`. Fully keyboard-operable (real <button>, aria-expanded/controls).
+ * FAQ accordion — ONE contained card (bg-card + border + shadow, same surface
+ * as the demo / pricing cards elsewhere) with the questions split by thin
+ * internal dividers, so it sits on the theme instead of floating as a bare
+ * list. Single-open; the answer slides open on a fluid grid-rows transition
+ * (see `.faq-panel` in globals.css). A `+` rotates 45° into an `×`. Fully
+ * keyboard-operable (real <button>, aria-expanded/controls).
  */
 export function Faq() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="border-t border-border/60">
-        {FAQ.map((item, i) => {
-          const isOpen = open === i;
-          return (
-            <ScrollReveal key={item.q} delay={i * 0.04}>
-              <div className="border-b border-border/60">
+      <ScrollReveal>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          {FAQ.map((item, i) => {
+            const isOpen = open === i;
+            return (
+              <div
+                key={item.q}
+                className={i > 0 ? "border-t border-border/60" : ""}
+              >
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : i)}
                   aria-expanded={isOpen}
                   aria-controls={`faq-panel-${i}`}
-                  className="group flex w-full items-center justify-between gap-4 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  className="group flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50"
                 >
                   <span className="text-[15px] font-medium text-foreground sm:text-base">
                     {item.q}
@@ -48,17 +53,17 @@ export function Faq() {
                     <p
                       id={`faq-panel-${i}`}
                       role="region"
-                      className="pb-5 pr-8 text-sm leading-relaxed text-muted-foreground sm:text-[15px]"
+                      className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground sm:text-[15px]"
                     >
                       {item.a}
                     </p>
                   </div>
                 </div>
               </div>
-            </ScrollReveal>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </ScrollReveal>
 
       {/* Soft support nudge — top-landing-FAQ pattern; routes to the same WA. */}
       <p className="mt-8 text-center text-sm text-muted-foreground">

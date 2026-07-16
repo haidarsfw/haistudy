@@ -14,7 +14,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: "haistudy cocok buat siapa?",
-    a: "Sekarang fokusnya buat mahasiswa BINUS jurusan Business Management. Materinya disusun ngikutin mata kuliah dan periode ujian kamu, jadi yang kamu pelajarin beneran nyambung sama yang keluar di ujian.",
+    a: "Mulai dari mahasiswa BINUS Business Management, dan sekarang haistudy lagi ekspansi ke makin banyak jurusan dan kampus lain. Materinya disusun ngikutin mata kuliah dan periode ujian kamu, jadi yang kamu pelajarin beneran nyambung sama yang keluar di ujian.",
   },
   {
     q: "Gimana cara dapat aksesnya?",
@@ -22,7 +22,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: "Bedanya tiap paket apa?",
-    a: "Isi materinya sama buat semua paket. Share paling murah tapi kamu diminta share haistudy ke temen dulu. Normal langsung akses tanpa syarat. VIP nambah fitur ekstra kayak AI prioritas, DM antar member, dan beberapa perk lain. Diamond buat yang mau dukung lebih sambil dapetin semua fitur VIP.",
+    a: "Isi materinya sama buat semua paket. Share paling murah tapi kamu diminta share haistudy ke temen dulu. Normal langsung akses tanpa syarat. VIP nambah beberapa fitur dan kenyamanan ekstra kayak AI prioritas, kustomisasi tampilan, dan perk lainnya. Diamond buat yang mau dukung haistudy lebih sambil dapetin semua fitur VIP.",
   },
   {
     q: "Berapa lama aksesnya berlaku?",
