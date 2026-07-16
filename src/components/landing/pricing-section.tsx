@@ -73,7 +73,7 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
       "Rangkuman lengkap tiap mata kuliah",
       "Belajar Kilat (mode swipe)",
       "Latihan Soal esai & PG + koreksi AI",
-      "3 kuota simulasi ujian",
+      "3x kuota simulasi ujian",
       "Quiz & flashcards interaktif",
     ],
   },
@@ -255,7 +255,7 @@ export function PricingSection() {
                           {f.quota ? (
                             <span className="leading-snug">
                               <span className="font-semibold text-foreground">
-                                {QUOTA[pkg.id]}
+                                {QUOTA[pkg.id]}x
                               </span>{" "}
                               {t("pricing.quota_simulasi")}
                             </span>
