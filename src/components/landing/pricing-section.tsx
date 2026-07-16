@@ -96,11 +96,14 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
   },
 ];
 
-// Per-tier look. Share/Normal neutral; VIP gold, Diamond icy — filled gradient
-// washes + a soft glow (not flat outlines). `cta` colours the selected buy button.
+// Per-tier look. Each card is a DARK, saturated tinted surface (the accent mixed
+// into a near-black base, kept dark) — colour comes from the SURFACE + border +
+// glow + checks, never from a light wash that would brighten the card. Share
+// teal, Normal emerald, VIP gold, Diamond icy (VIP/Diamond a touch more colour).
+// `wash` is only a faint top gloss now. `cta` colours the selected buy button.
 const TIER: Record<
   string,
-  { wash: string; border: string; glow: string; ctaBg: string; ctaGlow: string; check: string }
+  { surface: string; wash: string; border: string; glow: string; ctaBg: string; ctaGlow: string; check: string }
 > = {
   // Share = cooler TEAL, understated (budget tier). Normal = brand EMERALD,
   // fuller (the solid base). Distinct hues + intensity so they never twin.
@@ -108,34 +111,38 @@ const TIER: Record<
   // across the whole card, and the borders are boldly saturated — colour on a
   // dark surface, not a pale sliver at the top.
   share: {
-    wash: "bg-gradient-to-b from-teal-500/[0.13] to-teal-500/[0.05]",
-    border: "border-teal-500/40",
-    glow: "shadow-[0_18px_50px_-22px_rgba(20,184,166,0.32)]",
+    surface: "color-mix(in oklab, #0d1211 84%, #2dd4bf)",
+    wash: "bg-gradient-to-b from-white/[0.035] to-transparent",
+    border: "border-teal-500/35",
+    glow: "shadow-[0_18px_50px_-24px_rgba(20,184,166,0.26)]",
     ctaBg: "bg-gradient-to-b from-teal-500 to-teal-600",
     ctaGlow: "shadow-lg shadow-teal-500/40 hover:shadow-xl hover:shadow-teal-500/50",
     check: "text-teal-400",
   },
   normal: {
-    wash: "bg-gradient-to-b from-emerald-500/[0.22] to-emerald-500/[0.07]",
-    border: "border-emerald-500/55",
-    glow: "shadow-[0_18px_50px_-18px_rgba(16,185,129,0.42)]",
+    surface: "color-mix(in oklab, #0d1210 80%, #10b981)",
+    wash: "bg-gradient-to-b from-white/[0.04] to-transparent",
+    border: "border-emerald-500/45",
+    glow: "shadow-[0_18px_50px_-22px_rgba(16,185,129,0.34)]",
     ctaBg: "bg-gradient-to-b from-emerald-500 to-emerald-600",
     ctaGlow: "shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/50",
     check: "text-emerald-400",
   },
-  // VIP gold + Diamond icy — richest, most saturated (were washed out).
+  // VIP gold + Diamond icy — darker but a touch more saturated (premium).
   vip: {
-    wash: "bg-gradient-to-b from-amber-500/[0.34] to-amber-500/[0.12]",
-    border: "border-amber-500/70",
-    glow: "shadow-[0_20px_54px_-14px_rgba(245,158,11,0.58)]",
+    surface: "color-mix(in oklab, #100c06 78%, #f59e0b)",
+    wash: "bg-gradient-to-b from-white/[0.05] to-transparent",
+    border: "border-amber-500/55",
+    glow: "shadow-[0_20px_54px_-18px_rgba(245,158,11,0.5)]",
     ctaBg: "bg-gradient-to-b from-amber-500 to-amber-600",
     ctaGlow: "shadow-lg shadow-amber-500/45 hover:shadow-xl hover:shadow-amber-500/55",
     check: "text-amber-400",
   },
   diamond: {
-    wash: "bg-gradient-to-b from-sky-400/[0.32] via-sky-500/[0.16] to-indigo-400/[0.09]",
-    border: "border-sky-400/65",
-    glow: "shadow-[0_20px_54px_-14px_rgba(56,189,248,0.55)]",
+    surface: "color-mix(in oklab, #0a0e14 78%, #38bdf8)",
+    wash: "bg-gradient-to-b from-white/[0.05] to-transparent",
+    border: "border-sky-400/50",
+    glow: "shadow-[0_20px_54px_-18px_rgba(56,189,248,0.48)]",
     ctaBg: "bg-gradient-to-b from-sky-500 to-blue-600",
     ctaGlow: "shadow-lg shadow-sky-500/45 hover:shadow-xl hover:shadow-sky-500/55",
     check: "text-sky-400",
@@ -196,9 +203,9 @@ export function PricingSection() {
                     setSelected(pkg.id);
                   }
                 }}
-                // solid surface via inline style — a bg-color CLASS gets merged
-                // away by twMerge against the gradient wash (both are bg-*).
-                style={{ backgroundColor: "var(--hs-surface)" }}
+                // per-tier DARK tinted surface, inline so twMerge can't drop it
+                // against the wash gradient (both would be bg-*).
+                style={{ backgroundColor: tier.surface }}
                 className={cn(
                   "group relative flex cursor-pointer flex-col rounded-2xl border p-5 shadow-xl shadow-black/30 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                   tier.wash,
