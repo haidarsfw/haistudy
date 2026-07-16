@@ -82,9 +82,6 @@ export function Footer() {
               </h3>
               <ul className="mt-3.5 space-y-2.5">
                 <li>
-                  <SupportEmail />
-                </li>
-                <li>
                   <a
                     href={WA_HELP}
                     target="_blank"
@@ -93,6 +90,9 @@ export function Footer() {
                   >
                     Chat WhatsApp
                   </a>
+                </li>
+                <li>
+                  <SupportEmail />
                 </li>
               </ul>
             </div>
