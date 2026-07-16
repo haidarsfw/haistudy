@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
-import { FAQ } from "@/data/landing/faq";
+import { FAQ, type FaqItem } from "@/data/landing/faq";
 
 // Same support entry as the header (dark-only landing, WhatsApp pre-sale line).
 const WA_HELP =
@@ -16,14 +16,24 @@ const WA_HELP =
  * open; the answer slides open on a fluid grid-rows transition (see `.faq-panel`
  * in globals.css). A `+` rotates 45° into an `×`. Fully keyboard-operable (real
  * <button>, aria-expanded/controls).
+ *
+ * Defaults to the landing FAQ + its WhatsApp nudge. Pass `items` to reuse the
+ * accordion elsewhere (e.g. /refund) and `nudge` to swap or drop the footer CTA
+ * (`nudge={null}` renders none).
  */
-export function Faq() {
+export function Faq({
+  items = FAQ,
+  nudge,
+}: {
+  items?: FaqItem[];
+  nudge?: React.ReactNode;
+}) {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="space-y-3">
-        {FAQ.map((item, i) => {
+        {items.map((item, i) => {
           const isOpen = open === i;
           return (
             <ScrollReveal key={item.q} delay={i * 0.04}>
@@ -62,17 +72,21 @@ export function Faq() {
       </div>
 
       {/* Soft support nudge — top-landing-FAQ pattern; routes to the same WA. */}
-      <p className="mt-8 text-center text-sm text-muted-foreground">
-        Masih ada yang mau ditanyain?{" "}
-        <a
-          href={WA_HELP}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          Chat admin
-        </a>
-      </p>
+      {nudge === undefined ? (
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Masih ada yang mau ditanyain?{" "}
+          <a
+            href={WA_HELP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Chat admin
+          </a>
+        </p>
+      ) : (
+        nudge
+      )}
     </div>
   );
 }
