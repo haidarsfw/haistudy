@@ -1426,13 +1426,13 @@ html.tts-bar-open .tts-shift-target {
   .landing-root .faq-panel { transition: none; }
 }
 
-/* Landing footer — solid dark panel, deeper than the page background so it
-   reads as a distinct band, with a crisp neutral top hairline. No gradient
-   (looked cheap). Real class so Lightning keeps it. */
+/* Landing footer — solid panel only a touch deeper than the page background so
+   it settles in without a harsh seam (no gradient). Soft top hairline. Real
+   class so Lightning keeps it. */
 .landing-root .landing-footer {
   position: relative;
-  background: color-mix(in oklab, var(--background) 80%, #000);
-  border-top: 1px solid color-mix(in oklab, var(--border) 65%, transparent);
+  background: color-mix(in oklab, var(--background) 91%, #000);
+  border-top: 1px solid color-mix(in oklab, var(--border) 35%, transparent);
 }
 
 /* Music title marquee — scrolls horizontally, slowly, only when the title
