@@ -21,7 +21,7 @@ const linkCls =
  */
 export function Footer() {
   return (
-    <footer className="relative border-t border-border/60 bg-card px-4 py-10 sm:py-12">
+    <footer className="landing-footer relative px-4 py-12 sm:py-14">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-8">
           {/* brand lockup */}
