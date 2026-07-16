@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import katex from "katex";
 import "katex/dist/katex.min.css";
+import { EOQ_HTML } from "@/components/landing/eoq-html";
 import {
   Home,
   BookOpen,
@@ -59,11 +59,6 @@ import { DemoCursor } from "@/components/landing/demo-cursor";
 
 const SPEED = 0.72;
 const AI_SLOW = 1.35;
-
-// Pre-rendered so any equation in the tour shows clean math, never raw LaTeX.
-const EOQ_HTML = katex.renderToString("EOQ = \\sqrt{\\tfrac{2DS}{H}}", {
-  throwOnError: false,
-});
 
 type Surface = "dashboard" | "subjects" | "subject" | "jadwal" | "statistik" | "catatan" | "library";
 type Panel = null | "voice" | "chat" | "ai";
