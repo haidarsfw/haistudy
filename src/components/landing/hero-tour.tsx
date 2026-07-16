@@ -153,9 +153,9 @@ function DashboardSurface({ mobile }: { mobile?: boolean }) {
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] text-muted-foreground">Senin, 22 Juni 2026</p>
-            <h3 className="font-display mt-0.5 text-base font-extrabold sm:text-lg">
+            <div className="font-display mt-0.5 text-base font-extrabold sm:text-lg">
               Selamat pagi, Haidar!
-            </h3>
+            </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">Lebih dari setengah jalan, keren!</p>
           </div>
           <Ring percent={78} size={mobile ? 44 : 50} stroke={2.5} />
@@ -248,7 +248,7 @@ function SubjectsSurface({
     <div className={mobile ? "p-3" : "p-4"}>
       <div className="mb-3 flex items-center gap-2">
         <BookOpen className="h-4 w-4 text-primary" />
-        <h3 className="font-display text-sm font-bold">Mata Kuliah</h3>
+        <div className="font-display text-sm font-bold">Mata Kuliah</div>
       </div>
       <div className={`grid gap-3 ${mobile ? "grid-cols-1" : "grid-cols-2"}`}>
         {SUBJECTS.map((s) => {
@@ -378,7 +378,7 @@ function JadwalSurface({ mobile }: { mobile?: boolean }) {
     <div className={mobile ? "p-3" : "p-4"}>
       <div className="mb-3 flex items-center gap-2">
         <Calendar className="h-4 w-4 text-primary" />
-        <h3 className="font-display text-sm font-bold">Jadwal Ujian</h3>
+        <div className="font-display text-sm font-bold">Jadwal Ujian</div>
       </div>
       <div className="mb-3 rounded-xl border border-primary/25 bg-primary/[0.05] p-4 text-center">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Ujian Berikutnya</p>
@@ -419,7 +419,7 @@ function StatistikSurface({ mobile }: { mobile?: boolean }) {
     <div className={mobile ? "p-3" : "p-4"}>
       <div className="mb-3 flex items-center gap-2">
         <BarChart3 className="h-4 w-4 text-primary" />
-        <h3 className="font-display text-sm font-bold">Statistik Belajar</h3>
+        <div className="font-display text-sm font-bold">Statistik Belajar</div>
       </div>
       <div className={`mb-3 grid gap-2.5 ${mobile ? "grid-cols-2" : "grid-cols-4"}`}>
         {summary.map((s) => (
@@ -479,7 +479,7 @@ function CatatanSurface({ mobile }: { mobile?: boolean }) {
     <div className={mobile ? "p-3" : "p-4"}>
       <div className="mb-3 flex items-center gap-2">
         <StickyNote className="h-4 w-4 text-amber-500" />
-        <h3 className="font-display text-sm font-bold">Catatan</h3>
+        <div className="font-display text-sm font-bold">Catatan</div>
       </div>
       <div className="space-y-2">
         {notes.slice(0, mobile ? 2 : 3).map((n) => (
@@ -515,7 +515,7 @@ function LibrarySurface({ mobile }: { mobile?: boolean }) {
     <div className={mobile ? "p-3" : "p-4"}>
       <div className="mb-3 flex items-center gap-2">
         <Library className="h-4 w-4 text-primary" />
-        <h3 className="font-display text-sm font-bold">Library</h3>
+        <div className="font-display text-sm font-bold">Library</div>
       </div>
       <div className="mb-2 flex items-center gap-2">
         <Bookmark className="h-3.5 w-3.5 text-muted-foreground" />

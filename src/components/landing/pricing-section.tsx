@@ -281,7 +281,7 @@ export function PricingSection() {
                           e.stopPropagation();
                           setDialogOpen(true);
                         }}
-                        className="inline-flex items-center text-[12px] font-semibold text-foreground/70 underline-offset-2 transition-colors hover:text-foreground hover:underline"
+                        className="-my-1.5 inline-flex min-h-[32px] items-center py-1.5 text-[12px] font-semibold text-foreground/70 underline-offset-2 transition-colors hover:text-foreground hover:underline"
                       >
                         {t("pricing.more_all")}
                       </button>

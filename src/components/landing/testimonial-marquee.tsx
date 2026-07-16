@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 function Stars() {
   return (
-    <div className="flex gap-0.5" aria-label={`${TESTIMONIAL_RATING.value} dari 5`}>
+    <div className="flex gap-0.5" role="img" aria-label={`${TESTIMONIAL_RATING.value} dari 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Star key={i} className="h-3.5 w-3.5 fill-[#f5b301] text-[#f5b301]" aria-hidden="true" />
       ))}

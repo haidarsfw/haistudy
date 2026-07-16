@@ -1605,6 +1605,9 @@ html.tts-bar-open .tts-shift-target {
   --border: #24322c;
   --input: #24322c;
   --ring: #34d399;
+  /* Dark needs a lighter red: the base #dc2626 only reaches 3.5:1 on --card,
+     which fails AA for anything under 18.66px bold (countdowns, logout). */
+  --destructive: #f87171;
   --section-bg: #0b120f;
   --hs-glow: 0.28;
   --hs-wash1: 15%;
