@@ -1582,40 +1582,9 @@ html.tts-bar-open .tts-shift-target {
   .hs-marquee, .hs-marquee-rev, .hs-cta-shine { animation: none; }
 }
 
-/* System dark = default, but ONLY for .theme-system (no manual choice).
-   Class-based (not attribute) because the CSS pipeline mangles :not([attr]). */
-@media (prefers-color-scheme: dark) {
-  .landing-root.theme-system {
-    color-scheme: dark;
-    --background: #0e1613;
-    --foreground: #e8efeb;
-    --card: #131d19;
-    --card-foreground: #e8efeb;
-    --popover: #131d19;
-    --popover-foreground: #e8efeb;
-    --primary: #10b981;
-    --primary-foreground: #04130d;
-    --secondary: #1c2823;
-    --secondary-foreground: #e8efeb;
-    --muted: #1c2823;
-    --muted-foreground: #94a29b;
-    --accent: #16241e;
-    --accent-foreground: #d7f0e5;
-    --border: #24322c;
-    --input: #24322c;
-    --ring: #34d399;
-    --section-bg: #0b120f;
-    --hs-glow: 0.28;
-    --hs-wash1: 15%;
-    --hs-wash2: 13%;
-    --binus-text: #ffffff;
-    --hs-card-shadow: 0 1px 2px rgb(0 0 0 / 0.25), 0 10px 30px -10px rgb(0 0 0 / 0.5);
-  }
-}
-
-/* Manual dark override (header toggle adds .theme-dark). .theme-light needs no
-   block — the .landing-root base is already light and the media rule above only
-   targets .theme-system. */
+/* Landing is dark-only: LandingShell always pins `.theme-dark`, so the token
+   values below are what render. (The old `.theme-system` media block and the
+   `.theme-light` override were inert and have been removed.) */
 .landing-root.theme-dark {
   color-scheme: dark;
   --background: #0e1613;
@@ -1667,12 +1636,8 @@ html.tts-bar-open .tts-shift-target {
 .campus-logo {
   opacity: 1;
 }
-/* The BINUS wordmark colour comes from --binus-text (set per theme); only that
-   text recolours, the emblem keeps its colours. Light mode gets a hair of text
-   shadow so copy stays crisp over the ambient. */
-.landing-root.theme-light {
-  text-shadow: 0 1px 1.5px rgb(16 26 21 / 0.06);
-}
+/* The BINUS wordmark colour comes from --binus-text; only that text recolours,
+   the emblem keeps its colours. */
 
 /* TTS equalizer bars */
 @keyframes hs-eq {
