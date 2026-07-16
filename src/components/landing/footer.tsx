@@ -57,8 +57,8 @@ export function Footer() {
             </div>
           </div>
 
-          {/* two lean columns */}
-          <div className="grid grid-cols-2 gap-10 sm:gap-16">
+          {/* three lean columns */}
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-10 lg:gap-16">
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
                 Tautan
@@ -89,7 +89,7 @@ export function Footer() {
 
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
-                Bantuan &amp; Legal
+                Bantuan
               </h3>
               <ul className="mt-3.5 space-y-2.5">
                 <li>
@@ -105,6 +105,14 @@ export function Footer() {
                 <li>
                   <SupportEmail />
                 </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
+                Legal
+              </h3>
+              <ul className="mt-3.5 space-y-2.5">
                 <li>
                   <Link href="/privacy" className={linkCls}>
                     Privacy Policy
