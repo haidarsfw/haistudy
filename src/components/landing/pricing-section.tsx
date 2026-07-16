@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Crown, Gem } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Crown,
+  Gem,
+  GraduationCap,
+  Share2,
+  type LucideIcon,
+} from "lucide-react";
 import { PACKAGES, formatIDR } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
 import { Badge } from "@/components/ui/badge";
@@ -96,17 +104,23 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
   },
 ];
 
-// Per-tier look — FULLY NEUTRAL (monochrome). No colour on the cards at all,
-// not even on VIP: every card is the same dark surface + neutral border + neutral
-// checks. Tiers are told apart by price + features + the "Paling Populer" badge
-// and the (neutral) selection ring, never by hue. The buy CTA is colourless too.
+// Per-tier look — neutral cards, one deliberate accent: each card shows its rank
+// LOGO in a chip. Share/Normal chips are neutral (dark, muted icon); the premium
+// tiers stand apart with their rank colour — VIP gold, Diamond sky. Everything
+// else (surface, border, checks, selection ring, CTA) stays neutral.
 const NEUTRAL = "#131a16";
-const TIER: Record<string, { surface: string; border: string; check: string }> = {
-  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
-  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
-  vip: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
-  diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
+const TIER: Record<
+  string,
+  { surface: string; border: string; check: string; tile: string }
+> = {
+  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-white/[0.06] text-foreground/70" },
+  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-white/[0.06] text-foreground/70" },
+  vip: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-amber-500 text-white" },
+  diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-sky-600 text-white" },
 };
+
+// Rank logo (matches PackageDef.icon), rendered inside the chip.
+const ICON: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
 function TierBadge({ tier }: { tier: "vip" | "diamond" }) {
@@ -148,6 +162,7 @@ export function PricingSection() {
             const popular = !!pkg.highlight;
             const tier = TIER[pkg.id];
             const feats = CARD_FEATURES[pkg.id];
+            const Ico = ICON[pkg.icon];
 
             return (
               <div
@@ -174,13 +189,21 @@ export function PricingSection() {
                     : "hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl"
                 )}
               >
-                {/* name + quiet populer badge (neutral, recommended tier only) */}
-                <div className="flex min-h-6 items-center justify-between gap-2">
+                {/* rank chip + name + quiet populer badge */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm shadow-black/30",
+                      tier.tile
+                    )}
+                  >
+                    <Ico className="h-4 w-4" strokeWidth={2.25} />
+                  </div>
                   <h3 className="font-display text-base font-bold text-foreground">
                     {t(pkg.nameKey)}
                   </h3>
                   {popular && (
-                    <span className="shrink-0 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-semibold text-background">
+                    <span className="ml-auto shrink-0 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-semibold text-background">
                       {t("pricing.popular")}
                     </span>
                   )}
