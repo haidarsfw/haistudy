@@ -1412,6 +1412,20 @@ html.tts-bar-open .tts-shift-target {
 .hs-float { animation: hs-float 3.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .hs-float { animation: none; } }
 
+/* FAQ accordion — fluid height via the grid-rows 0fr→1fr trick (pure CSS, no
+   JS measuring). A real class (not a Tailwind arbitrary utility) so Lightning
+   CSS can't strip the transition. Reduced-motion snaps instead of sliding. */
+.landing-root .faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.landing-root .faq-panel[data-open="true"] { grid-template-rows: 1fr; }
+.landing-root .faq-panel > div { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .faq-panel { transition: none; }
+}
+
 /* Music title marquee — scrolls horizontally, slowly, only when the title
    overflows its container (otherwise the static text is shown). */
 @keyframes hs-marquee-scroll {
