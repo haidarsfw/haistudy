@@ -84,6 +84,16 @@ export function Footer() {
                 <li>
                   <SupportEmail />
                 </li>
+                <li>
+                  <a
+                    href={WA_HELP}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={linkCls}
+                  >
+                    Chat WhatsApp
+                  </a>
+                </li>
               </ul>
             </div>
 
