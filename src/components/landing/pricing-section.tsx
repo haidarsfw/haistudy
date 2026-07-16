@@ -2,15 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Check,
-  Crown,
-  Gem,
-  GraduationCap,
-  Share2,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Check, Crown, Gem, type LucideIcon } from "lucide-react";
 import { PACKAGES, formatIDR } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
 import { Badge } from "@/components/ui/badge";
@@ -104,23 +96,23 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
   },
 ];
 
-// Per-tier look — neutral cards, one deliberate accent: each card shows its rank
-// LOGO in a chip. Share/Normal chips are neutral (dark, muted icon); the premium
-// tiers stand apart with their rank colour — VIP gold, Diamond sky. Everything
-// else (surface, border, checks, selection ring, CTA) stays neutral.
+// Per-tier look — neutral cards throughout. The only differentiator: the two
+// premium tiers show their rank logo inline next to the name, in the rank colour
+// (VIP gold, Diamond sky) — NO chip/background. Share/Normal show no logo.
+// Surface, border, checks, selection ring, and CTA are all neutral.
 const NEUTRAL = "#131a16";
 const TIER: Record<
   string,
-  { surface: string; border: string; check: string; tile: string }
+  { surface: string; border: string; check: string; accent?: string }
 > = {
-  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-white/[0.06] text-foreground/70" },
-  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-white/[0.06] text-foreground/70" },
-  vip: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-amber-500 text-white" },
-  diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", tile: "bg-sky-600 text-white" },
+  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
+  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
+  vip: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", accent: "text-amber-400" },
+  diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", accent: "text-sky-400" },
 };
 
-// Rank logo (matches PackageDef.icon), rendered inside the chip.
-const ICON: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
+// Rank logo for the premium tiers (keyed by PackageDef.icon).
+const ICON: Record<string, LucideIcon> = { Crown, Gem };
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
 function TierBadge({ tier }: { tier: "vip" | "diamond" }) {
@@ -189,16 +181,14 @@ export function PricingSection() {
                     : "hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl"
                 )}
               >
-                {/* rank chip + name + quiet populer badge */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm shadow-black/30",
-                      tier.tile
-                    )}
-                  >
-                    <Ico className="h-4 w-4" strokeWidth={2.25} />
-                  </div>
+                {/* rank logo (premium tiers only, no chip) + name + populer badge */}
+                <div className="flex min-h-6 items-center gap-2">
+                  {tier.accent && Ico && (
+                    <Ico
+                      className={cn("h-[18px] w-[18px] shrink-0", tier.accent)}
+                      strokeWidth={2.25}
+                    />
+                  )}
                   <h3 className="font-display text-base font-bold text-foreground">
                     {t(pkg.nameKey)}
                   </h3>
