@@ -96,21 +96,28 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
 
     if (reduce) return () => io?.disconnect();
 
-    const lenis = new Lenis({
-      lerp: 0.16,
-      wheelMultiplier: 1,
-      smoothWheel: true,
-      touchMultiplier: 1.5,
-    });
+    // Smooth wheel-scroll is a DESKTOP nicety. On touch devices Lenis fights the
+    // native momentum scroller and makes the whole page feel heavy / laggy /
+    // unresponsive, so we skip it there and let the browser scroll natively.
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    let lenis: Lenis | null = null;
     let raf = 0;
-    const loop = (time: number) => {
-      lenis.raf(time);
+    if (!coarse) {
+      lenis = new Lenis({
+        lerp: 0.16,
+        wheelMultiplier: 1,
+        smoothWheel: true,
+        touchMultiplier: 1.5,
+      });
+      const loop = (time: number) => {
+        lenis!.raf(time);
+        raf = requestAnimationFrame(loop);
+      };
       raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
+    }
 
-    // In-page anchor jumps: a calm, deliberate glide (not too fast), and rapid
-    // back-and-forth clicks cancel + restart smoothly.
+    // In-page anchor jumps: glide with Lenis on desktop, native smooth-scroll on
+    // touch. Either way land the section just below the header.
     const onClick = (ev: MouseEvent) => {
       const a = (ev.target as HTMLElement).closest?.(
         'a[href^="#"]'
@@ -119,37 +126,40 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
       const id = a.getAttribute("href");
       if (!id || id === "#") return;
       const target = document.querySelector(id);
-      if (target) {
-        ev.preventDefault();
-        const el = target as HTMLElement;
-        // Anchor on the section's HEADING (not the padded section top or a padless
-        // wrapper like #harga), and land it just below the header — so the content
-        // is in view straight away instead of the heading pinned to the top edge.
-        const heading = el.querySelector("h1, h2, h3") as HTMLElement | null;
-        const anchor = (heading ?? el) as HTMLElement;
-        // offsetTop is layout-based, so it IGNORES the data-reveal translate that
-        // shifts a heading's rect while it is still off-screen — that was the cause
-        // of the inconsistent landing between sections. Sum it up the offsetParent
-        // chain to get the true document position.
-        let y = 0;
-        let node: HTMLElement | null = anchor;
-        while (node) {
-          y += node.offsetTop;
-          node = node.offsetParent as HTMLElement | null;
-        }
-        const dest = y - 120;
+      if (!target) return;
+      ev.preventDefault();
+      const el = target as HTMLElement;
+      // Anchor on the section's HEADING (not the padded section top or a padless
+      // wrapper like #harga), and land it just below the header — so the content
+      // is in view straight away instead of the heading pinned to the top edge.
+      const heading = el.querySelector("h1, h2, h3") as HTMLElement | null;
+      const anchor = (heading ?? el) as HTMLElement;
+      // offsetTop is layout-based, so it IGNORES the data-reveal translate that
+      // shifts a heading's rect while it is still off-screen — that was the cause
+      // of the inconsistent landing between sections. Sum it up the offsetParent
+      // chain to get the true document position.
+      let y = 0;
+      let node: HTMLElement | null = anchor;
+      while (node) {
+        y += node.offsetTop;
+        node = node.offsetParent as HTMLElement | null;
+      }
+      const dest = y - 120;
+      if (lenis) {
         lenis.scrollTo(dest, {
           duration: 1.1,
           easing: (t) => 1 - Math.pow(1 - t, 4), // ease-out quart
         });
+      } else {
+        window.scrollTo({ top: dest, behavior: "smooth" });
       }
     };
     document.addEventListener("click", onClick);
 
     return () => {
       document.removeEventListener("click", onClick);
-      cancelAnimationFrame(raf);
-      lenis.destroy();
+      if (raf) cancelAnimationFrame(raf);
+      lenis?.destroy();
       io?.disconnect();
       if (fallbackTimer) clearTimeout(fallbackTimer);
     };

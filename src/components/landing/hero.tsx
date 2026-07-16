@@ -20,21 +20,21 @@ export function Hero() {
           Static + subtle (masked), not animated aurora. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute left-1/2 top-[-16%] h-[560px] w-[min(950px,94vw)] -translate-x-1/2 rounded-full blur-[120px]"
+          className="absolute left-1/2 top-[-16%] h-[560px] w-[min(950px,94vw)] -translate-x-1/2 rounded-full blur-[64px] sm:blur-[120px]"
           style={{
             background: "radial-gradient(circle, var(--brand-1), transparent 66%)",
             opacity: "calc(var(--hs-glow) * 2.6)",
           }}
         />
         <div
-          className="absolute left-[2%] top-[18%] h-[340px] w-[340px] rounded-full blur-[90px]"
+          className="absolute left-[2%] top-[18%] h-[340px] w-[340px] rounded-full blur-[52px] sm:blur-[90px]"
           style={{
             background: "radial-gradient(circle, var(--brand-2), transparent 68%)",
             opacity: "calc(var(--hs-glow) * 1.7)",
           }}
         />
         <div
-          className="absolute right-[2%] top-[24%] h-[380px] w-[380px] rounded-full blur-[90px]"
+          className="absolute right-[2%] top-[24%] h-[380px] w-[380px] rounded-full blur-[52px] sm:blur-[90px]"
           style={{
             background: "radial-gradient(circle, var(--brand-1), transparent 68%)",
             opacity: "calc(var(--hs-glow) * 1.5)",

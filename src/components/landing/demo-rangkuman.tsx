@@ -147,6 +147,7 @@ export function DemoRangkumanAI() {
   const [aiMsgs, setAiMsgs] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   // Mobile drops the collapsible table so the reading pane isn't so crammed.
   const [isMobile, setIsMobile] = useState(false);
+  const [active, setActive] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 639px)");
@@ -154,6 +155,18 @@ export function DemoRangkumanAI() {
     on();
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
+  }, []);
+
+  // Only self-play while on screen — scrolled away, the loop below tears down.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setActive(e.isIntersecting),
+      { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   // Reading pane follows the site theme; changing the site theme re-syncs it.
@@ -185,6 +198,7 @@ export function DemoRangkumanAI() {
       ]);
       return;
     }
+    if (!active) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -358,28 +372,14 @@ export function DemoRangkumanAI() {
       await typeAi(a2, alive);
     }
 
-    let started = false;
-    const startAll = () => {
-      if (started) return;
-      started = true;
-      rangkumanLoop();
-    };
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) startAll();
-      },
-      { threshold: 0.2 }
-    );
-    if (containerRef.current) io.observe(containerRef.current);
-    timers.push(setTimeout(startAll, 1600));
+    rangkumanLoop();
 
     return () => {
       cancelled = true;
-      io.disconnect();
       timers.forEach(clearTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, isMobile]);
+  }, [locale, isMobile, active]);
 
   const rc = READING[reading];
   const cycleReading = () =>

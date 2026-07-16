@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, X, Globe, Sun, Moon } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -124,12 +124,54 @@ export function Header() {
   // scroll (not a boolean toggle), so it stays seamless whether you scroll up or
   // down — no fixed-duration "snap". Every property is interpolated from p, and
   // the glass (blur) fades in with it, so it never stutters against a size toggle.
-  const [p, setP] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const outerRef = useRef<HTMLElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const scrolledRef = useRef(false);
 
+  // The header MORPHS continuously with scroll. To keep it buttery (esp. on
+  // mobile) we write the interpolated styles straight to the DOM node each frame
+  // — NO React re-render per scroll frame — and only flip a tiny bit of state
+  // when the compact threshold is crossed (that drives the language / user-menu
+  // compaction). Previously setState-per-frame re-rendered the whole header.
   useEffect(() => {
+    // backdrop-filter blur repaints every scroll frame — fine on desktop GPUs,
+    // costly on mobile Safari. Touch devices get a more opaque solid bar instead.
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const apply = (p: number) => {
+      const bar = barRef.current;
+      const outer = outerRef.current;
+      if (!bar || !outer) return;
+      const glass =
+        coarse || p <= 0.01
+          ? "none"
+          : `blur(${p * 12}px) saturate(${100 + p * 50}%)`;
+      const bgPct = Math.round(p * (coarse ? 92 : 78));
+      outer.style.paddingLeft = `${p * 12}px`;
+      outer.style.paddingRight = `${p * 12}px`;
+      bar.style.maxWidth = `${80 - p * 20}rem`;
+      bar.style.height = `${80 - p * 16}px`;
+      bar.style.marginTop = `${p * 16}px`;
+      bar.style.paddingLeft = `${28 - p * 6}px`;
+      bar.style.paddingRight = `${28 - p * 6}px`;
+      bar.style.borderRadius = `${p * 999}px`;
+      bar.style.backgroundColor = `color-mix(in oklab, var(--background) ${bgPct}%, transparent)`;
+      bar.style.backdropFilter = glass;
+      bar.style.setProperty("-webkit-backdrop-filter", glass);
+      bar.style.borderColor = `color-mix(in oklab, var(--border) ${Math.round(p * 100)}%, transparent)`;
+      bar.style.boxShadow = `0 12px 32px -14px rgba(0,0,0,${p * 0.22})`;
+    };
     let raf = 0;
-    const update = () => setP(Math.min(1, Math.max(0, window.scrollY / 72)));
+    const update = () => {
+      const p = Math.min(1, Math.max(0, window.scrollY / 72));
+      apply(p);
+      const sc = p > 0.5;
+      if (sc !== scrolledRef.current) {
+        scrolledRef.current = sc;
+        setScrolled(sc);
+      }
+    };
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(update);
@@ -141,28 +183,26 @@ export function Header() {
       cancelAnimationFrame(raf);
     };
   }, []);
-  const scrolled = p > 0.5;
-  const glass = p > 0.01 ? `blur(${p * 12}px) saturate(${100 + p * 50}%)` : "none";
 
   return (
     <header
+      ref={outerRef}
       className="fixed inset-x-0 top-0 z-50"
-      style={{ paddingLeft: `${p * 12}px`, paddingRight: `${p * 12}px` }}
+      style={{ paddingLeft: "0px", paddingRight: "0px" }}
     >
       <div
+        ref={barRef}
         className="relative mx-auto flex items-center gap-3 border border-solid"
         style={{
-          maxWidth: `${80 - p * 20}rem`,
-          height: `${80 - p * 16}px`,
-          marginTop: `${p * 16}px`,
-          paddingLeft: `${28 - p * 6}px`,
-          paddingRight: `${28 - p * 6}px`,
-          borderRadius: `${p * 999}px`,
-          backgroundColor: `color-mix(in oklab, var(--background) ${Math.round(p * 78)}%, transparent)`,
-          backdropFilter: glass,
-          WebkitBackdropFilter: glass,
-          borderColor: `color-mix(in oklab, var(--border) ${Math.round(p * 100)}%, transparent)`,
-          boxShadow: `0 12px 32px -14px rgba(0,0,0,${p * 0.22})`,
+          maxWidth: "80rem",
+          height: "80px",
+          marginTop: "0px",
+          paddingLeft: "28px",
+          paddingRight: "28px",
+          borderRadius: "0px",
+          backgroundColor: "transparent",
+          borderColor: "transparent",
+          boxShadow: "none",
           willChange: "max-width, height",
         }}
       >

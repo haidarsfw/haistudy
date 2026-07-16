@@ -127,6 +127,7 @@ export function DemoLatihan() {
   // On mobile the flashcard split is dropped; it plays as a 3rd fade step
   // (esai → pg → flashcards → loop) inside the same window instead.
   const [isMobile, setIsMobile] = useState(false);
+  const [active, setActive] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 639px)");
@@ -134,6 +135,18 @@ export function DemoLatihan() {
     on();
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
+  }, []);
+
+  // Only self-play while on screen — both loops below tear down when scrolled away.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setActive(e.isIntersecting),
+      { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   const answerWords = t("landing.how.latihan.esai_answer").split(" ");
@@ -160,6 +173,7 @@ export function DemoLatihan() {
       setGraded(true);
       return;
     }
+    if (!active) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -277,34 +291,21 @@ export function DemoLatihan() {
       }
     }
 
-    let started = false;
-    const start = () => {
-      if (started) return;
-      started = true;
-      run();
-    };
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) start();
-      },
-      { threshold: 0.2 }
-    );
-    if (containerRef.current) io.observe(containerRef.current);
-    timers.push(setTimeout(start, 1600));
+    run();
 
     return () => {
       cancelled = true;
-      io.disconnect();
       timers.forEach(clearTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, isMobile]);
+  }, [locale, isMobile, active]);
 
   // ── flashcard side pane: independent, calm self-flip (desktop only; on
   //    mobile the flashcards play inside the main loop as a 3rd step) ──
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (isMobile) return;
+    if (!active) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -336,7 +337,7 @@ export function DemoLatihan() {
       timers.forEach(clearTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, isMobile]);
+  }, [locale, isMobile, active]);
 
   const typing = typed > 0 && typed < answerWords.length;
   const answerText = answerWords.slice(0, typed).join(" ");

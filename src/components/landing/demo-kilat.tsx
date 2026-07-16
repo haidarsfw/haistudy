@@ -217,6 +217,7 @@ export function DemoKilat() {
     animate: false,
   });
   const [lines, setLines] = useState<{ x1: number; y1: number; x2: number; y2: number }[]>([]);
+  const [active, setActive] = useState(false);
 
   const scenarioOpts = [
     t("landing.how.kilat.c2_opt1"),
@@ -233,6 +234,18 @@ export function DemoKilat() {
     { text: t("landing.how.kilat.c5_s2"), answer: false },
   ];
 
+  // Only self-play while on screen — the loop tears down when scrolled away.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setActive(e.isIntersecting),
+      { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (mq.matches) {
@@ -244,6 +257,7 @@ export function DemoKilat() {
       setTfIdx(2);
       return;
     }
+    if (!active) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -412,28 +426,14 @@ export function DemoKilat() {
       }
     }
 
-    let started = false;
-    const start = () => {
-      if (started) return;
-      started = true;
-      run();
-    };
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) start();
-      },
-      { threshold: 0.2 }
-    );
-    if (containerRef.current) io.observe(containerRef.current);
-    timers.push(setTimeout(start, 1600));
+    run();
 
     return () => {
       cancelled = true;
-      io.disconnect();
       timers.forEach(clearTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale]);
+  }, [locale, active]);
 
   // Connector lines for matched pairs, measured relative to the match grid so
   // the card's translate never offsets them.

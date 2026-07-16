@@ -699,6 +699,7 @@ export function HeroTour() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [cursor, setCursor] = useState({ x: 0, y: 0, clicking: false, hidden: true });
   const [isMobile, setIsMobile] = useState(false);
+  const [active, setActive] = useState(false);
 
   const [chatMsgs, setChatMsgs] = useState<Msg[]>([]);
   const [aiMsgs, setAiMsgs] = useState<Msg[]>([]);
@@ -749,6 +750,19 @@ export function HeroTour() {
     return () => mq.removeEventListener("change", on);
   }, []);
 
+  // Only run the self-playing tour while it's actually on screen. Scrolled away →
+  // active flips false → the animation effect below tears down (no forever loop).
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setActive(e.isIntersecting),
+      { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
@@ -756,6 +770,7 @@ export function HeroTour() {
       setCursor((c) => ({ ...c, hidden: true }));
       return;
     }
+    if (!active) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -1033,29 +1048,15 @@ export function HeroTour() {
       }
     }
 
-    let started = false;
-    const start = () => {
-      if (started) return;
-      started = true;
-      if (isMobile) runMobile();
-      else runDesktop();
-    };
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) start();
-      },
-      { threshold: 0.2 }
-    );
-    if (stageRef.current) io.observe(stageRef.current);
-    timers.push(setTimeout(start, 1600));
+    if (isMobile) runMobile();
+    else runDesktop();
 
     return () => {
       cancelled = true;
-      io.disconnect();
       timers.forEach(clearTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, isMobile]);
+  }, [locale, isMobile, active]);
 
   const renderSurface = (mobile: boolean) => {
     switch (surface) {
@@ -1161,7 +1162,7 @@ export function HeroTour() {
 
             {/* bottom dock */}
             <div className="relative z-20 shrink-0 px-3 pb-2 pt-4">
-              <div className="grid grid-cols-5 items-center rounded-2xl border border-border bg-card/90 py-1.5 backdrop-blur">
+              <div className="grid grid-cols-5 items-center rounded-2xl border border-border bg-card/95 py-1.5">
                 {[
                   { key: "home", label: "Home", icon: Home, ref: dockRefs.home },
                   { key: "subjects", label: "Matkul", icon: BookOpen, ref: dockRefs.subjects },
