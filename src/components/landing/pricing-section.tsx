@@ -111,7 +111,7 @@ const TIER: Record<
   // across the whole card, and the borders are boldly saturated — colour on a
   // dark surface, not a pale sliver at the top.
   share: {
-    surface: "color-mix(in oklab, #0b100e 87%, #2dd4bf)",
+    surface: "color-mix(in oklab, #0b100e 85%, #2dd4bf)",
     wash: "",
     border: "border-teal-500/35",
     glow: "shadow-[0_16px_44px_-26px_rgba(20,184,166,0.22)]",
@@ -120,7 +120,7 @@ const TIER: Record<
     check: "text-teal-400",
   },
   normal: {
-    surface: "color-mix(in oklab, #0b100e 85%, #10b981)",
+    surface: "color-mix(in oklab, #0b100e 83%, #10b981)",
     wash: "",
     border: "border-emerald-500/42",
     glow: "shadow-[0_16px_44px_-24px_rgba(16,185,129,0.26)]",
@@ -130,7 +130,7 @@ const TIER: Record<
   },
   // VIP gold + Diamond icy — dark, a step richer so the bright CTA sits on tone.
   vip: {
-    surface: "color-mix(in oklab, #0d0a05 84%, #f59e0b)",
+    surface: "color-mix(in oklab, #0d0a05 82%, #f59e0b)",
     wash: "",
     border: "border-amber-500/50",
     glow: "shadow-[0_18px_48px_-22px_rgba(245,158,11,0.30)]",
@@ -139,7 +139,7 @@ const TIER: Record<
     check: "text-amber-400",
   },
   diamond: {
-    surface: "color-mix(in oklab, #080b10 84%, #38bdf8)",
+    surface: "color-mix(in oklab, #080b10 82%, #38bdf8)",
     wash: "",
     border: "border-sky-400/45",
     glow: "shadow-[0_18px_48px_-22px_rgba(56,189,248,0.28)]",
