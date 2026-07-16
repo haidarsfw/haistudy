@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Crown, Gem, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Crown,
+  Gem,
+  GraduationCap,
+  Share2,
+  type LucideIcon,
+} from "lucide-react";
 import { PACKAGES, formatIDR } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
 import { Badge } from "@/components/ui/badge";
@@ -96,23 +104,23 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
   },
 ];
 
-// Per-tier look — neutral cards throughout. The only differentiator: the two
-// premium tiers show their rank logo inline next to the name, in the rank colour
-// (VIP gold, Diamond sky) — NO chip/background. Share/Normal show no logo.
-// Surface, border, checks, selection ring, and CTA are all neutral.
+// Per-tier look — neutral cards throughout. Every card shows its rank logo inline
+// next to the name (NO chip/background). The differentiator is the logo COLOUR:
+// Share/Normal muted-neutral, VIP gold, Diamond sky. Surface, border, checks,
+// selection ring, and CTA are all neutral.
 const NEUTRAL = "#131a16";
 const TIER: Record<
   string,
-  { surface: string; border: string; check: string; accent?: string }
+  { surface: string; border: string; check: string; accent: string }
 > = {
-  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
-  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70" },
+  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", accent: "text-foreground/55" },
+  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", accent: "text-foreground/55" },
   vip: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", accent: "text-amber-400" },
   diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-foreground/70", accent: "text-sky-400" },
 };
 
-// Rank logo for the premium tiers (keyed by PackageDef.icon).
-const ICON: Record<string, LucideIcon> = { Crown, Gem };
+// Rank logo (keyed by PackageDef.icon).
+const ICON: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
 function TierBadge({ tier }: { tier: "vip" | "diamond" }) {
