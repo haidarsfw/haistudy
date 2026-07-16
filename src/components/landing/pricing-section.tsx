@@ -102,37 +102,43 @@ const TIER: Record<
   string,
   { wash: string; border: string; glow: string; ctaBg: string; ctaGlow: string; check: string }
 > = {
+  // Share = cooler TEAL, understated (budget tier). Normal = brand EMERALD,
+  // fuller (the solid base). Distinct hues + intensity so they never twin.
+  // Washes carry a colour FLOOR (no fade to transparent) so the hue reads
+  // across the whole card, and the borders are boldly saturated — colour on a
+  // dark surface, not a pale sliver at the top.
   share: {
-    wash: "bg-gradient-to-b from-emerald-500/[0.10] via-emerald-500/[0.03] to-transparent",
-    border: "border-emerald-500/20",
-    glow: "shadow-[0_18px_50px_-24px_rgba(16,185,129,0.24)]",
-    ctaBg: "bg-gradient-to-b from-emerald-500 to-emerald-600",
-    ctaGlow: "shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/50",
-    check: "text-emerald-500/85",
+    wash: "bg-gradient-to-b from-teal-500/[0.13] to-teal-500/[0.05]",
+    border: "border-teal-500/40",
+    glow: "shadow-[0_18px_50px_-22px_rgba(20,184,166,0.32)]",
+    ctaBg: "bg-gradient-to-b from-teal-500 to-teal-600",
+    ctaGlow: "shadow-lg shadow-teal-500/40 hover:shadow-xl hover:shadow-teal-500/50",
+    check: "text-teal-400",
   },
   normal: {
-    wash: "bg-gradient-to-b from-emerald-500/[0.10] via-emerald-500/[0.03] to-transparent",
-    border: "border-emerald-500/20",
-    glow: "shadow-[0_18px_50px_-24px_rgba(16,185,129,0.24)]",
+    wash: "bg-gradient-to-b from-emerald-500/[0.22] to-emerald-500/[0.07]",
+    border: "border-emerald-500/55",
+    glow: "shadow-[0_18px_50px_-18px_rgba(16,185,129,0.42)]",
     ctaBg: "bg-gradient-to-b from-emerald-500 to-emerald-600",
     ctaGlow: "shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/50",
-    check: "text-emerald-500/85",
+    check: "text-emerald-400",
   },
+  // VIP gold + Diamond icy — richest, most saturated (were washed out).
   vip: {
-    wash: "bg-gradient-to-b from-amber-500/[0.18] via-amber-500/[0.06] to-transparent",
-    border: "border-amber-500/30",
-    glow: "shadow-[0_18px_50px_-18px_rgba(245,158,11,0.4)]",
+    wash: "bg-gradient-to-b from-amber-500/[0.34] to-amber-500/[0.12]",
+    border: "border-amber-500/70",
+    glow: "shadow-[0_20px_54px_-14px_rgba(245,158,11,0.58)]",
     ctaBg: "bg-gradient-to-b from-amber-500 to-amber-600",
-    ctaGlow: "shadow-lg shadow-amber-500/40 hover:shadow-xl hover:shadow-amber-500/50",
-    check: "text-amber-500",
+    ctaGlow: "shadow-lg shadow-amber-500/45 hover:shadow-xl hover:shadow-amber-500/55",
+    check: "text-amber-400",
   },
   diamond: {
-    wash: "bg-gradient-to-b from-sky-400/[0.16] via-indigo-400/[0.05] to-transparent",
-    border: "border-sky-400/30",
-    glow: "shadow-[0_18px_50px_-18px_rgba(56,189,248,0.38)]",
+    wash: "bg-gradient-to-b from-sky-400/[0.32] via-sky-500/[0.16] to-indigo-400/[0.09]",
+    border: "border-sky-400/65",
+    glow: "shadow-[0_20px_54px_-14px_rgba(56,189,248,0.55)]",
     ctaBg: "bg-gradient-to-b from-sky-500 to-blue-600",
-    ctaGlow: "shadow-lg shadow-sky-500/40 hover:shadow-xl hover:shadow-sky-500/50",
-    check: "text-sky-500",
+    ctaGlow: "shadow-lg shadow-sky-500/45 hover:shadow-xl hover:shadow-sky-500/55",
+    check: "text-sky-400",
   },
 };
 
