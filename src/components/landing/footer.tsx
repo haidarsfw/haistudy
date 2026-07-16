@@ -10,50 +10,20 @@ const WA_HELP =
 const IG = "https://instagram.com/haidarsfw";
 const LINKEDIN = "https://www.linkedin.com/in/haidarshofwan/";
 
-// Link columns. Section anchors for in-page nav, real routes for pages.
-// /refund is intentionally linked ahead of the page existing (built later).
-const COLS: {
-  title: string;
-  links: { label: string; href: string }[];
-}[] = [
-  {
-    title: "Produk",
-    links: [
-      { label: "Cara Kerja", href: "#cara-kerja" },
-      { label: "Fitur", href: "#fitur" },
-      { label: "Banding", href: "#banding" },
-      { label: "Harga", href: "#harga" },
-    ],
-  },
-  {
-    title: "Info",
-    links: [
-      { label: "Testimoni", href: "#testimoni" },
-      { label: "FAQ", href: "#faq" },
-      { label: "Preview Gratis", href: "/preview" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Pengembalian Dana", href: "/refund" },
-    ],
-  },
-];
+const linkCls =
+  "text-sm text-muted-foreground transition-colors hover:text-foreground";
 
 /**
- * Landing footer — brand lockup + tagline + socials, three link columns, a
- * dedicated Bantuan (contact) column, and a bottom bar with the BINUS
- * non-affiliation disclaimer + a clean copyright line. Dark-only landing;
- * tokens follow `.landing-root`.
+ * Landing footer — trimmed: brand lockup + socials on the left, two lean
+ * columns (Tautan + Bantuan & Legal) on the right, then a bottom bar with the
+ * (campus-agnostic) non-affiliation disclaimer + a clean copyright line.
+ * Dark-only landing; tokens follow `.landing-root`.
  */
 export function Footer() {
   return (
-    <footer className="relative border-t border-border/60 px-4 py-12 sm:py-16">
+    <footer className="relative border-t border-border/60 px-4 py-10 sm:py-12">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-12 lg:flex-row lg:justify-between lg:gap-8">
+        <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-8">
           {/* brand lockup */}
           <div className="max-w-xs">
             <a href="#beranda" aria-label="haistudy" className="inline-block">
@@ -87,41 +57,39 @@ export function Footer() {
             </div>
           </div>
 
-          {/* link + contact columns */}
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 sm:gap-10 lg:gap-16">
-            {COLS.map((col) => (
-              <div key={col.title}>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
-                  {col.title}
-                </h3>
-                <ul className="mt-3.5 space-y-2.5">
-                  {col.links.map((l) => (
-                    <li key={l.label}>
-                      {l.href.startsWith("/") ? (
-                        <Link
-                          href={l.href}
-                          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          {l.label}
-                        </Link>
-                      ) : (
-                        <a
-                          href={l.href}
-                          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          {l.label}
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            {/* Bantuan (contact) — WhatsApp + the not-yet-live support email */}
+          {/* two lean columns */}
+          <div className="grid grid-cols-2 gap-10 sm:gap-16">
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
-                Bantuan
+                Tautan
+              </h3>
+              <ul className="mt-3.5 space-y-2.5">
+                <li>
+                  <a href="#fitur" className={linkCls}>
+                    Fitur
+                  </a>
+                </li>
+                <li>
+                  <a href="#harga" className={linkCls}>
+                    Harga
+                  </a>
+                </li>
+                <li>
+                  <a href="#faq" className={linkCls}>
+                    FAQ
+                  </a>
+                </li>
+                <li>
+                  <Link href="/preview" className={linkCls}>
+                    Preview Gratis
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
+                Bantuan &amp; Legal
               </h3>
               <ul className="mt-3.5 space-y-2.5">
                 <li>
@@ -129,7 +97,7 @@ export function Footer() {
                     href={WA_HELP}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className={linkCls}
                   >
                     Chat WhatsApp
                   </a>
@@ -137,20 +105,36 @@ export function Footer() {
                 <li>
                   <SupportEmail />
                 </li>
+                <li>
+                  <Link href="/privacy" className={linkCls}>
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className={linkCls}>
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/refund" className={linkCls}>
+                    Pengembalian Dana
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
         </div>
 
         {/* fine print + bottom bar */}
-        <div className="mt-12 border-t border-border/50 pt-6">
+        <div className="mt-10 border-t border-border/50 pt-6">
           <p className="text-xs leading-relaxed text-muted-foreground/85">
             haistudy adalah platform belajar independen yang dibuat oleh
             mahasiswa. Platform ini tidak terafiliasi, berafiliasi, didukung,
-            atau disetujui oleh BINUS University. Seluruh materi kuliah, merek
-            dagang, dan hak cipta terkait adalah milik pemiliknya masing-masing.
+            atau disetujui oleh kampus, universitas, atau institusi mana pun.
+            Seluruh materi kuliah, merek dagang, dan hak cipta terkait adalah
+            milik pemiliknya masing-masing.
           </p>
-          <p className="mt-5 text-xs text-muted-foreground">
+          <p className="mt-4 text-xs text-muted-foreground">
             &copy; 2026 haistudy. Seluruh hak cipta dilindungi.
           </p>
         </div>
