@@ -101,16 +101,16 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
 // subtle brand-emerald tint + border. No per-tier neon outlines, no glossy CTA
 // — colour comes only from the single brand accent (emerald) + the small in-app
 // tier badges. Differentiation is price + features + the popular ring, not hue.
-const NEUTRAL = "#171f1b";
+const NEUTRAL = "#131a16";
 const TIER: Record<string, { surface: string; border: string; check: string }> = {
-  share: { surface: NEUTRAL, border: "border-white/[0.08]", check: "text-emerald-500" },
-  normal: { surface: NEUTRAL, border: "border-white/[0.08]", check: "text-emerald-500" },
+  share: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-emerald-500" },
+  normal: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-emerald-500" },
   vip: {
-    surface: "color-mix(in oklab, #171f1b 90%, #10b981)",
-    border: "border-emerald-500/25",
+    surface: "color-mix(in oklab, #131a16 84%, #10b981)",
+    border: "border-emerald-500/55",
     check: "text-emerald-500",
   },
-  diamond: { surface: NEUTRAL, border: "border-white/[0.08]", check: "text-emerald-500" },
+  diamond: { surface: NEUTRAL, border: "border-white/[0.14]", check: "text-emerald-500" },
 };
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
@@ -270,7 +270,7 @@ export function PricingSection() {
                     <Link
                       href={`/payments?pkg=${pkg.id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="group/cta mt-2 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 text-[13px] font-semibold text-white transition-colors duration-200 hover:bg-emerald-500 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="group/cta mt-2 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-700/40 bg-emerald-900 text-[13px] font-semibold text-white shadow-[0_10px_24px_-8px_rgba(0,0,0,0.75)] transition-colors duration-200 hover:bg-emerald-800 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {t("pricing.buy")}
                       <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/cta:translate-x-0.5" />
