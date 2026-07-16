@@ -931,7 +931,7 @@ const id: Record<string, string> = {
   "pricing.popular": "Paling Populer",
   "pricing.badge_label": "Badge",
   "pricing.devices": "perangkat",
-  "pricing.quota_simulasi": "simulasi ujian",
+  "pricing.quota_simulasi": "kuota simulasi ujian",
   "pricing.share_all_normal": "Semua fitur paket Normal.",
   "pricing.gvip_ai": "AI eksklusif + prioritas",
   "pricing.gvip_perks": "VIP Lounge & perks eksklusif",
