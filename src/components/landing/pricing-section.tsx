@@ -103,20 +103,20 @@ const TIER: Record<
   { wash: string; border: string; glow: string; ctaBg: string; ctaGlow: string; check: string }
 > = {
   share: {
-    wash: "bg-gradient-to-b from-white/[0.03] to-transparent",
-    border: "border-foreground/10",
-    glow: "",
+    wash: "bg-gradient-to-b from-emerald-500/[0.10] via-emerald-500/[0.03] to-transparent",
+    border: "border-emerald-500/20",
+    glow: "shadow-[0_18px_50px_-24px_rgba(16,185,129,0.24)]",
     ctaBg: "bg-gradient-to-b from-emerald-500 to-emerald-600",
     ctaGlow: "shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/50",
-    check: "text-foreground/55",
+    check: "text-emerald-500/85",
   },
   normal: {
-    wash: "bg-gradient-to-b from-white/[0.03] to-transparent",
-    border: "border-foreground/10",
-    glow: "",
+    wash: "bg-gradient-to-b from-emerald-500/[0.10] via-emerald-500/[0.03] to-transparent",
+    border: "border-emerald-500/20",
+    glow: "shadow-[0_18px_50px_-24px_rgba(16,185,129,0.24)]",
     ctaBg: "bg-gradient-to-b from-emerald-500 to-emerald-600",
     ctaGlow: "shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/50",
-    check: "text-foreground/55",
+    check: "text-emerald-500/85",
   },
   vip: {
     wash: "bg-gradient-to-b from-amber-500/[0.18] via-amber-500/[0.06] to-transparent",
