@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter, Geist_Mono, Poppins } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { SettingsProvider } from "@/components/providers/settings-provider";
@@ -43,6 +44,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "600"],
+});
+
+// General Sans — the landing display face (headings/wordmark). Self-hosted; only
+// the display weights are shipped. `--font-display` in globals prefers this.
+const generalSans = localFont({
+  variable: "--font-general-sans",
+  display: "swap",
+  src: [
+    { path: "./fonts/GeneralSans-Regular.otf", weight: "400", style: "normal" },
+    { path: "./fonts/GeneralSans-Medium.otf", weight: "500", style: "normal" },
+    { path: "./fonts/GeneralSans-Semibold.otf", weight: "600", style: "normal" },
+    { path: "./fonts/GeneralSans-Bold.otf", weight: "700", style: "normal" },
+  ],
 });
 
 export const viewport: Viewport = {
@@ -141,7 +155,7 @@ export default function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${jakartaSans.variable} ${inter.variable} ${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jakartaSans.variable} ${inter.variable} ${poppins.variable} ${geistMono.variable} ${generalSans.variable} h-full antialiased`}
     >
       <head>
         <link rel="preconnect" href="https://gvjwxccwuyuhgexypgbn.supabase.co" />

@@ -1485,7 +1485,7 @@ html.tts-bar-open .tts-shift-target {
   color-scheme: light;
   /* (overflow-anchor is set inline in landing-shell — Lightning CSS strips it
      from here.) */
-  --font-display: var(--font-heading); /* General Sans swaps in when files land */
+  --font-display: var(--font-general-sans); /* General Sans (self-hosted); Jakarta is the fallback in .font-display */
 
   --brand-1: #10b981;
   --brand-2: #047857;
