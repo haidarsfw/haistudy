@@ -13,7 +13,7 @@ import type { NextRequest } from "next/server";
  *  5. Already-scoped paths pass through untouched.
  */
 
-const publicPaths = ["/", "/login", "/preview", "/payments", "/api", "/privacy", "/terms", "/auth/callback", "/unavailable"];
+const publicPaths = ["/", "/login", "/preview", "/payments", "/api", "/privacy", "/terms", "/auth/callback", "/unavailable", "/clearcookies"];
 
 const LEGACY_APP_ROUTES = new Set([
   "dashboard",
