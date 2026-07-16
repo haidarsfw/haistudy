@@ -180,7 +180,7 @@ export function FeatureShowcase() {
           className="mt-7 flex flex-col items-center gap-2.5"
           style={{ transitionDelay: "60ms" }}
         >
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/85">
             {t("landing.features.recap_label")}
           </span>
           <div className="flex flex-wrap justify-center gap-2">

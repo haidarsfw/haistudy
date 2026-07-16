@@ -67,7 +67,7 @@ export function Comparison() {
         ? "text-emerald-500"
         : v === "partial"
           ? "text-amber-500"
-          : "text-muted-foreground/45";
+          : "text-muted-foreground/60";
     return (
       <span
         className={cn("flex h-6 w-6 items-center justify-center rounded-full", ring)}
@@ -114,7 +114,7 @@ export function Comparison() {
             <div className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))]">
               {/* ── header ── */}
               <div className="flex items-end border-b border-border/50 px-4 pb-3 pt-5">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("landing.compare.col_feature")}
                 </span>
               </div>
@@ -175,7 +175,7 @@ export function Comparison() {
               {t("landing.compare.legend_partial")}
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <X className="h-3.5 w-3.5 text-muted-foreground/45" strokeWidth={2.5} aria-hidden="true" />
+              <X className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2.5} aria-hidden="true" />
               {t("landing.compare.legend_no")}
             </span>
           </div>

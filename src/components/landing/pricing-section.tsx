@@ -285,7 +285,7 @@ export function PricingSection() {
                       >
                         {t("pricing.more_all")}
                       </button>
-                      <p className="mt-1 text-[10px] italic leading-snug text-muted-foreground/70">
+                      <p className="mt-1 text-[10px] italic leading-snug text-muted-foreground/85">
                         {t("pricing.more_note")}
                       </p>
                     </div>
@@ -294,7 +294,7 @@ export function PricingSection() {
 
                 {/* bottom-pinned group keeps device line + CTA aligned across cards */}
                 <div className="mt-auto pt-5">
-                  <span className="block text-[11px] text-muted-foreground/70">
+                  <span className="block text-[11px] text-muted-foreground/85">
                     Maks {pkg.maxDevices} {t("pricing.devices")}
                   </span>
                   {isSelected ? (

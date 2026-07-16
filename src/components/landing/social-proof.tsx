@@ -63,7 +63,7 @@ export function SocialProof() {
               value={n}
               spinTiming={{ duration: 3000, easing: "cubic-bezier(0.16,1,0.3,1)" }}
             />
-            <span className="text-brand-gradient">+</span>
+            <span className="text-primary">+</span>
           </span>
           <span className={word}>{t("landing.social.students")}</span>
         </div>
