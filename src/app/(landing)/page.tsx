@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FAQ } from "@/data/landing/faq";
 import { PricingSection } from "@/components/landing/pricing-section";
 import { Header } from "@/components/landing/header";
@@ -9,6 +8,7 @@ import { FeatureShowcase } from "@/components/landing/feature-showcase";
 import { Comparison } from "@/components/landing/comparison";
 import { TestimonialMarquee } from "@/components/landing/testimonial-marquee";
 import { Faq } from "@/components/landing/faq";
+import { Footer } from "@/components/landing/footer";
 
 export default function LandingPage() {
   return (
@@ -71,50 +71,8 @@ export default function LandingPage() {
           <Faq />
         </section>
 
-        {/* ── Disclaimer ── */}
-        <section className="border-t border-border/50 px-4 py-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs leading-relaxed text-muted-foreground/85">
-              haistudy adalah platform belajar independen yang dibuat oleh
-              mahasiswa. Platform ini tidak terafiliasi, berafiliasi, didukung,
-              atau disetujui oleh BINUS University. Seluruh materi kuliah, merek
-              dagang, dan hak cipta terkait adalah milik pemiliknya masing-masing.
-            </p>
-          </div>
-        </section>
-
-        {/* ── Footer ── */}
-        <footer className="relative border-t border-border/60 px-4 py-8">
-          <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 text-center">
-            <p className="text-sm text-muted-foreground">
-              made by{" "}
-              <a
-                href="https://instagram.com/haidarsfw"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground transition-colors hover:text-primary"
-              >
-                haidarsb
-              </a>{" "}
-              LE86
-            </p>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <Link
-                href="/privacy"
-                className="rounded transition-colors hover:text-foreground hover:underline"
-              >
-                Privacy Policy
-              </Link>
-              <span>&middot;</span>
-              <Link
-                href="/terms"
-                className="rounded transition-colors hover:text-foreground hover:underline"
-              >
-                Terms of Service
-              </Link>
-            </div>
-          </div>
-        </footer>
+        {/* ── Footer (brand lockup + nav + disclaimer + legal) ── */}
+        <Footer />
       </main>
     </>
   );
