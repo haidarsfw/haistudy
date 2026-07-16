@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
  * add exclusivity + customisation).
  */
 
-type Feat = { key: string; badge?: "vip" | "diamond" };
+type Feat = { key: string; badge?: "vip" | "diamond"; quota?: boolean };
 
 const CARD_FEATURES: Record<string, Feat[]> = {
   normal: [
@@ -51,12 +51,14 @@ const CARD_FEATURES: Record<string, Feat[]> = {
     { key: "pricing.gvip_ai" },
     { key: "pricing.gvip_perks" },
     { key: "pricing.gvip_custom" },
+    { key: "quota", quota: true },
     { key: "pricing.feat_vip_badge", badge: "vip" },
   ],
   diamond: [
     { key: "pricing.feat_all_vip" },
     { key: "pricing.feat_name_glow" },
     { key: "pricing.feat_support_dev" },
+    { key: "quota", quota: true },
     { key: "pricing.feat_diamond_badge", badge: "diamond" },
   ],
 };
@@ -71,6 +73,7 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
       "Rangkuman lengkap tiap mata kuliah",
       "Belajar Kilat (mode swipe)",
       "Latihan Soal esai & PG + koreksi AI",
+      "3x simulasi ujian",
       "Quiz & flashcards interaktif",
     ],
   },
@@ -121,6 +124,11 @@ const TIER: Record<
 
 // Rank logo (keyed by PackageDef.icon).
 const ICON: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
+
+// Exam-simulation quota per tier (display only — not wired to a backend limit).
+// Shown as a feature line above the badge on VIP/Diamond; Normal's lives in the
+// "& masih banyak lagi" popup, Share inherits Normal.
+const QUOTA: Record<string, number> = { share: 3, normal: 3, vip: 5, diamond: 10 };
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
 function TierBadge({ tier }: { tier: "vip" | "diamond" }) {
@@ -244,7 +252,14 @@ export function PricingSection() {
                             className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", tier.check)}
                             strokeWidth={2.75}
                           />
-                          {f.badge ? (
+                          {f.quota ? (
+                            <span className="leading-snug">
+                              <span className="font-semibold text-foreground">
+                                {QUOTA[pkg.id]}x
+                              </span>{" "}
+                              {t("pricing.quota_simulasi")}
+                            </span>
+                          ) : f.badge ? (
                             <span className="flex flex-wrap items-center gap-1.5 leading-snug">
                               {t("pricing.badge_label")}
                               <TierBadge tier={f.badge} />
