@@ -96,57 +96,21 @@ const ALL_FEATURES: { group: string; items: string[] }[] = [
   },
 ];
 
-// Per-tier look. Each card is a DARK, saturated tinted surface (the accent mixed
-// into a near-black base, kept dark) — colour comes from the SURFACE + border +
-// glow + checks, never from a light wash that would brighten the card. Share
-// teal, Normal emerald, VIP gold, Diamond icy (VIP/Diamond a touch more colour).
-// `wash` is only a faint top gloss now. `cta` colours the selected buy button.
-const TIER: Record<
-  string,
-  { surface: string; wash: string; border: string; glow: string; ctaBg: string; ctaGlow: string; check: string }
-> = {
-  // Share = cooler TEAL, understated (budget tier). Normal = brand EMERALD,
-  // fuller (the solid base). Distinct hues + intensity so they never twin.
-  // Washes carry a colour FLOOR (no fade to transparent) so the hue reads
-  // across the whole card, and the borders are boldly saturated — colour on a
-  // dark surface, not a pale sliver at the top.
-  share: {
-    surface: "color-mix(in oklab, #0b100e 85%, #2dd4bf)",
-    wash: "",
-    border: "border-teal-500/35",
-    glow: "shadow-[0_16px_44px_-26px_rgba(20,184,166,0.22)]",
-    ctaBg: "bg-gradient-to-b from-teal-500 to-teal-600",
-    ctaGlow: "shadow-lg shadow-teal-500/40 hover:shadow-xl hover:shadow-teal-500/50",
-    check: "text-teal-400",
-  },
-  normal: {
-    surface: "color-mix(in oklab, #0b100e 83%, #10b981)",
-    wash: "",
-    border: "border-emerald-500/42",
-    glow: "shadow-[0_16px_44px_-24px_rgba(16,185,129,0.26)]",
-    ctaBg: "bg-gradient-to-b from-emerald-500 to-emerald-600",
-    ctaGlow: "shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/50",
-    check: "text-emerald-400",
-  },
-  // VIP gold + Diamond icy — dark, a step richer so the bright CTA sits on tone.
+// Per-tier look — RESTRAINED (option A). All cards share one neutral dark
+// surface + a neutral hairline border; only VIP (the popular tier) carries a
+// subtle brand-emerald tint + border. No per-tier neon outlines, no glossy CTA
+// — colour comes only from the single brand accent (emerald) + the small in-app
+// tier badges. Differentiation is price + features + the popular ring, not hue.
+const NEUTRAL = "#171f1b";
+const TIER: Record<string, { surface: string; border: string; check: string }> = {
+  share: { surface: NEUTRAL, border: "border-white/[0.08]", check: "text-emerald-500" },
+  normal: { surface: NEUTRAL, border: "border-white/[0.08]", check: "text-emerald-500" },
   vip: {
-    surface: "color-mix(in oklab, #0d0a05 82%, #f59e0b)",
-    wash: "",
-    border: "border-amber-500/50",
-    glow: "shadow-[0_18px_48px_-22px_rgba(245,158,11,0.30)]",
-    ctaBg: "bg-gradient-to-b from-amber-500 to-amber-600",
-    ctaGlow: "shadow-lg shadow-amber-500/40 hover:shadow-xl hover:shadow-amber-500/50",
-    check: "text-amber-400",
+    surface: "color-mix(in oklab, #171f1b 90%, #10b981)",
+    border: "border-emerald-500/25",
+    check: "text-emerald-500",
   },
-  diamond: {
-    surface: "color-mix(in oklab, #080b10 82%, #38bdf8)",
-    wash: "",
-    border: "border-sky-400/45",
-    glow: "shadow-[0_18px_48px_-22px_rgba(56,189,248,0.28)]",
-    ctaBg: "bg-gradient-to-b from-sky-500 to-blue-600",
-    ctaGlow: "shadow-lg shadow-sky-500/40 hover:shadow-xl hover:shadow-sky-500/50",
-    check: "text-sky-400",
-  },
+  diamond: { surface: NEUTRAL, border: "border-white/[0.08]", check: "text-emerald-500" },
 };
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
@@ -203,18 +167,16 @@ export function PricingSection() {
                     setSelected(pkg.id);
                   }
                 }}
-                // per-tier DARK tinted surface, inline so twMerge can't drop it
-                // against the wash gradient (both would be bg-*).
+                // one neutral surface for all; VIP a subtle emerald tint. Inline
+                // so twMerge can't drop it against a bg-* class.
                 style={{ backgroundColor: tier.surface }}
                 className={cn(
                   "group relative flex cursor-pointer flex-col rounded-2xl border p-5 shadow-xl shadow-black/30 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                  tier.wash,
                   tier.border,
-                  tier.glow,
-                  // the SELECTED card is the one that rises (default = VIP)
+                  // the SELECTED card rises with a restrained brand ring (default = VIP)
                   isSelected
-                    ? "shadow-2xl ring-2 ring-foreground/25 lg:-translate-y-2"
-                    : "hover:-translate-y-1 hover:shadow-2xl"
+                    ? "shadow-2xl ring-2 ring-emerald-500/50 lg:-translate-y-2"
+                    : "hover:-translate-y-1 hover:border-white/15 hover:shadow-2xl"
                 )}
               >
                 {/* name + quiet populer badge (neutral, recommended tier only) */}
@@ -308,24 +270,10 @@ export function PricingSection() {
                     <Link
                       href={`/payments?pkg=${pkg.id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className={cn(
-                        "group/cta relative mt-2 inline-flex h-11 w-full items-center justify-center overflow-hidden rounded-xl text-[13px] font-bold text-white transition-all duration-200 hover:-translate-y-px active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                        tier.ctaGlow
-                      )}
+                      className="group/cta mt-2 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 text-[13px] font-semibold text-white transition-colors duration-200 hover:bg-emerald-500 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
-                      {/* tinted glass base */}
-                      <span className={cn("absolute inset-0", tier.ctaBg)} aria-hidden="true" />
-                      {/* specular sheen — a soft top highlight (kept off the text) */}
-                      <span className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/20 to-transparent" aria-hidden="true" />
-                      {/* glass edge highlight */}
-                      <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" aria-hidden="true" />
-                      {/* liquid shine — sweeps once when the card is selected
-                          (the button mounts), via a CSS class, not only on hover */}
-                      <span className="hs-cta-shine pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent" aria-hidden="true" />
-                      <span className="relative z-10 inline-flex items-center gap-1.5 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-                        {t("pricing.buy")}
-                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/cta:translate-x-0.5" />
-                      </span>
+                      {t("pricing.buy")}
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/cta:translate-x-0.5" />
                     </Link>
                   ) : (
                     <button
@@ -334,7 +282,7 @@ export function PricingSection() {
                         e.stopPropagation();
                         setSelected(pkg.id);
                       }}
-                      className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-lg border border-border bg-background/30 text-[13px] font-semibold text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                      className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-xl border border-white/[0.10] bg-white/[0.02] text-[13px] font-semibold text-foreground transition-colors hover:border-white/20 hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                     >
                       {t("pricing.select")}
                     </button>
