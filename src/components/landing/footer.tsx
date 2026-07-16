@@ -113,8 +113,8 @@ export function Footer() {
         </div>
 
         {/* fine print + bottom bar */}
-        <div className="mt-10 border-t border-border/50 pt-6">
-          <p className="text-xs leading-relaxed text-muted-foreground/85">
+        <div className="mt-10 border-t border-border/50 pt-6 text-center">
+          <p className="mx-auto max-w-3xl text-xs leading-relaxed text-muted-foreground/85">
             haistudy adalah platform belajar independen yang dibuat oleh
             mahasiswa. Platform ini tidak terafiliasi, berafiliasi, didukung,
             atau disetujui oleh kampus, universitas, atau institusi mana pun.
