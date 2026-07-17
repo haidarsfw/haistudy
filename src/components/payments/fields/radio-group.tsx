@@ -19,7 +19,12 @@ interface RadioGroupProps {
   value: string;
   onChange: (v: string) => void;
   options: readonly RadioOption[];
-  columns?: 1 | 2 | 3;
+  columns?: 1 | 2 | 3 | 4;
+  /**
+   * Column count below `sm`. Four campuses in one row is right on desktop and
+   * unreadable on a phone, so the two are stated separately.
+   */
+  columnsMobile?: 1 | 2;
   /**
    * "default" — left-aligned with a radio dot (+ optional description).
    * "tile"    — compact, content centered both axes, equal height, no dot.
@@ -34,10 +39,22 @@ export function RadioGroup({
   onChange,
   options,
   columns = 1,
+  columnsMobile,
   variant = "default",
 }: RadioGroupProps) {
-  const gridClass =
-    columns === 3 ? "grid-cols-3" : columns === 2 ? "grid-cols-2" : "grid-cols-1";
+  // Written out rather than composed, because Tailwind only ships the classes it
+  // can see as whole strings in the source.
+  const base =
+    columnsMobile === 2 ? "grid-cols-2" : "grid-cols-1";
+  const up =
+    columns === 4
+      ? "sm:grid-cols-4"
+      : columns === 3
+        ? "sm:grid-cols-3"
+        : columns === 2
+          ? "sm:grid-cols-2"
+          : "sm:grid-cols-1";
+  const gridClass = columnsMobile ? `${base} ${up}` : up.replace("sm:", "");
 
   if (variant === "tile") {
     return (

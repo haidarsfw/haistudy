@@ -356,7 +356,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-6 sm:py-10 lg:max-w-4xl">
+    <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-6 sm:py-8 lg:max-w-4xl">
       {/* Header */}
       <div className="mb-5 flex w-full items-center justify-between">
         <Link
@@ -404,11 +404,16 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
             className="space-y-5"
           >
             {step === 0 && (
-              // Two columns on desktop: this step was a 576px ribbon on a
-              // 1500px screen, so a form you can answer in a minute took a
-              // full-page scroll to read. Controls that are already multi-column
-              // (Kampus, Cara Masuk) span both so they aren't crushed.
-              <div className="grid gap-5 lg:grid-cols-2 lg:gap-x-5">
+              // Desktop target: this whole step on ONE screen, no scrolling.
+              //
+              // Widening alone did nothing — the fields just got fatter and the
+              // page stayed as long. What costs the height is ROWS, so the job
+              // is to pack them: Nama|Panggilan, Kelas|WhatsApp, then the two
+              // controls that are already multi-column (Kampus 4-up, Cara Masuk
+              // 2-up) each taking a single full-width row instead of stacking.
+              // Nothing here spans two columns unless it fills them, otherwise
+              // it leaves a hole and pushes the next field down for nothing.
+              <div className="grid gap-4 lg:grid-cols-2 lg:gap-x-5">
                 <FieldShell label={t("payments.name_label")} description={t("payments.name_desc")} required error={errors.name} htmlFor="pf-name">
                   <ShortAnswer id="pf-name" value={form.name} onChange={(v) => set("name", v)} placeholder={t("payments.name_ph")} invalid={!!errors.name} autoComplete="name" />
                 </FieldShell>
@@ -433,13 +438,22 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   )}
                 </FieldShell>
 
+                {/* Pairs with Kelas — both are one line, so they cost one row
+                    together instead of one each with a hole beside them. */}
+                <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
+                  <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
+                </FieldShell>
+
                 <div className="lg:col-span-2">
                   <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
+                    {/* 4-up across the full width: one row on desktop instead of
+                        the 2x2 block that cost two. */}
                     <RadioGroup
                       name="campus"
                       value={form.campus}
                       onChange={(v) => set("campus", v)}
-                      columns={2}
+                      columns={4}
+                      columnsMobile={2}
                       options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
                     />
                     {form.campus === "Other" && (
@@ -449,10 +463,6 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                     )}
                   </FieldShell>
                 </div>
-
-                <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
-                  <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
-                </FieldShell>
 
                 <div className="lg:col-span-2">
                   <FieldShell label={t("payments.login_method_label")} description={t("payments.login_method_note")} required>
@@ -469,28 +479,34 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   </FieldShell>
                 </div>
 
-                <FieldShell
-                  label={t("payments.login_email_label")}
-                  description={
-                    form.loginMethod === "google"
-                      ? t("payments.login_email_google_desc")
-                      : t("payments.login_email_password_desc")
-                  }
-                  required
-                  error={errors.loginEmail}
-                  htmlFor="pf-login-email"
-                >
-                  <ShortAnswer
-                    id="pf-login-email"
-                    type="email"
-                    inputMode="email"
-                    value={form.loginEmail}
-                    onChange={(v) => set("loginEmail", v)}
-                    placeholder={form.loginMethod === "google" ? "kamu@gmail.com" : "kamu@email.com"}
-                    invalid={!!errors.loginEmail}
-                    autoComplete="email"
-                  />
-                </FieldShell>
+                {/* Always full width. Pairing it with the first password field
+                    left "Ulangi password" orphaned on its own row with a hole
+                    beside it, and costs the same height either way — so the two
+                    passwords pair with each other, which is what they are. */}
+                <div className="lg:col-span-2">
+                  <FieldShell
+                    label={t("payments.login_email_label")}
+                    description={
+                      form.loginMethod === "google"
+                        ? t("payments.login_email_google_desc")
+                        : t("payments.login_email_password_desc")
+                    }
+                    required
+                    error={errors.loginEmail}
+                    htmlFor="pf-login-email"
+                  >
+                    <ShortAnswer
+                      id="pf-login-email"
+                      type="email"
+                      inputMode="email"
+                      value={form.loginEmail}
+                      onChange={(v) => set("loginEmail", v)}
+                      placeholder={form.loginMethod === "google" ? "kamu@gmail.com" : "kamu@email.com"}
+                      invalid={!!errors.loginEmail}
+                      autoComplete="email"
+                    />
+                  </FieldShell>
+                </div>
 
                 {form.loginMethod === "password" && (
                   <>
