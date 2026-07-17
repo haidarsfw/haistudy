@@ -26,11 +26,14 @@ interface RadioGroupProps {
    */
   columnsMobile?: 1 | 2;
   /**
-   * "default" — left-aligned with a radio dot (+ optional description).
+   * "default" — boxed row with a radio dot (+ optional description).
+   * "plain"   — dot + label, NO box. For use inside a Section, where the
+   *             section is already the box; a border per option there just
+   *             multiplies boxes without separating anything.
    * "tile"    — compact, content centered both axes, equal height, no dot.
    *             Used for short same-shape choices (e.g. device count).
    */
-  variant?: "default" | "tile";
+  variant?: "default" | "plain" | "tile";
 }
 
 export function RadioGroup({
@@ -68,6 +71,8 @@ export function RadioGroup({
     );
   }
 
+  const plain = variant === "plain";
+
   return (
     <div className={cn("grid gap-2", gridClass)} role="radiogroup" aria-label={name}>
       {options.map((o) => {
@@ -80,10 +85,17 @@ export function RadioGroup({
             aria-checked={selected}
             onClick={() => onChange(o.value)}
             className={cn(
-              "flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-all",
-              selected
-                ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                : "border-border hover:border-primary/30 hover:bg-muted/40"
+              "flex items-start gap-2.5 text-left transition-colors",
+              plain
+                // No border, no fill: the dot carries the state. Padding stays
+                // so the tap target is still a row, not just the label.
+                ? "-mx-1.5 rounded-lg px-1.5 py-1.5 hover:bg-muted/40"
+                : cn(
+                    "rounded-xl border px-3.5 py-2.5",
+                    selected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                      : "border-border hover:border-primary/30 hover:bg-muted/40"
+                  )
             )}
           >
             <span

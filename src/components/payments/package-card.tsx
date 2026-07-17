@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2, GraduationCap, Crown, Gem, Check, type LucideIcon } from "lucide-react";
+import { Share2, GraduationCap, Crown, Gem, Check, ArrowRight, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatIDR, MAX_DEVICES_ITEM, type PackageDef } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -49,22 +49,12 @@ export function getAccentClasses(id: PackageDef["id"]) {
   };
 }
 
-/** Lines that only point at another tier's list instead of naming a real feature. */
-const INHERITED_KEYS = new Set([
-  "pricing.feat_all_normal",
-  "pricing.feat_all_vip",
-  "pricing.feat_all_subjects",
-]);
-
 export function FeatureGroups({
   pkg,
   checkClass,
-  onInheritedClick,
 }: {
   pkg: PackageDef;
   checkClass: string;
-  /** Makes "Semua fitur Normal / VIP" open the full list instead of dead-ending. */
-  onInheritedClick?: () => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -75,31 +65,16 @@ export function FeatureGroups({
             {t(g.labelKey)}
           </p>
           <ul className="mt-1 space-y-1">
-            {g.itemKeys.map((k) => {
-              const label =
-                k === MAX_DEVICES_ITEM
-                  ? `${t("pricing.max_device_prefix")} ${pkg.maxDevices} ${t("pricing.devices")}`
-                  : t(k);
-              // "Semua fitur Normal" answers nothing on its own — it was a
-              // promise the buyer had no way to cash in. Now it opens the list.
-              const inherited = onInheritedClick && INHERITED_KEYS.has(k);
-              return (
-                <li key={k} className="flex items-start gap-1.5 text-xs text-foreground/90">
-                  <Check className={cn("mt-0.5 h-3 w-3 shrink-0", checkClass)} strokeWidth={3} />
-                  {inherited ? (
-                    <button
-                      type="button"
-                      onClick={onInheritedClick}
-                      className="text-left underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground"
-                    >
-                      {label}
-                    </button>
-                  ) : (
-                    <span>{label}</span>
-                  )}
-                </li>
-              );
-            })}
+            {g.itemKeys.map((k) => (
+              <li key={k} className="flex items-start gap-1.5 text-xs text-foreground/90">
+                <Check className={cn("mt-0.5 h-3 w-3 shrink-0", checkClass)} strokeWidth={3} />
+                <span>
+                  {k === MAX_DEVICES_ITEM
+                    ? `${t("pricing.max_device_prefix")} ${pkg.maxDevices} ${t("pricing.devices")}`
+                    : t(k)}
+                </span>
+              </li>
+            ))}
           </ul>
         </div>
       ))}
@@ -113,19 +88,23 @@ interface PackageCardProps {
   onSelect: () => void;
   /** Shared framer layoutId so the selection outline slides between cards. */
   layoutId: string;
+  /** Opens this package's feature dialog. Stops propagation — it isn't a pick. */
+  onShowFeatures?: () => void;
   className?: string;
 }
 
 /**
- * A price card. Selection is the ONLY interaction: features live in one panel
- * below the grid, so nothing here expands and every card stays the same size
- * whatever is picked.
+ * A price card. Nothing here expands and no card ever resizes: the body is
+ * price + one line of positioning, and detail opens in a dialog. Cards that
+ * grow when you touch them move every other card, which is the opposite of what
+ * a compare-four-prices step needs.
  */
 export function PackageCard({
   pkg,
   selected,
   onSelect,
   layoutId,
+  onShowFeatures,
   className,
 }: PackageCardProps) {
   const { t } = useTranslation();
@@ -187,6 +166,21 @@ export function PackageCard({
       <p className="relative z-10 mt-2.5 text-xs leading-relaxed text-muted-foreground">
         {t(pkg.shortKey)}
       </p>
+
+      {onShowFeatures && (
+        <button
+          type="button"
+          // Reading the features is not choosing the package.
+          onClick={(e) => {
+            e.stopPropagation();
+            onShowFeatures();
+          }}
+          className="relative z-10 mt-auto inline-flex w-fit items-center gap-1 pt-3 text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+        >
+          {t("pricing.see_all")}
+          <ArrowRight className="h-3 w-3" />
+        </button>
+      )}
     </motion.div>
   );
 }

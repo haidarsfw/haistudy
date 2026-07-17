@@ -42,6 +42,7 @@ import {
 } from "@/lib/payments";
 import { LATEST_SCOPE, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { FieldShell } from "./fields/field-shell";
+import { Section } from "./fields/section";
 import { ShortAnswer } from "./fields/short-answer";
 import { Dropdown } from "./fields/dropdown";
 import { RadioGroup, type RadioOption } from "./fields/radio-group";
@@ -404,149 +405,156 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
             className="space-y-5"
           >
             {step === 0 && (
-              // Desktop target: this whole step on ONE screen, no scrolling.
+              // Two sections, not twelve boxes.
               //
-              // Widening alone did nothing — the fields just got fatter and the
-              // page stayed as long. What costs the height is ROWS, so the job
-              // is to pack them: Nama|Panggilan, Kelas|WhatsApp, then the two
-              // controls that are already multi-column (Kampus 4-up, Cara Masuk
-              // 2-up) each taking a single full-width row instead of stacking.
-              // Nothing here spans two columns unless it fills them, otherwise
-              // it leaves a hole and pushes the next field down for nothing.
-              <div className="grid gap-4 lg:grid-cols-2 lg:gap-x-5">
-                <FieldShell label={t("payments.name_label")} description={t("payments.name_desc")} required error={errors.name} htmlFor="pf-name">
-                  <ShortAnswer id="pf-name" value={form.name} onChange={(v) => set("name", v)} placeholder={t("payments.name_ph")} invalid={!!errors.name} autoComplete="name" />
-                </FieldShell>
+              // Every field and every radio option used to carry its own border,
+              // so one screen held a dozen outlines and none of them said which
+              // field belonged with which. The borders now sit where they mean
+              // something — "Data kamu" and "Cara masuk" — and inside a section
+              // the radios go plain, leaving only the boxes a buyer can type in.
+              //
+              // Fields still pair two-up on desktop (Nama|Panggilan,
+              // Kelas|WhatsApp) because height is paid in rows, and nothing
+              // spans two columns unless it fills them.
+              <div className="space-y-4">
+                <Section title={t("payments.sec_you")}>
+                  <div className="grid gap-y-0 lg:grid-cols-2 lg:gap-x-5">
+                    <FieldShell label={t("payments.name_label")} description={t("payments.name_desc")} required error={errors.name} htmlFor="pf-name">
+                      <ShortAnswer id="pf-name" value={form.name} onChange={(v) => set("name", v)} placeholder={t("payments.name_ph")} invalid={!!errors.name} autoComplete="name" />
+                    </FieldShell>
 
-                <FieldShell label={t("payments.nickname_label")} description={t("payments.nickname_desc")} required error={errors.nickname} htmlFor="pf-nickname">
-                  <ShortAnswer id="pf-nickname" value={form.nickname} onChange={(v) => set("nickname", v)} placeholder={t("payments.nickname_ph")} invalid={!!errors.nickname} autoComplete="nickname" />
-                </FieldShell>
+                    <FieldShell label={t("payments.nickname_label")} description={t("payments.nickname_desc")} required error={errors.nickname} htmlFor="pf-nickname">
+                      <ShortAnswer id="pf-nickname" value={form.nickname} onChange={(v) => set("nickname", v)} placeholder={t("payments.nickname_ph")} invalid={!!errors.nickname} autoComplete="nickname" />
+                    </FieldShell>
 
-                <FieldShell label={t("payments.class_label")} required error={errors.classCode || errors.classOther} htmlFor="pf-class">
-                  <Dropdown
-                    id="pf-class"
-                    value={form.classCode}
-                    onChange={(v) => set("classCode", v)}
-                    placeholder={t("payments.class_ph")}
-                    invalid={!!errors.classCode}
-                    options={CLASSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
-                  />
-                  {form.classCode === "Other" && (
-                    <div className="mt-2">
-                      <ShortAnswer value={form.classOther} onChange={(v) => set("classOther", v)} placeholder={t("payments.class_other_ph")} invalid={!!errors.classOther} />
+                    <FieldShell label={t("payments.class_label")} description={t("payments.class_desc")} required error={errors.classCode || errors.classOther} htmlFor="pf-class">
+                      <Dropdown
+                        id="pf-class"
+                        value={form.classCode}
+                        onChange={(v) => set("classCode", v)}
+                        placeholder={t("payments.class_ph")}
+                        invalid={!!errors.classCode}
+                        options={CLASSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
+                      />
+                      {form.classCode === "Other" && (
+                        <div className="mt-2">
+                          <ShortAnswer value={form.classOther} onChange={(v) => set("classOther", v)} placeholder={t("payments.class_other_ph")} invalid={!!errors.classOther} />
+                        </div>
+                      )}
+                    </FieldShell>
+
+                    <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
+                      <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
+                    </FieldShell>
+
+                    <div className="lg:col-span-2">
+                      <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
+                        <RadioGroup
+                          name="campus"
+                          value={form.campus}
+                          onChange={(v) => set("campus", v)}
+                          variant="plain"
+                          columns={4}
+                          columnsMobile={2}
+                          options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
+                        />
+                        {form.campus === "Other" && (
+                          <div className="mt-2">
+                            <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
+                          </div>
+                        )}
+                      </FieldShell>
                     </div>
-                  )}
-                </FieldShell>
+                  </div>
+                </Section>
 
-                {/* Pairs with Kelas — both are one line, so they cost one row
-                    together instead of one each with a hole beside them. */}
-                <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
-                  <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
-                </FieldShell>
+                <Section title={t("payments.sec_login")} description={t("payments.login_method_note")}>
+                  <div className="grid gap-y-3 lg:grid-cols-2 lg:gap-x-5">
+                    <div className="lg:col-span-2">
+                      <RadioGroup
+                        name="loginMethod"
+                        value={form.loginMethod}
+                        onChange={(v) => set("loginMethod", v as LoginMethod)}
+                        variant="plain"
+                        columns={2}
+                        options={[
+                          { value: "google", label: t("payments.login_google"), description: t("payments.login_google_desc") },
+                          { value: "password", label: t("payments.login_password"), description: t("payments.login_password_desc") },
+                        ]}
+                      />
+                    </div>
 
-                <div className="lg:col-span-2">
-                  <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
-                    {/* 4-up across the full width: one row on desktop instead of
-                        the 2x2 block that cost two. */}
-                    <RadioGroup
-                      name="campus"
-                      value={form.campus}
-                      onChange={(v) => set("campus", v)}
-                      columns={4}
-                      columnsMobile={2}
-                      options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
-                    />
-                    {form.campus === "Other" && (
-                      <div className="mt-2">
-                        <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
-                      </div>
+                    {/* Full width: pairing it with the first password field left
+                        "Ulangi password" orphaned beside a hole, and costs the
+                        same height either way — so the passwords pair with each
+                        other, which is what they are. */}
+                    <div className="lg:col-span-2">
+                      <FieldShell
+                        label={t("payments.login_email_label")}
+                        description={
+                          form.loginMethod === "google"
+                            ? t("payments.login_email_google_desc")
+                            : t("payments.login_email_password_desc")
+                        }
+                        required
+                        error={errors.loginEmail}
+                        htmlFor="pf-login-email"
+                      >
+                        <ShortAnswer
+                          id="pf-login-email"
+                          type="email"
+                          inputMode="email"
+                          value={form.loginEmail}
+                          onChange={(v) => set("loginEmail", v)}
+                          placeholder={form.loginMethod === "google" ? "kamu@gmail.com" : "kamu@email.com"}
+                          invalid={!!errors.loginEmail}
+                          autoComplete="email"
+                        />
+                      </FieldShell>
+                    </div>
+
+                    {form.loginMethod === "password" && (
+                      <>
+                        <FieldShell
+                          label={t("payments.login_pw_label")}
+                          description={t("payments.login_pw_desc")}
+                          required
+                          error={errors.loginPassword}
+                          htmlFor="pf-password"
+                        >
+                          {/* autoComplete="new-password" so the browser offers to
+                              generate/save one instead of pasting an existing login. */}
+                          <ShortAnswer
+                            id="pf-password"
+                            type="password"
+                            value={form.loginPassword}
+                            onChange={(v) => set("loginPassword", v)}
+                            placeholder="Minimal 8 karakter"
+                            invalid={!!errors.loginPassword}
+                            autoComplete="new-password"
+                          />
+                        </FieldShell>
+                        <FieldShell
+                          label={t("payments.login_pw2_label")}
+                          description={t("payments.login_pw2_desc")}
+                          required
+                          error={errors.loginPassword2}
+                          htmlFor="pf-password2"
+                        >
+                          <ShortAnswer
+                            id="pf-password2"
+                            type="password"
+                            value={form.loginPassword2}
+                            onChange={(v) => set("loginPassword2", v)}
+                            placeholder={t("payments.login_pw2_placeholder")}
+                            invalid={!!errors.loginPassword2}
+                            autoComplete="new-password"
+                          />
+                        </FieldShell>
+                      </>
                     )}
-                  </FieldShell>
-                </div>
-
-                <div className="lg:col-span-2">
-                  <FieldShell label={t("payments.login_method_label")} description={t("payments.login_method_note")} required>
-                    <RadioGroup
-                      name="loginMethod"
-                      value={form.loginMethod}
-                      onChange={(v) => set("loginMethod", v as LoginMethod)}
-                      columns={2}
-                      options={[
-                        { value: "google", label: t("payments.login_google"), description: t("payments.login_google_desc") },
-                        { value: "password", label: t("payments.login_password"), description: t("payments.login_password_desc") },
-                      ]}
-                    />
-                  </FieldShell>
-                </div>
-
-                {/* Always full width. Pairing it with the first password field
-                    left "Ulangi password" orphaned on its own row with a hole
-                    beside it, and costs the same height either way — so the two
-                    passwords pair with each other, which is what they are. */}
-                <div className="lg:col-span-2">
-                  <FieldShell
-                    label={t("payments.login_email_label")}
-                    description={
-                      form.loginMethod === "google"
-                        ? t("payments.login_email_google_desc")
-                        : t("payments.login_email_password_desc")
-                    }
-                    required
-                    error={errors.loginEmail}
-                    htmlFor="pf-login-email"
-                  >
-                    <ShortAnswer
-                      id="pf-login-email"
-                      type="email"
-                      inputMode="email"
-                      value={form.loginEmail}
-                      onChange={(v) => set("loginEmail", v)}
-                      placeholder={form.loginMethod === "google" ? "kamu@gmail.com" : "kamu@email.com"}
-                      invalid={!!errors.loginEmail}
-                      autoComplete="email"
-                    />
-                  </FieldShell>
-                </div>
-
-                {form.loginMethod === "password" && (
-                  <>
-                    <FieldShell
-                      label={t("payments.login_pw_label")}
-                      description={t("payments.login_pw_desc")}
-                      required
-                      error={errors.loginPassword}
-                      htmlFor="pf-password"
-                    >
-                      {/* autoComplete="new-password" so the browser offers to
-                          generate/save one instead of pasting an existing login. */}
-                      <ShortAnswer
-                        id="pf-password"
-                        type="password"
-                        value={form.loginPassword}
-                        onChange={(v) => set("loginPassword", v)}
-                        placeholder="Minimal 8 karakter"
-                        invalid={!!errors.loginPassword}
-                        autoComplete="new-password"
-                      />
-                    </FieldShell>
-                    <FieldShell
-                      label={t("payments.login_pw2_label")}
-                      required
-                      error={errors.loginPassword2}
-                      htmlFor="pf-password2"
-                    >
-                      <ShortAnswer
-                        id="pf-password2"
-                        type="password"
-                        value={form.loginPassword2}
-                        onChange={(v) => set("loginPassword2", v)}
-                        placeholder={t("payments.login_pw2_placeholder")}
-                        invalid={!!errors.loginPassword2}
-                        autoComplete="new-password"
-                      />
-                    </FieldShell>
-                  </>
-                )}
+                  </div>
+                </Section>
               </div>
             )}
 

@@ -15,19 +15,21 @@ interface FieldShellProps {
 /**
  * Field wrapper: label, helper text, required *, error.
  *
- * The control is pinned to the BOTTOM of the cell (`mt-auto`). In the two-column
- * desktop grid the cells in a row already stretch to equal height, so bottom-
- * pinning is what makes the inputs line up across the row — and it does it for
- * any label block, whether the field has no description, one line, or two.
+ * Two things hold the layout still:
  *
- * The obvious alternative, reserving a fixed height for the description, only
- * holds while every description happens to fit one line; the first one that
- * wraps knocks its neighbour out of alignment again, and nothing in the code
- * would say why. Height comes out of the layout here instead of a magic number.
+ * 1. The control is pinned to the BOTTOM of the cell (`mt-auto`). Cells in a
+ *    grid row already stretch to equal height, so bottom-pinning is what lines
+ *    the inputs up across a row — for any label block, whether it has no
+ *    description, one line, or two. Reserving a fixed description height would
+ *    look identical today and break on the first one that wraps.
+ *
+ * 2. The error is absolutely positioned, so it takes NO space in the flow.
+ *    Validating a field must not move the field, or the neighbouring one, or
+ *    everything below it. `pb-5` reserves the strip it lands in.
  */
 export function FieldShell({ label, description, required, error, htmlFor, children }: FieldShellProps) {
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col pb-5">
       <label htmlFor={htmlFor} className="block">
         <span className="text-sm font-medium text-foreground">
           {label}
@@ -39,20 +41,24 @@ export function FieldShell({ label, description, required, error, htmlFor, child
           </span>
         )}
       </label>
-      <div className="mt-auto pt-2">{children}</div>
-      <AnimatePresence>
-        {error && (
-          <motion.p
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-1.5 pt-2 text-xs font-medium text-destructive"
-          >
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            {error}
-          </motion.p>
-        )}
-      </AnimatePresence>
+      <div className="relative mt-auto pt-2">
+        {children}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -2 }}
+              transition={{ duration: 0.12 }}
+              // Out of flow on purpose — see (2) above.
+              className="absolute left-0 top-full flex items-center gap-1.5 pt-1 text-xs font-medium text-destructive"
+            >
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

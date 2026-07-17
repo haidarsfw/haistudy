@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  PACKAGES,
-  getPackage,
-  type PurchasablePackageId,
-} from "@/lib/payments";
+import { PACKAGES, getPackage, type PurchasablePackageId } from "@/lib/payments";
 import {
   PackageCard,
   FeatureGroups,
@@ -27,25 +22,24 @@ interface PackagePickerProps {
 }
 
 /**
- * Package step.
+ * Package step: four cards, nothing else.
  *
- * The cards never resize and never reflow. The previous cut was a master-detail:
- * opening a package's features shrank the grid from 4 columns to 2 and slid a
- * side panel in, so choosing a package moved every other package on screen and
- * only one could be read at a time. Comparing is the entire job of this step,
- * and that layout fought it.
+ * This has been through a side panel (which shrank the grid from four columns to
+ * two and moved every other package when you picked one) and then a panel under
+ * the grid (a wall of thirteen feature lines with headings that looked like the
+ * lines beneath them, plus a "& masih banyak lagi" link sitting next to an
+ * already-clickable "Semua fitur Normal" — two doors to the same room).
  *
- * Now: a fixed 4-up grid, and the SELECTED package's features render in one
- * panel underneath. Selecting is the only interaction — there is no separate
- * open/close state to get stranded in, and the panel always shows what you
- * actually picked.
+ * The step's job is: pick a price. So the cards show price and one line of
+ * positioning, the grid never moves, and detail is one click away for whoever
+ * wants it. Nothing is duplicated because there is exactly one way in.
  */
 export function PackagePicker({ value, onChange }: PackagePickerProps) {
   const { t } = useTranslation();
-  const [allOpen, setAllOpen] = useState(false);
+  const [detailId, setDetailId] = useState<PurchasablePackageId | null>(null);
 
-  const selected = getPackage(value);
-  const accent = getAccentClasses(value);
+  const detail = detailId ? getPackage(detailId) : null;
+  const accent = detailId ? getAccentClasses(detailId) : null;
 
   return (
     <>
@@ -56,72 +50,52 @@ export function PackagePicker({ value, onChange }: PackagePickerProps) {
             pkg={pkg}
             selected={value === pkg.id}
             onSelect={() => onChange(pkg.id)}
+            onShowFeatures={() => setDetailId(pkg.id)}
             layoutId="hs-picker-ring"
           />
         ))}
       </div>
 
-      {selected && (
-        <div className="mt-3 rounded-2xl border border-border bg-card p-4">
-          {/* Keyed on the id so switching package cross-fades the list rather
-              than animating its height — height animation is what made this
-              step feel like it was lurching. */}
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={selected.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.14 }}
-            >
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("payments.features_of")} {t(selected.nameKey)}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setAllOpen(true)}
-                  className="shrink-0 text-[11px] font-semibold text-foreground/70 underline-offset-2 transition-colors hover:text-foreground hover:underline"
-                >
-                  {t("pricing.more_all")}
-                </button>
-              </div>
-              <FeatureGroups
-                pkg={selected}
-                checkClass={accent.check}
-                onInheritedClick={() => setAllOpen(true)}
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* "Semua fitur Normal" / "Semua fitur VIP" are references, not answers.
-          This is what they point at. */}
-      <Dialog open={allOpen} onOpenChange={setAllOpen}>
+      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetailId(null)}>
         <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display">{t("pricing.more_all")}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-1">
-            {ALL_FEATURES.map((g) => (
-              <div key={g.group}>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {g.group}
-                </p>
-                <ul className="mt-1.5 space-y-1">
-                  {g.items.map((item) => (
-                    <li key={item} className="text-sm text-foreground/90">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+          {detail && accent && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display">
+                  {t("payments.features_of")} {t(detail.nameKey)}
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4 pt-1">
+                {/* What this tier ADDS. */}
+                <FeatureGroups pkg={detail} checkClass={accent.check} />
+
+                {/* And what everyone gets regardless — so "Semua fitur Normal"
+                    resolves right here instead of pointing somewhere else. */}
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs font-semibold text-foreground">
+                    {t("payments.features_all_included")}
+                  </p>
+                  <div className="mt-2.5 space-y-3">
+                    {ALL_FEATURES.map((g) => (
+                      <div key={g.group}>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                          {g.group}
+                        </p>
+                        <ul className="mt-1 space-y-0.5">
+                          {g.items.map((item) => (
+                            <li key={item} className="text-xs text-foreground/85">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-          <p className="pt-1 text-[11px] leading-relaxed text-muted-foreground">
-            {t("pricing.more_note")}
-          </p>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>
