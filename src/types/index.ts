@@ -16,9 +16,11 @@ export interface Session {
   selectedClass: string;
   isPreview?: boolean;
   packageTier: "share" | "normal" | "vip" | "diamond";
-  // How the user logs in: 'key' = license key (carries the 30-day activation +
-  // idle timeout), 'email' = Google sign-in (no expiry, no idle logout).
-  loginMethod?: "key" | "email";
+  // How the user logs in. 'key' = license key (carries the 30-day activation +
+  // idle timeout, retired next exam period), 'google' = Google sign-in,
+  // 'password' = email + password. 'email' is the legacy alias of 'google' and
+  // still appears on live rows — see normalizeLoginMethod in lib/auth/login-method.
+  loginMethod?: "key" | "email" | "google" | "password";
   // Bound at activation, immutable per session. Backfilled to (2,uts,bm)
   // for sessions stored before this field existed.
   scope: ScopeTuple;
@@ -483,10 +485,12 @@ export interface PurchaseMeta {
   sourceOther?: string;
   leShareNote?: string;     // LE86 share acknowledgement
   scopeKey?: string;        // e.g. "s2-uts-bm"
-  // How the buyer chose to log in. 'key' = license key, 'email' = Google.
-  loginMethod?: "key" | "email";
-  // The Gmail used for Google login (only set when loginMethod === 'email').
-  // Contact/notification email lives in the purchase_requests.email column.
+  // How the buyer chose to log in. 'google' = Google sign-in, 'password' =
+  // email + password. 'key'/'email' only appear on purchases made before the
+  // account model landed.
+  loginMethod?: "key" | "email" | "google" | "password";
+  // The address the account is keyed to: a Gmail for 'google', any domain for
+  // 'password'. Contact/notification email lives in purchase_requests.email.
   loginEmail?: string;
   // How the buyer fulfilled the Share requirement (Items 4/6).
   shareMethod?: "broadcast" | "story";
@@ -621,9 +625,11 @@ export interface LicenseKey {
   createdAt: string;
   updatedAt: string;
   linkedEmail?: string | null;
-  // null = legacy (both login paths allowed); 'key' = license-key only;
-  // 'email' = Google login only. Bound at admin approval (migration 038).
-  loginMethod?: "key" | "email" | null;
+  // null = legacy (license key AND Google both allowed); 'key' = license-key
+  // only; 'google' = Google only ('email' = its legacy alias, still on live
+  // rows); 'password' = email + password only. Bound at admin approval
+  // (migrations 038 + 059).
+  loginMethod?: "key" | "email" | "google" | "password" | null;
 }
 
 export interface Activation {

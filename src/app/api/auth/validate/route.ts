@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/server-rate-limit";
 import { scopeKey as toScopeKey, DEFAULT_SCOPE } from "@/lib/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
+import { allowsKeyLogin, allowsPasswordLogin } from "@/lib/auth/login-method";
 import {
   activateLicense,
   ActivationError,
@@ -97,17 +98,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Login-method binding (migration 038): an 'email' key logs in via Google only.
-    // NULL = legacy, both paths allowed. This is a KNOWN-VALID key entered on the
-    // wrong path — do NOT record a failed attempt (no IP/lockout penalty for an
-    // honest method mismatch). The `reason` lets the client skip its own lockout.
-    if (license.login_method === "email") {
+    // Login-method binding (migrations 038 + 059). Positive check: the key path
+    // is open only to legacy (NULL) and 'key' accounts. It used to reject
+    // `=== "email"`, which let a 'password' account in through this path simply
+    // by not being the other method.
+    // This is a KNOWN-VALID key entered on the wrong path — do NOT record a
+    // failed attempt (no IP/lockout penalty for an honest method mismatch). The
+    // `reason` lets the client skip its own lockout.
+    if (!allowsKeyLogin(license.login_method)) {
+      const via = allowsPasswordLogin(license.login_method)
+        ? "Akun ini login pakai email & password kamu."
+        : "Akun ini login lewat Google. Gunakan tombol “Login dengan Google”.";
       return NextResponse.json(
-        {
-          valid: false,
-          reason: "wrong_method",
-          error: "Akun ini login lewat Google. Gunakan tombol “Login dengan Google”.",
-        },
+        { valid: false, reason: "wrong_method", error: via },
         { status: 403 }
       );
     }

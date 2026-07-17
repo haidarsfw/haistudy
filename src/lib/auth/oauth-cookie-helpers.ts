@@ -8,6 +8,7 @@ import {
 } from "@/lib/scope";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
+import { normalizeLoginMethod } from "@/lib/auth/login-method";
 
 export interface SessionPayload {
   licenseKey: string;
@@ -22,7 +23,7 @@ export interface SessionPayload {
   packageTier: "share" | "normal" | "vip" | "diamond";
   // 'key' = license-key login (30-day activation + idle timeout); 'email' =
   // Google sign-in (no expiry, no idle logout).
-  loginMethod?: "key" | "email";
+  loginMethod?: "key" | "email" | "google" | "password";
   scope: ScopeTuple;
   scopeKey: string;
 }
@@ -320,9 +321,12 @@ export async function activateLicense(
     isPreview: license.is_preview || false,
     packageTier:
       (license.package_tier as "share" | "normal" | "vip" | "diamond") || "normal",
-    // 'email' (Google) logins never expire / idle-out; default to 'key'.
+    // Report the real method. This used to collapse to `=== "email" ? "email"
+    // : "key"`, which mislabels every 'password' account as a key user.
+    // Legacy (null) accounts still report 'key': that is the path they get.
     loginMethod:
-      ((license as { login_method?: string }).login_method === "email" ? "email" : "key"),
+      normalizeLoginMethod((license as { login_method?: string }).login_method) ??
+      "key",
     scope: effectiveScope,
     scopeKey: toScopeKey(effectiveScope),
   };

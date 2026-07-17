@@ -12,6 +12,7 @@ import {
 } from "@/lib/scope";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
+import { normalizeLoginMethod } from "@/lib/auth/login-method";
 
 /**
  * GET /api/auth/me
@@ -123,8 +124,8 @@ export async function GET() {
     isPreview: license.is_preview || false,
     packageTier:
       (license.package_tier as "share" | "normal" | "vip" | "diamond") || "normal",
-    // 'email' (Google) logins never expire / idle-out; default to 'key'.
-    loginMethod: (license.login_method as "key" | "email") === "email" ? "email" : "key",
+    // Report the real method — this used to collapse 'password' into 'key'.
+    loginMethod: normalizeLoginMethod(license.login_method as string | null) ?? "key",
     scope: effectiveScope,
     scopeKey: toScopeKey(effectiveScope),
   };

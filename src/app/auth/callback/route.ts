@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { allowsGoogleLogin, allowsPasswordLogin } from "@/lib/auth/login-method";
 import {
   activateLicense,
   ActivationError,
@@ -97,10 +98,16 @@ export async function GET(request: Request) {
     return redirectToLoginError(origin, "license_not_found");
   }
 
-  // Login-method binding (migration 038): a 'key' license logs in with the
-  // license key only — block the Google path. NULL = legacy, both allowed.
-  if (license.login_method === "key") {
-    return redirectToLoginError(origin, "use_key_login", email);
+  // Login-method binding (migrations 038 + 059). Positive check: the Google path
+  // is open only to legacy (NULL), 'google' and its legacy alias 'email'. It
+  // used to reject `=== "key"`, which let a 'password' account sign in with
+  // Google — bypassing the password entirely — whenever that account's email
+  // happened to be a Gmail.
+  if (!allowsGoogleLogin(license.login_method)) {
+    const reason = allowsPasswordLogin(license.login_method)
+      ? "use_password_login"
+      : "use_key_login";
+    return redirectToLoginError(origin, reason, email);
   }
 
   // Server-generated device id for OAuth path (key-login path uses client device id)
