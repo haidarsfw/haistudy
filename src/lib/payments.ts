@@ -13,6 +13,15 @@ export type PurchasablePackageId = "share" | "normal" | "vip" | "diamond";
 /** Per-package accent. Gold = VIP (role-amber), diamond = sky, else primary. */
 export type PackageAccent = "primary" | "gold" | "diamond";
 
+/**
+ * Sentinel item key: renders the package's real `maxDevices` instead of a fixed
+ * string. A literal "Max 2 device" key used to sit in Share/Normal's list while
+ * VIP/Diamond only said "semua fitur Normal", so their 3-device allowance was
+ * never stated and was actively contradicted. Same idiom as the landing card's
+ * `{ key: "quota", quota: true }` marker.
+ */
+export const MAX_DEVICES_ITEM = "__max_devices";
+
 /** A labelled group of feature i18n keys, shown in the "lihat semua" panel. */
 export interface FeatureGroup {
   labelKey: string;
@@ -103,7 +112,7 @@ export const PACKAGES: PackageDef[] = [
       "pricing.feat_ai",
       "pricing.feat_forum",
       "pricing.feat_voice",
-      "pricing.feat_max_device",
+      MAX_DEVICES_ITEM,
     ],
     featureGroups: [
       {
@@ -114,7 +123,7 @@ export const PACKAGES: PackageDef[] = [
           "pricing.feat_ai",
           "pricing.feat_forum",
           "pricing.feat_voice",
-          "pricing.feat_max_device",
+          MAX_DEVICES_ITEM,
         ],
       },
     ],
@@ -135,7 +144,7 @@ export const PACKAGES: PackageDef[] = [
       "pricing.feat_ai",
       "pricing.feat_forum",
       "pricing.feat_voice",
-      "pricing.feat_max_device",
+      MAX_DEVICES_ITEM,
     ],
     featureGroups: [
       {
@@ -146,7 +155,7 @@ export const PACKAGES: PackageDef[] = [
           "pricing.feat_ai",
           "pricing.feat_forum",
           "pricing.feat_voice",
-          "pricing.feat_max_device",
+          MAX_DEVICES_ITEM,
         ],
       },
     ],
@@ -173,9 +182,13 @@ export const PACKAGES: PackageDef[] = [
       "pricing.feat_voice_perks",
       "pricing.feat_vip_badge",
       "pricing.feat_fast_support",
+      MAX_DEVICES_ITEM,
     ],
     featureGroups: [
-      { labelKey: "pricing.grp_included", itemKeys: ["pricing.feat_all_normal"] },
+      {
+        labelKey: "pricing.grp_included",
+        itemKeys: ["pricing.feat_all_normal", MAX_DEVICES_ITEM],
+      },
       { labelKey: "pricing.grp_ai", itemKeys: ["pricing.feat_ai_model", "pricing.feat_ai_priority"] },
       {
         labelKey: "pricing.grp_komunitas",
@@ -207,9 +220,13 @@ export const PACKAGES: PackageDef[] = [
       "pricing.feat_name_glow",
       "pricing.feat_diamond_badge",
       "pricing.feat_support_dev",
+      MAX_DEVICES_ITEM,
     ],
     featureGroups: [
-      { labelKey: "pricing.grp_all_vip", itemKeys: ["pricing.feat_all_vip"] },
+      {
+        labelKey: "pricing.grp_all_vip",
+        itemKeys: ["pricing.feat_all_vip", MAX_DEVICES_ITEM],
+      },
       {
         labelKey: "pricing.grp_eksklusif",
         itemKeys: ["pricing.feat_name_glow", "pricing.feat_diamond_badge"],

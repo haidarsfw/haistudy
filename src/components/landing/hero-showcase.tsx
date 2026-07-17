@@ -136,7 +136,7 @@ function RangkumanScreen() {
     <ScreenShell title="Rangkuman">
       <div className="flex h-full flex-col gap-4">
         <div className="rounded-xl border border-border bg-card p-4">
-          <p className="mb-3 text-sm font-semibold">Statistik I — Modul 3</p>
+          <p className="mb-3 text-sm font-semibold">Statistik I, Modul 3</p>
           <div className="space-y-2.5">
             <Bar w="92%" />
             <div className="relative">
@@ -246,7 +246,7 @@ function LatihanScreen() {
           ))}
         </div>
         <div className="mt-auto rounded-xl bg-accent px-3 py-2 text-xs text-accent-foreground">
-          Simulasi ujian nyata — soal esai pun otomatis dinilai AI dengan skor.
+          Simulasi ujian nyata. Soal esai pun otomatis dinilai AI dengan skor.
         </div>
       </div>
     </ScreenShell>

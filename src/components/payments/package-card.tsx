@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   packageAccent,
   formatIDR,
+  MAX_DEVICES_ITEM,
   type PackageAccent,
   type PackageDef,
 } from "@/lib/payments";
@@ -81,7 +82,11 @@ export function FeatureGroups({ pkg, checkClass }: { pkg: PackageDef; checkClass
             {g.itemKeys.map((k) => (
               <li key={k} className="flex items-start gap-1.5 text-xs text-foreground/90">
                 <Check className={cn("mt-0.5 h-3 w-3 shrink-0", checkClass)} strokeWidth={3} />
-                <span>{t(k)}</span>
+                <span>
+                  {k === MAX_DEVICES_ITEM
+                    ? `${t("pricing.max_device_prefix")} ${pkg.maxDevices} ${t("pricing.devices")}`
+                    : t(k)}
+                </span>
               </li>
             ))}
           </ul>

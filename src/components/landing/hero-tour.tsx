@@ -471,9 +471,9 @@ function StatistikSurface({ mobile }: { mobile?: boolean }) {
 
 function CatatanSurface({ mobile }: { mobile?: boolean }) {
   const notes = [
-    { title: "Rumus EOQ — Ops Mgmt", dot: "bg-orange-500", formula: true, body: " simpan safety stock buat lead time." },
+    { title: "Rumus EOQ, Ops Mgmt", dot: "bg-orange-500", formula: true, body: " simpan safety stock buat lead time." },
     { title: "Rumus Akuntansi penting", dot: "bg-violet-500", formula: false, body: "Aset = Liabilitas + Ekuitas. Jurnal penyesuaian akhir." },
-    { title: "Etika bisnis — poin ujian", dot: "bg-teal-500", formula: false, body: "Utilitarianism vs deontology. Contoh kasus CSR." },
+    { title: "Etika bisnis, poin ujian", dot: "bg-teal-500", formula: false, body: "Utilitarianism vs deontology. Contoh kasus CSR." },
   ];
   return (
     <div className={mobile ? "p-3" : "p-4"}>
