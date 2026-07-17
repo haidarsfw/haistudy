@@ -634,130 +634,150 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
             )}
 
             {step === 2 && (
-              <>
-                {/* Amount to pay */}
-                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-center">
-                  <p className="text-xs text-muted-foreground">{t("payments.amount_label")}</p>
-                  <button
-                    type="button"
-                    onClick={() => copy(String(uniqueAmount))}
-                    className="mt-1 inline-flex items-center gap-2 text-3xl font-bold text-foreground"
-                  >
-                    {formatIDR(uniqueAmount)}
-                    <Copy className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                  <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                    {t("payments.amount_unique_hint")
-                      .replace("{base}", formatIDR(price))
-                      .replace("{digits}", uniqueAmount === price ? "000" : String(uniqueAmount - price).padStart(3, "0"))}
-                  </p>
-                </div>
+              // Two columns, split by what the buyer DOES with each half.
+              //
+              // Left is reference: the amount and the accounts — you read it,
+              // copy from it, and switch to your banking app. Right is the form:
+              // method, proof, source. As one long column these interleaved, so
+              // you scrolled past the account number to find the upload, then
+              // scrolled back for the number. Widening the column did nothing
+              // for that; only splitting the two jobs does.
+              <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-5">
+                {/* ── LEFT: what to pay, and where ── */}
+                <Section title={t("payments.sec_pay")}>
+                  <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 text-center">
+                    <p className="text-[11px] text-muted-foreground">{t("payments.amount_label")}</p>
+                    <button
+                      type="button"
+                      onClick={() => copy(String(uniqueAmount))}
+                      className="mt-0.5 inline-flex items-center gap-2 font-display text-3xl font-bold text-foreground"
+                    >
+                      {formatIDR(uniqueAmount)}
+                      <Copy className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                      {t("payments.amount_unique_hint")
+                        .replace("{base}", formatIDR(price))
+                        .replace("{digits}", uniqueAmount === price ? "000" : String(uniqueAmount - price).padStart(3, "0"))}
+                    </p>
+                  </div>
 
-                {/* Accounts */}
-                <div className="space-y-2">
-                  <AccountRow icon={<Landmark className="h-4 w-4" />} label={PAYMENT_ACCOUNTS.bca.label} number={PAYMENT_ACCOUNTS.bca.number} holder={PAYMENT_ACCOUNTS.bca.holder} onCopy={() => copy(PAYMENT_ACCOUNTS.bca.number)} hint={t("payments.tap_to_copy")} />
-                  <AccountRow icon={<Wallet className="h-4 w-4" />} label={PAYMENT_ACCOUNTS.ewallet.label} number={PAYMENT_ACCOUNTS.ewallet.number} holder={PAYMENT_ACCOUNTS.ewallet.holder} onCopy={() => copy(PAYMENT_ACCOUNTS.ewallet.number)} hint={t("payments.tap_to_copy")} />
-                  <QrisCard
-                    label={t("payments.qris_label")}
-                    expandHint={t("payments.qris_expand")}
-                    downloadLabel={t("payments.qris_download")}
-                  />
-                </div>
-
-                <FieldShell label={t("payments.method_label")} required error={errors.paymentMethod}>
-                  <RadioGroup
-                    name="method"
-                    variant="tile"
-                    value={form.paymentMethod}
-                    onChange={(v) => set("paymentMethod", v as PaymentMethodId)}
-                    columns={3}
-                    options={PAYMENT_METHODS.map((m) => ({ value: m.id, label: t(m.labelKey) }))}
-                  />
-                </FieldShell>
-
-                <FieldShell label={t("payments.proof_pay_label")} description={t("payments.proof_pay_desc")} required error={errors.paymentProof}>
-                  <FileUpload value={form.paymentProof} onChange={(f) => set("paymentProof", f)} invalid={!!errors.paymentProof} />
-                </FieldShell>
-
-                {isShare && (
-                  <FieldShell
-                    label={t("payments.share_method_label")}
-                    description={t("payments.share_method_desc")}
-                    required
-                    error={errors.shareMethod}
-                  >
-                    <RadioGroup
-                      name="shareMethod"
-                      value={form.shareMethod}
-                      onChange={(v) => set("shareMethod", v as FormState["shareMethod"])}
-                      columns={1}
-                      options={[
-                        {
-                          value: "broadcast",
-                          label: t("payments.share_method_broadcast"),
-                          description: isLE86
-                            ? t("payments.share_method_broadcast_desc_le86")
-                            : t("payments.share_method_broadcast_desc"),
-                        },
-                        {
-                          value: "story",
-                          label: t("payments.share_method_story"),
-                          description: t("payments.share_method_story_desc"),
-                        },
-                      ]}
+                  <div className="mt-3 space-y-2">
+                    <AccountRow icon={<Landmark className="h-4 w-4" />} label={PAYMENT_ACCOUNTS.bca.label} number={PAYMENT_ACCOUNTS.bca.number} holder={PAYMENT_ACCOUNTS.bca.holder} onCopy={() => copy(PAYMENT_ACCOUNTS.bca.number)} hint={t("payments.tap_to_copy")} />
+                    <AccountRow icon={<Wallet className="h-4 w-4" />} label={PAYMENT_ACCOUNTS.ewallet.label} number={PAYMENT_ACCOUNTS.ewallet.number} holder={PAYMENT_ACCOUNTS.ewallet.holder} onCopy={() => copy(PAYMENT_ACCOUNTS.ewallet.number)} hint={t("payments.tap_to_copy")} />
+                    <QrisCard
+                      label={t("payments.qris_label")}
+                      expandHint={t("payments.qris_expand")}
+                      downloadLabel={t("payments.qris_download")}
                     />
-                  </FieldShell>
-                )}
+                  </div>
+                </Section>
 
-                {isShare && form.shareMethod && (
-                  <FieldShell
-                    label={
-                      form.shareMethod === "story"
-                        ? t("payments.proof_story_label")
-                        : requiredShareProofs === 2
-                          ? t("payments.proof_broadcast1_label")
-                          : t("payments.proof_broadcast_label")
-                    }
-                    description={
-                      form.shareMethod === "story"
-                        ? t("payments.proof_story_desc")
-                        : requiredShareProofs === 2
-                          ? t("payments.proof_broadcast1_desc")
-                          : t("payments.proof_broadcast_desc")
-                    }
-                    required
-                    error={errors.shareProof}
-                  >
-                    <FileUpload value={form.shareProof} onChange={(f) => set("shareProof", f)} invalid={!!errors.shareProof} />
-                  </FieldShell>
-                )}
+                {/* ── RIGHT: prove it ── */}
+                <Section title={t("payments.sec_confirm")}>
+                  <div className="space-y-4">
+                    <FieldShell label={t("payments.method_label")} required error={errors.paymentMethod}>
+                      <RadioGroup
+                        name="method"
+                        variant="tile"
+                        value={form.paymentMethod}
+                        onChange={(v) => set("paymentMethod", v as PaymentMethodId)}
+                        columns={3}
+                        options={PAYMENT_METHODS.map((m) => ({ value: m.id, label: t(m.labelKey) }))}
+                      />
+                    </FieldShell>
 
-                {isShare && form.shareMethod === "broadcast" && isLE86 && (
-                  <FieldShell
-                    label={t("payments.proof_broadcast2_label")}
-                    description={t("payments.proof_broadcast2_desc")}
-                    required
-                    error={errors.shareProof2}
-                  >
-                    <FileUpload value={form.shareProof2} onChange={(f) => set("shareProof2", f)} invalid={!!errors.shareProof2} />
-                  </FieldShell>
-                )}
+                    <FieldShell label={t("payments.proof_pay_label")} description={t("payments.proof_pay_desc")} required error={errors.paymentProof}>
+                      <FileUpload value={form.paymentProof} onChange={(f) => set("paymentProof", f)} invalid={!!errors.paymentProof} />
+                    </FieldShell>
 
-                <FieldShell label={t("payments.source_label")} required error={errors.source || errors.sourceOther}>
-                  <RadioGroup
-                    name="source"
-                    value={form.source}
-                    onChange={(v) => set("source", v)}
-                    columns={2}
-                    options={SOURCES.map((s) => ({ value: s.id, label: t(s.labelKey) })) as RadioOption[]}
-                  />
-                  {form.source === "other" && (
-                    <div className="mt-2">
-                      <ShortAnswer value={form.sourceOther} onChange={(v) => set("sourceOther", v)} placeholder={t("payments.source_other_ph")} invalid={!!errors.sourceOther} />
-                    </div>
-                  )}
-                </FieldShell>
-              </>
+                    <FieldShell label={t("payments.source_label")} required error={errors.source || errors.sourceOther}>
+                      <RadioGroup
+                        name="source"
+                        value={form.source}
+                        onChange={(v) => set("source", v)}
+                        variant="plain"
+                        columns={2}
+                        columnsMobile={2}
+                        options={SOURCES.map((s) => ({ value: s.id, label: t(s.labelKey) })) as RadioOption[]}
+                      />
+                      {form.source === "other" && (
+                        <div className="mt-2">
+                          <ShortAnswer value={form.sourceOther} onChange={(v) => set("sourceOther", v)} placeholder={t("payments.source_other_ph")} invalid={!!errors.sourceOther} />
+                        </div>
+                      )}
+                    </FieldShell>
+                  </div>
+                </Section>
+
+                {/* ── Share-only, full width: it is its own errand, and only a
+                       quarter of buyers ever see it. ── */}
+                {isShare && (
+                  <div className="lg:col-span-2">
+                    <Section title={t("payments.sec_share")} description={t("payments.share_method_desc")}>
+                      <div className="grid gap-4 lg:grid-cols-2 lg:gap-x-5">
+                        <FieldShell label={t("payments.share_method_label")} required error={errors.shareMethod}>
+                          <RadioGroup
+                            name="shareMethod"
+                            value={form.shareMethod}
+                            onChange={(v) => set("shareMethod", v as FormState["shareMethod"])}
+                            variant="plain"
+                            columns={1}
+                            options={[
+                              {
+                                value: "broadcast",
+                                label: t("payments.share_method_broadcast"),
+                                description: isLE86
+                                  ? t("payments.share_method_broadcast_desc_le86")
+                                  : t("payments.share_method_broadcast_desc"),
+                              },
+                              {
+                                value: "story",
+                                label: t("payments.share_method_story"),
+                                description: t("payments.share_method_story_desc"),
+                              },
+                            ]}
+                          />
+                        </FieldShell>
+
+                        {form.shareMethod && (
+                          <FieldShell
+                            label={
+                              form.shareMethod === "story"
+                                ? t("payments.proof_story_label")
+                                : requiredShareProofs === 2
+                                  ? t("payments.proof_broadcast1_label")
+                                  : t("payments.proof_broadcast_label")
+                            }
+                            description={
+                              form.shareMethod === "story"
+                                ? t("payments.proof_story_desc")
+                                : requiredShareProofs === 2
+                                  ? t("payments.proof_broadcast1_desc")
+                                  : t("payments.proof_broadcast_desc")
+                            }
+                            required
+                            error={errors.shareProof}
+                          >
+                            <FileUpload value={form.shareProof} onChange={(f) => set("shareProof", f)} invalid={!!errors.shareProof} />
+                          </FieldShell>
+                        )}
+
+                        {form.shareMethod === "broadcast" && isLE86 && (
+                          <FieldShell
+                            label={t("payments.proof_broadcast2_label")}
+                            description={t("payments.proof_broadcast2_desc")}
+                            required
+                            error={errors.shareProof2}
+                          >
+                            <FileUpload value={form.shareProof2} onChange={(f) => set("shareProof2", f)} invalid={!!errors.shareProof2} />
+                          </FieldShell>
+                        )}
+                      </div>
+                    </Section>
+                  </div>
+                )}
+              </div>
             )}
 
             {step === 3 && (

@@ -87,9 +87,10 @@ export function RadioGroup({
             className={cn(
               "flex items-start gap-2.5 text-left transition-colors",
               plain
-                // No border, no fill: the dot carries the state. Padding stays
-                // so the tap target is still a row, not just the label.
-                ? "-mx-1.5 rounded-lg px-1.5 py-1.5 hover:bg-muted/40"
+                // No border, no fill, not even on hover: the dot carries the
+                // state on its own. Padding stays so the tap target is a row
+                // rather than just the label.
+                ? "-mx-1.5 rounded-lg px-1.5 py-1.5"
                 : cn(
                     "rounded-xl border px-3.5 py-2.5",
                     selected
