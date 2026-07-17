@@ -12,6 +12,9 @@ import {
   Loader2,
   Pencil,
   QrCode,
+  Download,
+  Maximize2,
+  Minimize2,
   Landmark,
   Wallet,
   Home,
@@ -59,7 +62,6 @@ interface FormState {
   campus: string;
   campusOther: string;
   whatsapp: string;
-  email: string; // contact email (any domain) — notif & key reset
   loginMethod: LoginMethod;
   loginEmail: string; // Gmail for "google"; any domain for "password"
   loginPassword: string;
@@ -104,7 +106,6 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
     campus: "",
     campusOther: "",
     whatsapp: "",
-    email: "",
     loginMethod: "google",
     loginEmail: "",
     loginPassword: "",
@@ -178,7 +179,6 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       else if (form.campus === "Other" && !form.campusOther.trim())
         e.campusOther = t("payments.err_required");
       if (form.whatsapp.replace(/\D/g, "").length < 8) e.whatsapp = t("payments.err_whatsapp");
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) e.email = t("payments.err_email");
       const le = form.loginEmail.trim();
       if (!le) e.loginEmail = t("payments.err_required");
       else if (form.loginMethod === "google" && !GMAIL_RE.test(le))
@@ -259,7 +259,9 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       fd.set("name", form.name.trim());
       fd.set("nickname", form.nickname.trim());
       fd.set("whatsapp", form.whatsapp.trim());
-      fd.set("email", form.email.trim());
+      // Contact address = the sign-in address. They were two fields asking for
+      // near-identical things; the invoice now lands on the account's own email.
+      fd.set("email", form.loginEmail.trim());
       fd.set("loginMethod", form.loginMethod);
       fd.set("loginEmail", form.loginEmail.trim());
       // Not trimmed: a leading/trailing space is a legitimate password character.
@@ -453,10 +455,6 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
                 </FieldShell>
 
-                <FieldShell label={t("payments.email_label")} description={t("payments.email_desc")} required error={errors.email} htmlFor="pf-email">
-                  <ShortAnswer id="pf-email" type="email" inputMode="email" value={form.email} onChange={(v) => set("email", v)} placeholder="kamu@email.com" invalid={!!errors.email} autoComplete="email" />
-                </FieldShell>
-
                 <FieldShell label={t("payments.login_method_label")} description={t("payments.login_method_note")} required>
                   <RadioGroup
                     name="loginMethod"
@@ -639,7 +637,11 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                 <div className="space-y-2">
                   <AccountRow icon={<Landmark className="h-4 w-4" />} label={PAYMENT_ACCOUNTS.bca.label} number={PAYMENT_ACCOUNTS.bca.number} holder={PAYMENT_ACCOUNTS.bca.holder} onCopy={() => copy(PAYMENT_ACCOUNTS.bca.number)} hint={t("payments.tap_to_copy")} />
                   <AccountRow icon={<Wallet className="h-4 w-4" />} label={PAYMENT_ACCOUNTS.ewallet.label} number={PAYMENT_ACCOUNTS.ewallet.number} holder={PAYMENT_ACCOUNTS.ewallet.holder} onCopy={() => copy(PAYMENT_ACCOUNTS.ewallet.number)} hint={t("payments.tap_to_copy")} />
-                  <QrisCard label={t("payments.qris_label")} expandHint={t("payments.qris_expand")} />
+                  <QrisCard
+                    label={t("payments.qris_label")}
+                    expandHint={t("payments.qris_expand")}
+                    downloadLabel={t("payments.qris_download")}
+                  />
                 </div>
 
                 <FieldShell label={t("payments.method_label")} required error={errors.paymentMethod}>
@@ -745,7 +747,6 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   <ReviewRow label={t("payments.class_label")} value={resolvedClass} />
                   <ReviewRow label={t("payments.campus_label")} value={resolvedCampus} />
                   <ReviewRow label={t("payments.wa_label")} value={form.whatsapp} />
-                  <ReviewRow label={t("payments.email_label")} value={form.email} />
                   <ReviewRow
                     label={t("payments.login_method_label")}
                     value={form.loginMethod === "google" ? t("payments.login_google") : t("payments.login_password")}
@@ -864,49 +865,57 @@ function AccountRow({
   );
 }
 
-function QrisCard({ label, expandHint }: { label: string; expandHint: string }) {
+/**
+ * QRIS row. No thumbnail: a 64px crop of a QR is unscannable and unreadable, so
+ * it was decoration that cost a fetch. The two things a buyer actually does are
+ * explicit instead — save it to scan from another device (labelled, because it
+ * is the primary action), or open it inline to scan right here (icon only).
+ */
+function QrisCard({
+  label,
+  expandHint,
+  downloadLabel,
+}: {
+  label: string;
+  expandHint: string;
+  downloadLabel: string;
+}) {
   const [broken, setBroken] = useState(false);
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="rounded-xl border border-border bg-card">
-      <button
-        type="button"
-        onClick={() => !broken && setExpanded((v) => !v)}
-        aria-expanded={expanded}
-        className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-muted/40"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <div className="flex items-center gap-3 px-3.5 py-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground">
           <QrCode className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground">QRIS</p>
           <p className="text-[11px] text-muted-foreground">{broken ? label : expandHint}</p>
         </div>
-        {!broken ? (
-          // Collapsed thumbnail crops to the QR square — the QRIS red header,
-          // merchant name and footer text are trimmed via CSS. The QR square sits
-          // ~28–79% vertically (center ~53%) of the portrait /payment/qris.jpg, so
-          // scale-[1.35] (zoom past the oversized square cover window) with
-          // object-[50%_58%] (pull the crop down onto the QR) frames the WHOLE QR
-          // inside the 64px box with only a thin quiet-zone margin and no red
-          // header bleed (was scale-[1.3] object-[52%_47%], which sat too high and
-          // clipped the QR's bottom edge). Tuned visually; revisit these two values
-          // if the asset changes. The expanded view below shows the full card.
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={PAYMENT_ACCOUNTS.qrisImage}
-              alt="QRIS"
-              onError={() => setBroken(true)}
-              className="h-full w-full scale-[1.35] object-cover object-[50%_58%]"
-            />
-          </span>
-        ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-dashed border-border text-[9px] text-muted-foreground">
-            QRIS
+
+        {!broken && (
+          <div className="flex shrink-0 items-center gap-1.5">
+            <a
+              href={PAYMENT_ACCOUNTS.qrisImage}
+              download="qris-haistudy.jpg"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {downloadLabel}
+            </a>
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-label={expanded ? "Tutup QRIS" : "Perbesar QRIS"}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            >
+              {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            </button>
           </div>
         )}
-      </button>
+      </div>
+
       <AnimatePresence initial={false}>
         {expanded && !broken && (
           <motion.div
@@ -920,7 +929,7 @@ function QrisCard({ label, expandHint }: { label: string; expandHint: string }) 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={PAYMENT_ACCOUNTS.qrisImage}
-                alt="QRIS — scan untuk bayar"
+                alt="QRIS haistudy, scan untuk bayar"
                 onError={() => setBroken(true)}
                 className="w-full max-w-[18rem] rounded-lg border border-border object-contain"
               />

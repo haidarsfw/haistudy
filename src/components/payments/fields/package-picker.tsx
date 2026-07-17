@@ -56,7 +56,6 @@ export function PackagePicker({ value, onChange }: PackagePickerProps) {
             onFeaturesOpenChange={(o) => setDetailPkgId(o ? pkg.id : null)}
             featuresVariant="accordion"
             layoutId="hs-picker-ring-m"
-            showCheck
             className="p-3.5"
           />
         ))}
@@ -85,7 +84,6 @@ export function PackagePicker({ value, onChange }: PackagePickerProps) {
               onFeaturesOpenChange={(o) => setDetailPkgId(o ? pkg.id : null)}
               featuresVariant="button"
               layoutId="hs-picker-ring-d"
-              showCheck
               className="p-3.5"
             />
           ))}
