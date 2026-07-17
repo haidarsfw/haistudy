@@ -19,6 +19,7 @@ const ALLOWED_FILES = new Set([
  * Auth check is cookie-only (no Supabase query) → zero DB cost.
  *
  * Unauthenticated → 302 redirect to /unavailable
+ * Preview session → 302 redirect to /unavailable?reason=preview
  * Unknown file    → 404
  */
 export async function GET(
@@ -29,7 +30,12 @@ export async function GET(
   const jar = await cookies();
   const session = jar.get("hs-session")?.value;
   if (!session || session === "PREVIEW") {
-    return NextResponse.redirect(new URL("/unavailable", _req.url), 302);
+    // Preview users ARE signed in, they just lack access — telling them to "log
+    // in" reads as a bug. Pass the reason so /unavailable can pitch the packages
+    // instead.
+    const url = new URL("/unavailable", _req.url);
+    if (session === "PREVIEW") url.searchParams.set("reason", "preview");
+    return NextResponse.redirect(url, 302);
   }
 
   // 2. Validate filename against whitelist
