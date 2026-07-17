@@ -16,11 +16,11 @@ export const REFUND_FAQ: FaqItem[] = [
   },
   {
     q: "Gimana kalau salah beli paket?",
-    a: "Paketnya bisa dipindah, tapi cuma dalam 1 jam pertama setelah pembelian kamu disetujui admin. Tinggal chat admin di rentang itu: kalau kamu naik paket, kamu bayar selisihnya, kalau turun paket, selisihnya kita balikin. Lewat dari 1 jam, paketnya udah gak bisa diganti lagi ya.",
+    a: "Naik paket bebas kapan aja, tinggal chat admin dan bayar selisihnya. Turun paket beda ya: cuma bisa dalam 1 jam pertama setelah pembelian kamu disetujui admin, dan selisihnya kita balikin ke kamu. Lewat dari 1 jam, paket kamu udah gak bisa diturunin lagi.",
   },
   {
     q: "Kondisi apa yang gak bisa direfund?",
-    a: "Kalau kamu berubah pikiran atau ternyata gak sempat pakai, itu gak bisa direfund ya. Sama kalau akses kamu diblokir karena melanggar ketentuan, misalnya akunnya dibagikan ke orang lain, atau kamu baru minta ganti paket setelah lewat 1 jam. Gangguan kecil yang masih bisa kita beresin juga gak masuk refund, itu kita benerin aja langsung.",
+    a: "Kalau kamu berubah pikiran atau ternyata gak sempat pakai, itu gak bisa direfund ya. Sama kalau akses kamu diblokir karena melanggar ketentuan, misalnya akunnya dibagikan ke orang lain, atau kamu baru minta turun paket setelah lewat 1 jam. Gangguan kecil yang masih bisa kita beresin juga gak masuk refund, itu kita benerin aja langsung.",
   },
   {
     q: "Gimana cara ngajuinnya?",
