@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 
 type Resolved = "dark";
@@ -14,55 +15,75 @@ export const useLandingTheme = () => useContext(LandingThemeCtx);
  * observer. All motion disabled under prefers-reduced-motion.
  */
 export function LandingShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  // Scroll-reveal wiring. Keyed on `pathname` on purpose: LandingShell lives in
+  // the (landing) LAYOUT, so it stays mounted across route changes. A mount-once
+  // effect left `.reveal-ready` on the root while the newly mounted page's
+  // [data-reveal] elements were never observed — so returning to the landing
+  // from any subpage rendered every revealed section permanently invisible.
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const rootEl = document.querySelector<HTMLElement>(".landing-root");
-    // Kill scroll anchoring across the landing (the self-playing demos + Lenis
-    // can otherwise nudge the page on their own). Set inline so Lightning CSS
-    // can't strip it the way it drops the `overflow-anchor` CSS property.
-    rootEl?.style.setProperty("overflow-anchor", "none");
     const els = Array.from(
       document.querySelectorAll<HTMLElement>("[data-reveal]")
     );
-    let io: IntersectionObserver | null = null;
-    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
 
     if (reduce) {
       els.forEach((el) => el.classList.add("is-visible"));
-    } else {
-      // Enable the hidden→reveal animation only now (JS ran). Content is
-      // visible by default otherwise, so nothing can get stuck invisible.
-      rootEl?.classList.add("reveal-ready");
-      io = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) {
-              e.target.classList.add("is-visible");
-              io?.unobserve(e.target);
-            }
-          }
-        },
-        { rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
-      );
-      const vh = window.innerHeight;
-      els.forEach((el) => {
-        // Above-the-fold reveals immediately — no dependence on the observer,
-        // which browsers throttle/pause in background tabs.
-        if (el.getBoundingClientRect().top < vh * 0.92) {
-          el.classList.add("is-visible");
-        } else {
-          io!.observe(el);
-        }
-      });
-      // Safety net: never leave anything hidden.
-      fallbackTimer = setTimeout(
-        () => els.forEach((el) => el.classList.add("is-visible")),
-        1600
-      );
+      return;
     }
 
-    if (reduce) return () => io?.disconnect();
+    // Enable the hidden→reveal animation only now (JS ran). Content is
+    // visible by default otherwise, so nothing can get stuck invisible.
+    rootEl?.classList.add("reveal-ready");
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-visible");
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
+    );
+    const vh = window.innerHeight;
+    els.forEach((el) => {
+      // Above-the-fold reveals immediately — no dependence on the observer,
+      // which browsers throttle/pause in background tabs.
+      if (el.getBoundingClientRect().top < vh * 0.92) {
+        el.classList.add("is-visible");
+      } else {
+        io.observe(el);
+      }
+    });
+    // Safety net: never leave anything hidden.
+    const fallbackTimer = setTimeout(
+      () => els.forEach((el) => el.classList.add("is-visible")),
+      1600
+    );
+
+    return () => {
+      io.disconnect();
+      clearTimeout(fallbackTimer);
+    };
+  }, [pathname]);
+
+  // Lenis + anchor jumps — mount-once. Route changes must NOT tear the smooth
+  // scroller down and rebuild it.
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Kill scroll anchoring across the landing (the self-playing demos + Lenis
+    // can otherwise nudge the page on their own). Set inline so Lightning CSS
+    // can't strip it the way it drops the `overflow-anchor` CSS property.
+    document
+      .querySelector<HTMLElement>(".landing-root")
+      ?.style.setProperty("overflow-anchor", "none");
+
+    if (reduce) return;
 
     // Smooth wheel-scroll is a DESKTOP nicety. On touch devices Lenis fights the
     // native momentum scroller and makes the whole page feel heavy / laggy /
@@ -128,8 +149,6 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
       document.removeEventListener("click", onClick);
       if (raf) cancelAnimationFrame(raf);
       lenis?.destroy();
-      io?.disconnect();
-      if (fallbackTimer) clearTimeout(fallbackTimer);
     };
   }, []);
 

@@ -55,7 +55,8 @@ export default function RefundPage() {
       <p className="mt-6 text-sm leading-relaxed text-foreground/80 sm:text-[15px]">
         Pembelian haistudy bersifat final, karena begitu aksesnya aktif semua
         materinya langsung kebuka buat kamu. Tapi kalau ada yang salah di sisi
-        pembayaran atau akses kamu, uangnya tetap kita balikin. Ini rinciannya.
+        pembayaran, akses, atau platformnya, uangnya tetap kita balikin. Ini
+        rinciannya.
       </p>
 
       <div className="mt-8">
@@ -64,11 +65,12 @@ export default function RefundPage() {
 
       <div className="mt-10 rounded-2xl border border-border bg-card p-6 text-center shadow-card sm:p-7">
         <h2 className="font-display text-lg font-semibold text-foreground">
-          Ada kendala sama pembayaran kamu?
+          Ada kendala? Kita bantu.
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-          Chat admin aja langsung. Kirim bukti transfer sama cerita singkat
-          kendalanya, nanti kita cek dan beresin.
+          Chat admin aja langsung, mau soal pembayaran, akses kamu, atau
+          haistudy-nya yang error. Ceritain kendalanya sejelas mungkin dan
+          lampirin bukti bayar, nanti kita cek dan beresin.
         </p>
         <a
           href={WA_REFUND}
