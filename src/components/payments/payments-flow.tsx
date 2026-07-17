@@ -47,7 +47,9 @@ import { PackagePicker } from "./fields/package-picker";
 import { FileUpload } from "./fields/file-upload";
 import { cn } from "@/lib/utils";
 
-type LoginMethod = "key" | "email";
+// License key is no longer sold. Buyers pick an account: Google, or an email
+// they set a password for.
+type LoginMethod = "google" | "password";
 
 interface FormState {
   name: string;
@@ -59,7 +61,9 @@ interface FormState {
   whatsapp: string;
   email: string; // contact email (any domain) — notif & key reset
   loginMethod: LoginMethod;
-  loginEmail: string; // Gmail used for Google login (when loginMethod === "email")
+  loginEmail: string; // Gmail for "google"; any domain for "password"
+  loginPassword: string;
+  loginPassword2: string;
   pkg: PurchasablePackageId;
   deviceLimit: number;
   shareAck: boolean;
@@ -77,6 +81,7 @@ const TOTAL_STEPS = 4; // identity, package, payment, review
 
 // Google login requires a Gmail / Googlemail address.
 const GMAIL_RE = /@(gmail|googlemail)\.com$/i;
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 function isPackageId(v: string | undefined): v is PurchasablePackageId {
   return v === "share" || v === "normal" || v === "vip" || v === "diamond";
@@ -100,8 +105,10 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
     campusOther: "",
     whatsapp: "",
     email: "",
-    loginMethod: "key",
+    loginMethod: "google",
     loginEmail: "",
+    loginPassword: "",
+    loginPassword2: "",
     pkg: isPackageId(initialPkg) ? initialPkg : "normal",
     deviceLimit: 2,
     shareAck: false,
@@ -172,10 +179,18 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
         e.campusOther = t("payments.err_required");
       if (form.whatsapp.replace(/\D/g, "").length < 8) e.whatsapp = t("payments.err_whatsapp");
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) e.email = t("payments.err_email");
-      if (form.loginMethod === "email") {
-        const le = form.loginEmail.trim();
-        if (!le) e.loginEmail = t("payments.err_required");
-        else if (!GMAIL_RE.test(le)) e.loginEmail = t("payments.err_gmail");
+      const le = form.loginEmail.trim();
+      if (!le) e.loginEmail = t("payments.err_required");
+      else if (form.loginMethod === "google" && !GMAIL_RE.test(le))
+        e.loginEmail = t("payments.err_gmail");
+      else if (form.loginMethod === "password" && !EMAIL_RE.test(le))
+        e.loginEmail = t("payments.err_email");
+      if (form.loginMethod === "password") {
+        // Mirrors PASSWORD_MIN_LENGTH on the server. The server re-checks —
+        // this only saves the buyer a round trip.
+        if (form.loginPassword.length < 8) e.loginPassword = t("payments.err_pw_short");
+        if (form.loginPassword2 !== form.loginPassword)
+          e.loginPassword2 = t("payments.err_pw_mismatch");
       }
     } else if (s === 1) {
       if (isShare && !form.shareAck) e.shareAck = t("payments.err_share_ack");
@@ -246,7 +261,9 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       fd.set("whatsapp", form.whatsapp.trim());
       fd.set("email", form.email.trim());
       fd.set("loginMethod", form.loginMethod);
-      if (form.loginMethod === "email") fd.set("loginEmail", form.loginEmail.trim());
+      fd.set("loginEmail", form.loginEmail.trim());
+      // Not trimmed: a leading/trailing space is a legitimate password character.
+      if (form.loginMethod === "password") fd.set("loginPassword", form.loginPassword);
       fd.set("package", form.pkg);
       fd.set("scope", form.scopeKey);
       fd.set("classCode", resolvedClass);
@@ -447,16 +464,73 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                     onChange={(v) => set("loginMethod", v as LoginMethod)}
                     columns={2}
                     options={[
-                      { value: "key", label: t("payments.login_key"), description: t("payments.login_key_desc") },
-                      { value: "email", label: t("payments.login_email"), description: t("payments.login_email_desc") },
+                      { value: "google", label: t("payments.login_google"), description: t("payments.login_google_desc") },
+                      { value: "password", label: t("payments.login_password"), description: t("payments.login_password_desc") },
                     ]}
                   />
                 </FieldShell>
 
-                {form.loginMethod === "email" && (
-                  <FieldShell label={t("payments.login_email_label")} description={t("payments.login_email_field_desc")} required error={errors.loginEmail} htmlFor="pf-gmail">
-                    <ShortAnswer id="pf-gmail" type="email" inputMode="email" value={form.loginEmail} onChange={(v) => set("loginEmail", v)} placeholder="kamu@gmail.com" invalid={!!errors.loginEmail} autoComplete="email" />
-                  </FieldShell>
+                <FieldShell
+                  label={t("payments.login_email_label")}
+                  description={
+                    form.loginMethod === "google"
+                      ? t("payments.login_email_google_desc")
+                      : t("payments.login_email_password_desc")
+                  }
+                  required
+                  error={errors.loginEmail}
+                  htmlFor="pf-login-email"
+                >
+                  <ShortAnswer
+                    id="pf-login-email"
+                    type="email"
+                    inputMode="email"
+                    value={form.loginEmail}
+                    onChange={(v) => set("loginEmail", v)}
+                    placeholder={form.loginMethod === "google" ? "kamu@gmail.com" : "kamu@email.com"}
+                    invalid={!!errors.loginEmail}
+                    autoComplete="email"
+                  />
+                </FieldShell>
+
+                {form.loginMethod === "password" && (
+                  <>
+                    <FieldShell
+                      label={t("payments.login_pw_label")}
+                      description={t("payments.login_pw_desc")}
+                      required
+                      error={errors.loginPassword}
+                      htmlFor="pf-password"
+                    >
+                      {/* autoComplete="new-password" so the browser offers to
+                          generate/save one instead of pasting an existing login. */}
+                      <ShortAnswer
+                        id="pf-password"
+                        type="password"
+                        value={form.loginPassword}
+                        onChange={(v) => set("loginPassword", v)}
+                        placeholder="Minimal 8 karakter"
+                        invalid={!!errors.loginPassword}
+                        autoComplete="new-password"
+                      />
+                    </FieldShell>
+                    <FieldShell
+                      label={t("payments.login_pw2_label")}
+                      required
+                      error={errors.loginPassword2}
+                      htmlFor="pf-password2"
+                    >
+                      <ShortAnswer
+                        id="pf-password2"
+                        type="password"
+                        value={form.loginPassword2}
+                        onChange={(v) => set("loginPassword2", v)}
+                        placeholder={t("payments.login_pw2_placeholder")}
+                        invalid={!!errors.loginPassword2}
+                        autoComplete="new-password"
+                      />
+                    </FieldShell>
+                  </>
                 )}
               </>
             )}
@@ -674,9 +748,9 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   <ReviewRow label={t("payments.email_label")} value={form.email} />
                   <ReviewRow
                     label={t("payments.login_method_label")}
-                    value={form.loginMethod === "email" ? t("payments.login_email") : t("payments.login_key")}
+                    value={form.loginMethod === "google" ? t("payments.login_google") : t("payments.login_password")}
                   />
-                  {form.loginMethod === "email" && (
+                  {(
                     <ReviewRow label={t("payments.login_email_label")} value={form.loginEmail} />
                   )}
                 </ReviewSection>

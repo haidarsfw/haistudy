@@ -298,20 +298,53 @@ export async function POST(request: Request) {
 
     const resolved = await resolveAdminScope(request);
     const body = await request.json();
-    const { key: rawKey, name, shortName, daysActive, isAdmin, isTester, maxDevices, unlimitedDevices, packageTier, linkedEmail, loginMethod: loginMethodRaw } = body;
+    const {
+      key: rawKey,
+      name,
+      shortName,
+      daysActive,
+      isAdmin,
+      isTester,
+      maxDevices,
+      unlimitedDevices,
+      packageTier,
+      linkedEmail,
+      loginMethod: loginMethodRaw,
+      purchaseRequestId,
+    } = body;
     // Short name / nickname (shown in-app); falls back to the first word of the
     // full name at read time when null.
     const shortNameNorm = typeof shortName === "string" && shortName.trim() ? shortName.trim().slice(0, 24) : null;
-    // 'key' | 'email' | null (null = legacy, both login paths allowed).
-    const loginMethod =
-      loginMethodRaw === "key" || loginMethodRaw === "email" ? loginMethodRaw : null;
-    // An 'email' key logs in via Google ONLY — it MUST have a linked Gmail, else
-    // it would be locked out of both paths (key login 403 + Google email_not_linked).
+    // 'key' | 'email' | 'google' | 'password' | null (null = legacy, both key and
+    // Google allowed). 'email' is still accepted: it is the legacy alias of
+    // 'google' and older admin flows may still send it.
+    const loginMethod: "key" | "email" | "google" | "password" | null =
+      loginMethodRaw === "key" ||
+      loginMethodRaw === "email" ||
+      loginMethodRaw === "google" ||
+      loginMethodRaw === "password"
+        ? loginMethodRaw
+        : null;
+    const isGoogleBound = loginMethod === "google" || loginMethod === "email";
+    const isPasswordBound = loginMethod === "password";
+    // An account-bound license MUST carry its address, otherwise it is locked out
+    // of every path at once (key login 403 + no link to sign in against).
     const linkedEmailNorm =
       typeof linkedEmail === "string" ? linkedEmail.trim().toLowerCase() : "";
-    if (loginMethod === "email" && !linkedEmailNorm) {
+    if ((isGoogleBound || isPasswordBound) && !linkedEmailNorm) {
       return NextResponse.json(
-        { error: "login_method 'email' membutuhkan linkedEmail (Gmail) untuk membuat link Google." },
+        { error: `login_method '${loginMethod}' membutuhkan linkedEmail untuk membuat akunnya.` },
+        { status: 400 }
+      );
+    }
+
+    // A password account is only real once its hash is attached. The hash never
+    // travels through the admin's browser: the client sends the purchase id and
+    // the server fetches what the buyer set at checkout. Resolved below, once
+    // the Supabase client exists.
+    if (isPasswordBound && (typeof purchaseRequestId !== "string" || !purchaseRequestId)) {
+      return NextResponse.json(
+        { error: "login_method 'password' membutuhkan purchaseRequestId." },
         { status: 400 }
       );
     }
@@ -378,6 +411,35 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
 
+    // Fetch the password the buyer set at checkout. Read server-side from the
+    // purchase id so the hash never passes through the admin's browser.
+    let pendingPasswordHash: string | null = null;
+    if (isPasswordBound) {
+      const { data: cred } = await supabase
+        .from("pending_credentials")
+        .select("password_hash, email_lower")
+        .eq("purchase_request_id", purchaseRequestId as string)
+        .maybeSingle();
+      if (!cred?.password_hash) {
+        return NextResponse.json(
+          {
+            error:
+              "Password pembeli tidak ditemukan. Minta pembeli set ulang lewat link reset.",
+          },
+          { status: 400 }
+        );
+      }
+      // The address must be the one the password was set against, otherwise the
+      // buyer ends up with a working password on an account they cannot name.
+      if (cred.email_lower !== linkedEmailNorm) {
+        return NextResponse.json(
+          { error: "Email tidak cocok dengan yang dipakai pembeli saat set password." },
+          { status: 400 }
+        );
+      }
+      pendingPasswordHash = cred.password_hash as string;
+    }
+
     // Pre-check OAuth email uniqueness before creating license.
     const trimmedEmail =
       typeof linkedEmail === "string" ? linkedEmail.trim().toLowerCase() : "";
@@ -423,12 +485,15 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    // Link Google email if provided.
+    // Link the account's address. Password accounts carry their hash on the same
+    // row; Google accounts must carry none (the DB check constraint enforces
+    // both directions, so a mix-up fails loudly instead of silently).
     if (trimmedEmail) {
       const { error: linkErr } = await supabase.from("oauth_links").insert({
         license_key: data.key,
         email: trimmedEmail,
-        provider: "google",
+        provider: isPasswordBound ? "password" : "google",
+        ...(isPasswordBound ? { password_hash: pendingPasswordHash } : {}),
       });
       if (linkErr && linkErr.code === "23505") {
         return NextResponse.json(
@@ -438,6 +503,26 @@ export async function POST(request: Request) {
       }
       if (linkErr) {
         console.error("oauth_links insert error:", linkErr);
+        // A password account whose hash never landed cannot be logged into at
+        // all, and the buyer has already paid. Don't report success.
+        if (isPasswordBound) {
+          return NextResponse.json(
+            { error: "Gagal menyimpan akun password pembeli. Coba lagi." },
+            { status: 500 }
+          );
+        }
+      }
+
+      // The password now lives on the account; drop the checkout copy so it
+      // isn't sitting in two places.
+      if (isPasswordBound && !linkErr && typeof purchaseRequestId === "string") {
+        const { error: delErr } = await supabase
+          .from("pending_credentials")
+          .delete()
+          .eq("purchase_request_id", purchaseRequestId);
+        // Not fatal — the account works either way, and the leftover row is
+        // unreachable. Worth knowing about, not worth failing an approval over.
+        if (delErr) console.error("pending_credentials cleanup failed:", delErr);
       }
     }
 

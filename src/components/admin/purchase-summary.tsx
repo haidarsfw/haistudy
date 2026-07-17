@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import type { PurchaseRequest } from "@/types";
 import { formatIDR } from "@/lib/payments";
+import { loginMethodLabel } from "@/lib/auth/login-method";
 
 const PACKAGE_LABELS: Record<string, string> = {
   share: "Share",
@@ -265,7 +266,7 @@ export function PurchaseSummary({
                     <Td className="font-medium text-foreground">{p.name}</Td>
                     <Td className="whitespace-nowrap">{p.whatsapp}</Td>
                     <Td>{p.email || "—"}</Td>
-                    <Td>{p.meta?.loginMethod === "email" ? "Google" : "Key"}</Td>
+                    <Td>{loginMethodLabel(p.meta?.loginMethod)}</Td>
                     <Td>{PACKAGE_LABELS[p.package] ?? p.package}</Td>
                     <Td className="whitespace-nowrap text-right tabular-nums">
                       {typeof p.meta?.uniqueAmount === "number" ? `Rp ${p.meta.uniqueAmount.toLocaleString("id-ID")}` : "—"}

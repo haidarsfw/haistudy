@@ -12,6 +12,10 @@
 
 import { Resend } from "resend";
 import { WA_ADMIN } from "@/lib/payments";
+import {
+  resolveLoginMethod,
+  type StoredLoginMethod,
+} from "@/lib/auth/login-method";
 
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const FROM = process.env.EMAIL_FROM || "noreply@haistudy.site";
@@ -94,7 +98,7 @@ export interface PurchaseAlertEmailOpts {
   amount: string; // pre-formatted, e.g. "Rp 35.171"
   scopeLabel: string;
   whatsapp?: string | null;
-  loginMethod?: "key" | "email" | null;
+  loginMethod?: StoredLoginMethod;
 }
 
 /**
@@ -136,10 +140,19 @@ interface PurchaseAlertRenderArgs extends PurchaseAlertEmailOpts {
   url: string;
 }
 
-function loginMethodLabel(m: "key" | "email" | null | undefined): string {
-  if (m === "email") return "Login via Google (Email)";
-  if (m === "key") return "Login via License Key";
-  return "—";
+// Phrased for an email body. Resolution lives in lib/auth/login-method so this
+// can't drift from what the login gates actually allow.
+function loginMethodLabel(m: StoredLoginMethod): string {
+  switch (resolveLoginMethod(m)) {
+    case "google":
+      return "Login lewat Google";
+    case "password":
+      return "Login pakai email & password";
+    case "key":
+      return "Login pakai license key";
+    default:
+      return "—";
+  }
 }
 
 function renderPurchaseAlertHtml(a: PurchaseAlertRenderArgs): string {
@@ -207,7 +220,7 @@ export interface PurchaseInvoiceEmailOpts {
   packageLabel: string;
   amount: string; // pre-formatted, e.g. "Rp 20.000"
   whatsapp: string;
-  loginMethod: "key" | "email";
+  loginMethod: StoredLoginMethod;
 }
 
 /**
@@ -261,7 +274,7 @@ function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
   const nominalRow = (label: string, value: string) =>
     `<tr><td style="padding:9px 0;font-size:13px;color:#94a3b8;vertical-align:middle">${safe(label)}</td>` +
     `<td style="padding:9px 0;text-align:right"><span style="font-size:19px;font-weight:800;color:#22c55e">${safe(value)}</span></td></tr>`;
-  const loginLabel = a.loginMethod === "email" ? "Login via Google (Email)" : "Login via License Key";
+  const loginLabel = loginMethodLabel(a.loginMethod);
   const website = APP_URL.replace(/\/$/, "");
   const waUrl = `https://wa.me/${WA_ADMIN}`;
   return `<!doctype html>
@@ -313,7 +326,7 @@ function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
 
 function renderPurchaseInvoiceText(a: InvoiceRenderArgs): string {
   const website = APP_URL.replace(/\/$/, "");
-  const loginLabel = a.loginMethod === "email" ? "Login via Google (Email)" : "Login via License Key";
+  const loginLabel = loginMethodLabel(a.loginMethod);
   return (
     `Halo ${a.buyerName},\n\n` +
     `Pesananmu sudah kami terima${a.invoiceNo ? ` (Invoice ${a.invoiceNo})` : ""}.\n` +

@@ -17,6 +17,7 @@ import {
 import { sendWebPush, type PushSubLite } from "@/lib/push/send";
 import { sendPurchaseAlertEmail } from "@/lib/notifications/email";
 import { formatIDR } from "@/lib/payments";
+import type { StoredLoginMethod } from "@/lib/auth/login-method";
 
 export interface PurchaseAlertInput {
   requestId?: string | null;
@@ -25,7 +26,7 @@ export interface PurchaseAlertInput {
   uniqueAmount: number;
   scopeLabel: string;
   whatsapp?: string | null;
-  loginMethod?: "key" | "email" | null;
+  loginMethod?: StoredLoginMethod;
 }
 
 export async function notifyAdminsOnPurchase(input: PurchaseAlertInput): Promise<void> {

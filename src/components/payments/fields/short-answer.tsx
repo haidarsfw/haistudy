@@ -7,7 +7,7 @@ interface ShortAnswerProps {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  type?: "text" | "tel" | "email";
+  type?: "text" | "tel" | "email" | "password";
   inputMode?: "text" | "tel" | "email" | "numeric";
   maxLength?: number;
   autoComplete?: string;

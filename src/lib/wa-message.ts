@@ -3,6 +3,7 @@
 // ============================================
 
 import { capitalizeFirst } from "@/lib/name";
+import { resolveLoginMethod, type StoredLoginMethod } from "@/lib/auth/login-method";
 
 // Shared by BOTH issue flows so the message stays identical:
 //   - admin Purchase Queue approval (purchase-queue.tsx)
@@ -17,11 +18,11 @@ export interface ApprovalWaArgs {
   nickname: string;
   /** Per-scope invoice number, assigned at approve. */
   invoiceNo: number;
-  /** 'email' = Google sign-in, 'key' = paste license key. */
-  loginMethod: "key" | "email";
-  /** License key (only used for 'key' login). */
+  /** How this buyer signs in. 'email' is the legacy alias of 'google'. */
+  loginMethod: StoredLoginMethod;
+  /** License key. Only used for 'key' login, which is no longer sold. */
   licenseKey: string;
-  /** Gmail to sign in with (only used for 'email' login). */
+  /** The address the account is keyed to ('google' and 'password'). */
   gmail?: string;
   /** Package label, e.g. "Diamond". */
   pkgLabel: string;
@@ -34,14 +35,24 @@ export interface ApprovalWaArgs {
 export function buildApprovalWa(o: ApprovalWaArgs): string {
   const inv = `#${String(o.invoiceNo).padStart(3, "0")}`;
   const nick = capitalizeFirst(o.nickname);
+  const method = resolveLoginMethod(o.loginMethod);
   const head = `🧾 INVOICE ${inv} · haistudy\nHalo ${nick}, pesananmu sudah aktif ✅\n\n`;
+  // Tell them how THEY sign in — the way they chose at checkout. Sending a
+  // license key to someone who registered a password is how the old
+  // "anything that isn't 'email' must be 'key'" shape used to fail.
   const access =
-    o.loginMethod === "email"
-      ? `🌐 Buka https://haistudy.site → "Login dengan Google" → pilih ${o.gmail}\n`
-      : `🔑 License key: ${o.licenseKey}\n🌐 Buka https://haistudy.site → Login → tempel key\n`;
+    method === "password"
+      ? `🌐 Buka https://haistudy.site → Login → masukkan ${o.gmail} + password yang kamu buat waktu beli\n`
+      : method === "google"
+        ? `🌐 Buka https://haistudy.site → "Login dengan Google" → pilih ${o.gmail}\n`
+        : `🔑 License key: ${o.licenseKey}\n🌐 Buka https://haistudy.site → Login → tempel key\n`;
   const meta = `\n📦 ${o.pkgLabel} · ${o.amount} · ${o.periode}\n`;
-  const act = `\nAktivasi: login di device utama, lalu kirim screenshot Dashboard ke chat ini untuk validasi device.${
-    o.loginMethod === "email" ? "" : " Jangan bagikan key-mu 🙏"
-  }`;
+  const tail =
+    method === "key"
+      ? " Jangan bagikan key-mu 🙏"
+      : method === "password"
+        ? " Jangan bagikan akunmu 🙏"
+        : "";
+  const act = `\nAktivasi: login di device utama, lalu kirim screenshot Dashboard ke chat ini untuk validasi device.${tail}`;
   return head + access + meta + act;
 }

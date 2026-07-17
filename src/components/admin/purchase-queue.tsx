@@ -40,6 +40,7 @@ import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { PurchaseSummary } from "@/components/admin/purchase-summary";
 import { adminFetch } from "@/lib/admin/admin-fetch";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
+import { resolveLoginMethod, loginMethodLabel } from "@/lib/auth/login-method";
 
 const PACKAGE_LABELS: Record<string, string> = {
   share: "Share (Rp25.000)",
@@ -76,7 +77,7 @@ const STATUS_FILTER_LABELS: Record<string, string> = {
 // row (key, invoice no, package, amount, login method, scope). Used by BOTH the
 // approve flow and the resend button so a lost WA message can be re-sent in full.
 function waMessageForApprovedPurchase(purchase: PurchaseRequest): string {
-  const loginMethod = purchase.meta?.loginMethod === "email" ? "email" : "key";
+  const loginMethod = purchase.meta?.loginMethod ?? "key";
   const gmail = (purchase.meta?.loginEmail || purchase.email || "").trim();
   const periode = scopeFullLabel({
     semester: purchase.semester,
@@ -215,16 +216,23 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     const packageTier = TIER_MAP[purchase.package] ?? "normal";
     const maxDevices = purchase.meta?.deviceLimit ?? 2;
 
-    // Login-method binding: 'email' buyers log in via Google (link the Gmail so
-    // the oauth_links row is created); 'key' buyers log in with the license key.
-    const loginMethod = purchase.meta?.loginMethod === "email" ? "email" : "key";
+    // Login-method binding. Account buyers ('google' / 'password') need their
+    // address linked so an oauth_links row exists to sign in against; 'key'
+    // buyers (no longer sold, older rows only) log in with the license key.
+    const loginMethod = purchase.meta?.loginMethod ?? "key";
+    const method = resolveLoginMethod(loginMethod);
     const gmail = (purchase.meta?.loginEmail || purchase.email || "").trim();
     // Short name / nickname: saved onto the license + used in the WA greeting.
     const nickname = purchase.meta?.nickname || firstWord(purchase.name);
 
-    // Email-login buyer with no Gmail on file would mint a locked-out key. Stop here.
-    if (loginMethod === "email" && !gmail) {
-      toast.error("Pembeli pilih login via Google tapi email Gmail kosong. Perbaiki data pembeli dulu.");
+    // An account buyer with no address on file would mint a license that is
+    // locked out of every path at once. Stop before creating anything.
+    if ((method === "google" || method === "password") && !gmail) {
+      toast.error(
+        method === "google"
+          ? "Pembeli pilih masuk lewat Google tapi alamat Gmail-nya kosong. Perbaiki data pembeli dulu."
+          : "Pembeli pilih email & password tapi alamat emailnya kosong. Perbaiki data pembeli dulu."
+      );
       setProcessingId(null);
       return;
     }
@@ -242,7 +250,10 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
           maxDevices,
           scope: purchaseScopeKey,
           loginMethod,
-          ...(loginMethod === "email" && gmail ? { linkedEmail: gmail } : {}),
+          ...(method === "google" || method === "password" ? { linkedEmail: gmail } : {}),
+          // The password hash NEVER passes through this browser. The server
+          // reads it from pending_credentials using this id.
+          ...(method === "password" ? { purchaseRequestId: purchase.id } : {}),
         }),
       });
       if (!createRes.ok) throw new Error("Failed to create key");
@@ -583,8 +594,8 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                               <DetailRow label="WhatsApp" value={purchase.whatsapp} />
                               <DetailRow label="Email kontak" value={purchase.email || "—"} />
                               <DetailRow
-                                label="Metode login"
-                                value={purchase.meta?.loginMethod === "email" ? "Google (Email)" : "License Key"}
+                                label="Cara masuk"
+                                value={loginMethodLabel(purchase.meta?.loginMethod)}
                               />
                               {purchase.meta?.loginEmail && (
                                 <DetailRow label="Email Google" value={purchase.meta.loginEmail} />

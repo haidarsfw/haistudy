@@ -4,7 +4,7 @@ import { PaymentsFlow } from "@/components/payments/payments-flow";
 export const metadata: Metadata = {
   title: "Beli Akses",
   description:
-    "Beli license key haistudy. Pilih paket, bayar, unggah bukti, dan akses materi, quiz, AI, dan komunitas belajar.",
+    "Beli akses haistudy. Pilih paket, bayar, unggah bukti, lalu masuk pakai Google atau email kamu untuk membuka materi, latihan soal, AI, dan komunitas belajar.",
   alternates: { canonical: "/payments" },
 };
 
