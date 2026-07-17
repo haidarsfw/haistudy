@@ -48,8 +48,10 @@ export default function ErrorBoundary({
             <RotateCw className="h-4 w-4" />
             Coba lagi
           </button>
-          {/* Plain <a>, not <Link>: the router is what just blew up, so this
-              needs a real navigation rather than a client-side one. */}
+          {/* Plain <a>, not <Link>: this is the escape hatch from a crashed
+              render, so it must be a real navigation that resets client state
+              rather than a client-side one through the router that just blew up. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
             className="inline-flex h-10 items-center justify-center rounded-full border border-border px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
