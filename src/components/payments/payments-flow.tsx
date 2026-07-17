@@ -356,16 +356,9 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   ];
 
   return (
-    <div
-      className={cn(
-        "mx-auto flex min-h-[100dvh] w-full flex-col px-4 py-6 sm:py-10",
-        // The package step widens on desktop so the feature detail panel fits
-        // beside the cards; every other step stays at the narrow form width.
-        step === 1 ? "max-w-xl lg:max-w-4xl" : "max-w-xl"
-      )}
-    >
+    <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-6 sm:py-10 lg:max-w-4xl">
       {/* Header */}
-      <div className="mx-auto mb-5 flex w-full max-w-xl items-center justify-between">
+      <div className="mb-5 flex w-full items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -373,13 +366,13 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
           <ArrowLeft className="h-4 w-4" />
           {t("payments.back_home")}
         </Link>
-        <span className="font-heading text-sm font-bold">
+        <span className="font-display text-sm font-bold">
           <span className="text-primary">hai</span>study
         </span>
       </div>
 
       {/* Progress */}
-      <div className="mx-auto mb-6 w-full max-w-xl">
+      <div className="mb-6 w-full">
         <div className="flex items-center gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
@@ -404,14 +397,18 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
           <motion.div
             key={step}
             custom={dir}
-            initial={{ opacity: 0, x: dir * 28 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: dir * -28 }}
-            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-5"
           >
             {step === 0 && (
-              <>
+              // Two columns on desktop: this step was a 576px ribbon on a
+              // 1500px screen, so a form you can answer in a minute took a
+              // full-page scroll to read. Controls that are already multi-column
+              // (Kampus, Cara Masuk) span both so they aren't crushed.
+              <div className="grid gap-5 lg:grid-cols-2 lg:gap-x-5">
                 <FieldShell label={t("payments.name_label")} description={t("payments.name_desc")} required error={errors.name} htmlFor="pf-name">
                   <ShortAnswer id="pf-name" value={form.name} onChange={(v) => set("name", v)} placeholder={t("payments.name_ph")} invalid={!!errors.name} autoComplete="name" />
                 </FieldShell>
@@ -436,37 +433,41 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   )}
                 </FieldShell>
 
-                <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
-                  <RadioGroup
-                    name="campus"
-                    value={form.campus}
-                    onChange={(v) => set("campus", v)}
-                    columns={2}
-                    options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
-                  />
-                  {form.campus === "Other" && (
-                    <div className="mt-2">
-                      <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
-                    </div>
-                  )}
-                </FieldShell>
+                <div className="lg:col-span-2">
+                  <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
+                    <RadioGroup
+                      name="campus"
+                      value={form.campus}
+                      onChange={(v) => set("campus", v)}
+                      columns={2}
+                      options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
+                    />
+                    {form.campus === "Other" && (
+                      <div className="mt-2">
+                        <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
+                      </div>
+                    )}
+                  </FieldShell>
+                </div>
 
                 <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
                   <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
                 </FieldShell>
 
-                <FieldShell label={t("payments.login_method_label")} description={t("payments.login_method_note")} required>
-                  <RadioGroup
-                    name="loginMethod"
-                    value={form.loginMethod}
-                    onChange={(v) => set("loginMethod", v as LoginMethod)}
-                    columns={2}
-                    options={[
-                      { value: "google", label: t("payments.login_google"), description: t("payments.login_google_desc") },
-                      { value: "password", label: t("payments.login_password"), description: t("payments.login_password_desc") },
-                    ]}
-                  />
-                </FieldShell>
+                <div className="lg:col-span-2">
+                  <FieldShell label={t("payments.login_method_label")} description={t("payments.login_method_note")} required>
+                    <RadioGroup
+                      name="loginMethod"
+                      value={form.loginMethod}
+                      onChange={(v) => set("loginMethod", v as LoginMethod)}
+                      columns={2}
+                      options={[
+                        { value: "google", label: t("payments.login_google"), description: t("payments.login_google_desc") },
+                        { value: "password", label: t("payments.login_password"), description: t("payments.login_password_desc") },
+                      ]}
+                    />
+                  </FieldShell>
+                </div>
 
                 <FieldShell
                   label={t("payments.login_email_label")}
@@ -530,7 +531,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                     </FieldShell>
                   </>
                 )}
-              </>
+              </div>
             )}
 
             {step === 1 && (
@@ -556,11 +557,6 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                         disabledHint: d > maxDevices ? t("payments.device_locked_hint") : undefined,
                       }))}
                     />
-                    {form.deviceLimit === 3 && (
-                      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-                        {t("payments.device_3_note")}
-                      </p>
-                    )}
                     <p className="mt-1 text-[11px] font-medium leading-relaxed text-amber-600 dark:text-amber-400">
                       {t("payments.device_share_warn")}
                     </p>
@@ -883,9 +879,30 @@ function QrisCard({
   const [broken, setBroken] = useState(false);
   const [expanded, setExpanded] = useState(false);
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center gap-3 px-3.5 py-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      {/*
+        The whole row toggles, so the target is the size of the row rather than a
+        24px icon. `Simpan` sits inside it and stops propagation — otherwise
+        saving the image would also expand the panel you were trying to avoid.
+      */}
+      <div
+        role={broken ? undefined : "button"}
+        tabIndex={broken ? undefined : 0}
+        aria-expanded={broken ? undefined : expanded}
+        onClick={() => !broken && setExpanded((v) => !v)}
+        onKeyDown={(e) => {
+          if (broken) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded((v) => !v);
+          }
+        }}
+        className={cn(
+          "flex items-center gap-3 px-3.5 py-3 transition-colors",
+          !broken && "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60"
+        )}
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <QrCode className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
@@ -898,20 +915,18 @@ function QrisCard({
             <a
               href={PAYMENT_ACCOUNTS.qrisImage}
               download="qris-haistudy.jpg"
+              onClick={(e) => e.stopPropagation()}
               className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
             >
               <Download className="h-3.5 w-3.5" />
               {downloadLabel}
             </a>
-            <button
-              type="button"
-              onClick={() => setExpanded((v) => !v)}
-              aria-expanded={expanded}
-              aria-label={expanded ? "Tutup QRIS" : "Perbesar QRIS"}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            <span
+              aria-hidden
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground"
             >
               {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-            </button>
+            </span>
           </div>
         )}
       </div>

@@ -71,10 +71,18 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
     };
   }, [pathname]);
 
-  // Lenis + anchor jumps — mount-once. Route changes must NOT tear the smooth
-  // scroller down and rebuild it.
+  // Lenis + anchor jumps.
+  //
+  // Keyed on `pathname` so it can be SKIPPED per route. Lenis is a marketing-page
+  // nicety: it caches the document height and only re-measures on its own
+  // schedule, which is fine for a static page but wrong for a form whose height
+  // jumps every step. On /payments that stale limit made the page refuse to
+  // scroll past where the previous step ended — scrolling worked, then didn't,
+  // with nothing on screen to explain why. A form does not need momentum; the
+  // native scroller is correct here.
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isForm = pathname?.startsWith("/payments") ?? false;
 
     // Kill scroll anchoring across the landing (the self-playing demos + Lenis
     // can otherwise nudge the page on their own). Set inline so Lightning CSS
@@ -91,7 +99,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
     const coarse = window.matchMedia("(pointer: coarse)").matches;
     let lenis: Lenis | null = null;
     let raf = 0;
-    if (!coarse) {
+    if (!coarse && !isForm) {
       lenis = new Lenis({
         lerp: 0.16,
         wheelMultiplier: 1,
@@ -150,7 +158,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
       if (raf) cancelAnimationFrame(raf);
       lenis?.destroy();
     };
-  }, []);
+  }, [pathname]);
 
   return (
     <LandingThemeCtx.Provider value={{ resolved: "dark" }}>

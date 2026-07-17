@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   PACKAGES,
   getPackage,
-  formatIDR,
   type PurchasablePackageId,
 } from "@/lib/payments";
 import {
@@ -14,120 +12,118 @@ import {
   FeatureGroups,
   getAccentClasses,
 } from "@/components/payments/package-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ALL_FEATURES } from "@/data/landing/all-features";
 import { useTranslation } from "@/components/providers/language-provider";
-import { cn } from "@/lib/utils";
 
 interface PackagePickerProps {
   value: PurchasablePackageId;
   onChange: (id: PurchasablePackageId) => void;
 }
 
+/**
+ * Package step.
+ *
+ * The cards never resize and never reflow. The previous cut was a master-detail:
+ * opening a package's features shrank the grid from 4 columns to 2 and slid a
+ * side panel in, so choosing a package moved every other package on screen and
+ * only one could be read at a time. Comparing is the entire job of this step,
+ * and that layout fought it.
+ *
+ * Now: a fixed 4-up grid, and the SELECTED package's features render in one
+ * panel underneath. Selecting is the only interaction — there is no separate
+ * open/close state to get stranded in, and the panel always shows what you
+ * actually picked.
+ */
 export function PackagePicker({ value, onChange }: PackagePickerProps) {
   const { t } = useTranslation();
-  // Which package's feature list is open. null = none open. One at a time —
-  // the desktop side panel is a single panel, and mobile expands one card.
-  const [detailPkgId, setDetailPkgId] = useState<PurchasablePackageId | null>(null);
+  const [allOpen, setAllOpen] = useState(false);
 
-  const detailPkg = detailPkgId ? getPackage(detailPkgId) : null;
-  const detailAccent = detailPkgId ? getAccentClasses(detailPkgId) : null;
-
-  const handleSelect = (id: PurchasablePackageId) => {
-    onChange(id);
-    // If a panel is already open, follow the newly-selected package.
-    setDetailPkgId((cur) => (cur ? id : cur));
-  };
+  const selected = getPackage(value);
+  const accent = getAccentClasses(value);
 
   return (
     <>
-      {/* ── MOBILE / TABLET (<lg): compact-row cards, features expand inline ── */}
-      <div
-        className={cn(
-          "grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:hidden",
-          detailPkgId ? "items-start" : "items-stretch"
-        )}
-      >
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         {PACKAGES.map((pkg) => (
           <PackageCard
             key={pkg.id}
             pkg={pkg}
             selected={value === pkg.id}
-            onSelect={() => handleSelect(pkg.id)}
-            featuresOpen={detailPkgId === pkg.id}
-            onFeaturesOpenChange={(o) => setDetailPkgId(o ? pkg.id : null)}
-            featuresVariant="accordion"
-            layoutId="hs-picker-ring-m"
-            className="p-3.5"
+            onSelect={() => onChange(pkg.id)}
+            layoutId="hs-picker-ring"
           />
         ))}
       </div>
 
-      {/* ── DESKTOP (≥lg): master-detail — features show in a side panel ── */}
-      <div
-        className={cn(
-          "hidden gap-3 lg:grid",
-          detailPkg ? "lg:grid-cols-[1fr_minmax(0,19rem)]" : "lg:grid-cols-1"
-        )}
-      >
-        <div
-          className={cn(
-            "grid items-stretch gap-2.5",
-            detailPkg ? "lg:grid-cols-2" : "lg:grid-cols-4"
-          )}
-        >
-          {PACKAGES.map((pkg) => (
-            <PackageCard
-              key={pkg.id}
-              pkg={pkg}
-              selected={value === pkg.id}
-              onSelect={() => handleSelect(pkg.id)}
-              featuresOpen={detailPkgId === pkg.id}
-              onFeaturesOpenChange={(o) => setDetailPkgId(o ? pkg.id : null)}
-              featuresVariant="button"
-              layoutId="hs-picker-ring-d"
-              className="p-3.5"
-            />
-          ))}
-        </div>
-
-        <AnimatePresence initial={false} mode="wait">
-          {detailPkg && detailAccent && (
-            <motion.aside
-              key={detailPkg.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:sticky lg:top-4 lg:self-start"
+      {selected && (
+        <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+          {/* Keyed on the id so switching package cross-fades the list rather
+              than animating its height — height animation is what made this
+              step feel like it was lurching. */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={selected.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.14 }}
             >
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h4 className="font-heading text-base font-bold">{t(detailPkg.nameKey)}</h4>
-                    <div className="mt-0.5 flex items-baseline gap-1">
-                      <span className="text-lg font-bold">{formatIDR(detailPkg.price)}</span>
-                      <span className="text-xs text-muted-foreground">
-                        / {t("pricing.per_duration")}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setDetailPkgId(null)}
-                    aria-label={t("common.close")}
-                    className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">{t(detailPkg.shortKey)}</p>
-                <div className="mt-3 border-t border-border/60 pt-3">
-                  <FeatureGroups pkg={detailPkg} checkClass={detailAccent.check} />
-                </div>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("payments.features_of")} {t(selected.nameKey)}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setAllOpen(true)}
+                  className="shrink-0 text-[11px] font-semibold text-foreground/70 underline-offset-2 transition-colors hover:text-foreground hover:underline"
+                >
+                  {t("pricing.more_all")}
+                </button>
               </div>
-            </motion.aside>
-          )}
-        </AnimatePresence>
-      </div>
+              <FeatureGroups
+                pkg={selected}
+                checkClass={accent.check}
+                onInheritedClick={() => setAllOpen(true)}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* "Semua fitur Normal" / "Semua fitur VIP" are references, not answers.
+          This is what they point at. */}
+      <Dialog open={allOpen} onOpenChange={setAllOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display">{t("pricing.more_all")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            {ALL_FEATURES.map((g) => (
+              <div key={g.group}>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {g.group}
+                </p>
+                <ul className="mt-1.5 space-y-1">
+                  {g.items.map((item) => (
+                    <li key={item} className="text-sm text-foreground/90">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="pt-1 text-[11px] leading-relaxed text-muted-foreground">
+            {t("pricing.more_note")}
+          </p>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

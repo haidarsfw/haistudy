@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PACKAGES, formatIDR } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
+import { ALL_FEATURES } from "@/data/landing/all-features";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -63,49 +64,6 @@ const CARD_FEATURES: Record<string, Feat[]> = {
   ],
 };
 
-// The full "& masih banyak lagi" list — every core feature a user gets, well
-// beyond the four generalised lines on the Normal card. Shown in the popup so it
-// reveals what ISN'T already on the front, not a repeat of it.
-const ALL_FEATURES: { group: string; items: string[] }[] = [
-  {
-    group: "Materi & belajar",
-    items: [
-      "Rangkuman lengkap tiap mata kuliah",
-      "Belajar Kilat (mode swipe)",
-      "Latihan Soal esai & PG + koreksi AI",
-      "3x kuota simulasi ujian",
-      "Quiz & flashcards interaktif",
-    ],
-  },
-  {
-    group: "AI",
-    items: [
-      "haistudy AI 24/7 (tanya materi apa aja)",
-      "AI dilatih materi resmi, ga halusinasi",
-    ],
-  },
-  {
-    group: "Komunitas",
-    items: [
-      "Forum & chat kelas",
-      "Voice room belajar bareng",
-      "Pengumuman & kisi-kisi real-time",
-    ],
-  },
-  {
-    group: "Produktivitas",
-    items: [
-      "Jadwal kuliah + countdown ujian",
-      "Alat fokus (pomodoro + reminder)",
-      "Statistik belajar",
-      "Bookmark & catatan cepat",
-    ],
-  },
-  {
-    group: "Personalisasi",
-    items: ["Tema, warna & font", "Musik lofi + playlist sendiri"],
-  },
-];
 
 // Per-tier look — neutral cards throughout. Every card shows its rank logo inline
 // next to the name (NO chip/background). The differentiator is the logo COLOUR:
