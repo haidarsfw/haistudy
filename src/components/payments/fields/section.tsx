@@ -12,21 +12,27 @@
 export function Section({
   title,
   description,
+  action,
   children,
 }: {
   title: string;
   description?: string;
+  /** Top-right slot — the review's "Edit" link. */
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card/40 p-4">
-      <div className="mb-3">
-        <h2 className="font-display text-sm font-bold text-foreground">{title}</h2>
-        {description && (
-          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        )}
+    <section className="flex h-full flex-col rounded-2xl border border-border bg-card/40 p-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="font-display text-sm font-bold text-foreground">{title}</h2>
+          {description && (
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
+        {action}
       </div>
       {children}
     </section>

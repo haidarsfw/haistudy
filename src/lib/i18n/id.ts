@@ -1080,6 +1080,7 @@ const id: Record<string, string> = {
   "payments.features_all_included": "Semua paket sudah termasuk:",
   "payments.sec_login": "Cara masuk",
   "payments.sec_pay": "Bayar sejumlah ini",
+  "payments.sec_access": "Akses kamu",
   "payments.sec_confirm": "Konfirmasi pembayaran",
   "payments.sec_share": "Bukti share",
   "payments.class_desc": "Kelas kamu sekarang. Pilih Lainnya kalau gak ada.",

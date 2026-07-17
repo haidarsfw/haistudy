@@ -1699,3 +1699,20 @@ html.tts-bar-open .tts-shift-target {
     transition: none;
   }
 }
+
+/* ── Form error nudge (/payments) ─────────────────────────────────────────
+   A field that failed validation gets a short shake once the page has scrolled
+   it into view. Small on purpose: it says "here", it doesn't punish. */
+@keyframes hs-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+.hs-shake {
+  animation: hs-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs-shake { animation: none; }
+}

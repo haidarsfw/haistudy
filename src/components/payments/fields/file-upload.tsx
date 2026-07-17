@@ -158,7 +158,8 @@ export function FileUpload({ value, onChange, invalid }: FileUploadProps) {
         onChange={onInput}
         className="hidden"
       />
-      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
+      {/* Matches the validation errors in FieldShell — one size for every error. */}
+      {error && <p className="text-[11px] font-medium text-destructive">{error}</p>}
     </div>
   );
 }

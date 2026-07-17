@@ -90,6 +90,84 @@ function isPackageId(v: string | undefined): v is PurchasablePackageId {
   return v === "share" || v === "normal" || v === "vip" || v === "diamond";
 }
 
+// ─── Draft persistence ───
+//
+// A buyer fills this in while switching to their banking app, and a back button
+// or a stray tab close used to wipe the lot. The draft survives that; it is
+// cleared only when the purchase is actually submitted.
+const DRAFT_KEY = "hs-payments-draft";
+
+/**
+ * Fields that go to localStorage.
+ *
+ * Passwords are NOT here, and must never be. The whole point of hashing at
+ * submit and parking it away from the admin's reach is that the plaintext lives
+ * nowhere — writing it to localStorage would undo that on the buyer's own
+ * machine, where any script on the page can read it.
+ *
+ * Files aren't here either: a File can't be serialised. The upload boxes come
+ * back empty, validation says so, and the buyer re-picks. Better than pretending.
+ */
+type DraftKey = Exclude<
+  keyof FormState,
+  "loginPassword" | "loginPassword2" | "paymentProof" | "shareProof" | "shareProof2"
+>;
+
+const DRAFT_FIELDS: DraftKey[] = [
+  "name",
+  "nickname",
+  "classCode",
+  "classOther",
+  "campus",
+  "campusOther",
+  "whatsapp",
+  "loginMethod",
+  "loginEmail",
+  "pkg",
+  "deviceLimit",
+  "shareAck",
+  "scopeKey",
+  "paymentMethod",
+  "shareMethod",
+  "source",
+  "sourceOther",
+];
+
+function loadDraft(): Partial<FormState> | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    // Copy only the fields we know: a hand-edited or stale draft can't inject
+    // keys the form doesn't expect.
+    for (const k of DRAFT_FIELDS) {
+      if (parsed[k] !== undefined) out[k] = parsed[k];
+    }
+    return out as Partial<FormState>;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(form: FormState) {
+  try {
+    const out: Record<string, unknown> = {};
+    for (const k of DRAFT_FIELDS) out[k] = form[k];
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
+  } catch {
+    /* private mode / quota — a lost draft is not worth breaking checkout over */
+  }
+}
+
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
@@ -127,6 +205,33 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Restore the draft after mount. Deliberately not a lazy useState initialiser:
+  // localStorage doesn't exist during SSR, and reading it there would render a
+  // different tree on the server than on the client.
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft) {
+      setForm((f) => ({
+        ...f,
+        ...draft,
+        // A ?pkg= in the URL is a fresh intent — the buyer just clicked this
+        // package on the landing — so it beats whatever the draft remembers.
+        pkg: isPackageId(initialPkg) ? initialPkg : (draft.pkg ?? f.pkg),
+      }));
+    }
+    setDraftLoaded(true);
+    // initialPkg is fixed for the life of the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save on every change, but only after the restore has run — otherwise the
+  // first render would write the empty form straight over a real draft.
+  useEffect(() => {
+    if (!draftLoaded || done) return;
+    saveDraft(form);
+  }, [form, draftLoaded, done]);
+
   // Clamp the device count down when switching to a package with a lower cap
   // (Share/Normal cap at 2; VIP/Diamond allow 3).
   useEffect(() => {
@@ -140,7 +245,17 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   const isLE86 = form.classCode === "LE86";
   const resolvedClass = form.classCode === "Other" ? form.classOther.trim() : form.classCode;
   const resolvedCampus = form.campus === "Other" ? form.campusOther.trim() : form.campus;
+  // What the server stores: a stable id, not a label.
   const resolvedSource = form.source === "other" ? form.sourceOther.trim() : form.source;
+  // What a human reads. Never send this — the label is translated and would
+  // land in the database in whatever language the buyer happened to be using.
+  const sourceLabel =
+    form.source === "other"
+      ? form.sourceOther.trim()
+      : (() => {
+          const hit = SOURCES.find((s) => s.id === form.source);
+          return hit ? t(hit.labelKey) : form.source;
+        })();
   const maxDevices = packageMaxDevices(form.pkg);
   // 0 = not a share package. Story = 1 proof. Broadcast = LE86 → 2, others → 1.
   const requiredShareProofs = !isShare
@@ -211,12 +326,41 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
 
   const errors = showErrors ? validateStep(step) : {};
 
+  /**
+   * Take the buyer to the first thing that's wrong.
+   *
+   * Marking fields red is useless if the first one is off-screen — you get a
+   * toast saying something failed and no idea what. Scroll to it, then shake it
+   * so the eye lands on the right control rather than the general area.
+   */
+  const focusFirstError = (errs: Record<string, string>) => {
+    const firstKey = Object.keys(errs)[0];
+    if (!firstKey) return;
+    // Next frame: the errors have to be rendered before they can be found.
+    requestAnimationFrame(() => {
+      const el =
+        document.querySelector<HTMLElement>(`[data-field="${firstKey}"]`) ??
+        document.querySelector<HTMLElement>("[data-field-error='true']");
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.remove("hs-shake");
+      // Reading offsetWidth restarts the animation; without it a second failed
+      // submit on the same field wouldn't shake at all.
+      void el.offsetWidth;
+      el.classList.add("hs-shake");
+      el.querySelector<HTMLElement>("input, select, textarea, button")?.focus({
+        preventScroll: true,
+      });
+    });
+  };
+
   const goNext = () => {
     const e = validateStep(step);
     if (Object.keys(e).length) {
       setShowErrors(true);
       sounds.wrong();
       toast.error(t("payments.fix_errors"));
+      focusFirstError(e);
       return;
     }
     sounds.click();
@@ -252,6 +396,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       setStep(2);
       setShowErrors(true);
       toast.error(t("payments.fix_errors"));
+      focusFirstError(e);
       return;
     }
     setSubmitting(true);
@@ -290,6 +435,9 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
         throw new Error(data?.error || t("payments.submit_error"));
       }
       sounds.correct();
+      // Submitted — the draft has done its job. Anything else (back, refresh,
+      // closing the tab) keeps it.
+      clearDraft();
       setDone(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("payments.submit_error"));
@@ -559,35 +707,73 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
             )}
 
             {step === 1 && (
-              <>
-                <FieldShell label={t("payments.package_label")} required>
+              // Brought onto the same footing as the other steps: sections, not
+              // a bare label over a grid plus an orphan max-w-xl column. This
+              // step was the last one still on the old shape, which is why it
+              // read as a different page.
+              <div className="space-y-4">
+                <Section title={t("payments.package_label")}>
                   <PackagePicker value={form.pkg} onChange={(id) => set("pkg", id)} />
-                </FieldShell>
+                </Section>
 
-                {/* Device, share terms, and period stay at the narrow form width
-                    even when the package picker above spans wider on desktop. */}
-                <div className="mx-auto w-full max-w-xl space-y-5">
-                  <FieldShell label={t("payments.device_label")} description={t("payments.device_desc")} required error={errors.deviceLimit}>
-                    <RadioGroup
-                      name="device"
-                      variant="tile"
-                      value={String(form.deviceLimit)}
-                      onChange={(v) => set("deviceLimit", parseInt(v, 10))}
-                      columns={3}
-                      options={DEVICE_OPTIONS.map((d) => ({
-                        value: String(d),
-                        label: `${d} ${t("payments.device_unit")}`,
-                        disabled: d > maxDevices,
-                        disabledHint: d > maxDevices ? t("payments.device_locked_hint") : undefined,
-                      }))}
-                    />
-                    <p className="mt-1 text-[11px] font-medium leading-relaxed text-amber-600 dark:text-amber-400">
-                      {t("payments.device_share_warn")}
-                    </p>
-                  </FieldShell>
+                <Section title={t("payments.sec_access")}>
+                  <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-5">
+                    <FieldShell label={t("payments.device_label")} description={t("payments.device_desc")} required error={errors.deviceLimit}>
+                      <RadioGroup
+                        name="device"
+                        variant="tile"
+                        value={String(form.deviceLimit)}
+                        onChange={(v) => set("deviceLimit", parseInt(v, 10))}
+                        columns={3}
+                        options={DEVICE_OPTIONS.map((d) => ({
+                          value: String(d),
+                          label: `${d} ${t("payments.device_unit")}`,
+                          disabled: d > maxDevices,
+                          disabledHint: d > maxDevices ? t("payments.device_locked_hint") : undefined,
+                        }))}
+                      />
+                      <p className="mt-2 text-[11px] font-medium leading-relaxed text-amber-400">
+                        {t("payments.device_share_warn")}
+                      </p>
+                    </FieldShell>
 
-                  {isShare && (
-                    <FieldShell label={t("payments.share_ack_label")} required error={errors.shareAck}>
+                    {/* Exam period. Reads as a field like the rest now, instead
+                        of a stray bordered box floating under the form. */}
+                    <FieldShell label={t("payments.scope_current")}>
+                      <div className="rounded-xl border border-border bg-muted/20 p-3">
+                        <p className="text-sm font-medium text-foreground">
+                          {scopeFullLabel(selectedScope)}
+                        </p>
+                        {!scopeOpen ? (
+                          <button
+                            type="button"
+                            onClick={() => setScopeOpen(true)}
+                            className="mt-1 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                          >
+                            {t("payments.scope_switch")}
+                          </button>
+                        ) : (
+                          <div className="mt-2.5">
+                            <RadioGroup
+                              name="scope"
+                              value={form.scopeKey}
+                              onChange={(v) => set("scopeKey", v)}
+                              variant="plain"
+                              options={purchasableScopes().map((s) => ({
+                                value: scopeKey(s),
+                                label: scopeFullLabel(s),
+                              }))}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </FieldShell>
+                  </div>
+                </Section>
+
+                {isShare && (
+                  <Section title={t("payments.share_ack_label")}>
+                    <FieldShell label={t("payments.share_ack_check")} error={errors.shareAck}>
                       <CheckboxField
                         checked={form.shareAck}
                         onChange={(v) => set("shareAck", v)}
@@ -596,41 +782,14 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                         invalid={!!errors.shareAck}
                       />
                       {isLE86 && (
-                        <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-700 dark:text-amber-300">
+                        <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-300">
                           {t("payments.share_le86_note")}
                         </p>
                       )}
                     </FieldShell>
-                  )}
-
-                  {/* Scope (exam period) */}
-                  <div className="rounded-xl border border-border bg-muted/30 p-3.5">
-                    <p className="text-xs text-muted-foreground">{t("payments.scope_current")}</p>
-                    <p className="mt-0.5 text-sm font-medium text-foreground">{scopeFullLabel(selectedScope)}</p>
-                    {!scopeOpen ? (
-                      <button
-                        type="button"
-                        onClick={() => setScopeOpen(true)}
-                        className="mt-2 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                      >
-                        {t("payments.scope_switch")}
-                      </button>
-                    ) : (
-                      <div className="mt-3">
-                        <RadioGroup
-                          name="scope"
-                          value={form.scopeKey}
-                          onChange={(v) => set("scopeKey", v)}
-                          options={purchasableScopes().map((s) => ({
-                            value: scopeKey(s),
-                            label: scopeFullLabel(s),
-                          }))}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
+                  </Section>
+                )}
+              </div>
             )}
 
             {step === 2 && (
@@ -642,7 +801,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
               // you scrolled past the account number to find the upload, then
               // scrolled back for the number. Widening the column did nothing
               // for that; only splitting the two jobs does.
-              <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-5">
+              <div className="grid gap-4 lg:grid-cols-2 lg:gap-x-5">
                 {/* ── LEFT: what to pay, and where ── */}
                 <Section title={t("payments.sec_pay")}>
                   <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 text-center">
@@ -715,7 +874,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                 {isShare && (
                   <div className="lg:col-span-2">
                     <Section title={t("payments.sec_share")} description={t("payments.share_method_desc")}>
-                      <div className="grid gap-4 lg:grid-cols-2 lg:gap-x-5">
+                      <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-5">
                         <FieldShell label={t("payments.share_method_label")} required error={errors.shareMethod}>
                           <RadioGroup
                             name="shareMethod"
@@ -781,7 +940,10 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
             )}
 
             {step === 3 && (
-              <div className="space-y-3">
+              // Two columns on desktop. Identity and Package are short, so they
+              // stack on the left; Payment is the long one and gets its own.
+              <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-5">
+                <div className="space-y-4">
                 <ReviewSection title={t("payments.step_identity")} onEdit={() => jumpTo(0)} editLabel={t("common.edit")}>
                   <ReviewRow label={t("payments.name_label")} value={form.name} />
                   <ReviewRow label={t("payments.class_label")} value={resolvedClass} />
@@ -801,6 +963,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   <ReviewRow label={t("payments.device_label")} value={`${form.deviceLimit} ${t("payments.device_unit")}`} />
                   <ReviewRow label={t("payments.scope_current")} value={scopeFullLabel(selectedScope)} />
                 </ReviewSection>
+                </div>
 
                 <ReviewSection title={t("payments.step_payment")} onEdit={() => jumpTo(2)} editLabel={t("common.edit")}>
                   <ReviewRow label={t("payments.amount_label")} value={formatIDR(uniqueAmount)} highlight />
@@ -816,10 +979,10 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                   {isShare && form.shareMethod === "broadcast" && isLE86 && (
                     <ReviewRow label={t("payments.proof_broadcast2_label")} value={form.shareProof2 ? "✓" : "—"} />
                   )}
-                  <ReviewRow label={t("payments.source_label")} value={resolvedSource} />
+                  <ReviewRow label={t("payments.source_label")} value={sourceLabel} />
                 </ReviewSection>
 
-                <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
+                <p className="px-1 text-[11px] leading-relaxed text-muted-foreground lg:col-span-2">
                   {t("payments.review_note")}
                 </p>
               </div>
@@ -1012,30 +1175,44 @@ function ReviewSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
+    <Section
+      title={title}
+      action={
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
         >
           <Pencil className="h-3 w-3" />
           {editLabel}
         </button>
-      </div>
-      <div className="space-y-1.5">{children}</div>
-    </div>
+      }
+    >
+      <dl className="space-y-2">{children}</dl>
+    </Section>
   );
 }
 
+/**
+ * One reviewed value.
+ *
+ * Was label-left / value-right across the full card. That reads fine at 576px
+ * and badly at 896px: the eye has to cross an empty gulf to pair a label with
+ * its answer, and the wider the card the worse it gets. A fixed label column
+ * with the value right beside it keeps the pair together at any width.
+ */
 function ReviewRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex items-start justify-between gap-3 text-sm">
-      <span className="shrink-0 text-muted-foreground">{label}</span>
-      <span className={`min-w-0 break-words text-right ${highlight ? "font-bold text-primary" : "font-medium text-foreground"}`}>
+    <div className="grid grid-cols-[9rem_1fr] items-start gap-3 text-sm">
+      <dt className="truncate text-muted-foreground">{label}</dt>
+      <dd
+        className={cn(
+          "min-w-0 break-words",
+          highlight ? "font-display font-bold text-primary" : "font-medium text-foreground"
+        )}
+      >
         {value || "—"}
-      </span>
+      </dd>
     </div>
   );
 }

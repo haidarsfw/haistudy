@@ -850,6 +850,7 @@ const en: Record<string, string> = {
   "payments.features_all_included": "Every package already includes:",
   "payments.sec_login": "How you sign in",
   "payments.sec_pay": "Pay exactly this",
+  "payments.sec_access": "Your access",
   "payments.sec_confirm": "Confirm your payment",
   "payments.sec_share": "Share proof",
   "payments.class_desc": "Your current class. Pick Other if it is not listed.",
