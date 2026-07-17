@@ -60,6 +60,17 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
+/**
+ * Is this path one the app actually serves behind auth? Only these earn the
+ * login redirect; anything else is a genuine 404. Keep in sync with the route
+ * tree: the scoped `/s{N}/…` shape, the legacy unscoped aliases, and /admin.
+ */
+function isAppRoute(pathname: string, segs: string[]): boolean {
+  if (pathname.startsWith("/admin")) return true;
+  if (/^s\d+$/.test(segs[0] ?? "")) return true;
+  return LEGACY_APP_ROUTES.has(segs[0] ?? "");
+}
+
 function parseScopeCookie(raw: string | undefined): { sem: string; exam: string; jur: string } {
   const value = raw && /^s\d+-(uts|uas)-[a-z0-9-]{1,16}$/.test(raw) ? raw : DEFAULT_SCOPE_COOKIE;
   const [semWithS, exam, jur] = value.split("-");
@@ -98,9 +109,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Require session cookie
+  // 2. Require session cookie — but only for paths that are actually app routes.
+  //    A path that matches nothing is a 404, not a login prompt: bouncing
+  //    strangers who mistyped a URL into a login wall is hostile, and it turned
+  //    every dead marketing link into a soft-404 for crawlers (307 → /login,
+  //    which answers 200). Falling through lets Next render not-found.tsx.
   const sessionFlag = request.cookies.get("hs-session");
   if (!sessionFlag) {
+    if (!isAppRoute(pathname, segs)) {
+      return NextResponse.next();
+    }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);

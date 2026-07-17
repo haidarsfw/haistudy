@@ -2,6 +2,17 @@
 
 import { useEffect } from "react";
 
+/**
+ * Last-resort boundary: it replaces the root layout, so globals.css and the
+ * fonts are gone. Everything here is inline and literal on purpose — no tokens,
+ * no utility classes, nothing that depends on the stylesheet having loaded.
+ *
+ * The brand values are duplicated from `.landing-root` in globals.css
+ * (--brand-1 #10b981 / --brand-2 #047857) because they cannot be read from here.
+ * If the brand gradient changes, change it here too.
+ */
+const BRAND_GRADIENT = "linear-gradient(135deg, #10b981 0%, #047857 100%)";
+
 export default function GlobalError({
   error,
   unstable_retry,
@@ -14,7 +25,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html>
+    <html lang="id">
       <body
         style={{
           margin: 0,
@@ -35,36 +46,56 @@ export default function GlobalError({
               height: 56,
               margin: "0 auto 16px",
               borderRadius: 16,
-              background: "rgba(239,68,68,0.1)",
+              background: "rgba(248,113,113,0.12)",
+              border: "1px solid rgba(248,113,113,0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 28,
+              fontSize: 26,
             }}
           >
             ⚠️
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>
-            Terjadi Kesalahan
-          </h2>
-          <p style={{ fontSize: 14, color: "#a1a1aa", margin: "0 0 20px" }}>
-            Maaf, terjadi error yang tidak terduga. Coba refresh halaman.
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>
+            Ada yang error
+          </h1>
+          <p
+            style={{
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: "#a1a1aa",
+              margin: "0 0 20px",
+            }}
+          >
+            Bukan salah kamu. Coba muat ulang dulu, biasanya langsung beres.
           </p>
           <button
             onClick={() => unstable_retry()}
             style={{
-              padding: "10px 20px",
-              borderRadius: 8,
+              padding: "10px 22px",
+              borderRadius: 999,
               border: "none",
-              background: "#6366f1",
+              backgroundImage: BRAND_GRADIENT,
               color: "#fff",
               fontSize: 14,
               fontWeight: 600,
               cursor: "pointer",
             }}
           >
-            Coba Lagi
+            Coba lagi
           </button>
+          {error.digest && (
+            <p
+              style={{
+                margin: "16px 0 0",
+                fontSize: 11,
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                color: "#71717a",
+              }}
+            >
+              Kode error: {error.digest}
+            </p>
+          )}
         </div>
       </body>
     </html>
