@@ -1,177 +1,189 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import {
+  LegalContact,
+  LegalFooterNav,
+  LegalList,
+  LegalPage,
+  LegalSection,
+} from "@/components/landing/legal";
 
 export const metadata = {
-  title: "Privacy Policy",
+  title: "Kebijakan Privasi",
   description: "Kebijakan privasi haistudy: bagaimana data kamu dikelola.",
   alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 lg:py-16 lg:px-6">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:rounded"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Kembali
-      </Link>
+    <LegalPage
+      title="Kebijakan Privasi"
+      updated="17 Juli 2026"
+      intro="Ini penjelasan soal data apa yang kami simpan, dipakai buat apa, dan apa aja yang bisa kamu minta. Ditulis apa adanya, tanpa bahasa hukum yang muter-muter."
+      footer={
+        <LegalFooterNav
+          links={[
+            { href: "/terms", label: "Ketentuan Layanan" },
+            { href: "/refund", label: "Pengembalian Dana" },
+          ]}
+        />
+      }
+    >
+      <LegalSection n={1} title="Data yang Kami Simpan">
+        <p>Saat kamu memakai haistudy, kami menyimpan:</p>
+        <LegalList>
+          <li>
+            Nama dan kelas kamu (ditampilkan di chat, forum, dan voice room).
+          </li>
+          <li>
+            Kalau kamu masuk dengan Google: email dan foto profil Google kamu.
+          </li>
+          <li>
+            Kalau kamu daftar dengan email: alamat email dan password kamu.
+            Password disimpan dalam bentuk teracak (hash), jadi kami sendiri
+            tidak bisa membacanya.
+          </li>
+          <li>
+            Perangkat yang kamu pakai untuk masuk, supaya jumlah perangkat bisa
+            dibatasi sesuai paket kamu.
+          </li>
+          <li>
+            Nomor WhatsApp kamu, dari proses pembelian atau kalau kamu
+            memberikannya sendiri.
+          </li>
+          <li>
+            Pengaturan kamu (tema, font, bahasa, pengingat belajar, dan status
+            online).
+          </li>
+          <li>
+            Progress belajar (materi yang sudah dibaca, flashcard selesai, skor
+            quiz, dan streak).
+          </li>
+          <li>
+            Pesan yang kamu kirim di chat, forum, pesan pribadi, dan layanan
+            bantuan, termasuk gambar.
+          </li>
+          <li>
+            Riwayat percakapan kamu dengan asisten AI, termasuk gambar yang kamu
+            unggah.
+          </li>
+          <li>Jawaban, skor, dan riwayat Latihan Soal kamu.</li>
+          <li>Catatan pribadi dan bookmark kamu.</li>
+          <li>
+            Data pembelian: nama, nomor WhatsApp, email, kampus, kelas, jumlah
+            perangkat, dari mana kamu tahu haistudy, dan bukti transfer yang
+            kamu unggah.
+          </li>
+          <li>
+            Notifikasi dan sedikit catatan aktivitas masuk, untuk keamanan dan
+            perbaikan bug.
+          </li>
+        </LegalList>
+      </LegalSection>
 
-      <h1 className="font-heading text-2xl font-bold mb-6">Kebijakan Privasi</h1>
-      <p className="text-sm text-muted-foreground mb-8">
-        Terakhir diperbarui: 6 Juli 2026
-      </p>
+      <LegalSection n={2} title="Untuk Apa Data Dipakai">
+        <LegalList>
+          <li>Memastikan akun dan perangkat kamu.</li>
+          <li>Memverifikasi pembayaran dan mengaktifkan akses kamu.</li>
+          <li>Menampilkan progress, statistik, dan streak belajar.</li>
+          <li>Menjalankan fitur chat, forum, pesan pribadi, dan voice room.</li>
+          <li>Menampilkan status online kamu ke pengguna lain.</li>
+          <li>Menjalankan asisten belajar AI dan penilaian Latihan Soal.</li>
+          <li>
+            Mengirim notifikasi yang relevan (mention, balasan, pengumuman) dan
+            email seperti invoice pesanan.
+          </li>
+          <li>Menyinkronkan pengaturan dan data antar perangkat kamu.</li>
+          <li>Menyelesaikan masalah lewat layanan bantuan.</li>
+          <li>Memperbaiki bug dan meningkatkan kualitas platform.</li>
+        </LegalList>
+        <p>
+          Kami tidak menjual data kamu ke siapa pun, dan tidak memakainya untuk
+          iklan.
+        </p>
+      </LegalSection>
 
-      <div className="prose prose-sm dark:prose-invert max-w-none space-y-8 prose-headings:font-heading prose-headings:tracking-tight prose-li:my-0.5 text-sm text-foreground/80">
-        <section>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            1. Data yang Kami Simpan
-          </h2>
-          <p>Saat kamu memakai haistudy, kami menyimpan:</p>
-          <ul className="list-disc pl-5 space-y-1 mt-2">
-            <li>
-              Nama dan kelas kamu (ditampilkan di chat, forum, dan voice room).
-            </li>
-            <li>
-              Perangkat yang kamu pakai untuk login, supaya jumlah perangkat bisa
-              dibatasi (maksimal 2 per license key).
-            </li>
-            <li>
-              Nomor HP atau email, kalau kamu memberikannya secara sukarela.
-            </li>
-            <li>
-              Pengaturan kamu (tema, font, bahasa, pengingat belajar, dan status
-              online).
-            </li>
-            <li>
-              Progress belajar (materi yang sudah dibaca, flashcard selesai, skor
-              quiz, dan streak).
-            </li>
-            <li>
-              Pesan yang kamu kirim di chat, forum, pesan pribadi, dan layanan
-              bantuan, termasuk gambar.
-            </li>
-            <li>
-              Riwayat percakapan kamu dengan asisten AI, termasuk gambar yang
-              kamu unggah.
-            </li>
-            <li>Jawaban, skor, dan riwayat Latihan Soal kamu.</li>
-            <li>Catatan pribadi dan bookmark kamu.</li>
-            <li>
-              Kalau kamu login dengan Google, kami menerima email dan foto profil
-              Google kamu.
-            </li>
-            <li>
-              Data pembelian (nama, WhatsApp, dan email) saat kamu membeli akses.
-            </li>
-            <li>
-              Notifikasi dan sedikit catatan aktivitas login untuk keamanan dan
-              perbaikan bug.
-            </li>
-          </ul>
-        </section>
+      <LegalSection n={3} title="Di Mana Data Disimpan">
+        <p>
+          Data kamu disimpan dengan aman di server. Sebagian data (seperti
+          pengaturan dan progress) juga disimpan di browser perangkat kamu
+          supaya aplikasi terasa cepat, lalu disinkronkan ke server sebagai
+          cadangan.
+        </p>
+        <p>
+          Untuk beberapa fitur, kami dibantu oleh layanan pihak ketiga yang
+          tepercaya, misalnya untuk menjalankan server dan database, menjalankan
+          AI, menyimpan gambar, menjalankan voice room, mengirim email, dan
+          masuk lewat Google. Sebagian layanan itu servernya berada di luar
+          Indonesia. Kami hanya mengirim data seperlunya untuk fitur tersebut.
+        </p>
+        <p>
+          Khusus asisten AI: pertanyaan dan gambar yang kamu kirim diteruskan ke
+          penyedia AI pihak ketiga supaya bisa dijawab. Jadi sebaiknya jangan
+          kirim data pribadi yang sensitif ke AI.
+        </p>
+      </LegalSection>
 
-        <section>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            2. Untuk Apa Data Dipakai
-          </h2>
-          <ul className="list-disc pl-5 space-y-1 mt-2">
-            <li>Memastikan akun dan perangkat kamu.</li>
-            <li>Menampilkan progress, statistik, dan streak belajar.</li>
-            <li>Menjalankan fitur chat, forum, pesan pribadi, dan voice room.</li>
-            <li>Menampilkan status online kamu ke pengguna lain.</li>
-            <li>Menjalankan asisten belajar AI.</li>
-            <li>
-              Mengirim notifikasi yang relevan (mention, balasan, pengumuman)
-              dan email seperti invoice pesanan.
-            </li>
-            <li>Menyinkronkan pengaturan dan data antar perangkat kamu.</li>
-            <li>Menyelesaikan masalah lewat layanan bantuan.</li>
-            <li>Memperbaiki bug dan meningkatkan kualitas platform.</li>
-          </ul>
-        </section>
+      <LegalSection n={4} title="Cookie dan Penyimpanan di Browser">
+        <p>
+          Kami memakai satu cookie login dan penyimpanan di browser untuk
+          mengingat sesi masuk serta preferensi kamu (seperti tema dan
+          progress).
+        </p>
+        <p>
+          Kami juga memakai layanan pengukuran yang menghitung kunjungan dan
+          kecepatan halaman secara anonim, supaya kami tahu bagian mana yang
+          perlu diperbaiki. Layanan itu tidak memakai cookie pelacak dan tidak
+          membangun profil pribadi tentang kamu.
+        </p>
+        <p>Kami tidak memakai cookie pelacak iklan dari pihak ketiga.</p>
+      </LegalSection>
 
-        <section>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            3. Di Mana Data Disimpan
-          </h2>
-          <p>
-            Data kamu disimpan dengan aman di server. Sebagian data (seperti
-            pengaturan dan progress) juga disimpan di browser perangkat kamu
-            supaya aplikasi terasa cepat, lalu disinkronkan ke server sebagai
-            cadangan.
-          </p>
-          <p className="mt-2">
-            Untuk beberapa fitur, kami dibantu oleh layanan pihak ketiga yang
-            tepercaya, misalnya untuk menjalankan AI, menyimpan gambar,
-            menjalankan voice room, mengirim email, dan login lewat Google. Kami
-            hanya mengirim data seperlunya untuk fitur tersebut, dan tidak menjual
-            data kamu ke siapa pun.
-          </p>
-        </section>
+      <LegalSection n={5} title="Berapa Lama Data Disimpan">
+        <p>
+          Data kamu tetap kami simpan meski masa akses kamu sudah habis, supaya
+          kalau suatu saat kamu beli akses lagi, progress, catatan, dan riwayat
+          belajar kamu masih utuh. Tidak ada penghapusan otomatis.
+        </p>
+        <p>
+          Kalau kamu tidak mau begitu, kamu bisa minta data kamu dihapus kapan
+          saja lewat kontak di bawah.
+        </p>
+      </LegalSection>
 
-        <section>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            4. Cookie dan Penyimpanan di Browser
-          </h2>
-          <p>
-            Kami memakai satu cookie login dan penyimpanan di browser untuk
-            mengingat sesi login serta preferensi kamu (seperti tema dan
-            progress). Kami tidak memakai cookie pelacak iklan dari pihak ketiga.
-          </p>
-        </section>
+      <LegalSection n={6} title="Hak Kamu">
+        <LegalList>
+          <li>Meminta penghapusan akun dan data dengan menghubungi admin.</li>
+          <li>Meminta salinan data kamu yang tersimpan.</li>
+          <li>Meminta perbaikan data kamu yang keliru.</li>
+          <li>
+            Menghapus data lokal kapan saja dengan membersihkan penyimpanan
+            browser kamu.
+          </li>
+          <li>
+            Menyembunyikan status online lewat menu Pengaturan, bagian Privasi.
+          </li>
+        </LegalList>
+      </LegalSection>
 
-        <section>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            5. Hak Kamu
-          </h2>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>
-              Meminta penghapusan akun dan data dengan menghubungi admin.
-            </li>
-            <li>
-              Menghapus data lokal kapan saja dengan membersihkan penyimpanan
-              browser kamu.
-            </li>
-            <li>Meminta salinan data yang tersimpan.</li>
-            <li>
-              Menyembunyikan status online lewat menu Pengaturan, bagian Privasi.
-            </li>
-          </ul>
-        </section>
+      <LegalSection n={7} title="Keamanan">
+        <p>
+          Kami membatasi siapa yang bisa mengakses data, memverifikasi
+          perangkat, menyimpan password dalam bentuk teracak, dan mengamankan
+          seluruh koneksi. Namun tidak ada sistem yang benar-benar 100% aman,
+          jadi kami tidak bisa menjamin keamanan secara mutlak.
+        </p>
+      </LegalSection>
 
-        <section>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            6. Keamanan
-          </h2>
-          <p>
-            Kami membatasi siapa yang bisa mengakses data, memverifikasi
-            perangkat, dan mengamankan seluruh koneksi. Namun tidak ada sistem
-            yang benar-benar 100% aman, jadi kami tidak bisa menjamin keamanan
-            secara mutlak.
-          </p>
-        </section>
+      <LegalSection n={8} title="Perubahan Kebijakan">
+        <p>
+          Kami bisa mengubah kebijakan ini sewaktu-waktu. Perubahan akan
+          diumumkan lewat platform.
+        </p>
+      </LegalSection>
 
-        <section>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-2">
-            7. Kontak
-          </h2>
-          <p>
-            Untuk pertanyaan soal privasi, hubungi admin lewat fitur Live Chat di
-            dalam platform, atau lewat{" "}
-            <a
-              href="https://instagram.com/haidarsfw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Instagram @haidarsfw
-            </a>
-            .
-          </p>
-        </section>
-      </div>
-    </div>
+      <LegalContact
+        n={9}
+        waText="Halo min, saya mau tanya soal kebijakan privasi"
+      />
+    </LegalPage>
   );
 }
