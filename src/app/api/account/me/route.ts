@@ -46,6 +46,9 @@ export async function GET() {
         nickname: account.nickname,
         whatsapp: account.whatsapp,
         campus: account.campus,
+        angkatan: account.angkatan,
+        // Last class used at checkout. Sent so /payments can prefill it; the
+        // account page never edits it.
         classCode: account.classCode,
         avatarUrl: account.avatarUrl,
         language: account.language,

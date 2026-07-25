@@ -28,6 +28,12 @@ export interface Account {
   nickname: string;
   whatsapp: string;
   campus: string;
+  /** Cohort, e.g. "B29". Stable across semesters, unlike classCode. */
+  angkatan: string;
+  /**
+   * Last class used at checkout. Kept here only to prefill the next purchase —
+   * the class genuinely changes every semester, so /payments owns editing it.
+   */
   classCode: string;
   avatarUrl: string | null;
   language: "id" | "en";
@@ -54,7 +60,7 @@ export class AccountError extends Error {
  */
 export const ACCOUNT_COLUMNS =
   "id, email, email_lower, auth_provider, email_verified_at, full_name, nickname, " +
-  "whatsapp, campus, class_code, avatar_url, language, status, " +
+  "whatsapp, campus, angkatan, class_code, avatar_url, language, status, " +
   "deletion_requested_at, created_at, last_login_at";
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -69,6 +75,7 @@ export function mapAccount(row: any): Account {
     nickname: row.nickname ?? "",
     whatsapp: row.whatsapp ?? "",
     campus: row.campus ?? "",
+    angkatan: row.angkatan ?? "",
     classCode: row.class_code ?? "",
     avatarUrl: row.avatar_url ?? null,
     language: row.language === "en" ? "en" : "id",

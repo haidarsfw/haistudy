@@ -92,6 +92,89 @@ export async function listAccountAccesses(
   return data.map(mapAccess);
 }
 
+export interface AccountPurchase {
+  id: string;
+  packageId: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  approvedAt: string | null;
+  /** Invoice number, assigned only on approval. */
+  orderNo: number | null;
+  amount: number | null;
+  scopeKey: string;
+}
+
+/** Purchase history for the account, newest first. */
+export async function listAccountPurchases(
+  supabase: SupabaseClient,
+  accountId: string
+): Promise<AccountPurchase[]> {
+  const { data, error } = await supabase
+    .from("purchase_requests")
+    .select("id, package, status, created_at, approved_at, meta, semester, exam_period, jurusan")
+    .eq("account_id", accountId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  return data.map((r) => {
+    const meta = (r.meta ?? {}) as Record<string, unknown>;
+    return {
+      id: r.id as string,
+      packageId: (r.package as string) ?? "normal",
+      status: (r.status as AccountPurchase["status"]) ?? "pending",
+      createdAt: r.created_at as string,
+      approvedAt: (r.approved_at as string) ?? null,
+      orderNo: typeof meta.orderNo === "number" ? meta.orderNo : null,
+      amount: typeof meta.uniqueAmount === "number" ? meta.uniqueAmount : null,
+      scopeKey: `s${r.semester}-${r.exam_period}-${r.jurusan}`,
+    };
+  });
+}
+
+export interface AccountReferral {
+  code: string;
+  used: number;
+}
+
+/**
+ * The account's referral code.
+ *
+ * Codes are generated per activation, not per account, so someone who has
+ * never opened an access has no code yet. The page says so rather than
+ * inventing one — see the referral note in memory for the decisions still
+ * outstanding on the crediting side.
+ */
+export async function getAccountReferral(
+  supabase: SupabaseClient,
+  accountId: string
+): Promise<AccountReferral | null> {
+  const { data: licenses } = await supabase
+    .from("license_keys")
+    .select("key")
+    .eq("account_id", accountId);
+  if (!licenses?.length) return null;
+
+  const { data } = await supabase
+    .from("activations")
+    .select("referral_code, referral_count")
+    .in(
+      "license_key",
+      licenses.map((l) => l.key as string)
+    )
+    .not("referral_code", "is", null)
+    .order("referral_count", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data?.referral_code) return null;
+  return {
+    code: data.referral_code as string,
+    used: (data.referral_count as number) ?? 0,
+  };
+}
+
 export function activeAccesses(list: AccountAccess[]): AccountAccess[] {
   return list.filter((a) => a.status === "active");
 }
