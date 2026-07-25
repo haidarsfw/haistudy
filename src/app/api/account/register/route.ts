@@ -65,12 +65,8 @@ export async function POST(req: Request) {
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Email tidak valid", field: "email" }, { status: 400 });
   }
-  if (!fullName) {
-    return NextResponse.json(
-      { error: "Nama wajib diisi", field: "fullName" },
-      { status: 400 }
-    );
-  }
+  // Name is optional here on purpose. Signup asks for exactly what Google
+  // hands over, and the real name is collected once at the first checkout.
   const pwProblem = validatePassword(password);
   if (pwProblem) {
     return NextResponse.json({ error: pwProblem, field: "password" }, { status: 400 });
@@ -107,6 +103,7 @@ export async function POST(req: Request) {
     whatsapp,
     referralCode,
   });
+
 
   if (!account) {
     return NextResponse.json(

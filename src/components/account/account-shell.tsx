@@ -52,10 +52,41 @@ export function AccountShell({
       },
       { rootMargin: "-96px 0px -55% 0px", threshold: 0 }
     );
-
     nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
+
+    // The last section can never reach the observed band — the page simply
+    // runs out before it gets there — so it would stay permanently
+    // un-highlighted no matter how far you scrolled. Bottom of the page means
+    // the last item, full stop.
+    const onScroll = () => {
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.body.scrollHeight - 80;
+      if (atBottom) setActive(items[items.length - 1].id);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [items]);
+
+  /**
+   * Scrolls itself rather than relying on the href.
+   *
+   * The landing shell installs a document-wide handler for every `a[href^="#"]`
+   * that measures its own offset and jumps there, and it was landing in the
+   * wrong place here — these headings are `position: sticky`, so their offset
+   * is not where they appear. Buttons never match that selector, so this stays
+   * out of its way entirely.
+   */
+  const jumpTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    setActive(id);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-6 lg:px-8 lg:py-10">
@@ -75,23 +106,26 @@ export function AccountShell({
           <ul className="sticky top-10 flex flex-col gap-0.5">
             {items.map((item) => (
               <li key={item.id}>
-                <a
-                  href={`#${item.id}`}
+                <button
+                  type="button"
+                  onClick={() => jumpTo(item.id)}
                   className={cn(
-                    "block rounded-lg px-3 py-2 text-sm transition-colors",
+                    "block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
                     active === item.id
                       ? "bg-accent font-semibold text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {item.label}
-                </a>
+                </button>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="flex min-w-0 flex-col gap-10 lg:gap-14">{children}</div>
+        {/* The trailing space is what lets the final section scroll high enough
+            to sit under the contents list like every other one. */}
+        <div className="flex min-w-0 flex-col gap-10 pb-[40vh] lg:gap-14">{children}</div>
       </div>
     </div>
   );
@@ -113,7 +147,7 @@ export function AccountSection({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-6">
+    <section id={id} className="scroll-mt-4 lg:scroll-mt-10">
       <div className="sticky top-0 z-20 -mx-5 border-b border-border/60 bg-background/90 px-5 py-3 backdrop-blur lg:static lg:z-auto lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
         <h2 className="font-display text-base font-bold text-foreground lg:text-lg">
           {title}

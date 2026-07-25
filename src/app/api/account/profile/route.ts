@@ -40,14 +40,20 @@ export async function PATCH(req: Request) {
     const patch: Record<string, unknown> = {};
     const errors: Record<string, string> = {};
 
+    // Both name fields must be a name. An address or a handle here ends up on
+    // the invoice and in the greeting across the whole site, which is exactly
+    // what "akunfotoalkhalifah" looked like before signup stopped guessing.
     if ("fullName" in body) {
       const v = field(body.fullName, 100);
       if (!v) errors.fullName = "Nama wajib diisi";
+      else if (v.includes("@")) errors.fullName = "Isi nama asli, bukan alamat email";
+      else if (v.length < 2) errors.fullName = "Nama terlalu pendek";
       else patch.full_name = v;
     }
     if ("nickname" in body) {
       const v = field(body.nickname, 24);
       if (!v) errors.nickname = "Panggilan wajib diisi";
+      else if (v.includes("@")) errors.nickname = "Isi nama panggilan, bukan alamat email";
       else patch.nickname = v;
     }
     if ("whatsapp" in body) {

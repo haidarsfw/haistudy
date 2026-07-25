@@ -61,9 +61,10 @@ export function RegisterForm({ next }: { next?: string }) {
         body: JSON.stringify({
           email: email.trim(),
           password,
-          // Stands in as the display name until checkout collects a real one.
-          // Better than an empty greeting in the verification mail.
-          fullName: email.trim().split("@")[0],
+          // No name is sent. Deriving one from the address produced things
+          // like "akunfotoalkhalifah" and then greeted people by it across the
+          // whole site. The real name is collected once at checkout or in the
+          // account page, and until then nothing pretends to know it.
           referralCode: referral.trim() || undefined,
         }),
       });

@@ -1,11 +1,19 @@
 "use client";
 
 import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Camera, Check, Loader2, User } from "lucide-react";
+import { Camera, Check, Loader2, Trash2, User } from "lucide-react";
+
+// The same circular cropper the in-app profile uses. Lazy so react-easy-crop
+// never reaches anyone who does not open it.
+const AvatarCropper = dynamic(() => import("@/components/profile/avatar-cropper"), {
+  ssr: false,
+});
 
 import { AuthField } from "@/components/account/auth-field";
 import { Dropdown } from "@/components/payments/fields/dropdown";
+import { ANGKATAN_OPTIONS } from "@/data/landing/angkatan";
 import { CAMPUSES } from "@/lib/payments";
 import { compressImageToBudget, heicToJpeg, isHeic } from "@/lib/image";
 import { uploadToCloudinary } from "@/lib/cloudinary";
@@ -42,6 +50,7 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof ProfileValues>(k: K, v: ProfileValues[K]) => {
@@ -96,18 +105,34 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
     }
   };
 
+  /**
+   * Step one of two: normalise the file and hand it to the cropper.
+   *
+   * Uploading the raw photo straight through is what produced avatars framed
+   * on somebody's shoulder — a phone photo is portrait and the avatar is a
+   * circle, so without a crop step the browser picks the middle and hopes.
+   */
   const pickAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
 
-    setUploading(true);
     try {
       // iPhones hand over HEIC, which nothing else can display.
       const normalised = isHeic(file) ? await heicToJpeg(file) : file;
-      const small = await compressImageToBudget(normalised, {
-        maxBytes: AVATAR_TARGET_BYTES,
-      });
+      setCropSrc(URL.createObjectURL(normalised));
+    } catch {
+      toast.error("Gagal membaca foto. Coba foto lain.");
+    }
+  };
+
+  /** Step two: the cropped circle comes back, gets shrunk, and is stored. */
+  const applyCrop = async (blob: Blob) => {
+    closeCropper();
+    setUploading(true);
+    try {
+      const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+      const small = await compressImageToBudget(file, { maxBytes: AVATAR_TARGET_BYTES });
       const url = await uploadToCloudinary(small);
       if (!url) throw new Error("upload failed");
 
@@ -122,6 +147,34 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
       refreshAccount();
     } catch {
       toast.error("Gagal mengunggah foto. Coba lagi.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const closeCropper = () => {
+    setCropSrc((src) => {
+      // The object URL is ours to release; leaving it pins the whole file in
+      // memory for as long as the tab lives.
+      if (src) URL.revokeObjectURL(src);
+      return null;
+    });
+  };
+
+  const removeAvatar = async () => {
+    if (uploading) return;
+    setUploading(true);
+    try {
+      const res = await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: "" }),
+      });
+      if (!res.ok) throw new Error();
+      set("avatarUrl", null);
+      refreshAccount();
+    } catch {
+      toast.error("Gagal menghapus foto. Coba lagi.");
     } finally {
       setUploading(false);
     }
@@ -174,8 +227,23 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
             Dipakai di komunitas kelas. Opsional.
           </p>
+          {values.avatarUrl && (
+            <button
+              type="button"
+              onClick={removeAvatar}
+              disabled={uploading}
+              className="mt-1.5 inline-flex items-center gap-1 rounded text-xs text-destructive underline-offset-4 hover:underline disabled:opacity-50"
+            >
+              <Trash2 className="h-3 w-3" />
+              Hapus foto
+            </button>
+          )}
         </div>
       </div>
+
+      {cropSrc && (
+        <AvatarCropper src={cropSrc} onCancel={closeCropper} onApply={applyCrop} />
+      )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -184,7 +252,8 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
             label="Nama lengkap"
             value={values.fullName}
             onChange={(v) => set("fullName", v)}
-            placeholder="Sesuai nama di kampus"
+            placeholder="Nama asli sesuai data kampus"
+            hint="Nama asli, bukan nama akun"
             autoComplete="name"
             error={errors.fullName}
             maxLength={100}
@@ -196,7 +265,8 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
           label="Panggilan"
           value={values.nickname}
           onChange={(v) => set("nickname", v)}
-          placeholder="Yang dipakai menyapa kamu"
+          placeholder="Nama panggilanmu"
+          hint="Dipakai menyapa kamu"
           error={errors.nickname}
           maxLength={24}
         />
@@ -226,15 +296,23 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
           />
         </div>
 
-        <AuthField
-          id="acc-angkatan"
-          label="Angkatan"
-          value={values.angkatan}
-          onChange={(v) => set("angkatan", v.toUpperCase())}
-          placeholder="B29"
-          hint="Tidak berubah tiap semester"
-          maxLength={16}
-        />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <label htmlFor="acc-angkatan" className="text-xs font-medium text-muted-foreground">
+              Angkatan
+            </label>
+            <span className="text-[11px] text-muted-foreground/70">Tetap tiap semester</span>
+          </div>
+          {/* A list, not a text box: typed by hand the same intake arrives as
+              B29, b29 and "angkatan 29", and nothing can group those later. */}
+          <Dropdown
+            id="acc-angkatan"
+            value={values.angkatan}
+            onChange={(v) => set("angkatan", v)}
+            options={ANGKATAN_OPTIONS.map((a) => ({ value: a, label: a }))}
+            placeholder="Pilih angkatan"
+          />
+        </div>
       </div>
 
       <div className="mt-6 flex items-center gap-3">

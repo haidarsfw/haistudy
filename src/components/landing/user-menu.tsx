@@ -27,7 +27,7 @@ const TIER: Record<string, string> = {
  *
  * Profil and Keluar were placeholders that did nothing. Both are real now.
  */
-export function UserMenu({ compact = false }: { compact?: boolean }) {
+export function UserMenu() {
   const { session } = useSession();
   const { account, access } = useAccount();
   const { t } = useTranslation();
@@ -52,14 +52,13 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
   const signedIn = Boolean(account) || Boolean(session && !session.isPreview);
   if (!signedIn) return null;
 
+  // Never the email's local part. "akunfotoalkhalifah" is not a name, and
+  // showing it turned the header into a truncated address and the account page
+  // greeting into nonsense. Someone who has not filled in their name yet gets
+  // no name here, not a guess at one.
   const name =
-    session?.shortName ||
-    account?.nickname ||
-    session?.name ||
-    account?.fullName ||
-    account?.email.split("@")[0] ||
-    "Akun";
-  const initial = name.charAt(0).toUpperCase();
+    session?.shortName || account?.nickname || session?.name || account?.fullName || "";
+  const initial = (name || account?.email || "?").charAt(0).toUpperCase();
   const tier = session ? (TIER[session.packageTier] ?? "") : "";
   const dashboardPath = access?.dashboardPath ?? (session ? "/dashboard" : null);
 
@@ -88,11 +87,8 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
         <span className="brand-gradient-bg flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white">
           {initial}
         </span>
-        {!compact && (
-          <span className="max-w-[110px] truncate text-sm font-semibold text-foreground">
-            {name}
-          </span>
-        )}
+        {/* Avatar only. The name lives inside the dropdown, where it has room
+            to be read — carrying it in the bar cost width the CTA needed. */}
         <ChevronDown
           className={cn(
             "h-4 w-4 text-muted-foreground transition-transform duration-200",
@@ -107,7 +103,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
           className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-xl shadow-black/10"
         >
           <div className="px-3 py-2.5">
-            <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+            {name && <p className="truncate text-sm font-semibold text-foreground">{name}</p>}
             {account?.email && (
               <p className="truncate text-xs text-muted-foreground">{account.email}</p>
             )}

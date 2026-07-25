@@ -120,38 +120,54 @@ export function AccountLanguage({ initial }: { initial: "id" | "en" }) {
   );
 }
 
+const DELETE_PHRASE = "HAPUS AKUN SAYA";
+
+/** Exactly what goes, said plainly before anything is typed. */
+const WHAT_GOES = [
+  "Cara masuk kamu: email dan password ini tidak bisa dipakai lagi",
+  "Data diri: nama, panggilan, WhatsApp, kampus, angkatan, dan foto profil",
+  "Semua sesi di semua perangkat langsung berakhir",
+  "Kode referral kamu, beserta hitungan orang yang sudah memakainya",
+  "Akses yang sudah berakhir tidak bisa dipulihkan lagi",
+];
+
 /**
- * Danger zone.
+ * Closing an account.
  *
- * A request, not an instant wipe, and blocked outright while access is still
- * live. There is no automated refund behind this, so a mis-click would destroy
- * something that was paid for with nothing able to undo it.
+ * The account holder does this alone — no admin in the middle, no waiting.
+ * Two things keep it from being a footgun: an account still holding live paid
+ * access is blocked outright, and the phrase has to be typed by hand. A second
+ * "are you sure" button is something people click through on reflex; copying a
+ * phrase cannot be done by accident and forces a pause long enough to read
+ * the list above it.
  */
-export function AccountDangerZone({
+export function AccountDeletion({
   hasActiveAccess,
-  alreadyRequested,
   whatsappHref,
 }: {
   hasActiveAccess: boolean;
-  alreadyRequested: boolean;
   whatsappHref: string;
 }) {
-  const [confirming, setConfirming] = useState(false);
+  const [phrase, setPhrase] = useState("");
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(alreadyRequested);
 
-  const request = async () => {
+  const remove = async () => {
     if (busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/account/delete-request", { method: "POST" });
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: phrase }),
+      });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {
-        toast.error(data.error ?? "Gagal mengirim permintaan");
+        toast.error(data.error ?? "Gagal menghapus akun");
         return;
       }
-      setSent(true);
-      setConfirming(false);
+      // Full navigation: the account is gone, so every provider still holding
+      // its state has to be torn down rather than re-rendered.
+      window.location.href = "/";
     } catch {
       toast.error("Koneksi bermasalah. Coba lagi.");
     } finally {
@@ -159,73 +175,84 @@ export function AccountDangerZone({
     }
   };
 
+  if (hasActiveAccess) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-5">
+        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+          Hapus akun
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Akunmu masih punya akses aktif yang sudah dibayar, jadi belum bisa dihapus dari
+          sini. Hubungi admin dulu supaya aksesnya tidak hilang begitu saja.
+        </p>
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          Hubungi admin
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
       <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
         <ShieldAlert className="h-4 w-4 text-destructive" />
-        Hapus akun
+        Hapus akun permanen
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        Setelah dihapus, akun ini tidak bisa dikembalikan, oleh kamu maupun oleh admin.
       </p>
 
-      {sent ? (
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Permintaan hapus akun sudah kami terima. Admin akan menghubungimu lewat email
-          atau WhatsApp sebelum apa pun dihapus.
+      <div className="mt-4 rounded-xl border border-destructive/25 bg-background/40 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-destructive">
+          Yang ikut terhapus
         </p>
-      ) : hasActiveAccess ? (
-        <>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Akunmu masih punya akses aktif yang sudah dibayar. Hubungi admin dulu supaya
-            aksesnya tidak hilang begitu saja.
-          </p>
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-          >
-            Hubungi admin
-          </a>
-        </>
-      ) : confirming ? (
-        <>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Yakin? Semua data akunmu akan dihapus setelah admin memproses permintaan ini.
-            Langkah ini tidak bisa dibatalkan sendiri.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={request}
-              disabled={busy}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-destructive px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              Ya, kirim permintaan
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              className="inline-flex h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-            >
-              Batal
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Permintaan dikirim ke admin dulu, tidak langsung terhapus, supaya tidak ada
-            yang hilang karena salah pencet.
-          </p>
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-destructive/40 px-4 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
-          >
-            Minta hapus akun
-          </button>
-        </>
-      )}
+        <ul className="mt-2 flex flex-col gap-1.5">
+          {WHAT_GOES.map((line) => (
+            <li key={line} className="flex gap-2 text-xs leading-relaxed text-foreground">
+              <span aria-hidden="true" className="text-destructive">
+                &bull;
+              </span>
+              {line}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          Catatan pembelian tetap kami simpan sebagai bukti transaksi, tapi sudah tidak
+          terhubung ke kamu lagi.
+        </p>
+      </div>
+
+      <label
+        htmlFor="delete-phrase"
+        className="mt-4 block text-xs font-medium text-muted-foreground"
+      >
+        Ketik <span className="font-mono font-semibold text-foreground">{DELETE_PHRASE}</span>{" "}
+        untuk melanjutkan
+      </label>
+      <input
+        id="delete-phrase"
+        value={phrase}
+        onChange={(e) => setPhrase(e.target.value)}
+        placeholder={DELETE_PHRASE}
+        autoComplete="off"
+        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3.5 font-mono text-sm text-foreground outline-none transition-colors placeholder:font-sans placeholder:text-muted-foreground/40 focus:border-destructive focus:ring-2 focus:ring-destructive/25"
+      />
+
+      <button
+        type="button"
+        onClick={remove}
+        disabled={busy || phrase.trim().toUpperCase() !== DELETE_PHRASE}
+        className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-destructive px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+      >
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+        Hapus akun saya
+      </button>
     </div>
   );
 }

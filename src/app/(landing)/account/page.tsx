@@ -9,7 +9,7 @@ import { AccountSection, AccountShell } from "@/components/account/account-shell
 import { AccountProfileForm } from "@/components/account/account-profile-form";
 import { AccountSecurity } from "@/components/account/account-security";
 import {
-  AccountDangerZone,
+  AccountDeletion,
   AccountLanguage,
   AccountReferralCard,
 } from "@/components/account/account-extras";
@@ -37,7 +37,7 @@ const NAV = [
   { id: "referral", label: "Referral" },
   { id: "keamanan", label: "Keamanan" },
   { id: "preferensi", label: "Preferensi" },
-  { id: "bahaya", label: "Zona bahaya" },
+  { id: "hapus-akun", label: "Hapus akun" },
 ];
 
 const STATUS = {
@@ -87,9 +87,11 @@ export default async function AccountPage() {
     : [[], [], null, { devices: [], slots: [] }];
 
   const live = activeAccesses(accesses);
-  const displayName = account.nickname || account.fullName || account.email.split("@")[0];
+  // Never the email's local part. Someone who has not filled in a name yet
+  // gets a neutral heading instead of being greeted as "akunfotoalkhalifah".
+  const displayName = account.nickname || account.fullName || "";
   const waHref = `https://api.whatsapp.com/send?phone=${WA_ADMIN}&text=${encodeURIComponent(
-    `Halo admin, saya ${displayName} (${account.email}) butuh bantuan soal akun saya.`
+    `Halo admin, saya${displayName ? ` ${displayName}` : ""} (${account.email}) butuh bantuan soal akun saya.`
   )}`;
 
   return (
@@ -116,7 +118,7 @@ export default async function AccountPage() {
           </div>
           <div className="min-w-0">
             <h1 className="font-display text-xl font-bold tracking-tight text-foreground lg:text-2xl">
-              {displayName}
+              {displayName || "Akun kamu"}
             </h1>
             <p className="mt-0.5 truncate text-sm text-muted-foreground">{account.email}</p>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -286,36 +288,33 @@ export default async function AccountPage() {
       </AccountSection>
 
       <AccountSection id="preferensi" title="Preferensi">
-        <div className="flex flex-col gap-4">
-          <AccountLanguage initial={account.language} />
+        <AccountLanguage initial={account.language} />
+      </AccountSection>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-5">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground">Ada masalah dengan akunmu?</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                Chat admin langsung, biasanya dibalas di hari yang sama.
-              </p>
-            </div>
-            <a
-              href={waHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-            >
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </a>
-          </div>
+      <AccountSection id="hapus-akun" title="Hapus akun">
+        <AccountDeletion hasActiveAccess={live.length > 0} whatsappHref={waHref} />
+      </AccountSection>
+
+      {/* Below the deletion block on purpose: it is the last thing on the page,
+          and someone who got this far and hesitated should find a human before
+          they find the button. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground">Ada masalah dengan akunmu?</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+            Chat admin langsung, biasanya dibalas di hari yang sama.
+          </p>
         </div>
-      </AccountSection>
-
-      <AccountSection id="bahaya" title="Zona bahaya">
-        <AccountDangerZone
-          hasActiveAccess={live.length > 0}
-          alreadyRequested={Boolean(account.deletionRequestedAt)}
-          whatsappHref={waHref}
-        />
-      </AccountSection>
+        <a
+          href={waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          <MessageCircle className="h-4 w-4" />
+          WhatsApp
+        </a>
+      </div>
     </AccountShell>
   );
 }

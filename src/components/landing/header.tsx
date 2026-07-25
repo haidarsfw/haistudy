@@ -236,19 +236,22 @@ export function Header() {
         {/* actions (right) — flex-1 mirror of the logo side */}
         <div className="flex flex-1 items-center justify-end">
           {/* lg+ */}
-          <div className="hidden items-center gap-1 lg:flex">
-            <BantuanLink className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50" />
+          {/* Every child is shrink-0 and the CTA never wraps. Without both, the
+              signed-in row (help + language + button + avatar) overflowed and
+              broke "Beli Akses" onto two lines inside its own pill. */}
+          <div className="hidden shrink-0 items-center gap-1 lg:flex">
+            <BantuanLink className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50" />
             <LanguageToggle compact={scrolled} />
-            <span className="mx-1.5 h-5 w-px bg-border/60" aria-hidden="true" />
+            <span className="mx-1.5 h-5 w-px shrink-0 bg-border/60" aria-hidden="true" />
             {loggedIn ? (
               <>
                 <Link
                   href={ctaHref}
-                  className="brand-gradient-bg rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  className="brand-gradient-bg shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   {ctaLabel}
                 </Link>
-                <UserMenu compact={scrolled} />
+                <UserMenu />
               </>
             ) : (
               <Link

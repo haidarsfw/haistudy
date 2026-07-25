@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, Check, Circle, Eye, EyeOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -96,6 +97,9 @@ export function AuthField({
   );
 }
 
+// How long a satisfied rule stays on screen, ticked, before it leaves.
+const LINGER_MS = 700;
+
 /**
  * Live checklist under a new-password field.
  *
@@ -103,32 +107,65 @@ export function AuthField({
  * tidak memenuhi syarat" arriving on button press is the version people give
  * up on — they cannot see which rule they missed, so they guess.
  *
- * Stays hidden until the first keystroke: an empty form covered in red crosses
- * accuses someone of failing before they have started.
+ * Only UNMET rules stay listed. A rule that has just been satisfied flashes
+ * its tick for a beat and then slides away, so the list shrinks towards
+ * nothing as you type instead of standing there as a permanent wall of five
+ * lines. The whole thing is gone once the password is strong.
  */
 export function PasswordChecklist({ password }: { password: string }) {
-  if (!password) return null;
   const checks = passwordChecks(password);
+  const [lingering, setLingering] = useState<string[]>([]);
+  const previouslyOk = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const nowOk = new Set<string>(
+      passwordChecks(password)
+        .filter((c) => c.ok)
+        .map((c) => c.id as string)
+    );
+    const newlyOk: string[] = [...nowOk].filter((id) => !previouslyOk.current.has(id));
+    previouslyOk.current = nowOk;
+    if (newlyOk.length === 0) return;
+
+    setLingering((l) => Array.from(new Set([...l, ...newlyOk])));
+    const timer = setTimeout(() => {
+      setLingering((l) => l.filter((id) => !newlyOk.includes(id)));
+    }, LINGER_MS);
+    return () => clearTimeout(timer);
+  }, [password]);
+
+  // An empty field shows nothing: covering a form in crosses accuses someone
+  // of failing before they have started.
+  const visible = password
+    ? checks.filter((c) => !c.ok || lingering.includes(c.id))
+    : [];
 
   return (
-    <ul className="flex flex-col gap-1" aria-live="polite">
-      {checks.map((c) => (
-        <li
-          key={c.id}
-          className={cn(
-            "flex items-center gap-1.5 text-[11px] transition-colors",
-            c.ok ? "text-primary" : "text-muted-foreground"
-          )}
-        >
-          {c.ok ? (
-            <Check className="h-3 w-3 shrink-0" />
-          ) : (
-            <Circle className="h-3 w-3 shrink-0 opacity-40" />
-          )}
-          {c.label}
-        </li>
-      ))}
-    </ul>
+    <motion.ul layout className="flex flex-col gap-1 overflow-hidden" aria-live="polite">
+      <AnimatePresence initial={false} mode="popLayout">
+        {visible.map((c) => (
+          <motion.li
+            key={c.id}
+            layout
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className={cn(
+              "flex items-center gap-1.5 text-[11px]",
+              c.ok ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            {c.ok ? (
+              <Check className="h-3 w-3 shrink-0" />
+            ) : (
+              <Circle className="h-3 w-3 shrink-0 opacity-40" />
+            )}
+            {c.label}
+          </motion.li>
+        ))}
+      </AnimatePresence>
+    </motion.ul>
   );
 }
 
