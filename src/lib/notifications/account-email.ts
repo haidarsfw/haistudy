@@ -55,42 +55,71 @@ interface ShellArgs {
 }
 
 /**
- * One layout for every account mail. Table-based and fully inline-styled
- * because that is what mail clients actually render; the raw link is always
- * repeated as text since a good share of clients suppress the button.
+ * One layout for every account mail.
+ *
+ * LIGHT by default, dark only when the reader's client actually asks for it.
+ * The first version was hard-coded dark, which meant a black slab sitting in
+ * an otherwise white inbox — exactly backwards for anyone on light Gmail.
+ *
+ * The light theme lives in inline styles because that is the only thing every
+ * client renders (Outlook's Word engine drops <style> entirely, and it is the
+ * client most likely to be on a desktop in light mode). The dark variant rides
+ * on a <style> block with classes, so clients that support
+ * prefers-color-scheme upgrade and everyone else keeps a perfectly good light
+ * mail. The colour-scheme meta tags stop clients that auto-invert from
+ * mangling it on their own.
+ *
+ * Table-based, and the raw link is always repeated as text since a fair share
+ * of clients suppress the button.
  */
 function renderShell(a: ShellArgs): string {
   const paragraphs = a.body
     .map(
       (p) =>
-        `<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#c5d3cc">${p}</p>`
+        `<p class="body" style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#3f4d47">${p}</p>`
     )
     .join("");
 
   return `<!DOCTYPE html>
-<html lang="id"><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0b120f;color:#e8efeb;margin:0;padding:24px">
-  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background:#131d19;border-radius:16px;overflow:hidden">
-    <tr><td style="padding:22px 26px 0">
-      <div style="font-size:19px;font-weight:800;letter-spacing:-0.3px">
-        <span style="color:#10b981">hai</span><span style="color:#fff">study</span>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  @media (prefers-color-scheme: dark) {
+    .page    { background:#0b120f !important; }
+    .card    { background:#131d19 !important; border-color:#24322c !important; }
+    .brand-2 { color:#ffffff !important; }
+    .head    { color:#ffffff !important; }
+    .body    { color:#c5d3cc !important; }
+    .muted   { color:#8b998f !important; }
+    .link    { color:#94a29b !important; }
+  }
+</style>
+</head>
+<body class="page" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f2f6f3;margin:0;padding:24px">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto">
+    <tr><td class="card" style="background:#ffffff;border:1px solid #e2e9e4;border-radius:16px;padding:26px">
+      <div style="font-size:19px;font-weight:800;letter-spacing:-0.3px;margin-bottom:18px">
+        <span style="color:#059669">hai</span><span class="brand-2" style="color:#101a15">study</span>
       </div>
-    </td></tr>
-    <tr><td style="padding:18px 26px 26px">
       ${
         a.greetingName
-          ? `<p style="margin:0 0 4px;font-size:13px;color:#94a29b">Halo ${safe(a.greetingName)},</p>`
+          ? `<p class="muted" style="margin:0 0 4px;font-size:13px;color:#6b7873">Halo ${safe(a.greetingName)},</p>`
           : ""
       }
-      <h1 style="margin:0 0 14px;font-size:20px;line-height:1.3;color:#fff;font-weight:800">${safe(a.heading)}</h1>
+      <h1 class="head" style="margin:0 0 14px;font-size:20px;line-height:1.3;color:#101a15;font-weight:800">${safe(a.heading)}</h1>
       ${paragraphs}
-      <a href="${a.ctaUrl}" style="display:inline-block;background:#10b981;color:#04130d;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:10px;font-size:14px">
+      <a href="${a.ctaUrl}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:10px;font-size:14px">
         ${safe(a.ctaLabel)}
       </a>
-      <p style="margin:18px 0 0;font-size:11px;line-height:1.6;color:#7d8b84">
+      <p class="muted" style="margin:18px 0 0;font-size:11px;line-height:1.6;color:#6b7873">
         Kalau tombolnya tidak jalan, salin tautan ini ke peramban:<br>
-        <span style="color:#94a29b;word-break:break-all">${a.ctaUrl}</span>
+        <span class="link" style="color:#4f5c56;word-break:break-all">${a.ctaUrl}</span>
       </p>
-      <p style="margin:14px 0 0;font-size:11px;line-height:1.6;color:#7d8b84">${a.footnote}</p>
+      <p class="muted" style="margin:14px 0 0;font-size:11px;line-height:1.6;color:#6b7873">${a.footnote}</p>
     </td></tr>
   </table>
 </body></html>`;
@@ -142,7 +171,9 @@ export async function sendVerifyEmail(opts: {
     greetingName: opts.name || undefined,
     body: [
       "Akun haistudy kamu sudah jadi. Tinggal satu langkah: konfirmasi kalau email ini benar milikmu.",
-      "Kamu <strong style=\"color:#e8efeb\">tetap bisa langsung pakai akunmu</strong> tanpa ini. Konfirmasi cuma memastikan kamu bisa mengatur ulang password nanti kalau lupa.",
+      // The <strong> deliberately carries no colour: it inherits from .body, so
+      // it flips with the theme instead of staying stuck on one palette.
+      "Kamu <strong>tetap bisa langsung pakai akunmu</strong> tanpa ini. Konfirmasi cuma memastikan kamu bisa mengatur ulang password nanti kalau lupa.",
     ],
     ctaLabel: "Konfirmasi email",
     ctaUrl: url,

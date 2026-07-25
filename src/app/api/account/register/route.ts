@@ -57,6 +57,10 @@ export async function POST(req: Request) {
   const fullName = String(body.fullName ?? "").trim().slice(0, 100);
   const nickname = String(body.nickname ?? "").trim().slice(0, 24);
   const whatsapp = String(body.whatsapp ?? "").trim().slice(0, 30);
+  // Stored now, credited later: the referrer is rewarded when a licence
+  // activates, which is a separate step entirely. Keeping the code here means
+  // the input on /register is not a black hole while that side is wired up.
+  const referralCode = String(body.referralCode ?? "").trim().slice(0, 32);
 
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Email tidak valid", field: "email" }, { status: 400 });
@@ -101,6 +105,7 @@ export async function POST(req: Request) {
     fullName,
     nickname: nickname || fullName.split(" ")[0] || "",
     whatsapp,
+    referralCode,
   });
 
   if (!account) {

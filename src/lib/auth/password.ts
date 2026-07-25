@@ -16,6 +16,11 @@ const scrypt = promisify(scryptCb) as (
 /**
  * Password hashing for the email+password login method.
  *
+ * SERVER ONLY. This module evaluates `promisify(scrypt)` at import time, which
+ * throws in a browser bundle. Client components must import the length limits
+ * and `validatePassword` from `./password-rules` instead — importing them from
+ * here is what crashed /register and /reset-password.
+ *
  * scrypt from node:crypto rather than bcrypt/argon2: those are native modules
  * that have to be compiled for the deploy target, and this needs to run on
  * Vercel without a build step or an extra dependency. scrypt is memory-hard and
@@ -33,21 +38,13 @@ const P = 1;
 const KEYLEN = 32;
 const MAXMEM = 128 * N * R * 2;
 
-export const PASSWORD_MIN_LENGTH = 8;
-// Long enough to be a passphrase, bounded so a huge body can't be used to burn
-// CPU on the hash.
-export const PASSWORD_MAX_LENGTH = 200;
-
-/** Why this password is unacceptable, or null if it's fine. */
-export function validatePassword(password: string): string | null {
-  if (password.length < PASSWORD_MIN_LENGTH) {
-    return `Password minimal ${PASSWORD_MIN_LENGTH} karakter`;
-  }
-  if (password.length > PASSWORD_MAX_LENGTH) {
-    return `Password maksimal ${PASSWORD_MAX_LENGTH} karakter`;
-  }
-  return null;
-}
+// Re-exported so server callers keep one import site. Client components must
+// import these from "@/lib/auth/password-rules" directly.
+export {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  validatePassword,
+} from "./password-rules";
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);

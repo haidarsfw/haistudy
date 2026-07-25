@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import { AuthDivider } from "@/components/account/auth-shell";
+import { AuthField, AuthSubmit, IncognitoNote } from "@/components/account/auth-field";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
-import { FieldShell } from "@/components/payments/fields/field-shell";
-import { ShortAnswer } from "@/components/payments/fields/short-answer";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { sounds } from "@/lib/sounds";
 
@@ -57,15 +56,17 @@ export function LoginForm({
 
       <PasswordLoginForm next={safeNext} />
 
-      <p className="text-center text-sm text-muted-foreground">
+      <IncognitoNote />
+
+      <div className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
         Belum punya akun?{" "}
         <Link
           href={registerHref}
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-semibold text-primary underline-offset-4 hover:underline"
         >
           Daftar
         </Link>
-      </p>
+      </div>
     </div>
   );
 }
@@ -111,53 +112,45 @@ function PasswordLoginForm({ next }: { next?: string }) {
   };
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-1" noValidate>
-      <FieldShell label="Email" htmlFor="login-email" required>
-        <ShortAnswer
-          id="login-email"
-          type="email"
-          value={email}
-          onChange={setEmail}
-          placeholder="kamu@email.com"
-          autoComplete="email"
-          invalid={Boolean(error)}
-        />
-      </FieldShell>
+    <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+      <AuthField
+        id="login-email"
+        label="Email"
+        type="email"
+        value={email}
+        onChange={setEmail}
+        placeholder="kamu@email.com"
+        autoComplete="email"
+      />
 
-      <FieldShell label="Password" htmlFor="login-password" required>
-        <ShortAnswer
+      <div className="flex flex-col gap-1.5">
+        <AuthField
           id="login-password"
+          label="Password"
           type="password"
           value={password}
           onChange={setPassword}
           placeholder="Passwordmu"
           autoComplete="current-password"
-          invalid={Boolean(error)}
         />
-      </FieldShell>
+        <Link
+          href="/forgot-password"
+          className="self-end rounded text-[11px] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          Lupa password?
+        </Link>
+      </div>
 
       {error && (
-        <div className="mt-1 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+        <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-      >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {loading ? "Masuk..." : "Masuk"}
-      </button>
-
-      <Link
-        href="/forgot-password"
-        className="mt-3 self-center rounded text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-      >
-        Lupa password?
-      </Link>
+      <AuthSubmit loading={loading} loadingLabel="Masuk...">
+        Masuk
+      </AuthSubmit>
     </form>
   );
 }

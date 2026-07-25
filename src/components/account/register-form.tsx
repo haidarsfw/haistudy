@@ -3,20 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Gift } from "lucide-react";
 
 import { AuthDivider } from "@/components/account/auth-shell";
+import { AuthField, AuthSubmit, IncognitoNote } from "@/components/account/auth-field";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
-import { FieldShell } from "@/components/payments/fields/field-shell";
-import { ShortAnswer } from "@/components/payments/fields/short-answer";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password";
+import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password-rules";
 import { sounds } from "@/lib/sounds";
 
 /**
  * Create an account.
  *
- * Two fields only, matching exactly what signing in with Google hands over, so
+ * Two fields, matching exactly what signing in with Google hands over, so
  * neither path asks for more than the other. Everything a purchase needs
  * (nama, panggilan, WhatsApp, kampus, kelas) is collected once at the first
  * checkout and kept on the account from then on.
@@ -26,6 +25,8 @@ export function RegisterForm({ next }: { next?: string }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [referral, setReferral] = useState("");
+  const [showReferral, setShowReferral] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,9 +59,10 @@ export function RegisterForm({ next }: { next?: string }) {
         body: JSON.stringify({
           email: email.trim(),
           password,
-          // The address doubles as the display name until checkout collects a
-          // real one. Better than an empty greeting in the verification mail.
+          // Stands in as the display name until checkout collects a real one.
+          // Better than an empty greeting in the verification mail.
           fullName: email.trim().split("@")[0],
+          referralCode: referral.trim() || undefined,
         }),
       });
       const data = (await res.json()) as {
@@ -100,48 +102,60 @@ export function RegisterForm({ next }: { next?: string }) {
         </>
       )}
 
-      <form onSubmit={submit} className="flex flex-col gap-1" noValidate>
-        <FieldShell label="Email" htmlFor="reg-email" required error={errors.email}>
-          <ShortAnswer
-            id="reg-email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            placeholder="kamu@email.com"
-            autoComplete="email"
-            invalid={Boolean(errors.email)}
-          />
-        </FieldShell>
+      <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+        <AuthField
+          id="reg-email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          placeholder="kamu@email.com"
+          autoComplete="email"
+          error={errors.email}
+        />
 
-        <FieldShell
+        <AuthField
+          id="reg-password"
           label="Password"
-          htmlFor="reg-password"
-          required
-          description={`Minimal ${PASSWORD_MIN_LENGTH} karakter`}
+          type="password"
+          value={password}
+          onChange={setPassword}
+          placeholder="Buat password"
+          autoComplete="new-password"
+          hint={`Min. ${PASSWORD_MIN_LENGTH} karakter`}
           error={errors.password}
-        >
-          <ShortAnswer
-            id="reg-password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            placeholder="Buat password"
-            autoComplete="new-password"
-            invalid={Boolean(errors.password)}
-          />
-        </FieldShell>
+        />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-        >
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          {loading ? "Membuat akun..." : "Daftar"}
-        </button>
+        {showReferral ? (
+          <AuthField
+            id="reg-referral"
+            label="Kode referral"
+            value={referral}
+            onChange={(v) => setReferral(v.toUpperCase())}
+            placeholder="Punya kode dari teman?"
+            autoComplete="off"
+            maxLength={32}
+            hint="Opsional"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowReferral(true)}
+            className="-mt-1 flex items-center gap-1.5 self-start rounded text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <Gift className="h-3.5 w-3.5" />
+            Punya kode referral?
+          </button>
+        )}
+
+        <AuthSubmit loading={loading} loadingLabel="Membuat akun...">
+          Daftar
+        </AuthSubmit>
       </form>
 
-      <p className="text-center text-[11px] leading-relaxed text-muted-foreground/80">
+      <IncognitoNote />
+
+      <p className="text-center text-[11px] leading-relaxed text-muted-foreground/70">
         Dengan mendaftar kamu setuju dengan{" "}
         <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
           Ketentuan Layanan
@@ -153,15 +167,15 @@ export function RegisterForm({ next }: { next?: string }) {
         .
       </p>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <div className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
         Sudah punya akun?{" "}
         <Link
           href={loginHref}
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-semibold text-primary underline-offset-4 hover:underline"
         >
           Masuk
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

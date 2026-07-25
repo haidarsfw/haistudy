@@ -139,6 +139,11 @@ export interface CreateAccountInput {
   fullName?: string;
   nickname?: string;
   whatsapp?: string;
+  /**
+   * Referral code typed at registration. Parked on the account because the
+   * referrer is credited when a licence activates, which happens much later.
+   */
+  referralCode?: string;
 }
 
 /**
@@ -160,6 +165,8 @@ export async function createAccount(
       full_name: (input.fullName ?? "").trim().slice(0, 100),
       nickname: (input.nickname ?? "").trim().slice(0, 24),
       whatsapp: (input.whatsapp ?? "").trim().slice(0, 30),
+      referred_by_code:
+        input.referralCode?.trim().toUpperCase().slice(0, 32) || null,
     })
     .select(ACCOUNT_COLUMNS)
     .single();

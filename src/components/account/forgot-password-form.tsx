@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Loader2, MailCheck } from "lucide-react";
+import { AlertCircle, MailCheck } from "lucide-react";
 
-import { FieldShell } from "@/components/payments/fields/field-shell";
-import { ShortAnswer } from "@/components/payments/fields/short-answer";
+import { AuthField, AuthSubmit } from "@/components/account/auth-field";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -80,39 +79,23 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-1" noValidate>
-      <FieldShell
+    <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+      <AuthField
+        id="forgot-email"
         label="Email"
-        htmlFor="forgot-email"
-        required
-        description="Email yang kamu pakai waktu daftar"
-      >
-        <ShortAnswer
-          id="forgot-email"
-          type="email"
-          value={email}
-          onChange={setEmail}
-          placeholder="kamu@email.com"
-          autoComplete="email"
-          invalid={Boolean(error)}
-        />
-      </FieldShell>
+        type="email"
+        value={email}
+        onChange={setEmail}
+        placeholder="kamu@email.com"
+        autoComplete="email"
+        hint="Yang kamu pakai waktu daftar"
+        error={error ?? undefined}
+        autoFocus
+      />
 
-      {error && (
-        <div className="mt-1 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-      >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {loading ? "Mengirim..." : "Kirim tautan reset"}
-      </button>
+      <AuthSubmit loading={loading} loadingLabel="Mengirim...">
+        Kirim tautan reset
+      </AuthSubmit>
     </form>
   );
 }

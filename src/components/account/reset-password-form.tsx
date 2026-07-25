@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
-import { FieldShell } from "@/components/payments/fields/field-shell";
-import { ShortAnswer } from "@/components/payments/fields/short-answer";
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password";
+import { AuthField, AuthSubmit } from "@/components/account/auth-field";
+import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password-rules";
 import { sounds } from "@/lib/sounds";
 
 export function ResetPasswordForm({ token }: { token: string }) {
@@ -82,59 +81,43 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-1" noValidate>
+    <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
       {banner && (
-        <div className="mb-2 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+        <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{banner}</span>
         </div>
       )}
 
-      <FieldShell
+      <AuthField
+        id="reset-password"
         label="Password baru"
-        htmlFor="reset-password"
-        required
-        description={`Minimal ${PASSWORD_MIN_LENGTH} karakter`}
+        type="password"
+        value={password}
+        onChange={setPassword}
+        placeholder="Password baru"
+        autoComplete="new-password"
+        hint={`Min. ${PASSWORD_MIN_LENGTH} karakter`}
         error={errors.password}
-      >
-        <ShortAnswer
-          id="reset-password"
-          type="password"
-          value={password}
-          onChange={setPassword}
-          placeholder="Password baru"
-          autoComplete="new-password"
-          invalid={Boolean(errors.password)}
-        />
-      </FieldShell>
+        autoFocus
+      />
 
-      <FieldShell
+      <AuthField
+        id="reset-confirm"
         label="Ulangi password"
-        htmlFor="reset-confirm"
-        required
+        type="password"
+        value={confirm}
+        onChange={setConfirm}
+        placeholder="Ketik ulang"
+        autoComplete="new-password"
         error={errors.confirm}
-      >
-        <ShortAnswer
-          id="reset-confirm"
-          type="password"
-          value={confirm}
-          onChange={setConfirm}
-          placeholder="Ketik ulang"
-          autoComplete="new-password"
-          invalid={Boolean(errors.confirm)}
-        />
-      </FieldShell>
+      />
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-      >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {loading ? "Menyimpan..." : "Simpan password baru"}
-      </button>
+      <AuthSubmit loading={loading} loadingLabel="Menyimpan...">
+        Simpan password baru
+      </AuthSubmit>
 
-      <p className="mt-3 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+      <p className="text-center text-[11px] leading-relaxed text-muted-foreground/70">
         Semua perangkat lain akan dikeluarkan dari akunmu setelah ini.
       </p>
     </form>
