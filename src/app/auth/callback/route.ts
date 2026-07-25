@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
+
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import { allowsGoogleLogin, allowsPasswordLogin } from "@/lib/auth/login-method";
+import { allowsGoogleLogin } from "@/lib/auth/login-method";
 import {
   activateLicense,
   ActivationError,
   applySessionCookies,
 } from "@/lib/auth/oauth-cookie-helpers";
+import {
+  createAccount,
+  findAccountByEmail,
+  touchLastLogin,
+  type Account,
+} from "@/lib/auth/account";
+import { applyAccountCookie, createAccountSession } from "@/lib/auth/account-session";
+import { activeAccesses, listAccountAccesses } from "@/lib/auth/account-access";
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -31,11 +40,35 @@ function redirectToLoginError(
   return NextResponse.redirect(url, 303);
 }
 
+/** Same-origin paths only — anything else would make this an open redirect. */
+function readNextCookie(request: Request): string | null {
+  const raw = request.headers.get("cookie") || "";
+  const hit = raw
+    .split(";")
+    .map((p) => p.trim())
+    .find((p) => p.startsWith("hs-next="));
+  if (!hit) return null;
+  try {
+    const value = decodeURIComponent(hit.slice("hs-next=".length));
+    if (!value.startsWith("/") || value.startsWith("//")) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * GET /auth/callback?code=…
- * OAuth callback - exchanges the Supabase Auth code, looks up the linked
- * license via oauth_links, runs the shared activateLicense pipeline, and
- * lands the user on the scoped dashboard.
+ *
+ * Google sign-in. Resolves the Google address to an ACCOUNT — creating one on
+ * the spot if this is a first visit — and only then decides whether there is
+ * an access to open.
+ *
+ * The order matters. This used to look up `oauth_links` and dead-end with
+ * "hubungi admin" whenever the address was unknown, which is the single most
+ * common case for a would-be customer: someone who has simply never bought
+ * anything. Now a new address becomes an account and lands on the account page
+ * or straight back in the checkout they came from.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -43,31 +76,19 @@ export async function GET(request: Request) {
   const errorParam = url.searchParams.get("error");
   const origin = url.origin;
 
-  if (errorParam === "access_denied") {
-    return redirectToLoginError(origin, "cancelled");
-  }
-  if (!code) {
-    return redirectToLoginError(origin, "no_code");
-  }
-  if (!isSupabaseServerConfigured) {
-    return redirectToLoginError(origin, "not_configured");
-  }
+  if (errorParam === "access_denied") return redirectToLoginError(origin, "cancelled");
+  if (!code) return redirectToLoginError(origin, "no_code");
+  if (!isSupabaseServerConfigured) return redirectToLoginError(origin, "not_configured");
 
   const authClient = await createServerAuthClient();
-  if (!authClient) {
-    return redirectToLoginError(origin, "not_configured");
-  }
+  if (!authClient) return redirectToLoginError(origin, "not_configured");
 
   const { error: exchangeError } = await authClient.auth.exchangeCodeForSession(code);
   if (exchangeError) {
     console.error("OAuth exchangeCodeForSession failed:", exchangeError);
-    const url = new URL("/login", origin);
-    url.searchParams.set("oauth_error", "exchange_failed");
-    url.searchParams.set(
-      "detail",
-      exchangeError.message || "Unknown exchange error"
-    );
-    return NextResponse.redirect(url, 303);
+    // The provider's raw message used to be reflected into the URL and printed
+    // to the user. It reads like a crash and means nothing to a student.
+    return redirectToLoginError(origin, "exchange_failed");
   }
 
   const { data: userData, error: userError } = await authClient.auth.getUser();
@@ -76,41 +97,77 @@ export async function GET(request: Request) {
   }
 
   const email = userData.user.email.toLowerCase();
+  const googleName =
+    (userData.user.user_metadata?.full_name as string | undefined) ||
+    (userData.user.user_metadata?.name as string | undefined) ||
+    "";
 
   const supabase = createServerClient()!;
-  const { data: linkRow } = await supabase
-    .from("oauth_links")
-    .select("license_key")
-    .eq("email_lower", email)
-    .maybeSingle();
 
-  if (!linkRow?.license_key) {
-    return redirectToLoginError(origin, "email_not_linked", email);
+  let account = await findAccountByEmail(supabase, email);
+
+  if (account && account.authProvider !== "google") {
+    // One account, one way in — chosen at registration and never changed.
+    return redirectToLoginError(origin, "use_password_login", email);
+  }
+  if (account?.status === "blocked") {
+    return redirectToLoginError(origin, "suspended", email);
   }
 
-  const { data: license, error: licenseError } = await supabase
+  if (!account) {
+    account = await createAccount(supabase, {
+      email,
+      authProvider: "google",
+      // Google has already proven the address; asking again would be theatre.
+      emailVerified: true,
+      fullName: googleName,
+      nickname: googleName.split(" ")[0] ?? "",
+    });
+    if (!account) {
+      // Lost a race against a simultaneous sign-in; the row exists now.
+      account = await findAccountByEmail(supabase, email);
+    }
+    if (!account) return redirectToLoginError(origin, "server_error", email);
+
+    // Self-heal: an address that already had a licence linked the old way
+    // (oauth_links) but no account_id — for instance one an admin attached by
+    // hand after the backfill ran.
+    await adoptLegacyLink(supabase, account, email);
+  }
+
+  const sessionToken = await createAccountSession(supabase, account.id, request);
+  await touchLastLogin(supabase, account.id);
+
+  const next = readNextCookie(request);
+  const accesses = await listAccountAccesses(supabase, account.id);
+  const live = activeAccesses(accesses);
+
+  // Checkout intent always wins: they clicked a package, signing in was the
+  // detour, not the destination.
+  const target = next ?? (live.length === 1 ? null : "/account");
+
+  if (target) {
+    const res = NextResponse.redirect(new URL(target, origin), 303);
+    applyAccountCookie(res, sessionToken);
+    clearNextCookie(res);
+    return res;
+  }
+
+  // Exactly one live access: nothing to choose, so open it.
+  const only = live[0];
+  const { data: license } = await supabase
     .from("license_keys")
     .select("*")
-    .eq("key", linkRow.license_key)
+    .eq("key", only.licenseKey)
     .single();
 
-  if (licenseError || !license) {
-    return redirectToLoginError(origin, "license_not_found");
+  if (!license || !allowsGoogleLogin(license.login_method)) {
+    const res = NextResponse.redirect(new URL("/account", origin), 303);
+    applyAccountCookie(res, sessionToken);
+    clearNextCookie(res);
+    return res;
   }
 
-  // Login-method binding (migrations 038 + 059). Positive check: the Google path
-  // is open only to legacy (NULL), 'google' and its legacy alias 'email'. It
-  // used to reject `=== "key"`, which let a 'password' account sign in with
-  // Google — bypassing the password entirely — whenever that account's email
-  // happened to be a Gmail.
-  if (!allowsGoogleLogin(license.login_method)) {
-    const reason = allowsPasswordLogin(license.login_method)
-      ? "use_password_login"
-      : "use_key_login";
-    return redirectToLoginError(origin, reason, email);
-  }
-
-  // Server-generated device id for OAuth path (key-login path uses client device id)
   const cookieHeader = request.headers.get("cookie") || "";
   const existingDeviceId = cookieHeader
     .split(";")
@@ -119,14 +176,13 @@ export async function GET(request: Request) {
     ?.slice("hs-device-id=".length);
   const deviceId = existingDeviceId || crypto.randomUUID();
   const ua = request.headers.get("user-agent") || "";
-  const deviceType = detectDeviceType(ua);
 
   try {
     const { session } = await activateLicense(
       supabase,
       license,
       deviceId,
-      deviceType,
+      detectDeviceType(ua),
       request
     );
 
@@ -136,27 +192,68 @@ export async function GET(request: Request) {
     );
     const response = NextResponse.redirect(dashboard, 303);
     applySessionCookies(response, session);
+    applyAccountCookie(response, sessionToken);
+    clearNextCookie(response);
     if (!existingDeviceId) {
       response.cookies.set("hs-device-id", deviceId, COOKIE_OPTS);
     }
     return response;
   } catch (e) {
+    // The account session is real even when the access could not be opened, so
+    // keep them signed in and explain it on the account page rather than
+    // throwing them back to a login screen they just came from.
+    const res = NextResponse.redirect(new URL("/account", origin), 303);
+    applyAccountCookie(res, sessionToken);
+    clearNextCookie(res);
+
     if (e instanceof ActivationError) {
-      const body = (await e.response.clone().json().catch(() => null)) as
-        | { error?: string; deviceLimitReached?: boolean }
-        | null;
-      const status = e.response.status;
-      if (body?.deviceLimitReached) {
-        return redirectToLoginError(origin, "device_limit");
-      }
-      if (status === 403 && body?.error?.includes("expired")) {
-        return redirectToLoginError(origin, "expired");
-      }
-      if (status === 403 && body?.error?.includes("disuspend")) {
-        return redirectToLoginError(origin, "suspended");
-      }
-      return redirectToLoginError(origin, "activation_failed");
+      const body = (await e.response.clone().json().catch(() => null)) as {
+        error?: string;
+        deviceLimitReached?: boolean;
+      } | null;
+      const reason = body?.deviceLimitReached
+        ? "device_limit"
+        : body?.error?.includes("expired")
+          ? "expired"
+          : body?.error?.includes("disuspend")
+            ? "suspended"
+            : "activation_failed";
+      res.headers.set("Location", new URL(`/account?notice=${reason}`, origin).toString());
+      return res;
     }
-    return redirectToLoginError(origin, "server_error");
+    console.error("[auth/callback] activation failed", e);
+    return res;
+  }
+}
+
+function clearNextCookie(res: NextResponse) {
+  res.cookies.set("hs-next", "", { path: "/", maxAge: 0 });
+}
+
+/**
+ * Attach a pre-account licence to a freshly created account, if one is sitting
+ * in `oauth_links` for this address without an `account_id`.
+ */
+async function adoptLegacyLink(
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  supabase: any,
+  account: Account,
+  email: string
+): Promise<void> {
+  try {
+    const { data: link } = await supabase
+      .from("oauth_links")
+      .select("license_key")
+      .eq("email_lower", email)
+      .maybeSingle();
+    if (!link?.license_key) return;
+
+    await supabase
+      .from("license_keys")
+      .update({ account_id: account.id })
+      .eq("key", link.license_key)
+      .is("account_id", null);
+  } catch (e) {
+    console.error("[auth/callback] adopting legacy oauth_link failed", e);
   }
 }

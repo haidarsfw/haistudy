@@ -13,7 +13,27 @@ import type { NextRequest } from "next/server";
  *  5. Already-scoped paths pass through untouched.
  */
 
-const publicPaths = ["/", "/login", "/preview", "/payments", "/api", "/privacy", "/terms", "/refund", "/auth/callback", "/unavailable", "/clearcookies"];
+const publicPaths = [
+  "/",
+  "/login",
+  // Signing up, and the two mail links that lead back here. All four must stay
+  // open: the whole point of the account layer is that identity exists before
+  // any access does, and a verification link that first demands a sign-in is a
+  // link nobody clicks.
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+  "/preview",
+  "/payments",
+  "/api",
+  "/privacy",
+  "/terms",
+  "/refund",
+  "/auth/callback",
+  "/unavailable",
+  "/clearcookies",
+];
 
 const LEGACY_APP_ROUTES = new Set([
   "dashboard",
@@ -106,6 +126,19 @@ export function proxy(request: NextRequest) {
 
   // 1. Public paths
   if (isPublicPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  // 2a. /account belongs to the identity layer, not the app. It is gated on
+  //     hs-account (who you are), never on hs-session (what you bought) —
+  //     someone with an account and no access must still be able to open it,
+  //     since that is exactly where they go to buy one.
+  if (pathname === "/account" || pathname.startsWith("/account/")) {
+    if (!request.cookies.get("hs-account")) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
     return NextResponse.next();
   }
 

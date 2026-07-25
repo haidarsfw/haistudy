@@ -1,63 +1,67 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+
+import { AuthShell } from "@/components/account/auth-shell";
 import { LoginForm } from "@/components/auth/login-form";
+import { LegacyKeyForm } from "@/components/auth/legacy-key-form";
 
 export const metadata: Metadata = {
-  title: "Login",
-  description: "Masuk ke haistudy dengan license key untuk akses materi, quiz, dan komunitas belajar.",
+  title: "Masuk",
+  description:
+    "Masuk ke akun haistudy kamu untuk membuka akses materi, latihan soal, dan komunitas belajar.",
   alternates: { canonical: "/login" },
 };
+
+function safePath(value?: string): string | undefined {
+  // Same-origin paths only. Anything else here would be an open redirect.
+  if (!value) return undefined;
+  if (!value.startsWith("/") || value.startsWith("//")) return undefined;
+  return value;
+}
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ oauth_error?: string; email?: string; detail?: string }>;
+  searchParams: Promise<{
+    oauth_error?: string;
+    email?: string;
+    detail?: string;
+    next?: string;
+    redirect?: string;
+    legacy?: string;
+  }>;
 }) {
   const params = await searchParams;
+
+  // `next` is set by us (checkout intent); `redirect` is set by the proxy when
+  // it bounces someone off a page they were not signed in for. Both mean the
+  // same thing here.
+  const next = safePath(params.next) ?? safePath(params.redirect);
+
+  // Unlinked escape hatch. See legacy-key-form.tsx for why it still exists.
+  if (params.legacy === "1") {
+    return (
+      <AuthShell
+        title="Masuk dengan license key"
+        subtitle="Jalur lama. Kalau kamu punya akun, masuk lewat halaman biasa."
+        backHref="/login"
+        backLabel="Masuk biasa"
+      >
+        <LegacyKeyForm />
+      </AuthShell>
+    );
+  }
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-primary/8 blur-3xl" />
-      </div>
-      <div className="w-full max-w-sm">
-        {/* Back link */}
-        <Link
-          href="/"
-          className="mb-8 inline-flex items-center gap-1.5 rounded text-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali
-        </Link>
-
-        {/* Login Card */}
-        <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm p-7 shadow-md">
-          {/* Header */}
-          <div className="mb-6 text-center">
-            <h1 className="font-heading text-3xl font-bold tracking-tight">
-              <span className="text-primary">hai</span>study
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Masuk ke akunmu
-            </p>
-          </div>
-
-          <LoginForm
-            oauthError={params.oauth_error ?? null}
-            oauthEmail={params.email ?? null}
-            oauthDetail={params.detail ?? null}
-          />
-        </div>
-
-        {/* Footer */}
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          Belum punya license key?{" "}
-          <a href="/#pricing" className="text-primary hover:underline">
-            Dapatkan di sini
-          </a>
-        </p>
-      </div>
-    </div>
+    <AuthShell
+      title="Masuk ke akunmu"
+      subtitle="Satu akun untuk semua periode ujian yang kamu beli."
+    >
+      <LoginForm
+        oauthError={params.oauth_error ?? null}
+        oauthEmail={params.email ?? null}
+        oauthDetail={params.detail ?? null}
+        next={next ?? null}
+      />
+    </AuthShell>
   );
 }
-

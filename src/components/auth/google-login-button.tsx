@@ -31,13 +31,39 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-export function GoogleLoginButton() {
+/**
+ * Where to land after Google comes back.
+ *
+ * Deliberately a cookie rather than a query param on `redirectTo`: Supabase
+ * matches the redirect URL against its allow-list, and appending `?next=` can
+ * fail that match depending on how the entry was configured. A short-lived
+ * cookie keeps the intent without touching auth config at all.
+ */
+function rememberNext(next?: string) {
+  if (typeof document === "undefined") return;
+  // Same-origin paths only. An absolute URL here would be an open redirect.
+  const safe = next && next.startsWith("/") && !next.startsWith("//") ? next : "";
+  const base = "hs-next=; path=/; max-age=0; samesite=lax";
+  document.cookie = base;
+  if (safe) {
+    document.cookie = `hs-next=${encodeURIComponent(safe)}; path=/; max-age=600; samesite=lax`;
+  }
+}
+
+export function GoogleLoginButton({
+  next,
+  label,
+}: {
+  next?: string;
+  label?: string;
+} = {}) {
   const [loading, setLoading] = useState(false);
 
   if (!isSupabaseConfigured) return null;
 
   const onClick = async () => {
     setLoading(true);
+    rememberNext(next);
     try {
       const supabase = createAuthClient();
       if (!supabase) {
@@ -81,7 +107,7 @@ export function GoogleLoginButton() {
       ) : (
         <GoogleIcon className="h-4 w-4" />
       )}
-      <span>{loading ? "Membuka Google..." : "Lanjut dengan Google"}</span>
+      <span>{loading ? "Membuka Google..." : (label ?? "Lanjut dengan Google")}</span>
     </Button>
   );
 }
