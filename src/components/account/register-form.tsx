@@ -6,10 +6,14 @@ import Link from "next/link";
 import { AlertCircle, Gift } from "lucide-react";
 
 import { AuthDivider } from "@/components/account/auth-shell";
-import { AuthField, AuthSubmit, IncognitoNote } from "@/components/account/auth-field";
+import {
+  AuthField,
+  AuthSubmit,
+  PasswordChecklist,
+} from "@/components/account/auth-field";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password-rules";
+import { isPasswordStrong } from "@/lib/auth/password-rules";
 import { sounds } from "@/lib/sounds";
 
 /**
@@ -43,9 +47,7 @@ export function RegisterForm({ next }: { next?: string }) {
     // Mirrors the server. Only saves a round trip; the server re-checks.
     const local: Record<string, string> = {};
     if (!email.trim()) local.email = "Email wajib diisi";
-    if (password.length < PASSWORD_MIN_LENGTH) {
-      local.password = `Minimal ${PASSWORD_MIN_LENGTH} karakter`;
-    }
+    if (!isPasswordStrong(password)) local.password = "Password belum memenuhi syarat";
     if (Object.keys(local).length) {
       setErrors(local);
       return;
@@ -114,17 +116,19 @@ export function RegisterForm({ next }: { next?: string }) {
           error={errors.email}
         />
 
-        <AuthField
-          id="reg-password"
-          label="Password"
-          type="password"
-          value={password}
-          onChange={setPassword}
-          placeholder="Buat password"
-          autoComplete="new-password"
-          hint={`Min. ${PASSWORD_MIN_LENGTH} karakter`}
-          error={errors.password}
-        />
+        <div className="flex flex-col gap-2">
+          <AuthField
+            id="reg-password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            placeholder="Buat password"
+            autoComplete="new-password"
+            error={errors.password}
+          />
+          <PasswordChecklist password={password} />
+        </div>
 
         {showReferral ? (
           <AuthField
@@ -148,12 +152,16 @@ export function RegisterForm({ next }: { next?: string }) {
           </button>
         )}
 
-        <AuthSubmit loading={loading} loadingLabel="Membuat akun...">
+        {/* Locked until every rule is green. The checklist above already says
+            what is missing, so a rejection round trip would add nothing. */}
+        <AuthSubmit
+          loading={loading}
+          disabled={!isPasswordStrong(password) || !email.trim()}
+          loadingLabel="Membuat akun..."
+        >
           Daftar
         </AuthSubmit>
       </form>
-
-      <IncognitoNote />
 
       <p className="text-center text-[11px] leading-relaxed text-muted-foreground/70">
         Dengan mendaftar kamu setuju dengan{" "}

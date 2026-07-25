@@ -4,12 +4,15 @@ import Link from "next/link";
 import { Star, ArrowRight } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
+import { useAccount } from "@/hooks/use-account";
 import { HeroTour } from "@/components/landing/hero-tour";
 
 export function Hero() {
   const { t } = useTranslation();
   const { session } = useSession();
-  const loggedIn = !!session && !session.isPreview;
+  const { account, access } = useAccount();
+  const loggedIn = Boolean(account) || (!!session && !session.isPreview);
+  const hasAccess = access?.hasActive ?? (!!session && !session.isPreview);
 
   return (
     <section
@@ -73,12 +76,24 @@ export function Hero() {
           style={{ transitionDelay: "120ms" }}
         >
           {loggedIn ? (
-            <Link
-              href="/dashboard"
-              className="brand-gradient-bg inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              {t("landing.cta.dashboard")}
-            </Link>
+            hasAccess ? (
+              <Link
+                href={access?.dashboardPath ?? "/dashboard"}
+                className="brand-gradient-bg inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                {t("landing.cta.lanjut_belajar")}
+              </Link>
+            ) : (
+              // Same destination as the header's "Beli Akses", different words
+              // on purpose — two identical buttons on one screen read as a
+              // mistake, not as emphasis.
+              <a
+                href="#harga"
+                className="brand-gradient-bg inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                {t("landing.cta.lihat_paket")}
+              </a>
+            )
           ) : (
             <a
               href="#harga"

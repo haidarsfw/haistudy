@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getOptionalAccount } from "@/lib/auth/account-session";
+import { activeAccesses, listAccountAccesses } from "@/lib/auth/account-access";
+import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 
 /**
  * Who is signed in, at the account layer.
@@ -17,8 +19,24 @@ export async function GET() {
     return NextResponse.json({ account: null }, { headers: { "Cache-Control": "no-store" } });
   }
 
+  // The header needs to know whether there is anything to open, so it can say
+  // "Dashboard" instead of "Beli Akses". One extra query, and only for someone
+  // who is already signed in.
+  const accesses = isSupabaseServerConfigured
+    ? await listAccountAccesses(createServerClient()!, account.id)
+    : [];
+  const live = activeAccesses(accesses);
+
   return NextResponse.json(
     {
+      access: {
+        hasActive: live.length > 0,
+        count: live.length,
+        dashboardPath:
+          live.length > 0
+            ? `/s${live[0].scope.semester}/${live[0].scope.examPeriod}/${live[0].scope.jurusan}/dashboard`
+            : null,
+      },
       account: {
         id: account.id,
         email: account.email,

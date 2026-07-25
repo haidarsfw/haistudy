@@ -6,10 +6,16 @@ import { AccountError } from "@/lib/auth/account";
 import { requireAccount } from "@/lib/auth/account-session";
 import { issueAccountToken } from "@/lib/auth/account-tokens";
 import { sendVerifyEmail } from "@/lib/notifications/account-email";
+import {
+  checkVerifyResendQuota,
+  formatRetryAfter,
+  recordVerifyResend,
+} from "@/lib/auth/account-rate-limit";
 import { getClientIp } from "@/lib/auth/oauth-cookie-helpers";
 
 // Long enough that a double-click or an impatient second press costs nothing,
-// short enough that nobody feels stuck waiting.
+// short enough that nobody feels stuck waiting. The daily ceiling lives in
+// account-rate-limit; this is just the "stop mashing it" gap.
 const COOLDOWN_MS = 2 * 60 * 1000;
 
 /** Send the verification mail again. */
@@ -26,6 +32,19 @@ export async function POST(req: Request) {
     }
 
     const supabase = createServerClient()!;
+
+    // Hard ceiling first: 5 a day. Without it the two-minute gap alone still
+    // allows 720 mails a day at one address.
+    const quota = await checkVerifyResendQuota(supabase, account.id);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `Sudah terlalu sering. Coba lagi ${formatRetryAfter(quota.retryAfter)}.`,
+          retryAfter: quota.retryAfter,
+        },
+        { status: 429, headers: { "Retry-After": String(quota.retryAfter) } }
+      );
+    }
 
     const { data: recent } = await supabase
       .from("account_tokens")
@@ -49,15 +68,13 @@ export async function POST(req: Request) {
       }
     }
 
+    const ip = getClientIp(req);
+    await recordVerifyResend(supabase, account.id, ip);
+
     waitUntil(
       (async () => {
         try {
-          const token = await issueAccountToken(
-            supabase,
-            account.id,
-            "verify",
-            getClientIp(req)
-          );
+          const token = await issueAccountToken(supabase, account.id, "verify", ip);
           await sendVerifyEmail({
             to: account.email,
             name: account.nickname || account.fullName,

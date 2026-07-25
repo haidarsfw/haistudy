@@ -10,6 +10,11 @@ const id: Record<string, string> = {
   "landing.cta.masuk": "Masuk",
   "landing.cta.daftar": "Daftar",
   "landing.cta.dashboard": "Dashboard",
+  // Header vs hero once signed in. Same destination, different words, so the
+  // two never read as the same button printed twice.
+  "landing.cta.beli_akses": "Beli Akses",
+  "landing.cta.lihat_paket": "Lihat paket",
+  "landing.cta.lanjut_belajar": "Lanjut belajar",
   "landing.menu.profil": "Profil",
   "landing.menu.logout": "Keluar",
   "landing.soon": "Segera",

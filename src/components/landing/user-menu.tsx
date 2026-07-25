@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LayoutDashboard, User, LogOut } from "lucide-react";
+import { ChevronDown, LayoutDashboard, Loader2, User, LogOut } from "lucide-react";
+
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
+import { useAccount } from "@/hooks/use-account";
 import { cn } from "@/lib/utils";
 
 const TIER: Record<string, string> = {
@@ -14,13 +16,23 @@ const TIER: Record<string, string> = {
   diamond: "Diamond",
 };
 
-// Logged-in header control: avatar + name → dropdown (Dashboard / Profil /
-// Keluar). Profil (Account Settings page) and Keluar (logout wiring) are
-// deferred per the plan — they render but are placeholders for now.
+/**
+ * The signed-in control in the landing header.
+ *
+ * Reads BOTH layers. `useSession` knows about an open access (a license) and
+ * `useAccount` knows about the identity behind it, and the two do not always
+ * agree: someone who has registered but never bought has an account and no
+ * session at all. Keying only on the session, as this used to, meant a brand
+ * new account still saw a "Masuk" button on the page it had just signed into.
+ *
+ * Profil and Keluar were placeholders that did nothing. Both are real now.
+ */
 export function UserMenu({ compact = false }: { compact?: boolean }) {
   const { session } = useSession();
+  const { account, access } = useAccount();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,10 +49,32 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
     };
   }, [open]);
 
-  if (!session) return null;
-  const name = session.shortName || session.name || "Akun";
+  const signedIn = Boolean(account) || Boolean(session && !session.isPreview);
+  if (!signedIn) return null;
+
+  const name =
+    session?.shortName ||
+    account?.nickname ||
+    session?.name ||
+    account?.fullName ||
+    account?.email.split("@")[0] ||
+    "Akun";
   const initial = name.charAt(0).toUpperCase();
-  const tier = TIER[session.packageTier] ?? "";
+  const tier = session ? (TIER[session.packageTier] ?? "") : "";
+  const dashboardPath = access?.dashboardPath ?? (session ? "/dashboard" : null);
+
+  const signOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/account/logout", { method: "POST" });
+    } catch {
+      /* cookies are cleared server-side; a failed call still ends here */
+    }
+    // Full navigation, not a router push: every provider holding session state
+    // has to be torn down rather than re-rendered.
+    window.location.href = "/";
+  };
 
   return (
     <div className="relative" ref={ref}>
@@ -74,37 +108,45 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
         >
           <div className="px-3 py-2.5">
             <p className="truncate text-sm font-semibold text-foreground">{name}</p>
-            {tier && (
-              <p className="truncate text-xs text-muted-foreground">Paket {tier}</p>
+            {account?.email && (
+              <p className="truncate text-xs text-muted-foreground">{account.email}</p>
             )}
+            {tier && <p className="truncate text-xs text-muted-foreground">Paket {tier}</p>}
           </div>
           <div className="my-1 h-px bg-border" />
+
+          {dashboardPath && (
+            <Link
+              href={dashboardPath}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              <LayoutDashboard className="h-4 w-4 text-primary" />
+              {t("landing.cta.dashboard")}
+            </Link>
+          )}
+
           <Link
-            href="/dashboard"
+            href="/account"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            <LayoutDashboard className="h-4 w-4 text-primary" />
-            {t("landing.cta.dashboard")}
-          </Link>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
             <User className="h-4 w-4 text-primary" />
             {t("landing.menu.profil")}
-            <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              {t("landing.soon")}
-            </span>
-          </button>
+          </Link>
+
           <div className="my-1 h-px bg-border" />
           <button
             type="button"
-            onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            onClick={signOut}
+            disabled={signingOut}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-60"
           >
-            <LogOut className="h-4 w-4" />
+            {signingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="h-4 w-4" />
+            )}
             {t("landing.menu.logout")}
           </button>
         </div>

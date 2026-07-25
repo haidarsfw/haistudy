@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Check, Circle, Eye, EyeOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { passwordChecks } from "@/lib/auth/password-rules";
 
 /**
  * A field for the auth forms.
@@ -95,20 +96,58 @@ export function AuthField({
   );
 }
 
+/**
+ * Live checklist under a new-password field.
+ *
+ * Shown as it is typed rather than as an error after submitting. "Password
+ * tidak memenuhi syarat" arriving on button press is the version people give
+ * up on — they cannot see which rule they missed, so they guess.
+ *
+ * Stays hidden until the first keystroke: an empty form covered in red crosses
+ * accuses someone of failing before they have started.
+ */
+export function PasswordChecklist({ password }: { password: string }) {
+  if (!password) return null;
+  const checks = passwordChecks(password);
+
+  return (
+    <ul className="flex flex-col gap-1" aria-live="polite">
+      {checks.map((c) => (
+        <li
+          key={c.id}
+          className={cn(
+            "flex items-center gap-1.5 text-[11px] transition-colors",
+            c.ok ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          {c.ok ? (
+            <Check className="h-3 w-3 shrink-0" />
+          ) : (
+            <Circle className="h-3 w-3 shrink-0 opacity-40" />
+          )}
+          {c.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** The primary action on an auth card. Same gradient as the landing's CTA. */
 export function AuthSubmit({
   loading,
+  disabled,
   children,
   loadingLabel,
 }: {
   loading?: boolean;
+  disabled?: boolean;
   children: React.ReactNode;
   loadingLabel?: string;
 }) {
   return (
     <button
       type="submit"
-      disabled={loading}
+      disabled={loading || disabled}
       className="brand-gradient-bg mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
     >
       {loading ? (loadingLabel ?? children) : children}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu, X, Globe, Headset } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
+import { useAccount } from "@/hooks/use-account";
 import { Logo } from "@/components/landing/logo";
 import { UserMenu } from "@/components/landing/user-menu";
 import { cn } from "@/lib/utils";
@@ -116,7 +117,16 @@ function BantuanLink({
 export function Header() {
   const { t } = useTranslation();
   const { session } = useSession();
-  const loggedIn = !!session && !session.isPreview;
+  const { account, access } = useAccount();
+  // Signed in at EITHER layer. Someone who registered but has not bought
+  // anything has an account and no session, and used to be shown a "Masuk"
+  // button on the page they had just signed into.
+  const loggedIn = Boolean(account) || (!!session && !session.isPreview);
+  // The header's own action. Deliberately different wording from the hero's
+  // so the two never read as the same button twice.
+  const hasAccess = access?.hasActive ?? (!!session && !session.isPreview);
+  const ctaHref = hasAccess ? (access?.dashboardPath ?? "/dashboard") : "/#harga";
+  const ctaLabel = hasAccess ? t("landing.cta.dashboard") : t("landing.cta.beli_akses");
   // Scroll progress 0→1 over the first ~72px. The header MORPHS continuously with
   // scroll (not a boolean toggle), so it stays seamless whether you scroll up or
   // down — no fixed-duration "snap". Every property is interpolated from p, and
@@ -231,7 +241,15 @@ export function Header() {
             <LanguageToggle compact={scrolled} />
             <span className="mx-1.5 h-5 w-px bg-border/60" aria-hidden="true" />
             {loggedIn ? (
-              <UserMenu compact={scrolled} />
+              <>
+                <Link
+                  href={ctaHref}
+                  className="brand-gradient-bg rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  {ctaLabel}
+                </Link>
+                <UserMenu compact={scrolled} />
+              </>
             ) : (
               <Link
                 href="/login"
@@ -279,13 +297,22 @@ export function Header() {
             />
             <div className="mt-1">
               {loggedIn ? (
-                <Link
-                  href="/dashboard"
-                  onClick={() => setOpen(false)}
-                  className="brand-gradient-bg block rounded-full px-4 py-2.5 text-center text-sm font-semibold text-white"
-                >
-                  {t("landing.cta.dashboard")}
-                </Link>
+                <div className="flex flex-col gap-1">
+                  <Link
+                    href={ctaHref}
+                    onClick={() => setOpen(false)}
+                    className="brand-gradient-bg block rounded-full px-4 py-2.5 text-center text-sm font-semibold text-white"
+                  >
+                    {ctaLabel}
+                  </Link>
+                  <Link
+                    href="/account"
+                    onClick={() => setOpen(false)}
+                    className="block rounded-full px-4 py-2.5 text-center text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+                  >
+                    {t("landing.menu.profil")}
+                  </Link>
+                </div>
               ) : (
                 <Link
                   href="/login"

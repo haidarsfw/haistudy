@@ -7,10 +7,16 @@ import { Wordmark } from "@/components/landing/logo";
  * The frame every auth page sits in: masuk, daftar, lupa password, reset,
  * verifikasi.
  *
- * One component rather than five near-identical pages, because the thing that
- * makes an auth flow feel trustworthy is that each step looks like the last
- * one. A form that shifts its card width or moves its heading between steps
- * reads as a different site.
+ * Two shapes, not one. On a phone it is a single column. On a wide screen it
+ * splits: the words on the left, the form on the right, both vertically
+ * centred so nothing needs scrolling. The single narrow column was a phone
+ * layout stretched onto a desktop — technically responsive, but it left a
+ * 1400px screen mostly empty while still pushing the submit button below the
+ * fold.
+ *
+ * The wordmark is a small marker here, not a headline. It is a sign-in page;
+ * the visitor already knows whose site they are on, and a giant logo just
+ * competes with the thing they came to do.
  */
 export function AuthShell({
   title,
@@ -31,44 +37,45 @@ export function AuthShell({
   backLabel?: string;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-14">
-      <div className="w-full max-w-sm">
-        <Link
-          href={backHref}
-          className="mb-7 inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {backLabel}
-        </Link>
+    <div className="relative min-h-screen px-5 py-6 lg:px-10 lg:py-8">
+      <Link
+        href={backHref}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {backLabel}
+      </Link>
 
-        <div className="mb-6">
-          <Wordmark className="text-2xl" />
-          <h1 className="mt-4 font-display text-2xl font-bold leading-tight tracking-tight text-foreground">
+      <div className="mx-auto flex w-full max-w-5xl flex-col justify-center gap-8 py-10 lg:min-h-[calc(100vh-7rem)] lg:flex-row lg:items-center lg:gap-16 lg:py-0">
+        {/* Left on desktop, top on mobile. */}
+        <div className="w-full lg:max-w-sm lg:flex-1">
+          <Wordmark className="text-sm" />
+          <h1 className="mt-3 font-display text-2xl font-bold leading-tight tracking-tight text-foreground lg:mt-5 lg:text-4xl">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground lg:mt-3 lg:text-base">
               {subtitle}
             </p>
           )}
+          {intent && <div className="mt-5">{intent}</div>}
         </div>
 
-        {intent}
-
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-          {children}
+        <div className="w-full lg:max-w-md lg:flex-1">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+            {children}
+          </div>
+          {footer && (
+            <div className="mt-5 text-center text-sm text-muted-foreground">{footer}</div>
+          )}
         </div>
-
-        {footer && (
-          <div className="mt-5 text-center text-sm text-muted-foreground">{footer}</div>
-        )}
       </div>
     </div>
   );
 }
 
 /**
- * "Kamu akan membeli VIP — Rp35.000", shown above the form when someone was
+ * "Kamu akan membeli VIP — Rp35.000", shown beside the form when someone was
  * sent here mid-purchase.
  *
  * Without it, being bounced to a signup page reads as losing your place. With
@@ -84,7 +91,7 @@ export function PurchaseIntent({
   changeHref?: string;
 }) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3">
       <div className="min-w-0">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Kamu akan membeli

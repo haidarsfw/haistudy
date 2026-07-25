@@ -13,7 +13,14 @@ import {
   checkServerRateLimit,
   recordLoginAttempt,
 } from "@/lib/auth/server-rate-limit";
+import {
+  checkLoginLock,
+  clearLoginFails,
+  formatRetryAfter,
+  recordLoginFail,
+} from "@/lib/auth/account-rate-limit";
 import { getClientIp } from "@/lib/auth/oauth-cookie-helpers";
+import { normalizeEmail } from "@/lib/auth/account";
 
 const GENERIC = "Email atau password salah";
 
@@ -52,11 +59,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Server belum siap" }, { status: 503 });
   }
   const supabase = createServerClient()!;
+  const emailLower = normalizeEmail(email);
+
+  // Per-account lockout: 3 wrong tries buys a minute, 6 buys five, 9 buys half
+  // an hour. Checked before the address is even looked up, so this is also not
+  // usable as a way to test which addresses exist.
+  const lock = await checkLoginLock(supabase, emailLower);
+  if (!lock.allowed) {
+    return NextResponse.json(
+      {
+        error: `Terlalu banyak percobaan. Coba lagi ${formatRetryAfter(lock.retryAfter)}.`,
+        code: "LOCKED",
+        retryAfter: lock.retryAfter,
+      },
+      { status: 429, headers: { "Retry-After": String(lock.retryAfter) } }
+    );
+  }
 
   const account = await findAccountByEmail(supabase, email);
 
   if (!account) {
-    await recordLoginAttempt(ip, "fail");
+    await Promise.all([
+      recordLoginAttempt(ip, "fail"),
+      recordLoginFail(supabase, emailLower, ip),
+    ]);
     return NextResponse.json({ error: GENERIC }, { status: 401 });
   }
 
@@ -87,13 +113,33 @@ export async function POST(req: Request) {
 
   const hash = await readPasswordHashForLogin(supabase, account.id);
   if (!hash || !(await verifyPassword(password, hash))) {
-    await recordLoginAttempt(ip, "fail");
-    return NextResponse.json({ error: GENERIC }, { status: 401 });
+    await Promise.all([
+      recordLoginAttempt(ip, "fail"),
+      recordLoginFail(supabase, emailLower, ip),
+    ]);
+    // Tell them how many tries are left before the door shuts, rather than
+    // letting the lockout arrive as a surprise.
+    const next = await checkLoginLock(supabase, emailLower);
+    return NextResponse.json(
+      next.allowed
+        ? { error: GENERIC }
+        : {
+            error: `${GENERIC}. Terlalu banyak percobaan, coba lagi ${formatRetryAfter(next.retryAfter)}.`,
+            code: "LOCKED",
+            retryAfter: next.retryAfter,
+          },
+      { status: next.allowed ? 401 : 429 }
+    );
   }
 
   const token = await createAccountSession(supabase, account.id, req);
   await touchLastLogin(supabase, account.id);
-  await recordLoginAttempt(ip, "ok");
+  // A correct password wipes the ladder — it exists for strangers, not for
+  // someone who simply mistyped twice.
+  await Promise.all([
+    recordLoginAttempt(ip, "ok"),
+    clearLoginFails(supabase, emailLower),
+  ]);
 
   const res = NextResponse.json({
     ok: true,

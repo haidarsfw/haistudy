@@ -1,21 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
-import { AuthField, AuthSubmit } from "@/components/account/auth-field";
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password-rules";
+import {
+  AuthField,
+  AuthSubmit,
+  PasswordChecklist,
+} from "@/components/account/auth-field";
+import { isPasswordStrong } from "@/lib/auth/password-rules";
 import { sounds } from "@/lib/sounds";
 
 export function ResetPasswordForm({ token }: { token: string }) {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
+  const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -25,9 +28,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     setBanner(null);
 
     const local: Record<string, string> = {};
-    if (password.length < PASSWORD_MIN_LENGTH) {
-      local.password = `Minimal ${PASSWORD_MIN_LENGTH} karakter`;
-    }
+    if (!isPasswordStrong(password)) local.password = "Password belum memenuhi syarat";
     if (confirm !== password) local.confirm = "Passwordnya belum sama";
     if (Object.keys(local).length) {
       setErrors(local);
@@ -50,15 +51,40 @@ export function ResetPasswordForm({ token }: { token: string }) {
       }
 
       sounds.loginSuccess();
-      // The reset signs them straight back in, so there is nowhere to send them
-      // except into their account.
-      router.replace("/account");
+      // Deliberately does NOT jump straight to /account. Changing a password
+      // is a security action, and landing somewhere else with no word about it
+      // leaves you unsure it even worked — especially about the part where
+      // every other device was signed out.
+      setDone(true);
     } catch {
       setBanner("Koneksi bermasalah. Coba lagi.");
     } finally {
       setLoading(false);
     }
   };
+
+  if (done) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div className="text-sm leading-relaxed">
+            <p className="font-semibold text-foreground">Password berhasil diubah</p>
+            <p className="mt-1 text-muted-foreground">
+              Kamu sudah otomatis masuk di perangkat ini. Semua perangkat lain sudah
+              dikeluarkan dari akunmu.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/account"
+          className="brand-gradient-bg inline-flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5"
+        >
+          Ke akunku
+        </Link>
+      </div>
+    );
+  }
 
   if (expired || !token) {
     return (
@@ -89,18 +115,20 @@ export function ResetPasswordForm({ token }: { token: string }) {
         </div>
       )}
 
-      <AuthField
-        id="reset-password"
-        label="Password baru"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        placeholder="Password baru"
-        autoComplete="new-password"
-        hint={`Min. ${PASSWORD_MIN_LENGTH} karakter`}
-        error={errors.password}
-        autoFocus
-      />
+      <div className="flex flex-col gap-2">
+        <AuthField
+          id="reset-password"
+          label="Password baru"
+          type="password"
+          value={password}
+          onChange={setPassword}
+          placeholder="Password baru"
+          autoComplete="new-password"
+          error={errors.password}
+          autoFocus
+        />
+        <PasswordChecklist password={password} />
+      </div>
 
       <AuthField
         id="reset-confirm"
@@ -113,7 +141,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
         error={errors.confirm}
       />
 
-      <AuthSubmit loading={loading} loadingLabel="Menyimpan...">
+      <AuthSubmit
+        loading={loading}
+        disabled={!isPasswordStrong(password) || confirm !== password}
+        loadingLabel="Menyimpan..."
+      >
         Simpan password baru
       </AuthSubmit>
 
