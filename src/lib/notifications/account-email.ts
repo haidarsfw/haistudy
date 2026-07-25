@@ -193,6 +193,61 @@ export async function sendVerifyEmail(opts: {
   return send(opts.to, "Konfirmasi email haistudy kamu", html, text);
 }
 
+/**
+ * "Your access is live."
+ *
+ * There was no such mail before: a buyer heard nothing between paying and the
+ * admin remembering to send a WhatsApp by hand, which is the longest silence
+ * in the whole product and lands right after someone has just given you money.
+ */
+export async function sendAccessApprovedEmail(opts: {
+  to: string;
+  name?: string;
+  packageLabel: string;
+  scopeLabel: string;
+  invoiceNo: number | null;
+  signInWithGoogle: boolean;
+}): Promise<SendResult> {
+  const url = `${APP_URL}/account`;
+  const howToSignIn = opts.signInWithGoogle
+    ? "Masuk pakai tombol <strong>Lanjut dengan Google</strong>, pilih email yang kamu pakai waktu beli."
+    : "Masuk pakai email dan password yang kamu buat waktu daftar.";
+
+  const html = renderShell({
+    heading: "Aksesmu sudah aktif",
+    greetingName: opts.name || undefined,
+    body: [
+      `Pembayaranmu sudah kami cek. <strong>${safe(opts.packageLabel)}</strong> untuk ${safe(opts.scopeLabel)} sekarang menempel di akunmu.`,
+      howToSignIn,
+      opts.invoiceNo !== null
+        ? `Nomor invoice kamu: <strong>#${opts.invoiceNo}</strong>.`
+        : "",
+    ].filter(Boolean),
+    ctaLabel: "Buka akunku",
+    ctaUrl: url,
+    footnote:
+      "Akses berlaku 30 hari sejak pertama kali dibuka, disiapkan untuk menutup satu periode ujian. Ada kendala? Balas email ini atau chat admin lewat WhatsApp.",
+  });
+
+  const text = [
+    `Halo${opts.name ? ` ${opts.name}` : ""},`,
+    "",
+    `Pembayaranmu sudah kami cek. ${opts.packageLabel} untuk ${opts.scopeLabel} sekarang menempel di akunmu.`,
+    opts.signInWithGoogle
+      ? "Masuk pakai tombol Lanjut dengan Google, pilih email yang kamu pakai waktu beli."
+      : "Masuk pakai email dan password yang kamu buat waktu daftar.",
+    opts.invoiceNo !== null ? `Nomor invoice: #${opts.invoiceNo}` : "",
+    "",
+    url,
+    "",
+    "Akses berlaku 30 hari sejak pertama kali dibuka.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return send(opts.to, "Aksesmu di haistudy sudah aktif", html, text);
+}
+
 export async function sendPasswordResetEmail(opts: {
   to: string;
   name?: string;

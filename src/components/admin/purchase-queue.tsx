@@ -33,14 +33,14 @@ import type { PurchaseRequest } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
-import { scopeKey, scopeFullLabel } from "@/lib/scope";
+import { scopeFullLabel } from "@/lib/scope";
 import { buildApprovalWa } from "@/lib/wa-message";
 import { firstWord } from "@/lib/name";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { PurchaseSummary } from "@/components/admin/purchase-summary";
 import { adminFetch } from "@/lib/admin/admin-fetch";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
-import { resolveLoginMethod, loginMethodLabel } from "@/lib/auth/login-method";
+import { loginMethodLabel } from "@/lib/auth/login-method";
 
 const PACKAGE_LABELS: Record<string, string> = {
   share: "Share (Rp25.000)",
@@ -52,13 +52,8 @@ const PACKAGE_LABELS: Record<string, string> = {
   exam_quota: "Top-up Kuota",
 };
 
-// Purchase package → license_keys.package_tier granted on approval.
-const TIER_MAP: Record<string, "share" | "normal" | "vip" | "diamond"> = {
-  share: "share",
-  normal: "normal",
-  vip: "vip",
-  diamond: "diamond",
-};
+// The package → tier map, the scope helper and the login-method resolver all
+// moved to /api/admin/purchase/approve along with the approval itself.
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-500/10 text-yellow-600",
@@ -200,92 +195,47 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       return;
     }
 
-    // Generate license key
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const newKey = `B29-${random}`;
-
-    // License inherits the PURCHASE row's scope (not admin selection).
-    const purchaseScopeKey = scopeKey({
-      semester: purchase.semester,
-      examPeriod: purchase.examPeriod,
-      jurusan: purchase.jurusan,
-    });
-
-    // Grant the tier the buyer actually paid for + the device limit they
-    // requested. Without these the key silently defaulted to Normal / 2 devices.
-    const packageTier = TIER_MAP[purchase.package] ?? "normal";
-    const maxDevices = purchase.meta?.deviceLimit ?? 2;
-
-    // Login-method binding. Account buyers ('google' / 'password') need their
-    // address linked so an oauth_links row exists to sign in against; 'key'
-    // buyers (no longer sold, older rows only) log in with the license key.
-    const loginMethod = purchase.meta?.loginMethod ?? "key";
-    const method = resolveLoginMethod(loginMethod);
-    const gmail = (purchase.meta?.loginEmail || purchase.email || "").trim();
-    // Short name / nickname: saved onto the license + used in the WA greeting.
-    const nickname = purchase.meta?.nickname || firstWord(purchase.name);
-
-    // An account buyer with no address on file would mint a license that is
-    // locked out of every path at once. Stop before creating anything.
-    if ((method === "google" || method === "password") && !gmail) {
-      toast.error(
-        method === "google"
-          ? "Pembeli pilih masuk lewat Google tapi alamat Gmail-nya kosong. Perbaiki data pembeli dulu."
-          : "Pembeli pilih email & password tapi alamat emailnya kosong. Perbaiki data pembeli dulu."
-      );
-      setProcessingId(null);
-      return;
-    }
-
+    // One server call does the whole approval: mint the key, attach it to the
+    // buyer's account, stamp the invoice number, mark the purchase approved,
+    // and send the "aksesmu sudah aktif" mail.
+    //
+    // It used to be two fetches from here. When the second failed, a live key
+    // existed while the purchase still read "pending", and approving again
+    // minted a SECOND key for the same buyer. The key was also
+    // `Math.random()` with a hardcoded B29- prefix; the server uses the real
+    // collision-checked generator.
     try {
-      // Create the license key in the purchase's scope
-      const createRes = await fetch(`/api/admin/licenses?scope=${purchaseScopeKey}`, {
+      const res = await fetch("/api/admin/purchase/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          key: newKey,
-          name: purchase.name,
-          shortName: nickname,
-          packageTier,
-          maxDevices,
-          scope: purchaseScopeKey,
-          loginMethod,
-          ...(method === "google" || method === "password" ? { linkedEmail: gmail } : {}),
-          // The password hash NEVER passes through this browser. The server
-          // reads it from pending_credentials using this id.
-          ...(method === "password" ? { purchaseRequestId: purchase.id } : {}),
-        }),
+        body: JSON.stringify({ id: purchase.id }),
       });
-      if (!createRes.ok) throw new Error("Failed to create key");
+      const data = (await res.json()) as {
+        ok?: boolean;
+        licenseKey?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Gagal approve");
+      }
 
-      // Update purchase status
-      const patchRes = await fetch(`/api/admin/purchase${scopeQuery()}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: purchase.id,
-          status: "approved",
-          licenseKey: newKey,
-        }),
-      });
-      if (!patchRes.ok) throw new Error("Failed to update purchase");
+      // Re-read the row so the WhatsApp message is built from exactly what the
+      // server stored (invoice number included), byte-identical to what the
+      // resend button reproduces later.
+      const listRes = await fetch(`/api/admin/purchase${scopeQuery()}`);
+      const list = (await listRes.json()) as { purchases?: PurchaseRequest[] };
+      const updated = list.purchases?.find((p) => p.id === purchase.id);
+      if (updated) {
+        setPurchases((prev) => prev.map((p) => (p.id === purchase.id ? updated : p)));
+        window.open(
+          `https://api.whatsapp.com/send?phone=${waPhone(purchase.whatsapp)}&text=${encodeURIComponent(
+            waMessageForApprovedPurchase(updated)
+          )}`,
+          "_blank"
+        );
+      }
 
-      const { purchase: updated } = await patchRes.json();
-      setPurchases((prev) =>
-        prev.map((p) => (p.id === purchase.id ? updated : p))
-      );
-
-      // Open WhatsApp with the shared invoice message. Built from the freshly
-      // approved row (carries the server-assigned invoice no + key) so it is
-      // byte-identical to what the resend button reproduces later.
-      window.open(
-        `https://api.whatsapp.com/send?phone=${waPhone(purchase.whatsapp)}&text=${encodeURIComponent(
-          waMessageForApprovedPurchase(updated as PurchaseRequest)
-        )}`,
-        "_blank"
-      );
-
-      toast.success(`Approved! Key: ${newKey}`);
+      toast.success(`Disetujui. Key: ${data.licenseKey}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Gagal approve");
     }
