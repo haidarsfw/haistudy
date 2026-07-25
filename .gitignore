@@ -96,3 +96,4 @@ testsprite_tests/tmp/config.json
 
 # brand assets WIP — local only until build
 /brand.local/
+graphify-out/
