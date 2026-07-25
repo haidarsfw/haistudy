@@ -7,6 +7,7 @@ import { ArrowRight, MailCheck, MessageCircle, ShieldCheck, User } from "lucide-
 import { SignOutButton, VerifyEmailBanner } from "@/components/account/account-actions";
 import { AccountSection, AccountShell } from "@/components/account/account-shell";
 import { AccountProfileForm } from "@/components/account/account-profile-form";
+import { EnterAccessButton } from "@/components/account/enter-access-button";
 import { AccountSecurity } from "@/components/account/account-security";
 import {
   AccountDeletion,
@@ -196,15 +197,10 @@ export default async function AccountPage() {
                       {!a.activated && <> · belum pernah dibuka</>}
                     </p>
                   </div>
-                  {a.status === "active" && (
-                    <Link
-                      href={`/s${a.scope.semester}/${a.scope.examPeriod}/${a.scope.jurusan}/dashboard`}
-                      className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                    >
-                      Masuk
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  )}
+                  {/* Not a plain link: opening an access sets the app cookies
+                      and may need to spend a device slot, which the user has
+                      to see before it happens. */}
+                  {a.status === "active" && <EnterAccessButton licenseKey={a.licenseKey} />}
                 </li>
               );
             })}

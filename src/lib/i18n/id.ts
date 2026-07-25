@@ -12,6 +12,17 @@ const id: Record<string, string> = {
   "landing.cta.dashboard": "Dashboard",
   // Header vs hero once signed in. Same destination, different words, so the
   // two never read as the same button printed twice.
+  // Checkout now reads identity off the signed-in account instead of asking
+  // for it again.
+  "payments.sec_account": "Akun kamu",
+  "payments.sec_account_desc": "Akses yang kamu beli akan menempel di akun ini.",
+  "payments.sec_you_desc": "Cuma yang belum ada di akunmu yang kami tanyakan.",
+  "payments.account_email": "Email",
+  "payments.account_method": "Cara masuk",
+  "payments.edit_in_profile": "Ubah di profil",
+  "payments.angkatan_label": "Angkatan",
+  "payments.angkatan_desc": "Tidak berubah tiap semester",
+  "payments.angkatan_ph": "Pilih angkatan",
   "landing.cta.beli_akses": "Beli Akses",
   "landing.cta.lihat_paket": "Lihat paket",
   "landing.cta.lanjut_belajar": "Lanjut belajar",

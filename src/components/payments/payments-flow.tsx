@@ -40,6 +40,7 @@ import {
   type PurchasablePackageId,
   type PaymentMethodId,
 } from "@/lib/payments";
+import { ANGKATAN_OPTIONS } from "@/data/landing/angkatan";
 import { LATEST_SCOPE, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { FieldShell } from "./fields/field-shell";
 import { Section } from "./fields/section";
@@ -52,8 +53,25 @@ import { FileUpload } from "./fields/file-upload";
 import { cn } from "@/lib/utils";
 
 // License key is no longer sold. Buyers pick an account: Google, or an email
-// they set a password for.
-type LoginMethod = "google" | "password";
+/**
+ * Who is buying, taken from the signed-in account.
+ *
+ * Checkout no longer asks how you want to sign in or invents a login for you:
+ * you are already signed in by the time you get here, and the access lands on
+ * the account you are using. A field that is already on the account is shown,
+ * not asked for; anything still blank is asked once here and saved back, so
+ * the next purchase asks nothing at all.
+ */
+export interface BuyerAccount {
+  email: string;
+  authProvider: "google" | "password";
+  fullName: string;
+  nickname: string;
+  whatsapp: string;
+  campus: string;
+  angkatan: string;
+  classCode: string;
+}
 
 interface FormState {
   name: string;
@@ -62,11 +80,8 @@ interface FormState {
   classOther: string;
   campus: string;
   campusOther: string;
+  angkatan: string;
   whatsapp: string;
-  loginMethod: LoginMethod;
-  loginEmail: string; // Gmail for "google"; any domain for "password"
-  loginPassword: string;
-  loginPassword2: string;
   pkg: PurchasablePackageId;
   deviceLimit: number;
   shareAck: boolean;
@@ -82,10 +97,6 @@ interface FormState {
 
 const TOTAL_STEPS = 4; // identity, package, payment, review
 
-// Google login requires a Gmail / Googlemail address.
-const GMAIL_RE = /@(gmail|googlemail)\.com$/i;
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
 function isPackageId(v: string | undefined): v is PurchasablePackageId {
   return v === "share" || v === "normal" || v === "vip" || v === "diamond";
 }
@@ -100,17 +111,16 @@ const DRAFT_KEY = "hs-payments-draft";
 /**
  * Fields that go to localStorage.
  *
- * Passwords are NOT here, and must never be. The whole point of hashing at
- * submit and parking it away from the admin's reach is that the plaintext lives
- * nowhere — writing it to localStorage would undo that on the buyer's own
- * machine, where any script on the page can read it.
+ * No credentials live here any more — checkout stopped creating logins the
+ * moment accounts existed, so there is nothing sensitive left to leak onto the
+ * buyer's own machine.
  *
  * Files aren't here either: a File can't be serialised. The upload boxes come
  * back empty, validation says so, and the buyer re-picks. Better than pretending.
  */
 type DraftKey = Exclude<
   keyof FormState,
-  "loginPassword" | "loginPassword2" | "paymentProof" | "shareProof" | "shareProof2"
+  "paymentProof" | "shareProof" | "shareProof2"
 >;
 
 const DRAFT_FIELDS: DraftKey[] = [
@@ -120,9 +130,8 @@ const DRAFT_FIELDS: DraftKey[] = [
   "classOther",
   "campus",
   "campusOther",
+  "angkatan",
   "whatsapp",
-  "loginMethod",
-  "loginEmail",
   "pkg",
   "deviceLimit",
   "shareAck",
@@ -168,7 +177,23 @@ function clearDraft() {
   }
 }
 
-export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
+/** A value the account already holds: shown, not asked for. */
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline gap-3">
+      <dt className="w-28 shrink-0 text-xs text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+export function PaymentsFlow({
+  initialPkg,
+  account,
+}: {
+  initialPkg?: string;
+  account: BuyerAccount;
+}) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
@@ -178,17 +203,16 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
   const [scopeOpen, setScopeOpen] = useState(false);
 
   const [form, setForm] = useState<FormState>({
-    name: "",
-    nickname: "",
-    classCode: "",
+    // Seeded from the account. Whatever is already there is shown rather than
+    // asked for; whatever is blank is asked once and saved back on submit.
+    name: account.fullName,
+    nickname: account.nickname,
+    classCode: account.classCode,
     classOther: "",
-    campus: "",
+    campus: account.campus,
     campusOther: "",
-    whatsapp: "",
-    loginMethod: "google",
-    loginEmail: "",
-    loginPassword: "",
-    loginPassword2: "",
+    angkatan: account.angkatan,
+    whatsapp: account.whatsapp,
     pkg: isPackageId(initialPkg) ? initialPkg : "normal",
     deviceLimit: 2,
     shareAck: false,
@@ -218,6 +242,14 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
         // A ?pkg= in the URL is a fresh intent — the buyer just clicked this
         // package on the landing — so it beats whatever the draft remembers.
         pkg: isPackageId(initialPkg) ? initialPkg : (draft.pkg ?? f.pkg),
+        // The account outranks the draft for anything it already holds: a
+        // stale draft must not re-introduce a name the buyer has since
+        // corrected in their profile.
+        ...(account.fullName ? { name: account.fullName } : {}),
+        ...(account.nickname ? { nickname: account.nickname } : {}),
+        ...(account.whatsapp ? { whatsapp: account.whatsapp } : {}),
+        ...(account.campus ? { campus: account.campus } : {}),
+        ...(account.angkatan ? { angkatan: account.angkatan } : {}),
       }));
     }
     setDraftLoaded(true);
@@ -295,19 +327,7 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       else if (form.campus === "Other" && !form.campusOther.trim())
         e.campusOther = t("payments.err_required");
       if (form.whatsapp.replace(/\D/g, "").length < 8) e.whatsapp = t("payments.err_whatsapp");
-      const le = form.loginEmail.trim();
-      if (!le) e.loginEmail = t("payments.err_required");
-      else if (form.loginMethod === "google" && !GMAIL_RE.test(le))
-        e.loginEmail = t("payments.err_gmail");
-      else if (form.loginMethod === "password" && !EMAIL_RE.test(le))
-        e.loginEmail = t("payments.err_email");
-      if (form.loginMethod === "password") {
-        // Mirrors PASSWORD_MIN_LENGTH on the server. The server re-checks —
-        // this only saves the buyer a round trip.
-        if (form.loginPassword.length < 8) e.loginPassword = t("payments.err_pw_short");
-        if (form.loginPassword2 !== form.loginPassword)
-          e.loginPassword2 = t("payments.err_pw_mismatch");
-      }
+      if (!form.angkatan) e.angkatan = t("payments.err_required");
     } else if (s === 1) {
       if (isShare && !form.shareAck) e.shareAck = t("payments.err_share_ack");
     } else if (s === 2) {
@@ -405,17 +425,14 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
       fd.set("name", form.name.trim());
       fd.set("nickname", form.nickname.trim());
       fd.set("whatsapp", form.whatsapp.trim());
-      // Contact address = the sign-in address. They were two fields asking for
-      // near-identical things; the invoice now lands on the account's own email.
-      fd.set("email", form.loginEmail.trim());
-      fd.set("loginMethod", form.loginMethod);
-      fd.set("loginEmail", form.loginEmail.trim());
-      // Not trimmed: a leading/trailing space is a legitimate password character.
-      if (form.loginMethod === "password") fd.set("loginPassword", form.loginPassword);
+      // No email or login method is sent any more. The server takes the buyer
+      // from the session cookie, so a forged payload cannot attach someone
+      // else's purchase to an address they do not own.
       fd.set("package", form.pkg);
       fd.set("scope", form.scopeKey);
       fd.set("classCode", resolvedClass);
       fd.set("campus", resolvedCampus);
+      fd.set("angkatan", form.angkatan);
       fd.set("deviceLimit", String(form.deviceLimit));
       fd.set("paymentMethod", form.paymentMethod);
       fd.set("uniqueAmount", String(uniqueAmount));
@@ -564,17 +581,77 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
               // Fields still pair two-up on desktop (Nama|Panggilan,
               // Kelas|WhatsApp) because height is paid in rows, and nothing
               // spans two columns unless it fills them.
+              // Identity comes from the account now. Anything already on it is
+              // SHOWN, not asked for; only the gaps get a field, and those are
+              // saved back so the next purchase asks nothing. Kelas is the
+              // exception and is always asked: it changes every semester, which
+              // is exactly why it lives on the purchase and not on the person.
               <div className="space-y-4">
-                <Section title={t("payments.sec_you")}>
+                <Section
+                  title={t("payments.sec_account")}
+                  description={t("payments.sec_account_desc")}
+                  action={
+                    <Link
+                      href="/account"
+                      className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      {t("payments.edit_in_profile")}
+                    </Link>
+                  }
+                >
+                  <dl className="grid gap-x-5 gap-y-2.5 lg:grid-cols-2">
+                    <SummaryRow label={t("payments.account_email")} value={account.email} />
+                    <SummaryRow
+                      label={t("payments.account_method")}
+                      value={
+                        account.authProvider === "google"
+                          ? t("payments.login_google")
+                          : t("payments.login_password")
+                      }
+                    />
+                    {account.fullName && (
+                      <SummaryRow label={t("payments.name_label")} value={account.fullName} />
+                    )}
+                    {account.nickname && (
+                      <SummaryRow
+                        label={t("payments.nickname_label")}
+                        value={account.nickname}
+                      />
+                    )}
+                    {account.whatsapp && (
+                      <SummaryRow label={t("payments.wa_label")} value={account.whatsapp} />
+                    )}
+                    {account.campus && (
+                      <SummaryRow label={t("payments.campus_label")} value={account.campus} />
+                    )}
+                    {account.angkatan && (
+                      <SummaryRow
+                        label={t("payments.angkatan_label")}
+                        value={account.angkatan}
+                      />
+                    )}
+                  </dl>
+                </Section>
+
+                <Section
+                  title={t("payments.sec_you")}
+                  description={t("payments.sec_you_desc")}
+                >
                   <div className="grid gap-y-0 lg:grid-cols-2 lg:gap-x-5">
-                    <FieldShell label={t("payments.name_label")} description={t("payments.name_desc")} required error={errors.name} htmlFor="pf-name">
-                      <ShortAnswer id="pf-name" value={form.name} onChange={(v) => set("name", v)} placeholder={t("payments.name_ph")} invalid={!!errors.name} autoComplete="name" />
-                    </FieldShell>
+                    {!account.fullName && (
+                      <FieldShell label={t("payments.name_label")} description={t("payments.name_desc")} required error={errors.name} htmlFor="pf-name">
+                        <ShortAnswer id="pf-name" value={form.name} onChange={(v) => set("name", v)} placeholder={t("payments.name_ph")} invalid={!!errors.name} autoComplete="name" />
+                      </FieldShell>
+                    )}
 
-                    <FieldShell label={t("payments.nickname_label")} description={t("payments.nickname_desc")} required error={errors.nickname} htmlFor="pf-nickname">
-                      <ShortAnswer id="pf-nickname" value={form.nickname} onChange={(v) => set("nickname", v)} placeholder={t("payments.nickname_ph")} invalid={!!errors.nickname} autoComplete="nickname" />
-                    </FieldShell>
+                    {!account.nickname && (
+                      <FieldShell label={t("payments.nickname_label")} description={t("payments.nickname_desc")} required error={errors.nickname} htmlFor="pf-nickname">
+                        <ShortAnswer id="pf-nickname" value={form.nickname} onChange={(v) => set("nickname", v)} placeholder={t("payments.nickname_ph")} invalid={!!errors.nickname} autoComplete="nickname" />
+                      </FieldShell>
+                    )}
 
+                    {/* Always asked. The class is the one thing that genuinely
+                        changes between semesters. */}
                     <FieldShell label={t("payments.class_label")} description={t("payments.class_desc")} required error={errors.classCode || errors.classOther} htmlFor="pf-class">
                       <Dropdown
                         id="pf-class"
@@ -591,115 +668,44 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
                       )}
                     </FieldShell>
 
-                    <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
-                      <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
-                    </FieldShell>
-
-                    <div className="lg:col-span-2">
-                      <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
-                        <RadioGroup
-                          name="campus"
-                          value={form.campus}
-                          onChange={(v) => set("campus", v)}
-                          variant="plain"
-                          columns={4}
-                          columnsMobile={2}
-                          options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
-                        />
-                        {form.campus === "Other" && (
-                          <div className="mt-2">
-                            <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
-                          </div>
-                        )}
-                      </FieldShell>
-                    </div>
-                  </div>
-                </Section>
-
-                <Section title={t("payments.sec_login")} description={t("payments.login_method_note")}>
-                  <div className="grid gap-y-3 lg:grid-cols-2 lg:gap-x-5">
-                    <div className="lg:col-span-2">
-                      <RadioGroup
-                        name="loginMethod"
-                        value={form.loginMethod}
-                        onChange={(v) => set("loginMethod", v as LoginMethod)}
-                        variant="plain"
-                        columns={2}
-                        options={[
-                          { value: "google", label: t("payments.login_google"), description: t("payments.login_google_desc") },
-                          { value: "password", label: t("payments.login_password"), description: t("payments.login_password_desc") },
-                        ]}
-                      />
-                    </div>
-
-                    {/* Full width: pairing it with the first password field left
-                        "Ulangi password" orphaned beside a hole, and costs the
-                        same height either way — so the passwords pair with each
-                        other, which is what they are. */}
-                    <div className="lg:col-span-2">
-                      <FieldShell
-                        label={t("payments.login_email_label")}
-                        description={
-                          form.loginMethod === "google"
-                            ? t("payments.login_email_google_desc")
-                            : t("payments.login_email_password_desc")
-                        }
-                        required
-                        error={errors.loginEmail}
-                        htmlFor="pf-login-email"
-                      >
-                        <ShortAnswer
-                          id="pf-login-email"
-                          type="email"
-                          inputMode="email"
-                          value={form.loginEmail}
-                          onChange={(v) => set("loginEmail", v)}
-                          placeholder={form.loginMethod === "google" ? "kamu@gmail.com" : "kamu@email.com"}
-                          invalid={!!errors.loginEmail}
-                          autoComplete="email"
+                    {!account.angkatan && (
+                      <FieldShell label={t("payments.angkatan_label")} description={t("payments.angkatan_desc")} required error={errors.angkatan} htmlFor="pf-angkatan">
+                        <Dropdown
+                          id="pf-angkatan"
+                          value={form.angkatan}
+                          onChange={(v) => set("angkatan", v)}
+                          placeholder={t("payments.angkatan_ph")}
+                          invalid={!!errors.angkatan}
+                          options={ANGKATAN_OPTIONS.map((a) => ({ value: a, label: a }))}
                         />
                       </FieldShell>
-                    </div>
+                    )}
 
-                    {form.loginMethod === "password" && (
-                      <>
-                        <FieldShell
-                          label={t("payments.login_pw_label")}
-                          description={t("payments.login_pw_desc")}
-                          required
-                          error={errors.loginPassword}
-                          htmlFor="pf-password"
-                        >
-                          {/* autoComplete="new-password" so the browser offers to
-                              generate/save one instead of pasting an existing login. */}
-                          <ShortAnswer
-                            id="pf-password"
-                            type="password"
-                            value={form.loginPassword}
-                            onChange={(v) => set("loginPassword", v)}
-                            placeholder="Minimal 8 karakter"
-                            invalid={!!errors.loginPassword}
-                            autoComplete="new-password"
+                    {!account.whatsapp && (
+                      <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
+                        <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
+                      </FieldShell>
+                    )}
+
+                    {!account.campus && (
+                      <div className="lg:col-span-2">
+                        <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
+                          <RadioGroup
+                            name="campus"
+                            value={form.campus}
+                            onChange={(v) => set("campus", v)}
+                            variant="plain"
+                            columns={4}
+                            columnsMobile={2}
+                            options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
                           />
+                          {form.campus === "Other" && (
+                            <div className="mt-2">
+                              <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
+                            </div>
+                          )}
                         </FieldShell>
-                        <FieldShell
-                          label={t("payments.login_pw2_label")}
-                          description={t("payments.login_pw2_desc")}
-                          required
-                          error={errors.loginPassword2}
-                          htmlFor="pf-password2"
-                        >
-                          <ShortAnswer
-                            id="pf-password2"
-                            type="password"
-                            value={form.loginPassword2}
-                            onChange={(v) => set("loginPassword2", v)}
-                            placeholder={t("payments.login_pw2_placeholder")}
-                            invalid={!!errors.loginPassword2}
-                            autoComplete="new-password"
-                          />
-                        </FieldShell>
-                      </>
+                      </div>
                     )}
                   </div>
                 </Section>
@@ -945,17 +951,12 @@ export function PaymentsFlow({ initialPkg }: { initialPkg?: string }) {
               <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-5">
                 <div className="space-y-4">
                 <ReviewSection title={t("payments.step_identity")} onEdit={() => jumpTo(0)} editLabel={t("common.edit")}>
+                  <ReviewRow label={t("payments.account_email")} value={account.email} />
                   <ReviewRow label={t("payments.name_label")} value={form.name} />
                   <ReviewRow label={t("payments.class_label")} value={resolvedClass} />
+                  <ReviewRow label={t("payments.angkatan_label")} value={form.angkatan} />
                   <ReviewRow label={t("payments.campus_label")} value={resolvedCampus} />
                   <ReviewRow label={t("payments.wa_label")} value={form.whatsapp} />
-                  <ReviewRow
-                    label={t("payments.login_method_label")}
-                    value={form.loginMethod === "google" ? t("payments.login_google") : t("payments.login_password")}
-                  />
-                  {(
-                    <ReviewRow label={t("payments.login_email_label")} value={form.loginEmail} />
-                  )}
                 </ReviewSection>
 
                 <ReviewSection title={t("payments.step_package")} onEdit={() => jumpTo(1)} editLabel={t("common.edit")}>

@@ -12,28 +12,28 @@ import { recordActivity } from "@/lib/admin/activity";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
 import { firstWord, capitalizeFirst } from "@/lib/name";
-import { hashPassword, validatePassword, PASSWORD_MAX_LENGTH } from "@/lib/auth/password";
-import type { PurchaseLoginMethod } from "@/lib/auth/login-method";
+import { AccountError } from "@/lib/auth/account";
+import { requireAccount } from "@/lib/auth/account-session";
 
-// ─── POST /api/payments - on-site purchase submission (public, pre-login) ───
+// ─── POST /api/payments - on-site purchase submission (signed in) ───
 // multipart/form-data.
 //
-// scope-exempt: this is a PUBLIC pre-login route. The buyer has no session and
-// therefore no hs-scope cookie to require — they are buying access to a scope,
-// not acting inside one. Scope comes from the submitted value and is validated
-// against isAvailableScope() below (mirrors /api/webhooks/purchase). Every row
-// written still carries scopeColumns(scope), so nothing lands unscoped.
+// The buyer must have an account. Access lands on that account, so identity is
+// read from the session rather than from the payload — a forged body cannot
+// attach a purchase to an address the sender does not own. Credentials are no
+// longer created here at all: the account already exists by the time anyone
+// reaches this route.
+//
+// scope-exempt: they are buying access TO a scope, not acting inside one, so
+// there is no hs-scope cookie to require. Scope comes from the submitted value
+// and is validated against isAvailableScope() below (mirrors
+// /api/webhooks/purchase). Every row written still carries scopeColumns(scope),
+// so nothing lands unscoped.
 //
 // Activation stays MANUAL: admin verifies in the Purchase Queue, then approves.
 
 const ALLOWED_PACKAGES = new Set<PurchasablePackageId>(["share", "normal", "vip", "diamond"]);
 const ALLOWED_METHODS = new Set(["bca", "ewallet", "qris"]);
-// License keys are no longer sold — buyers pick an account. 'key' is gone from
-// the form and is NOT accepted here; existing key holders are unaffected, their
-// licenses already exist.
-const ALLOWED_LOGIN_METHODS = new Set<PurchaseLoginMethod>(["google", "password"]);
-const GMAIL_RE = /@(gmail|googlemail)\.com$/i;
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024; // server cap (client compresses to <500KB)
 
 function getStr(fd: FormData, key: string, max: number): string {
@@ -68,30 +68,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
     }
 
+    // Who is buying. From the session, never from the payload.
+    const account = await requireAccount();
+    const email = account.email;
+
     const fd = await request.formData();
 
     const name = getStr(fd, "name", 100);
     const nickname = getStr(fd, "nickname", 24);
     const whatsapp = getStr(fd, "whatsapp", 30);
-    const email = getStr(fd, "email", 120);
     const pkg = getStr(fd, "package", 20) as PurchasablePackageId;
     const scopeRaw = getStr(fd, "scope", 24);
     const classCode = getStr(fd, "classCode", 60);
     const campus = getStr(fd, "campus", 60);
+    const angkatan = getStr(fd, "angkatan", 16);
     const deviceLimitRaw = parseInt(getStr(fd, "deviceLimit", 3) || "2", 10);
     const paymentMethod = getStr(fd, "paymentMethod", 20);
     const source = getStr(fd, "source", 80);
     const leShareNote = getStr(fd, "leShareNote", 20);
-    const loginMethod = getStr(fd, "loginMethod", 10);
-    const loginEmail = getStr(fd, "loginEmail", 120);
     const shareMethod = getStr(fd, "shareMethod", 12);
-    // NOT run through getStr: that trims, and a leading/trailing space is a
-    // legitimate character in a password. Only the length cap applies.
-    const loginPasswordRaw = fd.get("loginPassword");
-    const loginPassword =
-      typeof loginPasswordRaw === "string"
-        ? loginPasswordRaw.slice(0, PASSWORD_MAX_LENGTH + 1)
-        : "";
 
     // ── Validation ──
     if (!name || whatsapp.replace(/\D/g, "").length < 8) {
@@ -101,38 +96,14 @@ export async function POST(request: Request) {
     if (!nickname || nickname.length < 1 || nickname.length > 24) {
       return NextResponse.json({ error: "Nama panggilan wajib diisi (maks 24 karakter)." }, { status: 400 });
     }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      return NextResponse.json({ error: "Email tidak valid." }, { status: 400 });
-    }
     if (!ALLOWED_PACKAGES.has(pkg)) {
       return NextResponse.json({ error: "Paket tidak valid." }, { status: 400 });
     }
     if (!ALLOWED_METHODS.has(paymentMethod)) {
       return NextResponse.json({ error: "Metode pembayaran tidak valid." }, { status: 400 });
     }
-    if (!classCode || !campus || !source) {
+    if (!classCode || !campus || !source || !angkatan) {
       return NextResponse.json({ error: "Lengkapi semua field wajib." }, { status: 400 });
-    }
-    if (!ALLOWED_LOGIN_METHODS.has(loginMethod as PurchaseLoginMethod)) {
-      return NextResponse.json({ error: "Cara masuk tidak valid." }, { status: 400 });
-    }
-    // Google sign-in needs a Google address; that is Google's constraint, not ours.
-    if (loginMethod === "google" && !GMAIL_RE.test(loginEmail)) {
-      return NextResponse.json(
-        { error: "Untuk masuk lewat Google, pakai alamat Gmail." },
-        { status: 400 }
-      );
-    }
-    // The password path exists precisely so buyers without a Gmail can still
-    // buy, so any domain goes.
-    if (loginMethod === "password") {
-      if (!EMAIL_RE.test(loginEmail)) {
-        return NextResponse.json({ error: "Email untuk masuk tidak valid." }, { status: 400 });
-      }
-      const pwErr = validatePassword(loginPassword);
-      if (pwErr) {
-        return NextResponse.json({ error: pwErr }, { status: 400 });
-      }
     }
 
     const deviceLimit = Number.isFinite(deviceLimitRaw) ? Math.min(3, Math.max(1, deviceLimitRaw)) : 2;
@@ -182,21 +153,23 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
 
-    // One address = one account — oauth_links enforces it with a unique index.
-    // Checking now turns what would be a failure at approval time, long after
-    // the buyer has paid, into a clear message while they still have the form
-    // open. Runs before the uploads so a rejected submission costs no storage.
-    const { data: emailTaken } = await supabase
-      .from("oauth_links")
-      .select("license_key")
-      .eq("email_lower", loginEmail.toLowerCase())
-      .maybeSingle();
-    if (emailTaken) {
-      return NextResponse.json(
-        { error: "Email ini sudah dipakai akun lain. Pakai email lain, atau chat admin." },
-        { status: 409 }
-      );
-    }
+    // Whatever the buyer just filled in that their account did not already
+    // hold gets written back, so the next purchase asks for none of it. Fields
+    // the account already had arrive unchanged, making this a no-op for a
+    // returning buyer. Class is included deliberately: it changes every
+    // semester and is only kept to prefill the next checkout.
+    await supabase
+      .from("accounts")
+      .update({
+        full_name: name,
+        nickname,
+        whatsapp,
+        campus,
+        angkatan: angkatan.toUpperCase(),
+        class_code: classCode,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", account.id);
 
     // Upload proofs to the PRIVATE payment-proofs bucket (service_role).
     const uploadOne = async (blob: Blob, suffix: string): Promise<string> => {
@@ -220,17 +193,17 @@ export async function POST(request: Request) {
     const meta = {
       classCode,
       campus,
+      angkatan: angkatan.toUpperCase(),
       deviceLimit,
       paymentMethod,
       uniqueAmount,
       basePrice,
       source,
       ...(leShareNote ? { leShareNote } : {}),
-      loginMethod,
-      // The address the account will be keyed to, for BOTH methods. The
-      // password itself is NOT here and must never be: meta is read wholesale
-      // by the admin queue and the CSV export.
-      loginEmail: loginEmail.toLowerCase(),
+      // How the buyer signs in, carried for the admin's approval message. It
+      // describes an account that already exists rather than one to be made.
+      loginMethod: account.authProvider,
+      loginEmail: account.emailLower,
       scopeKey: sk,
       nickname,
       ...(pkg === "share" ? { shareMethod } : {}),
@@ -241,7 +214,11 @@ export async function POST(request: Request) {
       .insert({
         name,
         whatsapp,
-        email: email || null,
+        email,
+        // The link that makes approval trivial: the admin no longer has to
+        // match an address by hand, and no credentials have to be parked
+        // anywhere waiting to be moved.
+        account_id: account.id,
         package: pkg,
         status: "pending",
         ...scopeColumns(scope),
@@ -253,21 +230,6 @@ export async function POST(request: Request) {
       .select("id")
       .single();
     if (insErr) throw insErr;
-
-    // Park the password hash where the admin surfaces cannot reach it. The
-    // queue and the export both `select("*")` on purchase_requests, so a column
-    // there would be shipped to the admin's browser and written into the CSV.
-    // On approval this moves to oauth_links and the row is deleted.
-    if (loginMethod === "password" && inserted?.id) {
-      const { error: credErr } = await supabase.from("pending_credentials").insert({
-        purchase_request_id: inserted.id as string,
-        email_lower: loginEmail.toLowerCase(),
-        password_hash: await hashPassword(loginPassword),
-      });
-      // Without this the buyer has paid for an account that can never be
-      // activated, so fail loudly rather than leaving a half-made purchase.
-      if (credErr) throw credErr;
-    }
 
     // Audit → admin Activity Logs (low-freq, high-value student event).
     await recordActivity(supabase, {
@@ -287,7 +249,7 @@ export async function POST(request: Request) {
         uniqueAmount,
         scopeLabel: scopeFullLabel(scope),
         whatsapp,
-        loginMethod: loginMethod as PurchaseLoginMethod,
+        loginMethod: account.authProvider,
       }).catch((e) => console.error("[payments] admin alert failed", e))
     );
 
@@ -301,13 +263,18 @@ export async function POST(request: Request) {
           packageLabel: PACKAGE_LABELS[pkg] ?? pkg,
           amount: formatIDR(uniqueAmount),
           whatsapp,
-          loginMethod: loginMethod as PurchaseLoginMethod,
+          loginMethod: account.authProvider,
         }).catch((e) => console.error("[payments] buyer invoice email failed", e))
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    // Signed out mid-checkout: say so plainly so the form can send them to
+    // sign in again rather than showing a generic server error.
+    if (error instanceof AccountError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Payments POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
