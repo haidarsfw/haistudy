@@ -11,6 +11,12 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  getAccountReferralCode,
+  listAccountReferralCodes,
+  mintAccountReferralCode,
+} from "@/lib/referral/codes";
+import { getReferralProgress, type ReferralProgress } from "@/lib/referral/rewards";
 import { DEFAULT_SCOPE, scopeKey as toScopeKey, validateScopeTuple } from "@/lib/scope";
 import type { ExamPeriod, ScopeTuple } from "@/types/scope";
 
@@ -133,9 +139,19 @@ export async function listAccountPurchases(
   });
 }
 
+export interface ReferralInvitee {
+  /** Nickname, or a masked address when they have not set one. */
+  who: string;
+  joinedAt: string;
+  /** They bought something and it was approved. */
+  credited: boolean;
+}
+
 export interface AccountReferral {
   code: string;
   used: number;
+  progress: ReferralProgress;
+  invitees: ReferralInvitee[];
 }
 
 /**
@@ -150,29 +166,57 @@ export async function getAccountReferral(
   supabase: SupabaseClient,
   accountId: string
 ): Promise<AccountReferral | null> {
-  const { data: licenses } = await supabase
-    .from("license_keys")
-    .select("key")
-    .eq("account_id", accountId);
-  if (!licenses?.length) return null;
+  // Straight off the account. It used to go account → licences → activations,
+  // which meant anyone who had not bought anything yet had no code at all —
+  // so the one group most likely to share a link with their friends was the
+  // one group with nothing to share.
+  let code = await getAccountReferralCode(supabase, accountId);
 
-  const { data } = await supabase
-    .from("activations")
-    .select("referral_code, referral_count")
-    .in(
-      "license_key",
-      licenses.map((l) => l.key as string)
-    )
-    .not("referral_code", "is", null)
-    .order("referral_count", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Minted on first look for accounts that predate the referral table. Cheap,
+  // runs once, and saves a backfill from having to be perfect.
+  if (!code) code = await mintAccountReferralCode(supabase, accountId);
+  if (!code) return null;
 
-  if (!data?.referral_code) return null;
-  return {
-    code: data.referral_code as string,
-    used: (data.referral_count as number) ?? 0,
-  };
+  // Everything derived from the uses table rather than from a stored counter:
+  // a number that is computed cannot drift, and the old counter was being
+  // incremented on the wrong side of the relationship anyway.
+  // Across every code they own, not just the readable one on screen. A retired
+  // code still credits them, and a friend who used it last term belongs in
+  // this list.
+  const allCodes = await listAccountReferralCodes(supabase, accountId);
+  const codes = allCodes.length ? allCodes : [code];
+
+  const [progress, { data: rows }] = await Promise.all([
+    getReferralProgress(supabase, accountId, code),
+    supabase
+      .from("referral_uses")
+      .select("created_at, credited_at, accounts(nickname, full_name, email)")
+      .in("code", codes)
+      .order("created_at", { ascending: false })
+      .limit(60),
+  ]);
+
+  const invitees: ReferralInvitee[] = (rows ?? []).map((r) => {
+    const acc = (r as { accounts?: { nickname?: string; full_name?: string; email?: string } | null })
+      .accounts;
+    return {
+      // Their own name if they set one. Otherwise a masked address — the
+      // referrer is owed proof their invite landed, not their friend's inbox.
+      who: acc?.nickname || acc?.full_name || maskEmail(acc?.email ?? ""),
+      joinedAt: r.created_at as string,
+      credited: Boolean(r.credited_at),
+    };
+  });
+
+  return { code, used: invitees.length, progress, invitees };
+}
+
+/** "hai***@gmail.com" — enough to recognise, not enough to contact. */
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return "Seseorang";
+  const head = local.slice(0, Math.min(3, local.length));
+  return `${head}${"*".repeat(Math.max(1, local.length - head.length))}@${domain}`;
 }
 
 export function activeAccesses(list: AccountAccess[]): AccountAccess[] {

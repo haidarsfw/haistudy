@@ -160,6 +160,97 @@ export function resetUrl(token: string): string {
   return `${APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
 }
 
+export function deleteUrl(token: string): string {
+  return `${APP_URL}/delete-account?token=${encodeURIComponent(token)}`;
+}
+
+export function cancelDeleteUrl(token: string): string {
+  return `${APP_URL}/cancel-deletion?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * "Someone asked to delete this account."
+ *
+ * The whole point of the mail is that the request has to be proven from the
+ * mailbox that owns the account. A typed phrase on a page only proves whoever
+ * is holding the session can read; it says nothing about whether they should
+ * be able to destroy it.
+ */
+export async function sendDeleteRequestEmail(opts: {
+  to: string;
+  name?: string;
+  token: string;
+}): Promise<SendResult> {
+  const url = deleteUrl(opts.token);
+  const html = renderShell({
+    heading: "Konfirmasi penghapusan akun",
+    greetingName: opts.name || undefined,
+    body: [
+      "Ada permintaan untuk menghapus akun haistudy ini. Kalau itu memang kamu, konfirmasi lewat tombol di bawah.",
+      "Setelah dikonfirmasi, akunmu <strong>dijadwalkan dihapus 7 hari kemudian</strong>. Selama 7 hari itu akunmu masih jalan seperti biasa, dan kamu masih bisa membatalkannya.",
+    ],
+    ctaLabel: "Konfirmasi penghapusan",
+    ctaUrl: url,
+    footnote:
+      "Tautan ini berlaku 1 jam. Kalau kamu tidak meminta ini, abaikan email ini — tanpa tautan ini tidak ada yang terhapus.",
+  });
+  const text = [
+    `Halo${opts.name ? ` ${opts.name}` : ""},`,
+    "",
+    "Ada permintaan untuk menghapus akun haistudy ini.",
+    "Kalau itu memang kamu, konfirmasi lewat tautan ini:",
+    url,
+    "",
+    "Setelah dikonfirmasi, akunmu dijadwalkan dihapus 7 hari kemudian.",
+    "Selama 7 hari itu akunmu masih jalan, dan masih bisa dibatalkan.",
+    "",
+    "Tautan berlaku 1 jam. Kalau kamu tidak meminta ini, abaikan email ini.",
+  ].join("\n");
+
+  return send(opts.to, "Konfirmasi penghapusan akun haistudy", html, text);
+}
+
+/**
+ * "It is scheduled, and here is the way back."
+ *
+ * Sent immediately after confirming, because at that moment they are signed
+ * out of the flow and holding nothing. The cancel link has to live somewhere
+ * they will still have in six days, and that is their inbox.
+ */
+export async function sendDeleteScheduledEmail(opts: {
+  to: string;
+  name?: string;
+  token: string;
+  deleteOn: string;
+}): Promise<SendResult> {
+  const url = cancelDeleteUrl(opts.token);
+  const html = renderShell({
+    heading: "Akunmu dijadwalkan dihapus",
+    greetingName: opts.name || undefined,
+    body: [
+      `Akun haistudy kamu akan dihapus pada <strong>${opts.deleteOn}</strong>.`,
+      "Sampai tanggal itu akunmu masih bisa dipakai seperti biasa, termasuk akses yang sudah kamu beli. Kalau berubah pikiran, batalkan lewat tombol di bawah.",
+    ],
+    ctaLabel: "Batalkan penghapusan",
+    ctaUrl: url,
+    footnote:
+      "Simpan email ini. Setelah tanggal di atas, data akunmu dihapus dan tidak bisa dikembalikan.",
+  });
+  const text = [
+    `Halo${opts.name ? ` ${opts.name}` : ""},`,
+    "",
+    `Akun haistudy kamu akan dihapus pada ${opts.deleteOn}.`,
+    "Sampai tanggal itu akunmu masih bisa dipakai seperti biasa.",
+    "",
+    "Batalkan lewat tautan ini:",
+    url,
+    "",
+    "Simpan email ini. Setelah tanggal di atas, datanya tidak bisa dikembalikan.",
+  ].join("\n");
+
+  return send(opts.to, "Akun haistudy kamu dijadwalkan dihapus", html, text);
+}
+
 export async function sendVerifyEmail(opts: {
   to: string;
   name?: string;

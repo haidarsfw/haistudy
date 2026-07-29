@@ -13,6 +13,7 @@
 // Only the SHA-256 of the token is stored, so a database dump does not hand
 // anyone a working session.
 
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
 import type { NextResponse } from "next/server";
@@ -92,7 +93,21 @@ function readIp(request?: Request): string | null {
  * deleted, blocked — because to a signed-out visitor they are all the same
  * thing, and distinguishing them would leak whether a token was ever real.
  */
-export async function readAccountSession(): Promise<AccountSessionContext | null> {
+export const readAccountSession = cache(
+  async (): Promise<AccountSessionContext | null> => {
+    return readAccountSessionUncached();
+  }
+);
+
+/**
+ * Deduped for the length of one request by the wrapper above.
+ *
+ * `/account` is a layout plus a page, and both need to know who is signed in.
+ * Without this each render did the same session query twice and touched
+ * `last_seen_at` twice with it — double the database work for one page view, on
+ * a plan where database work is the thing being rationed.
+ */
+async function readAccountSessionUncached(): Promise<AccountSessionContext | null> {
   if (!isSupabaseServerConfigured) return null;
 
   const jar = await cookies();

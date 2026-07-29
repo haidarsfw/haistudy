@@ -97,3 +97,7 @@ testsprite_tests/tmp/config.json
 # brand assets WIP — local only until build
 /brand.local/
 graphify-out/
+
+# Claude Code workspace — hooks, subagents, local rules. Repo is public and this
+# is machine-local working config, not product.
+/.claude/

@@ -24,6 +24,11 @@ const publicPaths = [
   "/forgot-password",
   "/reset-password",
   "/verify-email",
+  // Same reason again, and it matters more here: someone confirming or
+  // cancelling a deletion is often doing it from a phone they are not signed
+  // in on, and the cancel link has to work for a full week.
+  "/delete-account",
+  "/cancel-deletion",
   "/preview",
   "/payments",
   "/api",
@@ -151,6 +156,16 @@ export function proxy(request: NextRequest) {
   if (!sessionFlag) {
     if (!isAppRoute(pathname, segs)) {
       return NextResponse.next();
+    }
+    // Signed in, but nothing opened yet. Sending these people to /login was
+    // the bug behind "login does nothing": they signed in, got sent back to
+    // the dashboard, arrived without hs-session, and were bounced to /login
+    // again. /enter is the only thing that can actually resolve this — it
+    // opens the access (or asks about the device) and then forwards.
+    if (request.cookies.get("hs-account")) {
+      const enterUrl = new URL("/enter", request.url);
+      enterUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(enterUrl);
     }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);

@@ -38,6 +38,15 @@ export interface Account {
   avatarUrl: string | null;
   language: "id" | "en";
   status: AccountStatus;
+  /**
+   * Renames still owed to this person.
+   *
+   * Tops up by one each time they buy a period, and is spent by changing the
+   * name. Everyone in the class chat knows them by this string, so it is
+   * budgeted rather than free — but never frozen, because a typo made at a
+   * first checkout should not follow someone around for a year.
+   */
+  nicknameChangesLeft: number;
   deletionRequestedAt: string | null;
   createdAt: string;
   lastLoginAt: string | null;
@@ -61,7 +70,7 @@ export class AccountError extends Error {
 export const ACCOUNT_COLUMNS =
   "id, email, email_lower, auth_provider, email_verified_at, full_name, nickname, " +
   "whatsapp, campus, angkatan, class_code, avatar_url, language, status, " +
-  "deletion_requested_at, created_at, last_login_at";
+  "nickname_changes_left, deletion_requested_at, created_at, last_login_at";
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export function mapAccount(row: any): Account {
@@ -80,6 +89,7 @@ export function mapAccount(row: any): Account {
     avatarUrl: row.avatar_url ?? null,
     language: row.language === "en" ? "en" : "id",
     status: row.status === "blocked" ? "blocked" : "active",
+    nicknameChangesLeft: Number(row.nickname_changes_left ?? 0),
     deletionRequestedAt: row.deletion_requested_at ?? null,
     createdAt: row.created_at,
     lastLoginAt: row.last_login_at ?? null,

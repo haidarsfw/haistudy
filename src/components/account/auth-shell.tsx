@@ -38,19 +38,37 @@ export function AuthShell({
 }) {
   return (
     <div className="relative min-h-screen px-5 py-6 lg:px-10 lg:py-8">
-      <Link
-        href={backHref}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {backLabel}
-      </Link>
-
-      <div className="mx-auto flex w-full max-w-5xl flex-col justify-center gap-8 py-10 lg:min-h-[calc(100vh-7rem)] lg:flex-row lg:items-center lg:gap-16 lg:py-0">
-        {/* Left on desktop, top on mobile. */}
+      {/* Vertically centred, and the min-height is what keeps it honest: the
+          row is at least a screen tall, so it does NOT resize when the card
+          grows a little (opening the referral field). Without that floor, both
+          columns would be averaged against each other and the words on the
+          left would slide every time the form changed height. */}
+      {/* The phone layout used to start almost against the browser chrome.
+          A viewport-relative top gap lets it breathe on a tall screen without
+          pushing the button off a short one; desktop keeps its own centring. */}
+      <div className="mx-auto flex w-full max-w-5xl flex-col justify-center gap-8 pb-12 pt-[7vh] lg:min-h-[calc(100vh-9rem)] lg:flex-row lg:items-center lg:gap-16 lg:py-0">
         <div className="w-full lg:max-w-sm lg:flex-1">
-          <Wordmark className="text-sm" />
-          <h1 className="mt-3 font-display text-2xl font-bold leading-tight tracking-tight text-foreground lg:mt-5 lg:text-4xl">
+          {/* Directly above the words it returns from, not pinned to the far
+              corner of the page. On a centred layout a top-left back link ends
+              up hundreds of pixels from the only content on screen, which is
+              why it read as decoration. Small and quiet: it is an escape
+              hatch, not one of the two things you came here to do. */}
+          {/* On a phone the two columns stack, so a mark sitting above the
+              card would land halfway down the page again — adrift, which is
+              exactly what it looked like before. It belongs at the top of the
+              screen on mobile and beside the card on desktop, so it is
+              rendered in both places and only one is ever visible. */}
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-1 rounded text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              {backLabel}
+            </Link>
+            <Wordmark className="text-sm lg:hidden" />
+          </div>
+          <h1 className="font-display text-2xl font-bold leading-tight tracking-tight text-foreground lg:text-4xl">
             {title}
           </h1>
           {subtitle && (
@@ -62,6 +80,10 @@ export function AuthShell({
         </div>
 
         <div className="w-full lg:max-w-md lg:flex-1">
+          {/* Desktop only. The mobile copy lives up beside the back link. */}
+          <div className="mb-3 hidden justify-end lg:flex">
+            <Wordmark className="text-sm" />
+          </div>
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
             {children}
           </div>
@@ -106,6 +128,33 @@ export function PurchaseIntent({
       >
         Ganti
       </Link>
+    </div>
+  );
+}
+
+/**
+ * The card's own heading.
+ *
+ * The card used to open straight onto a full-width Google button, which left
+ * the top of it looking unfinished and gave the eye nothing to land on. Every
+ * comparable product — Vercel, Linear, Figma, Notion, Stripe, Supabase — puts
+ * a heading inside the card; not one of them ships a headless one.
+ *
+ * It is an `h2`, not an `h1`, and it names the TASK ("Buat akun") while the
+ * page heading beside it sells the idea. Same words at two sizes would just be
+ * the redundancy in a different place.
+ */
+export function AuthCardHeader({ title, hint }: { title: string; hint?: string }) {
+  return (
+    // Centred, matching the buttons and the footer link under it. Left-aligned
+    // it was the only thing in the card pulling to one side.
+    <div className="mb-1 text-center">
+      <h2 className="font-display text-lg font-bold tracking-tight text-foreground">
+        {title}
+      </h2>
+      {hint && (
+        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{hint}</p>
+      )}
     </div>
   );
 }

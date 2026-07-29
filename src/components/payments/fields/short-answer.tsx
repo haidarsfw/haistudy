@@ -14,6 +14,8 @@ interface ShortAnswerProps {
   maxLength?: number;
   autoComplete?: string;
   invalid?: boolean;
+  /** Status sitting inside the field — a spinner, a tick. Never interactive. */
+  trailing?: React.ReactNode;
 }
 
 const baseClass =
@@ -29,6 +31,7 @@ export function ShortAnswer({
   maxLength = 200,
   autoComplete,
   invalid,
+  trailing,
 }: ShortAnswerProps) {
   const [reveal, setReveal] = useState(false);
   const isPassword = type === "password";
@@ -48,12 +51,27 @@ export function ShortAnswer({
         baseClass,
         invalid ? "border-destructive/60" : "border-border",
         // Room for the reveal toggle so long passwords don't run under it.
-        isPassword && "pr-11"
+        isPassword && "pr-11",
+        // Same, for a status icon. Narrower, because nothing here is clickable.
+        !isPassword && trailing && "pr-10"
       )}
     />
   );
 
-  if (!isPassword) return input;
+  if (!isPassword) {
+    if (!trailing) return input;
+    return (
+      <div className="relative">
+        {input}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center"
+        >
+          {trailing}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">

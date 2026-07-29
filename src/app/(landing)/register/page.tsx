@@ -37,13 +37,12 @@ export default async function RegisterPage({
   const pkg = packageFromNext(next, params.pkg);
 
   return (
+    // The page heading sells the idea; the card heading names the task. Both
+    // used to say "buat akun", which is how the card ended up feeling like a
+    // smaller copy of the column next to it.
     <AuthShell
-      title={pkg ? "Buat akun untuk lanjut" : "Buat akun"}
-      subtitle={
-        pkg
-          ? "Sebentar saja. Akun ini yang nanti memegang aksesmu, jadi periode berikutnya tinggal masuk dan beli."
-          : "Satu akun untuk semua periode ujian yang kamu beli. Daftar dulu, akses dibeli setelahnya."
-      }
+      title="Satu akun, semua periode ujian."
+      subtitle="Beli sekali, aksesnya menempel di akun. Ujian berikutnya tinggal masuk."
       intent={
         pkg ? (
           <PurchaseIntent

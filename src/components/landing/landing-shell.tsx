@@ -1,13 +1,30 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+
+import { PageTransition } from "@/components/shared/page-transition";
 
 type Resolved = "dark";
 
 const LandingThemeCtx = createContext<{ resolved: Resolved }>({ resolved: "dark" });
 export const useLandingTheme = () => useContext(LandingThemeCtx);
+
+/**
+ * Runs after the DOM is committed but BEFORE the browser paints.
+ *
+ * The reveal wiring below has to be one of these, not a passive effect. On a
+ * client-side navigation the root is still marked `.reveal-ready` from the
+ * visit before, so the incoming page's `[data-reveal]` sections mount already
+ * at opacity 0 — and a passive effect hands the browser one frame with all of
+ * them invisible before it gets to mark them. That frame is the flicker you see
+ * pressing Back onto the landing.
+ *
+ * Aliased rather than imported directly because `useLayoutEffect` warns when a
+ * client component is rendered on the server.
+ */
+const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
  * Landing runtime. Dark-only (light mode removed) — the `.landing-root` scope is
@@ -22,7 +39,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
   // effect left `.reveal-ready` on the root while the newly mounted page's
   // [data-reveal] elements were never observed — so returning to the landing
   // from any subpage rendered every revealed section permanently invisible.
-  useEffect(() => {
+  useBeforePaint(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const rootEl = document.querySelector<HTMLElement>(".landing-root");
@@ -163,7 +180,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
   return (
     <LandingThemeCtx.Provider value={{ resolved: "dark" }}>
       <div className="landing-root theme-dark min-h-screen bg-background text-foreground">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </div>
     </LandingThemeCtx.Provider>
   );

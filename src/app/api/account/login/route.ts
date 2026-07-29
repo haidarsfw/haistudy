@@ -19,6 +19,7 @@ import {
   formatRetryAfter,
   recordLoginFail,
 } from "@/lib/auth/account-rate-limit";
+import { activeAccesses, listAccountAccesses } from "@/lib/auth/account-access";
 import { getClientIp } from "@/lib/auth/oauth-cookie-helpers";
 import { normalizeEmail } from "@/lib/auth/account";
 
@@ -141,8 +142,22 @@ export async function POST(req: Request) {
     clearLoginFails(supabase, emailLower),
   ]);
 
+  // Where to send them. Signing in should land on the thing they signed in
+  // FOR, not on a settings page they have to click through.
+  //
+  //   1 active access  -> open it, so the browser goes straight to a dashboard
+  //   0 or 2+          -> /account, which is both the "buy one" screen and,
+  //                       when there are several, the chooser
+  //
+  // The form takes it from here: it opens the single access itself, so a
+  // recognised browser never even renders /account. A NEW browser has to be
+  // asked first, because opening an access spends a device slot.
+  const live = activeAccesses(await listAccountAccesses(supabase, account.id));
+  const soleAccess = live.length === 1 ? live[0].licenseKey : null;
+
   const res = NextResponse.json({
     ok: true,
+    soleAccess,
     account: {
       id: account.id,
       email: account.email,

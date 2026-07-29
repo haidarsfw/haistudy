@@ -52,9 +52,12 @@ export default async function LoginPage({
   }
 
   return (
+    // "Masuk" is the card's job. The column beside it says why it is worth
+    // doing, and says it once — at roughly the same weight as the register
+    // page, so the two do not look like different layouts.
     <AuthShell
-      title="Masuk ke akunmu"
-      subtitle="Satu akun untuk semua periode ujian yang kamu beli."
+      title="Selamat datang kembali."
+      subtitle="Satu akun untuk semua periode ujian yang kamu beli. Materi, latihan soal, dan kelasmu tetap di tempatnya."
     >
       <LoginForm
         oauthError={params.oauth_error ?? null}

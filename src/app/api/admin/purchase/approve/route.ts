@@ -6,6 +6,7 @@ import { validateAdmin } from "@/lib/auth/admin-guard";
 import { resolveAdminScope } from "@/lib/auth/admin-scope";
 import { generateUniqueKey } from "@/lib/license/generator";
 import { recordActivity } from "@/lib/admin/activity";
+import { creditReferralOnApproval } from "@/lib/referral/rewards";
 import { sendAccessApprovedEmail } from "@/lib/notifications/account-email";
 import { PACKAGE_LABELS, packageMaxDevices, type PurchasablePackageId } from "@/lib/payments";
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
@@ -170,6 +171,26 @@ export async function POST(request: Request) {
         },
         { status: 500 }
       );
+    }
+
+    // This is the moment a referral becomes real. Not at signup — a programme
+    // that pays for registrations pays for throwaway addresses. Idempotent, so
+    // approving twice cannot mint a second milestone.
+    await creditReferralOnApproval(supabase, accountId);
+
+    // A period bought is a rename earned. Tied to approval rather than to
+    // submitting an order so an unpaid order cannot buy a new identity, and
+    // done through a function so a double approval cannot hand out two.
+    if (accountId) {
+      const { error: grantErr } = await supabase.rpc("grant_nickname_change", {
+        p_account_id: accountId,
+        p_purchase_id: id,
+      });
+      if (grantErr) {
+        // Never fatal. The buyer has their access; a missing rename allowance
+        // is something the owner can add by hand.
+        console.error("[purchase/approve] nickname grant failed", grantErr);
+      }
     }
 
     await recordActivity(supabase, {

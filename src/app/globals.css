@@ -171,6 +171,45 @@
   --section-bg: oklch(0.955 0.002 250);
 }
 
+/* The canvas the browser paints BEFORE any of our markup exists.
+   ============================================================
+   Without a colour here the browser falls back to white for the gap between
+   two documents, so every full page load flashes through white — most
+   obviously pressing Back out of checkout onto the dark landing. `html` is
+   `:root`, and the theme class lands on `html` too, so this picks up whichever
+   `--background` is in force without a second source of truth.
+
+   `color-scheme` is the other half: it tells the browser which way to render
+   the scrollbars, form controls and the pre-paint frame, none of which our CSS
+   gets a say in. */
+html {
+  color-scheme: light;
+  background-color: var(--background);
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* The landing is the exception to the rule above, and the reason the flash
+   survived the first fix. Its theme class lands on the `.landing-root` DIV, not
+   on `html` — the app owns the class on `html` and has its own light mode — so
+   `var(--background)` up here still resolved to the LIGHT token while every
+   pixel below was dark. Any moment `html` itself was visible was a white one:
+   the frame between two documents, an over-scroll past the end, and the gap
+   while Back restores a scroll position into a page that has not finished
+   laying out.
+
+   `:has()` reads the surface off the DOM, so it holds for client-side
+   navigation between landing routes as well as a cold load, with no second
+   source of truth and no script. Values are copied from `.landing-root
+   .theme-dark` because a custom property set on a descendant cannot be read by
+   its own ancestor. */
+html:has(.landing-root) {
+  color-scheme: dark;
+  background-color: #0e1613;
+}
+
 .dark {
   /* Dark surfaces: neutral */
   --background: oklch(0.15 0.003 250);

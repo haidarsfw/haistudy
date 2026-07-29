@@ -15,6 +15,11 @@ import {
   type Account,
 } from "@/lib/auth/account";
 import { applyAccountCookie, createAccountSession } from "@/lib/auth/account-session";
+import {
+  attachReferral,
+  mintAccountReferralCode,
+  normalizeReferralCode,
+} from "@/lib/referral/codes";
 import { activeAccesses, listAccountAccesses } from "@/lib/auth/account-access";
 
 const COOKIE_OPTS = {
@@ -54,6 +59,29 @@ function readNextCookie(request: Request): string | null {
     return value;
   } catch {
     return null;
+  }
+}
+
+/**
+ * The referral code typed on /register, carried across the Google round trip.
+ *
+ * Without this it was simply lost: someone entered a friend's code, chose
+ * "Daftar dengan Google", and the code went nowhere — no error, no record, the
+ * friend never credited. Same short-lived cookie trick as `hs-next`, for the
+ * same reason (Supabase matches `redirectTo` against an allow-list, so extra
+ * query params are not safe to add).
+ */
+function readReferralCookie(request: Request): string {
+  const raw = request.headers.get("cookie") || "";
+  const hit = raw
+    .split(";")
+    .map((p) => p.trim())
+    .find((p) => p.startsWith("hs-ref="));
+  if (!hit) return "";
+  try {
+    return normalizeReferralCode(decodeURIComponent(hit.slice("hs-ref=".length)));
+  } catch {
+    return "";
   }
 }
 
@@ -114,7 +142,12 @@ export async function GET(request: Request) {
     return redirectToLoginError(origin, "suspended", email);
   }
 
+  // Whether this round trip CREATED the account or merely signed one in. A
+  // returning user must not be congratulated on registering.
+  let justCreated = false;
+
   if (!account) {
+    justCreated = true;
     account = await createAccount(supabase, {
       email,
       authProvider: "google",
@@ -133,6 +166,16 @@ export async function GET(request: Request) {
     // (oauth_links) but no account_id — for instance one an admin attached by
     // hand after the backfill ran.
     await adoptLegacyLink(supabase, account, email);
+
+    // Only for a BRAND NEW account: a returning Google user is not being
+    // referred by anyone, whatever is left in the cookie.
+    const typedReferral = readReferralCookie(request);
+    try {
+      await mintAccountReferralCode(supabase, account.id);
+      if (typedReferral) await attachReferral(supabase, account.id, typedReferral);
+    } catch (e) {
+      console.error("[auth/callback] referral setup failed", e);
+    }
   }
 
   const sessionToken = await createAccountSession(supabase, account.id, request);
@@ -147,7 +190,11 @@ export async function GET(request: Request) {
   const target = next ?? (live.length === 1 ? null : "/account");
 
   if (target) {
-    const res = NextResponse.redirect(new URL(target, origin), 303);
+    // Same confirmation the e-mail path gets, so signing up with Google is not
+    // the one route where nothing acknowledges that it worked.
+    const dest = new URL(target, origin);
+    if (justCreated) dest.searchParams.set("welcome", "1");
+    const res = NextResponse.redirect(dest, 303);
     applyAccountCookie(res, sessionToken);
     clearNextCookie(res);
     return res;
@@ -228,6 +275,9 @@ export async function GET(request: Request) {
 
 function clearNextCookie(res: NextResponse) {
   res.cookies.set("hs-next", "", { path: "/", maxAge: 0 });
+  // Consumed above, and it must not survive into the next sign-in — otherwise
+  // a second, unrelated Google login would pick up a stale referral.
+  res.cookies.set("hs-ref", "", { path: "/", maxAge: 0 });
 }
 
 /**

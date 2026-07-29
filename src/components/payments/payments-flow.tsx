@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,21 +14,25 @@ import {
   QrCode,
   Download,
   Maximize2,
-  Minimize2,
   Landmark,
   Wallet,
   Home,
   MessageCircle,
 } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
 import { sounds } from "@/lib/sounds";
-import { CLASSES } from "@/lib/constants";
 import {
   effectiveBasePrice,
   PAYMENT_ACCOUNTS,
   PAYMENT_METHODS,
-  CAMPUSES,
   DEVICE_OPTIONS,
   SOURCES,
   WA_ADMIN,
@@ -40,8 +44,33 @@ import {
   type PurchasablePackageId,
   type PaymentMethodId,
 } from "@/lib/payments";
-import { ANGKATAN_OPTIONS } from "@/data/landing/angkatan";
+import {
+  ANGKATAN_CHOICES,
+  CAMPUS_OPTIONS,
+  CLASSES_BY_LOCATION,
+  JURUSAN_LABELS,
+  OTHER_LOCATION,
+  campusForLocation,
+  defaultScopeForAngkatan,
+  normalizeClassCode,
+} from "@/data/landing/campus";
 import { LATEST_SCOPE, scopeKey, scopeFullLabel } from "@/lib/scope";
+import { directionalPanel, NAV } from "@/lib/motion";
+import { WelcomeStrip } from "@/components/account/welcome-strip";
+import {
+  NicknameAdornment,
+  NicknameHint,
+  useNicknameCheck,
+} from "@/components/account/nickname-status";
+import {
+  NICKNAME_MAX,
+  normalizeNickname,
+  validateNickname,
+} from "@/lib/account/nickname";
+import {
+  VerifyEmailBox,
+  VerifyEmailInline,
+} from "@/components/account/verify-email-notice";
 import { FieldShell } from "./fields/field-shell";
 import { Section } from "./fields/section";
 import { ShortAnswer } from "./fields/short-answer";
@@ -62,8 +91,20 @@ import { cn } from "@/lib/utils";
  * not asked for; anything still blank is asked once here and saved back, so
  * the next purchase asks nothing at all.
  */
+export interface DiscountOption {
+  id: string;
+  label: string;
+  detail: string;
+  amount: number;
+}
+
 export interface BuyerAccount {
   email: string;
+  /**
+   * Blocks nothing here. It decides whether the order can be APPROVED later,
+   * which is why the buyer is told before they pay rather than after.
+   */
+  emailVerified: boolean;
   authProvider: "google" | "password";
   fullName: string;
   nickname: string;
@@ -78,6 +119,10 @@ interface FormState {
   nickname: string;
   classCode: string;
   classOther: string;
+  /** BINUS or UNJ. `campus` below is the LOCATION, which is a different thing. */
+  university: string;
+  /** Scope jurusan code, e.g. "bm". */
+  jurusan: string;
   campus: string;
   campusOther: string;
   angkatan: string;
@@ -128,6 +173,8 @@ const DRAFT_FIELDS: DraftKey[] = [
   "nickname",
   "classCode",
   "classOther",
+  "university",
+  "jurusan",
   "campus",
   "campusOther",
   "angkatan",
@@ -190,17 +237,39 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 export function PaymentsFlow({
   initialPkg,
   account,
+  justRegistered = false,
+  discount = null,
+  otherDiscounts = [],
 }: {
   initialPkg?: string;
+  /** They created the account on the way here — `?welcome=1`, read server-side. */
+  justRegistered?: boolean;
   account: BuyerAccount;
+  /** The one discount being applied — always the largest. Priced server-side. */
+  discount?: DiscountOption | null;
+  /** Kept, not burned. Shown so nobody thinks they lost one. */
+  otherDiscounts?: DiscountOption[];
 }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
+  const reduced = useReducedMotion();
+  const stepMotion = useMemo(
+    () => directionalPanel(NAV.distance.step, reduced),
+    [reduced]
+  );
+  // Only ever used on a first purchase — after that the nickname is settled and
+  // shown as a locked card. Seeded with "" because there is nothing of theirs
+  // to compare against yet.
+  const nickCheck = useNicknameCheck(account.nickname);
   const [showErrors, setShowErrors] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [scopeOpen, setScopeOpen] = useState(false);
+  // Set once the buyer overrides the period themselves. After that the cohort
+  // default stops moving under them — a guess that keeps overwriting a decision
+  // is worse than no guess.
+  const [scopePicked, setScopePicked] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     // Seeded from the account. Whatever is already there is shown rather than
@@ -209,6 +278,11 @@ export function PaymentsFlow({
     nickname: account.nickname,
     classCode: account.classCode,
     classOther: "",
+    // Derived from the location the account already carries, so a returning
+    // buyer never re-answers a question whose answer is implied by their own
+    // stored data.
+    university: campusForLocation(account.campus),
+    jurusan: LATEST_SCOPE.jurusan,
     campus: account.campus,
     campusOther: "",
     angkatan: account.angkatan,
@@ -273,10 +347,48 @@ export function PaymentsFlow({
     });
   }, [form.pkg]);
 
+  // ─── The Kampus → Jurusan → Lokasi → Kelas chain ───
+  const campusDef = useMemo(
+    () => CAMPUS_OPTIONS.find((c) => c.id === form.university) ?? CAMPUS_OPTIONS[0],
+    [form.university]
+  );
+  const locationOptions = useMemo(
+    () =>
+      [...campusDef.locations, OTHER_LOCATION].map((l) => ({
+        value: l,
+        label: l === OTHER_LOCATION ? t("payments.opt_other") : l,
+      })),
+    [campusDef, t]
+  );
+  // Only the majors this campus actually sells, which is only the ones with
+  // material written for them. Anything else would be a period nobody could be
+  // given after they had paid for it.
+  const jurusanOptions = useMemo(
+    () =>
+      campusDef.jurusan
+        .filter((j) => purchasableScopes().some((s) => s.jurusan === j))
+        .map((j) => ({ value: j, label: JURUSAN_LABELS[j] ?? j.toUpperCase() })),
+    [campusDef]
+  );
+  // Codes seen at THIS location, plus a way out. The shortcut is what stops
+  // "Lb-30" being typed by hand; "Lainnya" is what stops next semester's new
+  // code being impossible to enter.
+  const classOptions = useMemo(() => {
+    const known = CLASSES_BY_LOCATION[form.campus] ?? [];
+    return [
+      ...known.map((c) => ({ value: c, label: c })),
+      { value: "Other", label: t("payments.opt_other") },
+    ];
+  }, [form.campus, t]);
+
   const isShare = form.pkg === "share";
-  const isLE86 = form.classCode === "LE86";
-  const resolvedClass = form.classCode === "Other" ? form.classOther.trim() : form.classCode;
-  const resolvedCampus = form.campus === "Other" ? form.campusOther.trim() : form.campus;
+  const resolvedClass =
+    form.classCode === "Other"
+      ? normalizeClassCode(form.classOther)
+      : form.classCode;
+  const isLE86 = resolvedClass === "LE86";
+  const resolvedCampus =
+    form.campus === OTHER_LOCATION ? form.campusOther.trim() : form.campus;
   // What the server stores: a stable id, not a label.
   const resolvedSource = form.source === "other" ? form.sourceOther.trim() : form.source;
   // What a human reads. Never send this — the label is translated and would
@@ -298,13 +410,48 @@ export function PaymentsFlow({
         ? 2
         : 1;
   // LE86 + Share = Rp20.000 (flat); else the package list price.
-  const price = effectiveBasePrice(form.pkg, resolvedClass);
+  const listPrice = effectiveBasePrice(form.pkg, resolvedClass);
+  // Re-capped against the package actually chosen: the server priced the
+  // discount against the cheapest one so it had a number before a package
+  // existed. Mirrors what the server will charge — this figure is never sent,
+  // so the price cannot be talked down from the browser.
+  const discountAmount = discount ? Math.min(discount.amount, listPrice) : 0;
+  const price = Math.max(0, listPrice - discountAmount);
   const uniqueAmount = useMemo(
     () => computeUniqueAmount(price, form.whatsapp),
     [price, form.whatsapp]
   );
   const selectedScope =
     purchasableScopes().find((s) => scopeKey(s) === form.scopeKey) ?? LATEST_SCOPE;
+
+  // Moving campus invalidates everything downstream of it. Leaving a Bekasi
+  // class code selected under Kemanggisan is the exact failure the chain
+  // exists to prevent, and it is invisible because the field still looks
+  // filled in.
+  useEffect(() => {
+    setForm((f) => {
+      const valid = campusDef.locations.includes(f.campus) || f.campus === OTHER_LOCATION;
+      if (valid) return f;
+      return { ...f, campus: "", campusOther: "", classCode: "", classOther: "" };
+    });
+  }, [campusDef]);
+
+  useEffect(() => {
+    setForm((f) => {
+      if (!f.classCode || f.classCode === "Other") return f;
+      const known = CLASSES_BY_LOCATION[f.campus] ?? [];
+      return known.includes(f.classCode) ? f : { ...f, classCode: "" };
+    });
+  }, [form.campus]);
+
+  // The cohort's likely period, offered until they say otherwise. A guess that
+  // overrides a decision is worse than no guess, so it stops the moment the
+  // buyer opens the picker and chooses.
+  useEffect(() => {
+    if (scopePicked || !form.angkatan) return;
+    const guess = scopeKey(defaultScopeForAngkatan(form.angkatan, form.jurusan));
+    setForm((f) => (f.scopeKey === guess ? f : { ...f, scopeKey: guess }));
+  }, [form.angkatan, form.jurusan, scopePicked]);
 
   // Drop a stale second broadcast proof when it's no longer required
   // (method switched to Story, package changed, or class is no longer LE86).
@@ -319,13 +466,28 @@ export function PaymentsFlow({
     const e: Record<string, string> = {};
     if (s === 0) {
       if (!form.name.trim()) e.name = t("payments.err_required");
-      if (!form.nickname.trim()) e.nickname = t("payments.err_required");
-      if (!form.classCode) e.classCode = t("payments.err_required");
-      else if (form.classCode === "Other" && !form.classOther.trim())
-        e.classOther = t("payments.err_required");
+      // The shape is checked here; whether anyone else already has it is
+      // answered by the live check, which blocks the step only once it has
+      // actually come back with "taken". A check that never answered must not
+      // stop anyone — the database still has the last word on submit.
+      if (!account.nickname) {
+        const why = validateNickname(form.nickname);
+        if (why) e.nickname = why;
+        else if (nickCheck.state === "taken") {
+          e.nickname = "Nama panggilan ini sudah dipakai orang lain";
+        }
+      }
+      // Down the chain, in the order it is answered — a missing campus is
+      // reported before a missing class, because the class cannot be picked
+      // until the campus is.
+      if (!campusDef.available) e.university = t("payments.err_campus_soon");
+      if (!jurusanOptions.length) e.jurusan = t("payments.err_jurusan_none");
       if (!form.campus) e.campus = t("payments.err_required");
-      else if (form.campus === "Other" && !form.campusOther.trim())
+      else if (form.campus === OTHER_LOCATION && !form.campusOther.trim())
         e.campusOther = t("payments.err_required");
+      if (!form.classCode) e.classCode = t("payments.err_required");
+      else if (form.classCode === "Other" && !normalizeClassCode(form.classOther))
+        e.classOther = t("payments.err_required");
       if (form.whatsapp.replace(/\D/g, "").length < 8) e.whatsapp = t("payments.err_whatsapp");
       if (!form.angkatan) e.angkatan = t("payments.err_required");
     } else if (s === 1) {
@@ -423,7 +585,9 @@ export function PaymentsFlow({
     try {
       const fd = new FormData();
       fd.set("name", form.name.trim());
-      fd.set("nickname", form.nickname.trim());
+      // Sent in the one casing the product uses, so the name that reaches the
+      // chat is the same one whichever way they typed it.
+      fd.set("nickname", normalizeNickname(form.nickname));
       fd.set("whatsapp", form.whatsapp.trim());
       // No email or login method is sent any more. The server takes the buyer
       // from the session cookie, so a forged payload cannot attach someone
@@ -432,6 +596,9 @@ export function PaymentsFlow({
       fd.set("scope", form.scopeKey);
       fd.set("classCode", resolvedClass);
       fd.set("campus", resolvedCampus);
+      // Recorded so the admin queue can tell a BINUS Bekasi buyer from a UNJ
+      // one without inferring it from a location name.
+      fd.set("university", form.university);
       fd.set("angkatan", form.angkatan);
       fd.set("deviceLimit", String(form.deviceLimit));
       fd.set("paymentMethod", form.paymentMethod);
@@ -492,6 +659,14 @@ export function PaymentsFlow({
             {t("payments.success_policy")}
           </p>
         </div>
+
+        {/* The one screen where the consequence is real: the order exists and
+            is now waiting on something only they can do. */}
+        {!account.emailVerified && (
+          <div className="mt-3 w-full">
+            <VerifyEmailBox email={account.email} context="order" />
+          </div>
+        )}
         <div className="mt-6 flex w-full flex-col gap-2.5">
           <Link
             href="/"
@@ -522,9 +697,12 @@ export function PaymentsFlow({
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-6 sm:py-8 lg:max-w-4xl">
+    // Tighter on a phone, unchanged on a desktop. Every gap here was sized for
+    // a wide screen and then inherited by a 390px one, which is how four short
+    // steps turned into a page you scroll through twice.
+    <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-4 sm:py-8 lg:max-w-4xl">
       {/* Header */}
-      <div className="mb-5 flex w-full items-center justify-between">
+      <div className="mb-4 flex w-full items-center justify-between sm:mb-5">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -537,8 +715,16 @@ export function PaymentsFlow({
         </span>
       </div>
 
+      {/* Only after signing up on the way here. Keeps the momentum of the
+          package they clicked instead of stopping them on a separate
+          congratulations screen. */}
+      <WelcomeStrip
+        show={justRegistered}
+        email={account.emailVerified ? undefined : account.email}
+      />
+
       {/* Progress */}
-      <div className="mb-6 w-full">
+      <div className="mb-4 w-full sm:mb-6">
         <div className="flex items-center gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
@@ -559,14 +745,18 @@ export function PaymentsFlow({
 
       {/* Animated step body */}
       <div className="flex-1">
+        {/* Sideways, and mirrored on the way back. A step that slid in from the
+            right must slide back out to the right when you press Kembali —
+            otherwise every move feels like going forwards and the wizard stops
+            having a direction at all. */}
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div
             key={step}
             custom={dir}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            variants={stepMotion}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="space-y-5"
           >
             {step === 0 && (
@@ -644,29 +834,47 @@ export function PaymentsFlow({
                       </FieldShell>
                     )}
 
+                    {/* Checked while they type. This is the only field on the
+                        page whose answer depends on other people, so it is the
+                        only one that can fail for a reason nobody could have
+                        guessed — and finding that out on the review step, with
+                        the payment already filled in, is the worst place for
+                        it. Chosen once here; changing it later lives on
+                        /account and costs one of their renames. */}
                     {!account.nickname && (
-                      <FieldShell label={t("payments.nickname_label")} description={t("payments.nickname_desc")} required error={errors.nickname} htmlFor="pf-nickname">
-                        <ShortAnswer id="pf-nickname" value={form.nickname} onChange={(v) => set("nickname", v)} placeholder={t("payments.nickname_ph")} invalid={!!errors.nickname} autoComplete="nickname" />
+                      <FieldShell
+                        label={t("payments.nickname_label")}
+                        description={t("payments.nickname_desc")}
+                        required
+                        error={errors.nickname}
+                        htmlFor="pf-nickname"
+                      >
+                        <div className="flex flex-col gap-1.5">
+                          <ShortAnswer
+                            id="pf-nickname"
+                            value={form.nickname}
+                            onChange={(v) => {
+                              set("nickname", v);
+                              nickCheck.check(v);
+                            }}
+                            placeholder={t("payments.nickname_ph")}
+                            invalid={!!errors.nickname || nickCheck.state === "taken"}
+                            autoComplete="nickname"
+                            maxLength={NICKNAME_MAX}
+                            trailing={<NicknameAdornment state={nickCheck.state} />}
+                          />
+                          <NicknameHint
+                            state={nickCheck.state}
+                            reason={nickCheck.reason}
+                            suggestions={nickCheck.suggestions}
+                            onPick={(v) => {
+                              set("nickname", v);
+                              nickCheck.check(v);
+                            }}
+                          />
+                        </div>
                       </FieldShell>
                     )}
-
-                    {/* Always asked. The class is the one thing that genuinely
-                        changes between semesters. */}
-                    <FieldShell label={t("payments.class_label")} description={t("payments.class_desc")} required error={errors.classCode || errors.classOther} htmlFor="pf-class">
-                      <Dropdown
-                        id="pf-class"
-                        value={form.classCode}
-                        onChange={(v) => set("classCode", v)}
-                        placeholder={t("payments.class_ph")}
-                        invalid={!!errors.classCode}
-                        options={CLASSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
-                      />
-                      {form.classCode === "Other" && (
-                        <div className="mt-2">
-                          <ShortAnswer value={form.classOther} onChange={(v) => set("classOther", v)} placeholder={t("payments.class_other_ph")} invalid={!!errors.classOther} />
-                        </div>
-                      )}
-                    </FieldShell>
 
                     {!account.angkatan && (
                       <FieldShell label={t("payments.angkatan_label")} description={t("payments.angkatan_desc")} required error={errors.angkatan} htmlFor="pf-angkatan">
@@ -676,7 +884,7 @@ export function PaymentsFlow({
                           onChange={(v) => set("angkatan", v)}
                           placeholder={t("payments.angkatan_ph")}
                           invalid={!!errors.angkatan}
-                          options={ANGKATAN_OPTIONS.map((a) => ({ value: a, label: a }))}
+                          options={ANGKATAN_CHOICES.map((a) => ({ value: a, label: a }))}
                         />
                       </FieldShell>
                     )}
@@ -686,27 +894,101 @@ export function PaymentsFlow({
                         <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
                       </FieldShell>
                     )}
+                  </div>
+                </Section>
 
-                    {!account.campus && (
-                      <div className="lg:col-span-2">
-                        <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
-                          <RadioGroup
-                            name="campus"
-                            value={form.campus}
-                            onChange={(v) => set("campus", v)}
-                            variant="plain"
-                            columns={4}
-                            columnsMobile={2}
-                            options={CAMPUSES.map((c) => ({ value: c, label: c === "Other" ? t("payments.opt_other") : c }))}
-                          />
-                          {form.campus === "Other" && (
-                            <div className="mt-2">
-                              <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
-                            </div>
-                          )}
-                        </FieldShell>
-                      </div>
-                    )}
+                {/* Kampus → Jurusan → Lokasi → Kelas, in that order and in one
+                    place. These four used to be scattered through the form with
+                    the class above the campus, which meant answering them in
+                    the order they appeared was answering them backwards.
+                    Each one narrows the next; a Bekasi student is never shown a
+                    Kemanggisan class code. */}
+                <Section
+                  title={t("payments.sec_campus")}
+                  description={t("payments.sec_campus_desc")}
+                >
+                  <div className="grid gap-y-0 lg:grid-cols-2 lg:gap-x-5">
+                    <div className="lg:col-span-2">
+                      <FieldShell label={t("payments.university_label")} required error={errors.university}>
+                        <RadioGroup
+                          name="university"
+                          value={form.university}
+                          onChange={(v) => set("university", v)}
+                          variant="plain"
+                          columns={2}
+                          columnsMobile={2}
+                          options={CAMPUS_OPTIONS.map((c) => ({
+                            value: c.id,
+                            label: c.label,
+                            disabled: !c.available,
+                            disabledHint: c.available ? undefined : t("payments.campus_soon"),
+                          }))}
+                        />
+                      </FieldShell>
+                    </div>
+
+                    <div className="lg:col-span-2">
+                      <FieldShell label={t("payments.campus_label")} required error={errors.campus || errors.campusOther}>
+                        <RadioGroup
+                          name="campus"
+                          value={form.campus}
+                          onChange={(v) => set("campus", v)}
+                          variant="plain"
+                          columns={4}
+                          columnsMobile={2}
+                          options={locationOptions}
+                        />
+                        {form.campus === OTHER_LOCATION && (
+                          <div className="mt-2">
+                            <ShortAnswer value={form.campusOther} onChange={(v) => set("campusOther", v)} placeholder={t("payments.campus_other_ph")} invalid={!!errors.campusOther} />
+                          </div>
+                        )}
+                      </FieldShell>
+                    </div>
+
+                    {/* One option is a fact, not a choice. Rendering a dropdown
+                        that can only ever say one thing reads as broken; it
+                        becomes a real picker the moment a second major ships. */}
+                    <FieldShell label={t("payments.jurusan_label")} error={errors.jurusan}>
+                      {jurusanOptions.length > 1 ? (
+                        <Dropdown
+                          id="pf-jurusan"
+                          value={form.jurusan}
+                          onChange={(v) => set("jurusan", v)}
+                          placeholder={t("payments.jurusan_ph")}
+                          invalid={!!errors.jurusan}
+                          options={jurusanOptions}
+                        />
+                      ) : (
+                        <div className="flex h-[42px] items-center rounded-xl border border-border bg-muted/20 px-3.5 text-sm text-foreground">
+                          {jurusanOptions[0]?.label ?? t("payments.jurusan_none")}
+                        </div>
+                      )}
+                    </FieldShell>
+
+                    <FieldShell
+                      label={t("payments.class_label")}
+                      description={t("payments.class_desc")}
+                      required
+                      error={errors.classCode || errors.classOther}
+                      htmlFor="pf-class"
+                    >
+                      <Dropdown
+                        id="pf-class"
+                        value={form.classCode}
+                        onChange={(v) => set("classCode", v)}
+                        placeholder={
+                          form.campus ? t("payments.class_ph") : t("payments.class_needs_campus")
+                        }
+                        invalid={!!errors.classCode}
+                        options={classOptions}
+                      />
+                      {form.classCode === "Other" && (
+                        <div className="mt-2">
+                          <ShortAnswer value={form.classOther} onChange={(v) => set("classOther", v)} placeholder={t("payments.class_other_ph")} invalid={!!errors.classOther} />
+                        </div>
+                      )}
+                    </FieldShell>
                   </div>
                 </Section>
               </div>
@@ -763,7 +1045,10 @@ export function PaymentsFlow({
                             <RadioGroup
                               name="scope"
                               value={form.scopeKey}
-                              onChange={(v) => set("scopeKey", v)}
+                              onChange={(v) => {
+                                setScopePicked(true);
+                                set("scopeKey", v);
+                              }}
                               variant="plain"
                               options={purchasableScopes().map((s) => ({
                                 value: scopeKey(s),
@@ -778,21 +1063,17 @@ export function PaymentsFlow({
                 </Section>
 
                 {isShare && (
+                  // The same sentence used to appear three times over: as the
+                  // section heading, as the field label, and again as the
+                  // checkbox label. One statement, said once, with the long
+                  // version behind a link.
                   <Section title={t("payments.share_ack_label")}>
-                    <FieldShell label={t("payments.share_ack_check")} error={errors.shareAck}>
-                      <CheckboxField
-                        checked={form.shareAck}
-                        onChange={(v) => set("shareAck", v)}
-                        label={t("payments.share_ack_check")}
-                        description={t("payments.share_ack_desc")}
-                        invalid={!!errors.shareAck}
-                      />
-                      {isLE86 && (
-                        <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-300">
-                          {t("payments.share_le86_note")}
-                        </p>
-                      )}
-                    </FieldShell>
+                    <ShareTerms
+                      checked={form.shareAck}
+                      onChange={(v) => set("shareAck", v)}
+                      error={errors.shareAck}
+                      isLE86={isLE86}
+                    />
                   </Section>
                 )}
               </div>
@@ -812,6 +1093,15 @@ export function PaymentsFlow({
                 <Section title={t("payments.sec_pay")}>
                   <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 text-center">
                     <p className="text-[11px] text-muted-foreground">{t("payments.amount_label")}</p>
+                    {/* The old price stays on screen, struck through and
+                        small. A discount nobody can see is a discount nobody
+                        values — and it is also the only way to prove the
+                        number changed for a reason. */}
+                    {discountAmount > 0 && (
+                      <p className="text-sm text-muted-foreground line-through">
+                        {formatIDR(listPrice)}
+                      </p>
+                    )}
                     <button
                       type="button"
                       onClick={() => copy(String(uniqueAmount))}
@@ -820,6 +1110,29 @@ export function PaymentsFlow({
                       {formatIDR(uniqueAmount)}
                       <Copy className="h-4 w-4 text-muted-foreground" />
                     </button>
+
+                    {discountAmount > 0 && discount && (
+                      <div className="mt-2 rounded-lg border border-primary/25 bg-primary/10 px-3 py-2 text-left">
+                        <p className="flex items-center justify-between gap-2 text-xs font-semibold text-primary">
+                          <span>{discount.label}</span>
+                          <span>−{formatIDR(discountAmount)}</span>
+                        </p>
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                          {discount.detail}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Losing a comparison is not the same as being spent. Say
+                        so, or the one that lost looks like it vanished. */}
+                    {otherDiscounts.length > 0 && (
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                        Potongan lain yang kamu punya (
+                        {otherDiscounts.map((d) => d.label).join(", ")}) tidak hangus dan
+                        tetap bisa dipakai lain kali. Potongan tidak bisa digabung, jadi
+                        yang terbesar yang dipakai.
+                      </p>
+                    )}
                     <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
                       {t("payments.amount_unique_hint")
                         .replace("{base}", formatIDR(price))
@@ -983,9 +1296,18 @@ export function PaymentsFlow({
                   <ReviewRow label={t("payments.source_label")} value={sourceLabel} />
                 </ReviewSection>
 
-                <p className="px-1 text-[11px] leading-relaxed text-muted-foreground lg:col-span-2">
-                  {t("payments.review_note")}
-                </p>
+                <div className="space-y-1.5 lg:col-span-2">
+                  <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
+                    {t("payments.review_note")}
+                  </p>
+                  {/* Said before the money moves, not after. A quiet line and
+                      not a warning box on purpose: an alert here is friction at
+                      the worst possible moment and they cannot act on it
+                      without abandoning the form. But hiding a condition on
+                      approval from someone about to pay is worse than one extra
+                      line of small print. */}
+                  {!account.emailVerified && <VerifyEmailInline email={account.email} />}
+                </div>
               </div>
             )}
           </motion.div>
@@ -993,7 +1315,10 @@ export function PaymentsFlow({
       </div>
 
       {/* Footer nav */}
-      <div className="mx-auto mt-7 flex w-full max-w-xl gap-2.5">
+      {/* Sticky on a phone. The buyer's thumb sits at the bottom of the screen,
+          and on a long step the only way to reach Lanjut was to scroll past
+          everything they had just filled in. */}
+      <div className="sticky bottom-0 z-20 mx-auto -mx-4 mt-5 flex w-[calc(100%+2rem)] gap-2.5 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-auto sm:mt-7 sm:w-full sm:max-w-xl sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         {step > 0 && (
           <button
             type="button"
@@ -1085,29 +1410,25 @@ function QrisCard({
   downloadLabel: string;
 }) {
   const [broken, setBroken] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  // A window, not an accordion.
+  //
+  // Opening it in place added roughly 300px between the buyer and the Continue
+  // button they were about to press — so the button moved out from under a
+  // thumb that was already travelling towards it. A QR code is also the one
+  // thing here you want as large as the screen allows, which an inline panel
+  // squeezed into a column can never be.
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      {/*
-        The whole row toggles, so the target is the size of the row rather than a
-        24px icon. `Simpan` sits inside it and stops propagation — otherwise
-        saving the image would also expand the panel you were trying to avoid.
-      */}
-      <div
-        role={broken ? undefined : "button"}
-        tabIndex={broken ? undefined : 0}
-        aria-expanded={broken ? undefined : expanded}
-        onClick={() => !broken && setExpanded((v) => !v)}
-        onKeyDown={(e) => {
-          if (broken) return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setExpanded((v) => !v);
-          }
-        }}
+    <>
+      <button
+        type="button"
+        onClick={() => !broken && setOpen(true)}
+        disabled={broken}
         className={cn(
-          "flex items-center gap-3 px-3.5 py-3 transition-colors",
-          !broken && "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60"
+          "flex w-full items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3 text-left transition-colors",
+          !broken &&
+            "hover:border-primary/30 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
         )}
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -1117,49 +1438,149 @@ function QrisCard({
           <p className="text-sm font-semibold text-foreground">QRIS</p>
           <p className="text-[11px] text-muted-foreground">{broken ? label : expandHint}</p>
         </div>
-
         {!broken && (
-          <div className="flex shrink-0 items-center gap-1.5">
-            <a
-              href={PAYMENT_ACCOUNTS.qrisImage}
-              download="qris-haistudy.jpg"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-            >
-              <Download className="h-3.5 w-3.5" />
-              {downloadLabel}
-            </a>
-            <span
-              aria-hidden
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground"
-            >
-              {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-            </span>
-          </div>
+          <span
+            aria-hidden
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </span>
         )}
+      </button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>QRIS</DialogTitle>
+            <DialogDescription>{expandHint}</DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={PAYMENT_ACCOUNTS.qrisImage}
+              alt="QRIS haistudy, scan untuk bayar"
+              onError={() => {
+                setBroken(true);
+                setOpen(false);
+              }}
+              className="w-full max-w-[18rem] rounded-lg border border-border object-contain"
+            />
+          </div>
+          <a
+            href={PAYMENT_ACCOUNTS.qrisImage}
+            download="qris-haistudy.jpg"
+            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+          >
+            <Download className="h-4 w-4" />
+            {downloadLabel}
+          </a>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/**
+ * The Share package's one condition, plus the message that fulfils it.
+ *
+ * Two things were wrong here. The sentence "Saya setuju memenuhi syarat share"
+ * appeared three times on one screen — heading, field label, checkbox — which
+ * is what made the section read like a form shouting. And the terms told
+ * people to broadcast haistudy to their friends without giving them anything
+ * to broadcast, so everyone wrote their own and half of them left out the
+ * link.
+ *
+ * Now: one statement, the long version behind a link, and a ready-made message
+ * they can send in two taps.
+ */
+function ShareTerms({
+  checked,
+  onChange,
+  error,
+  isLE86,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  error?: string;
+  isLE86: boolean;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+
+  const broadcast = t("payments.share_broadcast_text").replace(
+    "{url}",
+    typeof window === "undefined" ? "https://haistudy.site" : window.location.origin
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <CheckboxField
+        checked={checked}
+        onChange={onChange}
+        label={t("payments.share_ack_check")}
+        invalid={!!error}
+      />
+      {error && <p className="text-xs text-destructive">{error}</p>}
+
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="self-start rounded text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        {t("payments.share_read_terms")}
+      </button>
+
+      {isLE86 && (
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-300">
+          {t("payments.share_le86_note")}
+        </p>
+      )}
+
+      {/* The thing they are actually being asked to send. Copy for wherever
+          they like, or straight into WhatsApp — a condition nobody can meet
+          without writing their own copy is a condition half of them will get
+          wrong. */}
+      <div className="rounded-xl border border-border bg-muted/20 p-3">
+        <p className="text-xs font-semibold text-foreground">
+          {t("payments.share_broadcast_label")}
+        </p>
+        <p className="mt-1.5 whitespace-pre-line text-[11px] leading-relaxed text-muted-foreground">
+          {broadcast}
+        </p>
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              void navigator.clipboard.writeText(broadcast);
+              toast.success(t("payments.copied"));
+            }}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            {t("payments.share_copy")}
+          </button>
+          <a
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(broadcast)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            {t("payments.share_send_wa")}
+          </a>
+        </div>
       </div>
 
-      <AnimatePresence initial={false}>
-        {expanded && !broken && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="flex justify-center border-t border-border p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={PAYMENT_ACCOUNTS.qrisImage}
-                alt="QRIS haistudy, scan untuk bayar"
-                onError={() => setBroken(true)}
-                className="w-full max-w-[18rem] rounded-lg border border-border object-contain"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("payments.share_ack_label")}</DialogTitle>
+          </DialogHeader>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+            {t("payments.share_ack_desc")}
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

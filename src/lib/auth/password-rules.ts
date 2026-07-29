@@ -17,15 +17,13 @@ export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 200;
 
 export interface PasswordCheck {
-  id: "length" | "upper" | "lower" | "digit" | "symbol";
+  id: "length" | "upper" | "lower" | "digit";
+  /** Full sentence. Used in server rejections, where there is no context. */
   label: string;
+  /** Two or three words. Used in the live grid, where the heading gives context. */
+  short: string;
   ok: boolean;
 }
-
-// Anything that is not a letter, a digit, or whitespace. Deliberately broad:
-// naming a fixed set of "allowed" symbols is how you end up rejecting the £ a
-// student actually typed.
-const SYMBOL_RE = /[^A-Za-z0-9\s]/;
 
 /**
  * The live checklist shown under the password field.
@@ -34,18 +32,39 @@ const SYMBOL_RE = /[^A-Za-z0-9\s]/;
  * rule is still missing while the user types. Being told "password tidak
  * memenuhi syarat" only after pressing the button is the version people give
  * up on.
+ *
+ * A symbol used to be required as well. It was dropped deliberately: it is the
+ * rule people fail most, it pushes them towards the `Password1!` shape that
+ * cracking tools try first, and NIST SP 800-63B now tells services not to
+ * impose composition rules at all. Four rules also happen to sit in a tidy
+ * 2×2 grid, which is what stops the list from resizing as you type.
  */
 export function passwordChecks(password: string): PasswordCheck[] {
   return [
     {
       id: "length",
       label: `Minimal ${PASSWORD_MIN_LENGTH} karakter`,
+      short: `${PASSWORD_MIN_LENGTH}+ karakter`,
       ok: password.length >= PASSWORD_MIN_LENGTH,
     },
-    { id: "upper", label: "Ada huruf besar (A-Z)", ok: /[A-Z]/.test(password) },
-    { id: "lower", label: "Ada huruf kecil (a-z)", ok: /[a-z]/.test(password) },
-    { id: "digit", label: "Ada angka (0-9)", ok: /[0-9]/.test(password) },
-    { id: "symbol", label: "Ada simbol (!@#$...)", ok: SYMBOL_RE.test(password) },
+    {
+      id: "upper",
+      label: "Ada huruf besar (A-Z)",
+      short: "Huruf besar",
+      ok: /[A-Z]/.test(password),
+    },
+    {
+      id: "lower",
+      label: "Ada huruf kecil (a-z)",
+      short: "Huruf kecil",
+      ok: /[a-z]/.test(password),
+    },
+    {
+      id: "digit",
+      label: "Ada angka (0-9)",
+      short: "Angka",
+      ok: /[0-9]/.test(password),
+    },
   ];
 }
 

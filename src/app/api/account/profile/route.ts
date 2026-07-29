@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { ACCOUNT_COLUMNS, AccountError, mapAccount } from "@/lib/auth/account";
 import { requireAccount } from "@/lib/auth/account-session";
+import {
+  NICKNAME_MAX,
+  normalizeNickname,
+  validateNickname,
+} from "@/lib/account/nickname";
 
 /** Trim, cap, and treat an all-whitespace value as empty. */
 function field(v: unknown, max: number): string {
@@ -50,11 +55,31 @@ export async function PATCH(req: Request) {
       else if (v.length < 2) errors.fullName = "Nama terlalu pendek";
       else patch.full_name = v;
     }
+    // The nickname is the only field here with a budget attached. Everyone
+    // else in the class knows this person by it, so changing it freely means
+    // the name on last week's messages is no longer the name of anyone
+    // recognisable. One change per period bought is the allowance; a change
+    // that does not actually change anything costs nothing.
+    let nicknameChanging = false;
     if ("nickname" in body) {
-      const v = field(body.nickname, 24);
-      if (!v) errors.nickname = "Panggilan wajib diisi";
-      else if (v.includes("@")) errors.nickname = "Isi nama panggilan, bukan alamat email";
-      else patch.nickname = v;
+      const raw = field(body.nickname, NICKNAME_MAX * 2);
+      const v = normalizeNickname(raw);
+      const problem = validateNickname(v);
+      if (problem) {
+        errors.nickname = problem;
+      } else if (v.toLowerCase() !== account.nickname.toLowerCase()) {
+        nicknameChanging = true;
+        if (account.nicknameChangesLeft <= 0) {
+          errors.nickname = account.nickname
+            ? "Jatah mengganti nama panggilan sudah habis. Silakan hubungi admin untuk lebih lanjut."
+            : "Nama panggilan diisi pertama kali saat pembelian.";
+        } else {
+          patch.nickname = v;
+        }
+      } else {
+        // Same name, different capitalisation. Store the tidy form, no charge.
+        patch.nickname = v;
+      }
     }
     if ("whatsapp" in body) {
       const v = field(body.whatsapp, 30);
@@ -86,16 +111,50 @@ export async function PATCH(req: Request) {
     patch.updated_at = new Date().toISOString();
 
     const supabase = createServerClient()!;
-    const { data, error } = await supabase
-      .from("accounts")
-      .update(patch)
-      .eq("id", account.id)
-      .select(ACCOUNT_COLUMNS)
-      .single();
+
+    // Spend the allowance in the same statement that writes the name, and only
+    // while it is still positive. Two tabs pressing Save at once would
+    // otherwise both read "1 left" and both go through.
+    let write = supabase.from("accounts").update(patch).eq("id", account.id);
+    if (nicknameChanging) {
+      write = supabase
+        .from("accounts")
+        .update({
+          ...patch,
+          nickname_changes_left: account.nicknameChangesLeft - 1,
+        })
+        .eq("id", account.id)
+        .gt("nickname_changes_left", 0);
+    }
+
+    const { data, error } = await write.select(ACCOUNT_COLUMNS).maybeSingle();
 
     if (error) {
+      // 23505 = the unique index on the name. Someone claimed it between the
+      // live check and Save.
+      if (error.code === "23505") {
+        return NextResponse.json(
+          {
+            error: "Ada yang belum benar",
+            fields: { nickname: "Nama panggilan ini baru saja dipakai orang lain" },
+          },
+          { status: 409 }
+        );
+      }
       console.error("[account/profile] update failed", error);
       return NextResponse.json({ error: "Gagal menyimpan" }, { status: 500 });
+    }
+    if (!data) {
+      return NextResponse.json(
+        {
+          error: "Ada yang belum benar",
+          fields: {
+            nickname:
+              "Jatah mengganti nama panggilan sudah habis. Silakan hubungi admin untuk lebih lanjut.",
+          },
+        },
+        { status: 409 }
+      );
     }
 
     return NextResponse.json({ ok: true, account: mapAccount(data) });

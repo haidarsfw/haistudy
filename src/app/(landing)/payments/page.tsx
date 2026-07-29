@@ -3,6 +3,13 @@ import { redirect } from "next/navigation";
 
 import { PaymentsFlow } from "@/components/payments/payments-flow";
 import { getOptionalAccount } from "@/lib/auth/account-session";
+import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
+import { availableDiscounts } from "@/lib/referral/rewards";
+
+// The cheapest thing anyone can buy. A discount is capped at the price, and
+// the price is not known until a package is picked, so it is measured against
+// this floor here and re-capped inside the flow.
+const MIN_PACKAGE_PRICE = 20000;
 
 export const metadata: Metadata = {
   title: "Beli Akses",
@@ -14,7 +21,7 @@ export const metadata: Metadata = {
 export default async function PaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pkg?: string }>;
+  searchParams: Promise<{ pkg?: string; welcome?: string }>;
 }) {
   const params = await searchParams;
 
@@ -33,12 +40,27 @@ export default async function PaymentsPage({
     redirect(`/register?next=${encodeURIComponent(next)}`);
   }
 
+  // Read here so the price on screen matches the price the server will charge.
+  // The server recomputes it when the order is submitted — this copy exists to
+  // be shown, and is never trusted.
+  //
+  // Priced against the cheapest package so the figure is available before a
+  // package is chosen; the flow re-caps it against whatever they pick.
+  const supabase = isSupabaseServerConfigured ? createServerClient()! : null;
+  const discounts = supabase
+    ? await availableDiscounts(supabase, account.id, MIN_PACKAGE_PRICE)
+    : { best: null, others: [] };
+
   return (
     <div className="min-h-screen bg-background">
       <PaymentsFlow
         initialPkg={params.pkg}
+        justRegistered={params.welcome === "1"}
+        discount={discounts.best}
+        otherDiscounts={discounts.others}
         account={{
           email: account.email,
+          emailVerified: Boolean(account.emailVerifiedAt),
           authProvider: account.authProvider,
           fullName: account.fullName,
           nickname: account.nickname,

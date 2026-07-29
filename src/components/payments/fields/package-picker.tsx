@@ -22,7 +22,14 @@ interface PackagePickerProps {
  */
 export function PackagePicker({ value, onChange }: PackagePickerProps) {
   return (
-    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+    // Two across on a phone, not one. Stacked, four cards ran to roughly three
+    // screens of scrolling on the one step whose whole job is comparing them —
+    // you cannot compare what you cannot see at the same time.
+    //
+    // `auto-rows-fr` is what stops the heights wobbling: `h-full` only equalises
+    // cards WITHIN a row, so at two columns the second row sized itself
+    // independently and the grid stepped.
+    <div className="grid auto-rows-fr grid-cols-2 gap-2.5 lg:grid-cols-4">
       {PACKAGES.map((pkg) => (
         <PackageCard
           key={pkg.id}

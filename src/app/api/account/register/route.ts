@@ -18,6 +18,12 @@ import {
   recordLoginAttempt,
 } from "@/lib/auth/server-rate-limit";
 import { getClientIp } from "@/lib/auth/oauth-cookie-helpers";
+import {
+  attachReferral,
+  lookupReferralCode,
+  mintAccountReferralCode,
+  normalizeReferralCode,
+} from "@/lib/referral/codes";
 
 /**
  * Create an account with e-mail + password.
@@ -57,10 +63,7 @@ export async function POST(req: Request) {
   const fullName = String(body.fullName ?? "").trim().slice(0, 100);
   const nickname = String(body.nickname ?? "").trim().slice(0, 24);
   const whatsapp = String(body.whatsapp ?? "").trim().slice(0, 30);
-  // Stored now, credited later: the referrer is rewarded when a licence
-  // activates, which is a separate step entirely. Keeping the code here means
-  // the input on /register is not a black hole while that side is wired up.
-  const referralCode = String(body.referralCode ?? "").trim().slice(0, 32);
+  const referralCode = normalizeReferralCode(String(body.referralCode ?? ""));
 
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Email tidak valid", field: "email" }, { status: 400 });
@@ -93,6 +96,32 @@ export async function POST(req: Request) {
     );
   }
 
+  // The authoritative check. The form checks as you type, but a form can be
+  // skipped entirely, so an unknown code has to die here too.
+  //
+  // A LOOKUP FAILURE IS NOT A REJECTION. If the table is unreachable the code
+  // is dropped and the signup continues — losing a referral we cannot verify
+  // costs us a row; refusing to create the account costs us the customer.
+  let resolvedReferral: string | null = null;
+  if (referralCode) {
+    try {
+      const found = await lookupReferralCode(supabase, referralCode);
+      if (!found) {
+        return NextResponse.json(
+          {
+            error: `Kode ${referralCode} tidak kami kenali. Cek lagi, atau lanjut tanpa kode.`,
+            field: "referralCode",
+            code: "REFERRAL_UNKNOWN",
+          },
+          { status: 400 }
+        );
+      }
+      resolvedReferral = found.code;
+    } catch (e) {
+      console.error("[account/register] referral lookup failed, continuing", e);
+    }
+  }
+
   const account = await createAccount(supabase, {
     email,
     authProvider: "password",
@@ -111,6 +140,20 @@ export async function POST(req: Request) {
       { status: 409 }
     );
   }
+
+  // Their own code, and the link back to whoever sent them. Both off the
+  // critical path: a signup must not fail because a referral row did not
+  // insert, and the code can always be minted later when /account asks for it.
+  waitUntil(
+    (async () => {
+      try {
+        await mintAccountReferralCode(supabase, account.id);
+        if (resolvedReferral) await attachReferral(supabase, account.id, resolvedReferral);
+      } catch (e) {
+        console.error("[account/register] referral setup failed", e);
+      }
+    })()
+  );
 
   // Verification never blocks anything: the account is usable immediately and
   // the account page simply shows an unverified badge until the link is

@@ -27,6 +27,7 @@ import {
   Trash2,
   RotateCcw,
   ChevronDown,
+  MailWarning,
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import type { PurchaseRequest } from "@/types";
@@ -121,6 +122,8 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // Delete confirmation target. Approved orders get an extra choice (revoke key).
   const [deleteTarget, setDeleteTarget] = useState<PurchaseRequest | null>(null);
+  /** Set only when approving something whose buyer has not confirmed their e-mail. */
+  const [approveTarget, setApproveTarget] = useState<PurchaseRequest | null>(null);
 
   const exportFile = useCallback(
     (format: "csv" | "xlsx") => {
@@ -241,6 +244,29 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     }
     setProcessingId(null);
   }, [scopeQuery]);
+
+  /**
+   * Approve, unless the buyer's e-mail is still unconfirmed.
+   *
+   * A warning with a way past it, not a locked button. Confirming an address is
+   * a condition on approval because it keeps fake signups out of the queue —
+   * but the person who paid is real, and a hard block would leave the owner
+   * unable to serve a paying customer whose mail simply never arrived. So the
+   * default answer is "not yet" and the override is one click away, deliberately
+   * with a stop in between so it is never the thing you do by reflex.
+   */
+  const requestApprove = useCallback(
+    (purchase: PurchaseRequest) => {
+      // `false` only. `null` means the row predates accounts and there is
+      // nothing to check — flagging those would put a warning on all of history.
+      if (purchase.emailVerified === false) {
+        setApproveTarget(purchase);
+        return;
+      }
+      void handleApprove(purchase);
+    },
+    [handleApprove]
+  );
 
   const handleReject = useCallback(async (id: string) => {
     setProcessingId(id);
@@ -491,6 +517,19 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                                   s{purchase.semester}-{purchase.examPeriod}-{purchase.jurusan}
                                 </Badge>
                               )}
+                              {/* Only on rows still waiting. Once approved the
+                                  question is settled and the badge would just
+                                  be a permanent accusation. */}
+                              {purchase.emailVerified === false &&
+                                purchase.status === "pending" && (
+                                  <Badge
+                                    variant="outline"
+                                    className="gap-1 border-warning/40 text-[10px] text-warning"
+                                  >
+                                    <MailWarning className="h-3 w-3" />
+                                    Email belum dikonfirmasi
+                                  </Badge>
+                                )}
                             </div>
                             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                               <span>{PACKAGE_LABELS[purchase.package] || purchase.package}</span>
@@ -602,7 +641,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                                 size="sm"
                                 variant="default"
                                 className="h-7 gap-1 text-xs"
-                                onClick={() => handleApprove(purchase)}
+                                onClick={() => requestApprove(purchase)}
                                 disabled={processingId === purchase.id}
                               >
                                 {processingId === purchase.id ? (
@@ -714,6 +753,42 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
             </Button>
           </div>
         )}
+      </DialogContent>
+    </Dialog>
+
+    {/* Approving a buyer who has not confirmed their e-mail. A stop, not a
+        lock: the address may be perfectly real and the mail simply never
+        opened, and refusing to serve someone who has already paid is the worse
+        failure. */}
+    <Dialog open={!!approveTarget} onOpenChange={(o) => { if (!o) setApproveTarget(null); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Email belum dikonfirmasi</DialogTitle>
+          <DialogDescription>
+            {approveTarget
+              ? `${approveTarget.name} · ${approveTarget.email ?? "tanpa email"}`
+              : null}
+          </DialogDescription>
+        </DialogHeader>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Pembeli ini belum mengklik tautan konfirmasi yang kami kirim, jadi alamat
+          emailnya belum terbukti benar. Kalau kamu yakin orangnya asli dan sudah
+          membayar, tetap boleh disetujui.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setApproveTarget(null)}>
+            Batal
+          </Button>
+          <Button
+            onClick={() => {
+              const target = approveTarget;
+              setApproveTarget(null);
+              if (target) void handleApprove(target);
+            }}
+          >
+            Ya, tetap setujui
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
     </>

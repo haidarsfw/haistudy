@@ -136,6 +136,13 @@ export async function compressImageToBudget(
     }
 
     if (!blob) return working;
+    // Never hand back something bigger than what we were given.
+    //
+    // Re-encoding is not free: a 7 KB screenshot pushed through a JPEG encoder
+    // routinely comes out at 8 KB, and the upload box prints both numbers — so
+    // "compression" was visibly making files larger. If the original already
+    // fits the budget and our attempt did not beat it, the original wins.
+    if (working.size <= maxBytes && blob.size >= working.size) return working;
     return new File([blob], `${base}.jpg`, { type: mime });
   } catch {
     return working;

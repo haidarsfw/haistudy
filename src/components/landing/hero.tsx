@@ -77,16 +77,25 @@ export function Hero() {
         >
           {loggedIn ? (
             hasAccess ? (
-              <Link
-                href={access?.dashboardPath ?? "/dashboard"}
+              // A plain anchor, NOT next/link.
+              //
+              // /enter is a route handler that answers with a redirect, not a
+              // page. Next's client-side navigation asks it for an RSC payload,
+              // gets a redirect it cannot render, and gives up — which is the
+              // "flashes and stays put" the button was doing. A real browser
+              // navigation follows the redirect the way it is meant to, and it
+              // is also required here anyway: /enter sets the access cookies
+              // that the next page has to read.
+              <a
+                href="/enter"
                 className="brand-gradient-bg inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                {t("landing.cta.lanjut_belajar")}
-              </Link>
+                {/* "Dashboard", not "Lanjut belajar". The header no longer
+                    carries a button at all, so this is the only call to action
+                    on the screen and it should say exactly where it goes. */}
+                {t("landing.cta.dashboard")}
+              </a>
             ) : (
-              // Same destination as the header's "Beli Akses", different words
-              // on purpose — two identical buttons on one screen read as a
-              // mistake, not as emphasis.
               <a
                 href="#harga"
                 className="brand-gradient-bg inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"

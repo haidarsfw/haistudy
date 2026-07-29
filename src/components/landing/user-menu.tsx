@@ -7,6 +7,7 @@ import { ChevronDown, LayoutDashboard, Loader2, User, LogOut } from "lucide-reac
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useAccount } from "@/hooks/use-account";
+import { clearStoredSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 const TIER: Record<string, string> = {
@@ -60,7 +61,9 @@ export function UserMenu() {
     session?.shortName || account?.nickname || session?.name || account?.fullName || "";
   const initial = (name || account?.email || "?").charAt(0).toUpperCase();
   const tier = session ? (TIER[session.packageTier] ?? "") : "";
-  const dashboardPath = access?.dashboardPath ?? (session ? "/dashboard" : null);
+  // /enter, not the dashboard path — see hero.tsx. Linking straight to a
+  // scoped page without an access cookie bounces to /login.
+  const dashboardPath = access?.hasActive || session ? "/enter" : null;
 
   const signOut = async () => {
     if (signingOut) return;
@@ -69,6 +72,20 @@ export function UserMenu() {
       await fetch("/api/account/logout", { method: "POST" });
     } catch {
       /* cookies are cleared server-side; a failed call still ends here */
+    }
+    // The half that was missing.
+    //
+    // The server clears all four cookies correctly — that was never the
+    // problem. But the session is ALSO mirrored into localStorage under
+    // `hs-session-data` for instant paint, and the session provider restores
+    // from it on mount. So logging out cleared the cookies, the page reloaded,
+    // and the provider immediately drew a signed-in header again from a copy
+    // nothing had touched. The only way out was /clearcookies, which wipes
+    // localStorage wholesale.
+    try {
+      clearStoredSession();
+    } catch {
+      /* private mode can refuse storage; the cookies are already gone */
     }
     // Full navigation, not a router push: every provider holding session state
     // has to be torn down rather than re-rendered.
@@ -111,15 +128,16 @@ export function UserMenu() {
           </div>
           <div className="my-1 h-px bg-border" />
 
+          {/* Plain anchor: /enter is a redirect, not a page. See hero.tsx. */}
           {dashboardPath && (
-            <Link
+            <a
               href={dashboardPath}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
             >
               <LayoutDashboard className="h-4 w-4 text-primary" />
               {t("landing.cta.dashboard")}
-            </Link>
+            </a>
           )}
 
           <Link

@@ -68,10 +68,46 @@ function mapRow(row: Record<string, unknown>): PurchaseRequest {
     examPeriod: (row.exam_period as "uts" | "uas") ?? "uts",
     jurusan: (row.jurusan as string) ?? "bm",
     meta: (row.meta as PurchaseMeta) ?? undefined,
+    emailVerified: null,
     paymentProofUrl: null,
     shareProofUrl: null,
     shareProofUrl2: null,
   };
+}
+
+/**
+ * Stamp each row with whether its buyer has confirmed their e-mail.
+ *
+ * One query for the whole page, not one per row: the admin queue is the
+ * hottest admin screen and this is decoration on it, not the point of it.
+ * Rows with no account behind them (legacy imports) stay `null` — unknown,
+ * which is not the same as unconfirmed.
+ */
+async function stampEmailVerified(
+  supabase: NonNullable<ReturnType<typeof createServerClient>>,
+  rows: Record<string, unknown>[],
+  purchases: PurchaseRequest[]
+): Promise<void> {
+  const ids = [
+    ...new Set(rows.map((r) => r.account_id as string | null).filter(Boolean)),
+  ] as string[];
+  if (!ids.length) return;
+
+  const { data } = await supabase
+    .from("accounts")
+    .select("id, email_verified_at")
+    .in("id", ids);
+
+  const verified = new Map<string, boolean>();
+  for (const a of data ?? []) {
+    verified.set(a.id as string, Boolean(a.email_verified_at));
+  }
+  rows.forEach((row, i) => {
+    const accountId = row.account_id as string | null;
+    if (accountId && verified.has(accountId)) {
+      purchases[i].emailVerified = verified.get(accountId)!;
+    }
+  });
 }
 
 // Build short-lived signed URLs for the private payment-proofs bucket so the
@@ -179,7 +215,9 @@ export async function GET(request: Request) {
     const { data, error } = await query;
     if (error) throw error;
 
-    const purchases = await signProofs(supabase, (data || []) as Record<string, unknown>[]);
+    const rows = (data || []) as Record<string, unknown>[];
+    const purchases = await signProofs(supabase, rows);
+    await stampEmailVerified(supabase, rows, purchases);
     return NextResponse.json({ purchases });
   } catch (error) {
     const r = scopeErrorResponse(error);

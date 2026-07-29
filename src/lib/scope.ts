@@ -106,11 +106,19 @@ const EXAM_LABELS: Record<string, string> = {
   uas: "UAS",
 };
 
-/** Full label: "Semester 2 · UTS · Business Management" */
+/**
+ * Full label: "Semester 2: UAS Business Management"
+ *
+ * One colon, then the period read as a phrase. The old
+ * "Semester 2 · UTS · Business Management" chopped it into three equal shards,
+ * which made three unrelated facts out of one name. This is the wording used
+ * everywhere the period is spelled out — invoices, admin, checkout, dashboard,
+ * account — so there is nothing to keep in sync.
+ */
 export function scopeFullLabel(s: ScopeTuple): string {
   const jur = JURUSAN_LABELS[s.jurusan] ?? s.jurusan.toUpperCase();
   const exam = EXAM_LABELS[s.examPeriod] ?? s.examPeriod.toUpperCase();
-  return `Semester ${s.semester} · ${exam} · ${jur}`;
+  return `Semester ${s.semester}: ${exam} ${jur}`;
 }
 
 /** Short label: "Sem 2 UTS" */

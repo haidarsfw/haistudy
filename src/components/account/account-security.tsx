@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Laptop, Loader2, Smartphone, Tablet } from "lucide-react";
 
 import { AuthField, PasswordChecklist } from "@/components/account/auth-field";
+import { DisclosureCard } from "@/components/account/disclosure-card";
 import { isPasswordStrong } from "@/lib/auth/password-rules";
 import { toast } from "@/components/ui/toast";
 import type { AccountDevice, DeviceSlots } from "@/lib/auth/account-devices";
@@ -25,17 +26,18 @@ function relative(iso: string | null): string {
   return `${Math.floor(hours / 24)} hari lalu`;
 }
 
+/**
+ * Password and sessions. Devices moved out to their own page.
+ *
+ * They were one block while /account was one scroll, but they answer different
+ * questions — "is my login safe" against "who else is using my access" — and
+ * only one of them has a quota attached.
+ */
 export function AccountSecurity({
   authProvider,
-  devices: initialDevices,
-  slots,
 }: {
   authProvider: "google" | "password";
-  devices: AccountDevice[];
-  slots: DeviceSlots[];
 }) {
-  const [devices, setDevices] = useState(initialDevices);
-
   return (
     <div className="flex flex-col gap-4">
       {authProvider === "password" ? (
@@ -50,10 +52,21 @@ export function AccountSecurity({
         </div>
       )}
 
-      <DeviceList devices={devices} slots={slots} onChange={setDevices} />
       <SignOutOthers />
     </div>
   );
+}
+
+/** The registered browsers, and the slots each access allows. */
+export function AccountDevices({
+  devices: initialDevices,
+  slots,
+}: {
+  devices: AccountDevice[];
+  slots: DeviceSlots[];
+}) {
+  const [devices, setDevices] = useState(initialDevices);
+  return <DeviceList devices={devices} slots={slots} onChange={setDevices} />;
 }
 
 function ChangePassword() {
@@ -129,56 +142,59 @@ function ChangePassword() {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border border-border bg-card p-5" noValidate>
-      <p className="text-sm font-semibold text-foreground">Ganti password</p>
-
-      <div className="mt-4 flex flex-col gap-4">
-        <AuthField
-          id="sec-current"
-          label="Password sekarang"
-          type="password"
-          value={current}
-          onChange={setCurrent}
-          placeholder="Password lamamu"
-          autoComplete="current-password"
-          error={errors.currentPassword}
-        />
-
-        <div className="flex flex-col gap-2">
+    <DisclosureCard
+      title="Ganti password"
+      hint="Perangkat lain otomatis dikeluarkan setelah passwordnya diganti."
+    >
+      <form onSubmit={submit} noValidate>
+        <div className="flex flex-col gap-4">
           <AuthField
-            id="sec-new"
-            label="Password baru"
+            id="sec-current"
+            label="Password sekarang"
             type="password"
-            value={next}
-            onChange={setNext}
-            placeholder="Password baru"
-            autoComplete="new-password"
-            error={errors.newPassword}
+            value={current}
+            onChange={setCurrent}
+            placeholder="Password lamamu"
+            autoComplete="current-password"
+            error={errors.currentPassword}
           />
-          <PasswordChecklist password={next} />
+
+          <div className="flex flex-col gap-2">
+            <AuthField
+              id="sec-new"
+              label="Password baru"
+              type="password"
+              value={next}
+              onChange={setNext}
+              placeholder="Password baru"
+              autoComplete="new-password"
+              error={errors.newPassword}
+            />
+            <PasswordChecklist password={next} />
+          </div>
+
+          <AuthField
+            id="sec-confirm"
+            label="Ulangi password baru"
+            type="password"
+            value={confirm}
+            onChange={setConfirm}
+            placeholder="Ketik ulang"
+            autoComplete="new-password"
+            error={errors.confirm}
+          />
         </div>
 
-        <AuthField
-          id="sec-confirm"
-          label="Ulangi password baru"
-          type="password"
-          value={confirm}
-          onChange={setConfirm}
-          placeholder="Ketik ulang"
-          autoComplete="new-password"
-          error={errors.confirm}
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={saving || !isPasswordStrong(next) || confirm !== next || !current}
-        className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-      >
-        {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-        {saving ? "Menyimpan..." : "Simpan password baru"}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={saving || !isPasswordStrong(next) || confirm !== next || !current}
+          className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+          {saving ? "Menyimpan..." : "Simpan password baru"}
+        </button>
+      </form>
+    </DisclosureCard>
   );
 }
 

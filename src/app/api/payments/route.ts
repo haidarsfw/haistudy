@@ -8,9 +8,17 @@ import { scopeColumns } from "@/lib/auth/scope-check";
 import { parseScopeKey, isAvailableScope, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { rateLimit } from "@/lib/support/server";
 import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, type PurchasablePackageId } from "@/lib/payments";
+import {
+  availableDiscounts,
+  consumeRefereeDiscount,
+  spendReferralBalance,
+} from "@/lib/referral/rewards";
 import { recordActivity } from "@/lib/admin/activity";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
+import { verifyUrl } from "@/lib/notifications/account-email";
+import { normalizeNickname, validateNickname } from "@/lib/account/nickname";
+import { issueAccountToken } from "@/lib/auth/account-tokens";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { AccountError } from "@/lib/auth/account";
 import { requireAccount } from "@/lib/auth/account-session";
@@ -81,6 +89,7 @@ export async function POST(request: Request) {
     const scopeRaw = getStr(fd, "scope", 24);
     const classCode = getStr(fd, "classCode", 60);
     const campus = getStr(fd, "campus", 60);
+    const university = getStr(fd, "university", 20);
     const angkatan = getStr(fd, "angkatan", 16);
     const deviceLimitRaw = parseInt(getStr(fd, "deviceLimit", 3) || "2", 10);
     const paymentMethod = getStr(fd, "paymentMethod", 20);
@@ -92,9 +101,13 @@ export async function POST(request: Request) {
     if (!name || whatsapp.replace(/\D/g, "").length < 8) {
       return NextResponse.json({ error: "Nama dan WhatsApp wajib diisi." }, { status: 400 });
     }
-    // Short name / nickname: required, 1-24 chars (shown everywhere in-app).
-    if (!nickname || nickname.length < 1 || nickname.length > 24) {
-      return NextResponse.json({ error: "Nama panggilan wajib diisi (maks 24 karakter)." }, { status: 400 });
+    // The name everyone else sees. One word, letters and digits, and nobody
+    // else's. The browser checks all of this too; this is the copy that counts,
+    // because a form can be skipped entirely.
+    const cleanNickname = normalizeNickname(nickname);
+    const nicknameProblem = validateNickname(cleanNickname);
+    if (nicknameProblem) {
+      return NextResponse.json({ error: `Nama panggilan: ${nicknameProblem}.` }, { status: 400 });
     }
     if (!ALLOWED_PACKAGES.has(pkg)) {
       return NextResponse.json({ error: "Paket tidak valid." }, { status: 400 });
@@ -143,8 +156,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const basePrice = effectiveBasePrice(pkg, classCode);
-    const uniqueAmount = computeUniqueAmount(basePrice, whatsapp);
+    const listPrice = effectiveBasePrice(pkg, classCode);
 
     // Dev mode (no Supabase): accept as a no-op success.
     if (!isSupabaseServerConfigured) {
@@ -153,16 +165,35 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
 
+    // Priced HERE, never taken from the browser. The unique transfer amount is
+    // what the admin matches the incoming payment against, so a client that
+    // could name its own discount could name its own price.
+    //
+    // Discounts do not stack: the largest is applied and the rest are left
+    // untouched, still spendable next period.
+    const { best: discountUsed } = await availableDiscounts(
+      supabase,
+      account.id,
+      listPrice
+    );
+    const discount = discountUsed?.amount ?? 0;
+    const basePrice = Math.max(0, listPrice - discount);
+    const uniqueAmount = computeUniqueAmount(basePrice, whatsapp);
+
     // Whatever the buyer just filled in that their account did not already
     // hold gets written back, so the next purchase asks for none of it. Fields
     // the account already had arrive unchanged, making this a no-op for a
     // returning buyer. Class is included deliberately: it changes every
     // semester and is only kept to prefill the next checkout.
-    await supabase
+    //
+    // Checked BEFORE the order is written. If the nickname were saved after,
+    // a clash would leave a paid order attached to a name the account does not
+    // actually carry — and the buyer would never be told.
+    const { error: profileErr } = await supabase
       .from("accounts")
       .update({
         full_name: name,
-        nickname,
+        nickname: cleanNickname,
         whatsapp,
         campus,
         angkatan: angkatan.toUpperCase(),
@@ -170,6 +201,22 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", account.id);
+
+    if (profileErr) {
+      // 23505 = someone claimed the name between the live check and this
+      // submit. Rare, and worth naming precisely: "server error" would send
+      // them looking in the wrong place.
+      if (profileErr.code === "23505") {
+        return NextResponse.json(
+          {
+            error: `Nama panggilan "${cleanNickname}" baru saja dipakai orang lain. Ganti sedikit lalu kirim lagi.`,
+            field: "nickname",
+          },
+          { status: 409 }
+        );
+      }
+      throw profileErr;
+    }
 
     // Upload proofs to the PRIVATE payment-proofs bucket (service_role).
     const uploadOne = async (blob: Blob, suffix: string): Promise<string> => {
@@ -193,6 +240,7 @@ export async function POST(request: Request) {
     const meta = {
       classCode,
       campus,
+      ...(university ? { university } : {}),
       angkatan: angkatan.toUpperCase(),
       deviceLimit,
       paymentMethod,
@@ -205,7 +253,7 @@ export async function POST(request: Request) {
       loginMethod: account.authProvider,
       loginEmail: account.emailLower,
       scopeKey: sk,
-      nickname,
+      nickname: cleanNickname,
       ...(pkg === "share" ? { shareMethod } : {}),
     };
 
@@ -231,6 +279,22 @@ export async function POST(request: Request) {
       .single();
     if (insErr) throw insErr;
 
+    // Spent only once the order exists, and only the ONE that was applied.
+    // Marked here rather than at approval because the discount is already
+    // baked into the amount they were told to transfer, so a second order must
+    // not quote it again. Whatever lost the comparison is deliberately left
+    // alone — it is still theirs next period.
+    if (discountUsed?.id === "referee") {
+      await consumeRefereeDiscount(supabase, account.id, discount);
+    } else if (discountUsed?.id === "referral_balance") {
+      await spendReferralBalance(
+        supabase,
+        account.id,
+        discount,
+        inserted.id as string
+      );
+    }
+
     // Audit → admin Activity Logs (low-freq, high-value student event).
     await recordActivity(supabase, {
       action: "purchase_request",
@@ -254,17 +318,42 @@ export async function POST(request: Request) {
     );
 
     // Background: email the buyer their invoice (received & verifying). /payments only.
+    //
+    // An unconfirmed address gets a fresh confirmation link folded into the
+    // invoice. The invoice is the mail they are certain to open, and it lands
+    // in the same inbox as the link they need — sending them hunting for an
+    // older message would put the friction in the worst possible place. The
+    // token is minted here rather than reusing an old one because an old one
+    // may well have expired by now.
     if (email) {
       waitUntil(
-        sendPurchaseInvoiceEmail({
-          to: email,
-          buyerName: capitalizeFirst(nickname || firstWord(name)),
-          scopeLabel: scopeFullLabel(scope),
-          packageLabel: PACKAGE_LABELS[pkg] ?? pkg,
-          amount: formatIDR(uniqueAmount),
-          whatsapp,
-          loginMethod: account.authProvider,
-        }).catch((e) => console.error("[payments] buyer invoice email failed", e))
+        (async () => {
+          let verifyLink: string | null = null;
+          if (!account.emailVerifiedAt) {
+            try {
+              const token = await issueAccountToken(
+                supabase,
+                account.id,
+                "verify",
+                clientIp(request)
+              );
+              verifyLink = verifyUrl(token);
+            } catch (e) {
+              // A missing link must never cost the buyer their invoice.
+              console.error("[payments] verify token for invoice failed", e);
+            }
+          }
+          await sendPurchaseInvoiceEmail({
+            to: email,
+            buyerName: capitalizeFirst(cleanNickname || firstWord(name)),
+            scopeLabel: scopeFullLabel(scope),
+            packageLabel: PACKAGE_LABELS[pkg] ?? pkg,
+            amount: formatIDR(uniqueAmount),
+            whatsapp,
+            loginMethod: account.authProvider,
+            verifyUrl: verifyLink,
+          });
+        })().catch((e) => console.error("[payments] buyer invoice email failed", e))
       );
     }
 

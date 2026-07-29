@@ -12,6 +12,12 @@ const AvatarCropper = dynamic(() => import("@/components/profile/avatar-cropper"
 });
 
 import { AuthField } from "@/components/account/auth-field";
+import {
+  NicknameAdornment,
+  NicknameHint,
+  useNicknameCheck,
+} from "@/components/account/nickname-status";
+import { NICKNAME_MAX } from "@/lib/account/nickname";
 import { Dropdown } from "@/components/payments/fields/dropdown";
 import { ANGKATAN_OPTIONS } from "@/data/landing/angkatan";
 import { CAMPUSES } from "@/lib/payments";
@@ -44,8 +50,33 @@ const AVATAR_TARGET_BYTES = 300 * 1024;
  * purchase rather than to a person, and /payments owns it. Two places able to
  * write it would be two places that can disagree.
  */
-export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
+export function AccountProfileForm({
+  initial,
+  nicknameChangesLeft,
+}: {
+  initial: ProfileValues;
+  /** Renames still owed. Tops up by one every time they buy a period. */
+  nicknameChangesLeft: number;
+}) {
   const [values, setValues] = useState(initial);
+
+  // The name as the server currently holds it, and what it costs to move away
+  // from it. Both are tracked locally so the field tells the truth immediately
+  // after a save — the props come from a server render that is not going to
+  // happen again until the page is reloaded.
+  const [savedNickname, setSavedNickname] = useState(initial.nickname);
+  const [changesLeft, setChangesLeft] = useState(nicknameChangesLeft);
+  const nickCheck = useNicknameCheck(savedNickname);
+
+  // Locked only when they HAVE a name and no allowance left. Someone who has
+  // never been to checkout has neither, and locking them out of a field they
+  // have not filled in yet would be nonsense.
+  const locked = Boolean(savedNickname) && changesLeft <= 0;
+  const nicknameHint = !savedNickname
+    ? "Maksimal dua kata, huruf saja"
+    : locked
+      ? "Jatah ganti habis, hubungi admin"
+      : `Bisa diganti ${changesLeft}x lagi`;
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -93,6 +124,14 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
         if (data.fields) setErrors(data.fields);
         else toast.error(data.error ?? "Gagal menyimpan");
         return;
+      }
+
+      // A rename actually went through, so the allowance is one lower and the
+      // new name is the one to measure the next edit against.
+      if (values.nickname.toLowerCase() !== savedNickname.toLowerCase()) {
+        setChangesLeft((n) => Math.max(0, n - 1));
+        setSavedNickname(values.nickname);
+        nickCheck.reset();
       }
 
       setSaved(true);
@@ -145,6 +184,10 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
 
       set("avatarUrl", url);
       refreshAccount();
+      // The photo is stored the moment it is cropped — it does not wait for
+      // the Simpan button, which is why that button stays disabled afterwards.
+      // Without saying so, a silent success looks exactly like a failure.
+      toast.success("Foto profil tersimpan");
     } catch {
       toast.error("Gagal mengunggah foto. Coba lagi.");
     } finally {
@@ -173,6 +216,7 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
       if (!res.ok) throw new Error();
       set("avatarUrl", null);
       refreshAccount();
+      toast.success("Foto profil dihapus");
     } catch {
       toast.error("Gagal menghapus foto. Coba lagi.");
     } finally {
@@ -260,16 +304,36 @@ export function AccountProfileForm({ initial }: { initial: ProfileValues }) {
           />
         </div>
 
-        <AuthField
-          id="acc-nickname"
-          label="Panggilan"
-          value={values.nickname}
-          onChange={(v) => set("nickname", v)}
-          placeholder="Nama panggilanmu"
-          hint="Dipakai menyapa kamu"
-          error={errors.nickname}
-          maxLength={24}
-        />
+        {/* The one field here with a budget on it. Everyone in the class knows
+            this person by it, so it is not free to change — but it is never
+            frozen either, because a typo made at a first checkout should not
+            follow someone around for a year. */}
+        <div className="flex flex-col gap-1.5">
+          <AuthField
+            id="acc-nickname"
+            label="Panggilan"
+            value={values.nickname}
+            onChange={(v) => {
+              set("nickname", v);
+              nickCheck.check(v);
+            }}
+            placeholder="Nama panggilanmu"
+            hint={nicknameHint}
+            error={errors.nickname}
+            maxLength={NICKNAME_MAX}
+            disabled={locked}
+            trailing={<NicknameAdornment state={nickCheck.state} />}
+          />
+          <NicknameHint
+            state={nickCheck.state}
+            reason={nickCheck.reason}
+            suggestions={nickCheck.suggestions}
+            onPick={(v) => {
+              set("nickname", v);
+              nickCheck.check(v);
+            }}
+          />
+        </div>
 
         <AuthField
           id="acc-whatsapp"

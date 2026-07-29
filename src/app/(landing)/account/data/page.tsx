@@ -62,7 +62,7 @@ export default async function AccountDataPage() {
     <div className="mx-auto w-full max-w-2xl px-5 py-8 lg:px-8 lg:py-12">
       <div className="flex items-center justify-between gap-4 print:hidden">
         <Link
-          href="/account"
+          href="/account/manage"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />

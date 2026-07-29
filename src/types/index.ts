@@ -476,7 +476,10 @@ export interface VoiceParticipant {
 // Rich metadata captured by the on-site /payments form (migration 037: meta jsonb).
 export interface PurchaseMeta {
   classCode?: string;
+  /** Location, e.g. "Bekasi". The university itself is `university` below. */
   campus?: string;
+  /** "BINUS" | "UNJ". Absent on orders placed before the chain existed. */
+  university?: string;
   deviceLimit?: number;
   paymentMethod?: string;   // "bca" | "ewallet" | "qris"
   uniqueAmount?: number;    // basePrice + last 3 digits of WA
@@ -529,6 +532,14 @@ export interface PurchaseRequest {
   examPeriod: ExamPeriod;
   jurusan: string;
   meta?: PurchaseMeta;
+  /**
+   * Whether the buyer's account has confirmed its e-mail.
+   *
+   * `null` means there is nothing to check — a legacy row with no account
+   * behind it. Only `false` is a warning; treating `null` as unconfirmed would
+   * put a scare badge on every historical purchase.
+   */
+  emailVerified?: boolean | null;
   // Short-lived signed URLs to the private payment-proofs bucket (admin GET only).
   paymentProofUrl?: string | null;
   shareProofUrl?: string | null;

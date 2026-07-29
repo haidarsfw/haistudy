@@ -10,13 +10,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createResetToken, hashResetToken } from "@/lib/auth/password";
 
-export type TokenPurpose = "verify" | "reset";
+export type TokenPurpose = "verify" | "reset" | "delete" | "delete_cancel";
 
 // A verification link should survive a weekend in a crowded inbox. A reset
-// link is a live credential, so it gets an hour.
+// link is a live credential, so it gets an hour. So does a deletion request,
+// for the same reason.
+//
+// The cancel link is the exception and gets EIGHT days: the deletion it undoes
+// happens on day seven, and a way back that expires before the thing it
+// reverses is not a way back.
 const TTL_MS: Record<TokenPurpose, number> = {
   verify: 7 * 24 * 60 * 60 * 1000,
   reset: 60 * 60 * 1000,
+  delete: 60 * 60 * 1000,
+  delete_cancel: 8 * 24 * 60 * 60 * 1000,
 };
 
 /**

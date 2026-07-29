@@ -1,43 +1,39 @@
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { AccountError } from "@/lib/auth/account";
-import { clearAccountCookie, requireAccount } from "@/lib/auth/account-session";
-import { activeAccesses, listAccountAccesses } from "@/lib/auth/account-access";
+import { requireAccount } from "@/lib/auth/account-session";
+import { issueAccountToken } from "@/lib/auth/account-tokens";
+import { sendDeleteRequestEmail } from "@/lib/notifications/account-email";
+import {
+  checkDeleteRequestQuota,
+  formatRetryAfter,
+  recordDeleteRequest,
+} from "@/lib/auth/account-rate-limit";
+import { getClientIp } from "@/lib/auth/oauth-cookie-helpers";
 
 /**
- * The phrase the user has to type out.
+ * ASK to delete the account. Nothing is deleted here.
  *
- * A second "are you sure" button is something people click through on reflex.
- * Copying a phrase by hand cannot be done by accident, and it forces a pause
- * long enough to read what is about to happen.
- */
-export const DELETE_PHRASE = "HAPUS AKUN SAYA";
-
-const CLEARED = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  maxAge: 0,
-};
-
-/**
- * Delete the account. Immediately, and by the account holder alone — no admin
- * in the middle.
+ * Two gates, and they check different things.
  *
- * Two things stop it being a footgun: an account still holding live paid
- * access cannot be deleted at all, and the phrase above has to be typed out.
+ * Typing your own e-mail address proves you know whose account this is. It
+ * replaced a fixed phrase ("HAPUS AKUN SAYA") which anyone holding a borrowed
+ * session could copy off the screen — it proved someone could read, not that
+ * they had any business being there.
  *
- * What actually goes: the account row, and with it every session and every
- * pending verification or reset token. What does NOT go: the licence and
- * purchase rows, which are unlinked (`ON DELETE SET NULL`) rather than
- * destroyed. Those are financial records of a real transaction, and since a
- * deletion can only happen once no access is live, nothing usable survives —
- * only the receipt.
+ * The mail then proves the request came from the mailbox that owns the account,
+ * which is the only thing that actually establishes ownership. Nothing is
+ * scheduled until that link is clicked.
+ *
+ * Having live paid access no longer blocks anything. It used to, and the effect
+ * was that the people with the most at stake were the only ones who could not
+ * do this themselves and had to go and find the admin. The seven-day window
+ * exists precisely so that having something to lose is survivable.
  */
 export async function POST(req: Request) {
-  // scope-exempt: deletes the caller's own account row. Scoped content is
+  // scope-exempt: acts on the caller's own account row. Scoped content is
   // reached through licences, which this route does not touch.
   try {
     const account = await requireAccount();
@@ -46,49 +42,67 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Server belum siap" }, { status: 503 });
     }
 
-    let confirm = "";
+    let typed = "";
     try {
       const body = (await req.json()) as Record<string, unknown>;
-      confirm = String(body.confirm ?? "").trim();
+      typed = String(body.email ?? "").trim();
     } catch {
-      /* handled by the phrase check */
+      /* handled by the match below */
     }
 
-    if (confirm.toUpperCase() !== DELETE_PHRASE) {
+    if (typed.toLowerCase() !== account.emailLower) {
       return NextResponse.json(
-        { error: "Frasa konfirmasinya belum cocok", code: "BAD_PHRASE" },
+        { error: "Emailnya belum cocok dengan email akun ini", code: "BAD_EMAIL" },
         { status: 400 }
       );
     }
 
     const supabase = createServerClient()!;
 
-    const live = activeAccesses(await listAccountAccesses(supabase, account.id));
-    if (live.length > 0) {
+    // Already scheduled. Say so rather than sending a second identical mail —
+    // the cancel link they already have is the thing they need.
+    if (account.deletionRequestedAt) {
       return NextResponse.json(
         {
-          error:
-            "Akunmu masih punya akses aktif yang sudah dibayar. Hubungi admin dulu supaya aksesnya tidak hilang begitu saja.",
-          code: "HAS_ACTIVE_ACCESS",
+          error: "Penghapusan akun ini sudah dijadwalkan. Cek emailmu untuk membatalkannya.",
+          code: "ALREADY_SCHEDULED",
         },
         { status: 409 }
       );
     }
 
-    const { error } = await supabase.from("accounts").delete().eq("id", account.id);
-    if (error) {
-      console.error("[account/delete] failed", error);
-      return NextResponse.json({ error: "Gagal menghapus akun" }, { status: 500 });
+    const quota = await checkDeleteRequestQuota(supabase, account.id);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `Sudah terlalu sering. Coba lagi ${formatRetryAfter(quota.retryAfter)}.`,
+        },
+        { status: 429, headers: { "Retry-After": String(quota.retryAfter) } }
+      );
     }
 
-    // The session row is already gone with the account; clearing the cookies
-    // stops the browser from carrying a token that now points at nothing.
-    const res = NextResponse.json({ ok: true });
-    clearAccountCookie(res);
-    res.cookies.set("hs-session", "", CLEARED);
-    res.cookies.set("hs-scope", "", CLEARED);
-    res.cookies.set("hs-admin", "", CLEARED);
-    return res;
+    const ip = getClientIp(req);
+    await recordDeleteRequest(supabase, account.id, ip);
+
+    // Off the critical path. The user is told the mail is on its way either
+    // way; a slow mail provider must not make this look like a failure and
+    // invite a second press.
+    waitUntil(
+      (async () => {
+        try {
+          const token = await issueAccountToken(supabase, account.id, "delete", ip);
+          await sendDeleteRequestEmail({
+            to: account.email,
+            name: account.nickname || account.fullName,
+            token,
+          });
+        } catch (e) {
+          console.error("[account/delete] request mail failed", e);
+        }
+      })()
+    );
+
+    return NextResponse.json({ ok: true, sentTo: account.email });
   } catch (error) {
     if (error instanceof AccountError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

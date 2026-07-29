@@ -125,7 +125,9 @@ export function Header() {
   // The header's own action. Deliberately different wording from the hero's
   // so the two never read as the same button twice.
   const hasAccess = access?.hasActive ?? (!!session && !session.isPreview);
-  const ctaHref = hasAccess ? (access?.dashboardPath ?? "/dashboard") : "/#harga";
+  // /enter, never the dashboard path — see hero.tsx. The access cookie has to
+  // be opened before any scoped page will accept the visit.
+  const ctaHref = hasAccess ? "/enter" : "/#harga";
   const ctaLabel = hasAccess ? t("landing.cta.dashboard") : t("landing.cta.beli_akses");
   // Scroll progress 0→1 over the first ~72px. The header MORPHS continuously with
   // scroll (not a boolean toggle), so it stays seamless whether you scroll up or
@@ -243,16 +245,13 @@ export function Header() {
             <BantuanLink className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50" />
             <LanguageToggle compact={scrolled} />
             <span className="mx-1.5 h-5 w-px shrink-0 bg-border/60" aria-hidden="true" />
+            {/* Signed in: the avatar, and nothing else. A filled pill next to
+                it made the right-hand side heavy enough to creep towards the
+                centre, and it duplicated the hero's button one screenful
+                below. The hero now owns the call to action; the header owns
+                identity. */}
             {loggedIn ? (
-              <>
-                <Link
-                  href={ctaHref}
-                  className="brand-gradient-bg shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                >
-                  {ctaLabel}
-                </Link>
-                <UserMenu />
-              </>
+              <UserMenu />
             ) : (
               <Link
                 href="/login"
@@ -301,13 +300,16 @@ export function Header() {
             <div className="mt-1">
               {loggedIn ? (
                 <div className="flex flex-col gap-1">
-                  <Link
+                  {/* Plain anchor: when signed in this points at /enter, which
+                      is a redirect, not a page. Client-side navigation cannot
+                      follow it and the button just flashes. See hero.tsx. */}
+                  <a
                     href={ctaHref}
                     onClick={() => setOpen(false)}
                     className="brand-gradient-bg block rounded-full px-4 py-2.5 text-center text-sm font-semibold text-white"
                   >
                     {ctaLabel}
-                  </Link>
+                  </a>
                   <Link
                     href="/account"
                     onClick={() => setOpen(false)}

@@ -221,6 +221,15 @@ export interface PurchaseInvoiceEmailOpts {
   amount: string; // pre-formatted, e.g. "Rp 20.000"
   whatsapp: string;
   loginMethod: StoredLoginMethod;
+  /**
+   * A ready-to-click confirmation link, present only when the buyer's address
+   * is still unconfirmed.
+   *
+   * The invoice is the one mail they are certain to open, and it lands in the
+   * same inbox as the link they need. Sending them off to go and find an older
+   * message would be the worst possible place to add a step.
+   */
+  verifyUrl?: string | null;
 }
 
 /**
@@ -294,10 +303,24 @@ function renderPurchaseInvoiceHtml(a: InvoiceRenderArgs): string {
           ? `<p style="margin:0 0 14px;font-size:13px;color:#22c55e;font-weight:700">Invoice ${safe(a.invoiceNo)} · ${safe(a.scopeLabel)}</p>`
           : `<p style="margin:0 0 14px;font-size:13px;color:#94a3b8">${safe(a.scopeLabel)}</p>`
       }
-      <p style="margin:14px 0 18px;font-size:14px;line-height:1.6;color:#cbd5e1">
+      ${
+        a.verifyUrl
+          ? // "Nothing to do" is only true when it IS true. An unconfirmed
+            // address is the one thing that stops this order being approved,
+            // so the mail says so and hands over the link rather than leaving
+            // someone waiting on a queue they are themselves blocking.
+            `<p style="margin:14px 0 14px;font-size:14px;line-height:1.6;color:#cbd5e1">
+        Pembayaran &amp; buktimu sedang <strong style="color:#e2e8f0">kami verifikasi</strong>. Satu hal lagi dari kamu:
+        <strong style="color:#e2e8f0">konfirmasi email ini dulu</strong>, karena pesanan baru bisa kami setujui setelahnya.
+      </p>
+      <a href="${a.verifyUrl}" style="display:inline-block;background:#22c55e;color:#0f172a;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:9px;font-size:14px;margin:0 0 18px">
+        Konfirmasi email saya
+      </a>`
+          : `<p style="margin:14px 0 18px;font-size:14px;line-height:1.6;color:#cbd5e1">
         Pembayaran &amp; buktimu sedang <strong style="color:#e2e8f0">kami verifikasi</strong>. Santai aja — kamu
         <strong style="color:#e2e8f0">tidak perlu melakukan apa pun</strong> sekarang. 🙌
-      </p>
+      </p>`
+      }
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#0f172a;border-radius:10px;padding:6px 16px;margin-bottom:14px">
         ${row("Paket", a.packageLabel)}
         ${nominalRow("Nominal", a.amount)}
@@ -330,7 +353,10 @@ function renderPurchaseInvoiceText(a: InvoiceRenderArgs): string {
   return (
     `Halo ${a.buyerName},\n\n` +
     `Pesananmu sudah kami terima${a.invoiceNo ? ` (Invoice ${a.invoiceNo})` : ""}.\n` +
-    `Pembayaran & buktimu sedang kami verifikasi. Santai aja — kamu tidak perlu melakukan apa pun sekarang.\n\n` +
+    (a.verifyUrl
+      ? `Pembayaran & buktimu sedang kami verifikasi. Satu hal lagi dari kamu: konfirmasi email ini dulu, karena pesanan baru bisa kami setujui setelahnya.\n` +
+        `Konfirmasi email: ${a.verifyUrl}\n\n`
+      : `Pembayaran & buktimu sedang kami verifikasi. Santai aja — kamu tidak perlu melakukan apa pun sekarang.\n\n`) +
     `Paket: ${a.packageLabel}\n` +
     `Nominal: ${a.amount}\n` +
     `Periode: ${a.scopeLabel}\n` +

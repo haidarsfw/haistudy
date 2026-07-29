@@ -21,7 +21,20 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type RateKind = "login_fail" | "reset_request" | "verify_resend";
+export type RateKind =
+  | "login_fail"
+  | "reset_request"
+  | "verify_resend"
+  // Counted per network. See src/lib/referral/codes.ts — a public "is this
+  // code valid?" endpoint is an oracle, and an oracle without a limit is a
+  // list of everyone's codes.
+  | "referral_check"
+  // Counted per account. Nicknames are public by design, so this is a brake on
+  // scripted enumeration rather than a secret being guarded.
+  | "nickname_check"
+  // Counted per account. Sends mail to a fixed address, so the ceiling is what
+  // stops the form being used to flood an inbox.
+  | "delete_request";
 
 export interface RateDecision {
   allowed: boolean;
@@ -47,6 +60,8 @@ const LOGIN_WINDOW = 30 * MIN;
 const RESET_PER_EMAIL = { max: 3, windowMs: HOUR };
 const RESET_PER_IP = { max: 10, windowMs: HOUR };
 const VERIFY_PER_ACCOUNT = { max: 5, windowMs: DAY };
+const NICKNAME_PER_ACCOUNT = { max: 60, windowMs: HOUR };
+const DELETE_PER_ACCOUNT = { max: 3, windowMs: HOUR };
 
 interface Counted {
   count: number;
@@ -212,6 +227,76 @@ export async function recordVerifyResend(
   ip?: string | null
 ): Promise<void> {
   await recordRateEvent(supabase, "verify_resend", accountId, ip);
+}
+
+/**
+ * "Is this nickname free?", counted per account.
+ *
+ * Loose on purpose. This fires as someone types their own name into a checkout
+ * field, so the ceiling has to sit well above normal use — it exists to stop a
+ * script walking the whole name space, not to ration a person picking a name.
+ */
+export async function checkNicknameQuota(
+  supabase: SupabaseClient,
+  accountId: string
+): Promise<RateDecision> {
+  const counted = await countSince(
+    supabase,
+    "nickname_check",
+    accountId,
+    NICKNAME_PER_ACCOUNT.windowMs
+  );
+  if (!counted || counted.count < NICKNAME_PER_ACCOUNT.max || !counted.lastAt) {
+    return ALLOW;
+  }
+  const until = counted.lastAt + NICKNAME_PER_ACCOUNT.windowMs;
+  return {
+    allowed: false,
+    retryAfter: Math.max(30, Math.ceil((until - Date.now()) / 1000)),
+  };
+}
+
+export async function recordNicknameCheck(
+  supabase: SupabaseClient,
+  accountId: string,
+  ip?: string | null
+): Promise<void> {
+  await recordRateEvent(supabase, "nickname_check", accountId, ip);
+}
+
+/**
+ * Asking to delete an account, counted per account.
+ *
+ * Tight. This endpoint posts mail to a fixed address, so without a ceiling the
+ * form is a way to flood someone's inbox — including your own by accident, by
+ * pressing the button again when the first mail is slow.
+ */
+export async function checkDeleteRequestQuota(
+  supabase: SupabaseClient,
+  accountId: string
+): Promise<RateDecision> {
+  const counted = await countSince(
+    supabase,
+    "delete_request",
+    accountId,
+    DELETE_PER_ACCOUNT.windowMs
+  );
+  if (!counted || counted.count < DELETE_PER_ACCOUNT.max || !counted.lastAt) {
+    return ALLOW;
+  }
+  const until = counted.lastAt + DELETE_PER_ACCOUNT.windowMs;
+  return {
+    allowed: false,
+    retryAfter: Math.max(60, Math.ceil((until - Date.now()) / 1000)),
+  };
+}
+
+export async function recordDeleteRequest(
+  supabase: SupabaseClient,
+  accountId: string,
+  ip?: string | null
+): Promise<void> {
+  await recordRateEvent(supabase, "delete_request", accountId, ip);
 }
 
 /** "3 menit lagi" / "45 detik lagi" — for a message a human reads. */

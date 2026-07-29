@@ -129,3 +129,108 @@ export const hoverButton = {
   scale: 1.02,
   transition: { duration: 0.2, ease: "easeOut" },
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// Navigation motion contract
+// ═══════════════════════════════════════════════════════════════════
+//
+// One set of numbers for every "the content just changed" moment — a route
+// change, a tab, a step in the checkout wizard. They differ only in how far
+// things travel, so the whole product reads as one thing rather than a pile of
+// screens that each picked their own timing.
+//
+// Two rules hold everywhere:
+//
+//   1. Transform and opacity ONLY. Both are composited, so nothing here can
+//      trigger layout or paint, and nothing here can shove the page around
+//      while a field is focused.
+//   2. Leaving is faster than arriving. Symmetric timings leave a hole in the
+//      middle where neither the old nor the new content is readable, which is
+//      exactly what makes a transition feel slow.
+
+/** Fast start, soft landing. The house curve for anything arriving. */
+export const easeEnter = [0.16, 1, 0.3, 1] as const;
+/** Anything leaving. Gets out of the way instead of lingering. */
+export const easeExit = [0.4, 0, 1, 1] as const;
+
+export const NAV = {
+  /** Arriving. Long enough to notice, short enough not to wait on. */
+  enter: 0.24,
+  /** Leaving. */
+  exit: 0.14,
+  /** Everything collapses to this when the OS asks for less motion. */
+  reduced: 0.09,
+  /** Travel distance, by surface size. */
+  distance: { page: 8, tab: 12, step: 16 },
+} as const;
+
+/**
+ * A route change.
+ *
+ * Enter only, deliberately. In the App Router the outgoing page is gone before
+ * the incoming one renders, so there is nothing left to animate out — a
+ * "proper" exit needs the experimental View Transitions flag, which is not
+ * worth turning on across a live site for 140ms of polish.
+ */
+export function pageEnter(flat: boolean | null): Variants {
+  const transition = {
+    duration: flat ? NAV.reduced : NAV.enter,
+    ease: easeEnter,
+  };
+  // `y` is left out entirely rather than set to 0. Animating TO zero still
+  // makes the element carry `transform: translateY(0px)` forever after, and a
+  // transformed ancestor becomes the containing block for `position: fixed`
+  // children — which would strand the landing header mid-page for good. A
+  // crossfade has to mean no transform at all, not a transform worth nothing.
+  if (flat) {
+    return { hidden: { opacity: 0 }, visible: { opacity: 1, transition } };
+  }
+  return {
+    hidden: { opacity: 0, y: NAV.distance.page },
+    visible: { opacity: 1, y: 0, transition },
+  };
+}
+
+/**
+ * Tabs and wizard steps: direction-aware, and reversible because of it.
+ *
+ * `custom` carries the direction (+1 forward, -1 back), so going back is the
+ * exact mirror of going forward rather than a second forward animation. That
+ * mirroring is the whole reason a wizard feels like it has a place you are
+ * moving through instead of a stack of unrelated screens.
+ *
+ * Under reduced motion the sideways travel disappears entirely and only the
+ * crossfade survives — direction stops mattering when nothing moves.
+ */
+export function directionalPanel(
+  distance: number = NAV.distance.tab,
+  reduced: boolean | null = false
+): Variants {
+  const d = reduced ? 0 : distance;
+  return {
+    hidden: (dir: number) => ({ opacity: 0, x: d * (dir || 1) }),
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: reduced ? NAV.reduced : 0.22,
+        ease: easeEnter,
+      },
+    },
+    exit: (dir: number) => ({
+      opacity: 0,
+      x: -d * (dir || 1),
+      transition: {
+        duration: reduced ? NAV.reduced : 0.13,
+        ease: easeExit,
+      },
+    }),
+  };
+}
+
+/** The sliding marker under an active tab. Springs, so it settles rather than stops. */
+export const tabIndicator: Transition = {
+  type: "spring",
+  stiffness: 380,
+  damping: 32,
+};

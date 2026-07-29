@@ -50,12 +50,33 @@ function rememberNext(next?: string) {
   }
 }
 
+/**
+ * Carry a typed referral code across the Google round trip.
+ *
+ * Same cookie trick as `next`, and for the same reason. Before this, someone
+ * who entered a friend's code and then chose Google lost it silently: no
+ * error, no record, and the friend never credited.
+ */
+function rememberReferral(code?: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = "hs-ref=; path=/; max-age=0; samesite=lax";
+  const safe = (code || "").trim().slice(0, 32);
+  if (safe) {
+    document.cookie = `hs-ref=${encodeURIComponent(safe)}; path=/; max-age=600; samesite=lax`;
+  }
+}
+
 export function GoogleLoginButton({
   next,
   label,
+  referral,
+  hint,
 }: {
   next?: string;
   label?: string;
+  referral?: string;
+  /** One line under the button. Used on /register to say what Google saves you. */
+  hint?: string;
 } = {}) {
   const [loading, setLoading] = useState(false);
 
@@ -64,6 +85,7 @@ export function GoogleLoginButton({
   const onClick = async () => {
     setLoading(true);
     rememberNext(next);
+    rememberReferral(referral);
     try {
       const supabase = createAuthClient();
       if (!supabase) {
@@ -95,19 +117,30 @@ export function GoogleLoginButton({
   };
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onClick}
-      disabled={loading}
-      className="w-full h-11 gap-2.5 text-sm font-medium border-border bg-background hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-    >
-      {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <GoogleIcon className="h-4 w-4" />
+    <div className="flex flex-col gap-1.5">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClick}
+        disabled={loading}
+        className="w-full h-11 gap-2.5 text-sm font-medium border-border bg-background hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <GoogleIcon className="h-4 w-4" />
+        )}
+        <span>{loading ? "Membuka Google..." : (label ?? "Lanjut dengan Google")}</span>
+      </Button>
+      {hint && (
+        // Not a sales pitch — a true statement about what the other path costs.
+        // Google hands the address over already confirmed, so that route skips
+        // the mail entirely. Saying it plainly is the honest way to make the
+        // easier path look easier.
+        <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+          {hint}
+        </p>
       )}
-      <span>{loading ? "Membuka Google..." : (label ?? "Lanjut dengan Google")}</span>
-    </Button>
+    </div>
   );
 }

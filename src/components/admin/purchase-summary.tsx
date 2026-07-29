@@ -17,7 +17,11 @@ import {
   YAxis,
 } from "recharts";
 import type { PurchaseRequest } from "@/types";
-import { formatIDR } from "@/lib/payments";
+import {
+  effectiveBasePrice,
+  formatIDR,
+  type PurchasablePackageId,
+} from "@/lib/payments";
 import { loginMethodLabel } from "@/lib/auth/login-method";
 
 const PACKAGE_LABELS: Record<string, string> = {
@@ -86,16 +90,44 @@ export function PurchaseSummary({
   const stats = useMemo(() => {
     const total = purchases.length;
     const approved = purchases.filter((p) => p.status === "approved");
+
+    // Money RECEIVED, which is `uniqueAmount` — the discounted price plus the
+    // digits that make a transfer identifiable. Never the package's list
+    // price: with referral credits and the newcomer's discount in play, list
+    // price is what something costs, not what anybody paid.
     const revenue = approved.reduce(
       (sum, p) => sum + (typeof p.meta?.uniqueAmount === "number" ? p.meta.uniqueAmount : 0),
       0
     );
+
+    // Orders old enough to predate the nominal being recorded. They contribute
+    // nothing to the total above, so the total is an understatement and has to
+    // say so — a silent zero reads as "we know, and it was nothing".
+    const unpriced = approved.filter(
+      (p) => typeof p.meta?.uniqueAmount !== "number"
+    ).length;
+
+    // What the discounts cost. Worth its own line: it is the only number that
+    // says whether the referral programme is paying for itself, and it is
+    // invisible in both the list price and the amount received.
+    const discounted = approved.reduce((sum, p) => {
+      const paid = p.meta?.basePrice;
+      if (typeof paid !== "number") return sum;
+      const list = effectiveBasePrice(
+        p.package as PurchasablePackageId,
+        p.meta?.classCode ?? ""
+      );
+      return sum + Math.max(0, list - paid);
+    }, 0);
+
     return {
       total,
       approvedCount: approved.length,
       pendingCount: purchases.filter((p) => p.status === "pending").length,
       rejectedCount: purchases.filter((p) => p.status === "rejected").length,
       revenue,
+      unpriced,
+      discounted,
       byStatus: tally(purchases.map((p) => p.status)),
       byPackage: tally(purchases.map((p) => p.package)),
       byClass: tally(purchases.map((p) => p.meta?.classCode)),
@@ -194,10 +226,33 @@ export function PurchaseSummary({
             <Stat label="Ditolak" value={String(stats.rejectedCount)} accent="text-red-600" tint="bg-red-500/5 border-red-500/20" />
           </div>
 
-          <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-3">
-            <Wallet className="h-4 w-4 text-primary" />
-            <span className="text-xs text-muted-foreground">Pendapatan (approved)</span>
-            <span className="ml-auto text-base font-bold text-foreground">{formatIDR(stats.revenue)}</span>
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-3">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-primary" />
+              <span className="text-xs text-muted-foreground">Uang masuk (approved)</span>
+              <span className="ml-auto text-base font-bold text-foreground">{formatIDR(stats.revenue)}</span>
+            </div>
+            {(stats.discounted > 0 || stats.unpriced > 0) && (
+              <div className="mt-2 space-y-1 border-t border-primary/15 pt-2 text-[11px] text-muted-foreground">
+                {stats.discounted > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span>Potongan yang diberikan</span>
+                    <span className="ml-auto font-semibold">
+                      {formatIDR(stats.discounted)}
+                    </span>
+                  </div>
+                )}
+                {stats.unpriced > 0 && (
+                  // Named, not hidden. These rows count as zero in the figure
+                  // above, so without this line the total quietly understates
+                  // itself and nothing on screen explains why.
+                  <p>
+                    {stats.unpriced} pesanan lama tidak menyimpan nominal, jadi belum
+                    ikut terhitung di angka atas.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Pies */}

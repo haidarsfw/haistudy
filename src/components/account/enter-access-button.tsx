@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, ArrowRight, Laptop, Loader2, Smartphone, Tablet } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Laptop,
+  Loader2,
+  MonitorSmartphone,
+  Smartphone,
+  Tablet,
+} from "lucide-react";
 
 import { looksLikePrivateTab } from "@/lib/incognito";
 import { toast } from "@/components/ui/toast";
@@ -47,9 +56,12 @@ function relative(iso: string | null): string {
 export function EnterAccessButton({
   licenseKey,
   label = "Masuk",
+  autoEnter = false,
 }: {
   licenseKey: string;
   label?: string;
+  /** Sign-in already tried to open this and was told the browser is new. */
+  autoEnter?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
@@ -59,6 +71,16 @@ export function EnterAccessButton({
     if (!confirm) return;
     void looksLikePrivateTab().then(setPrivateTab);
   }, [confirm]);
+
+  // Sign-in bounced here because this browser is not recognised. Bring the
+  // confirmation up by itself rather than making them find the button that
+  // triggers the question they were already asked.
+  useEffect(() => {
+    if (!autoEnter) return;
+    void enter(false);
+    // Once, on arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoEnter]);
 
   const enter = async (confirmDevice = false) => {
     if (busy) return;
@@ -136,33 +158,59 @@ export function EnterAccessButton({
         type="button"
         onClick={() => enter(false)}
         disabled={busy}
-        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+        className="brand-gradient-bg group inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
       >
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         {label}
-        {!busy && <ArrowRight className="h-4 w-4" />}
+        {!busy && (
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+        )}
       </button>
 
       {confirm && (
-        <div
+        <motion.div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+          aria-labelledby="device-confirm-title"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
           onClick={() => !busy && setConfirm(null)}
         >
-          <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="font-display text-base font-bold text-foreground">
-              Perangkat baru
-            </h2>
+            {/* An icon and a centred heading, so the dialog reads as a decision
+                rather than as a paragraph that happens to float. */}
+            <div className="flex flex-col items-center px-6 pt-6 text-center">
+              <span
+                className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                  confirm.full
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-primary/10 text-primary"
+                }`}
+              >
+                <MonitorSmartphone className="h-5 w-5" />
+              </span>
+              <h2
+                id="device-confirm-title"
+                className="mt-3 font-display text-lg font-bold tracking-tight text-foreground"
+              >
+                {confirm.full ? "Jatah perangkat penuh" : "Perangkat baru"}
+              </h2>
+            </div>
 
+            <div className="px-6 pb-6 pt-2">
             {confirm.full ? (
               <>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Jatah perangkatmu sudah penuh
-                  {confirm.max !== null && ` (${confirm.used} dari ${confirm.max})`}.
+                <p className="text-center text-sm leading-relaxed text-muted-foreground">
+                  {confirm.max !== null &&
+                    `${confirm.used} dari ${confirm.max} perangkat terpakai. `}
                   Keluarkan salah satu dulu untuk masuk dari sini.
                 </p>
                 <ul className="mt-4 flex flex-col gap-2">
@@ -198,12 +246,12 @@ export function EnterAccessButton({
                 </ul>
               </>
             ) : (
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <p className="text-center text-sm leading-relaxed text-muted-foreground">
                 Melanjutkan akan memakai 1 jatah perangkat
                 {confirm.max !== null && (
                   <>
                     {" "}
-                    dari {confirm.max}. Sisa setelah ini:{" "}
+                    dari {confirm.max}. Sisa setelah ini{" "}
                     <span className="font-semibold text-foreground">
                       {Math.max(0, confirm.max - confirm.used - 1)}
                     </span>
@@ -224,13 +272,15 @@ export function EnterAccessButton({
               </div>
             )}
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            {/* Stacked, full width, primary on top. Two pills side by side at
+                different widths is what made this look improvised. */}
+            <div className="mt-5 flex flex-col gap-2">
               {!confirm.full && (
                 <button
                   type="button"
                   onClick={() => enter(true)}
                   disabled={busy}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  className="brand-gradient-bg inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
                 >
                   {busy && <Loader2 className="h-4 w-4 animate-spin" />}
                   Ya, ini perangkat saya
@@ -240,13 +290,14 @@ export function EnterAccessButton({
                 type="button"
                 onClick={() => setConfirm(null)}
                 disabled={busy}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
               >
                 {confirm.full ? "Tutup" : "Batal"}
               </button>
             </div>
-          </div>
-        </div>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </>
   );

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { durationFast } from "@/lib/motion";
+import { directionalPanel, NAV } from "@/lib/motion";
 import { QuickLicense } from "./quick-license";
 import { LicenseTable } from "./license-table";
 import { Statistics } from "./statistics";
@@ -14,6 +14,7 @@ import { PurchaseQueue } from "./purchase-queue";
 import { DangerZone } from "./danger-zone";
 import { FeedbackList } from "./feedback-list";
 import { AdminSupportChat } from "./admin-support-chat";
+import { ReferralCodes } from "./referral-codes";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { useAdminPurchaseCount } from "@/hooks/use-admin-purchase-count";
 import {
@@ -25,6 +26,7 @@ import {
   ShoppingCart,
   MessageSquarePlus,
   Headphones,
+  Gift,
 } from "lucide-react";
 
 const TABS = [
@@ -36,6 +38,7 @@ const TABS = [
   { label: "Purchase", icon: ShoppingCart, value: 5 },
   { label: "Feedback", icon: MessageSquarePlus, value: 6 },
   { label: "Support", icon: Headphones, value: 7 },
+  { label: "Referral", icon: Gift, value: 8 },
 ] as const;
 
 interface AdminTabsProps {
@@ -45,6 +48,23 @@ interface AdminTabsProps {
 
 export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
   const [feedbackCount, setFeedbackCount] = useState(0);
+  // Which way the panel should travel.
+  //
+  // Derived during render by comparing against the previous value, not in an
+  // effect: the direction has to be known in the SAME render that swaps the
+  // panel, and an effect runs after the animation has already started in the
+  // wrong direction.
+  const [prevTab, setPrevTab] = useState(activeTab);
+  const [dir, setDir] = useState(1);
+  if (prevTab !== activeTab) {
+    setDir(activeTab > prevTab ? 1 : -1);
+    setPrevTab(activeTab);
+  }
+  const reduced = useReducedMotion();
+  const tabMotion = useMemo(
+    () => directionalPanel(NAV.distance.tab, reduced),
+    [reduced]
+  );
   const { scopeQuery, adminScopeKey, isAllPeriods } = useAdminScope();
   const { pendingCount, refresh: refreshPurchaseCount } = useAdminPurchaseCount({ scopeQuery });
   const [purchaseReload, setPurchaseReload] = useState(0);
@@ -82,14 +102,19 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
         ))}
       </TabsList>
 
-      <AnimatePresence mode="wait">
+      {/* Sideways in the direction you actually moved. Jumping from Lisensi to
+          Feedback and back used to play the identical animation both ways,
+          which is what made a row of eight tabs feel like eight unrelated
+          screens instead of one strip you move along. */}
+      <AnimatePresence mode="wait" custom={dir}>
         <motion.div
           key={activeTab}
+          custom={dir}
           className="mt-4"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={durationFast}
+          variants={tabMotion}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
         >
           <TabsContent value={0}>
             <QuickLicense />
@@ -128,6 +153,9 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
           </TabsContent>
           <TabsContent value={7}>
             <AdminSupportChat />
+          </TabsContent>
+          <TabsContent value={8}>
+            <ReferralCodes />
           </TabsContent>
         </motion.div>
       </AnimatePresence>
