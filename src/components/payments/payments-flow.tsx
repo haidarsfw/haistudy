@@ -60,6 +60,11 @@ import {
   pickBestDiscount,
   type DiscountOption,
 } from "@/lib/referral/discount-pricing";
+import {
+  classDiscountOption,
+  isPromoClass,
+  type ClassPromo,
+} from "@/lib/referral/class-discount";
 import { directionalPanel, NAV } from "@/lib/motion";
 import { WelcomeStrip } from "@/components/account/welcome-strip";
 import {
@@ -243,6 +248,7 @@ export function PaymentsFlow({
   justRegistered = false,
   discount = null,
   otherDiscounts = [],
+  classPromos = [],
 }: {
   initialPkg?: string;
   /** They created the account on the way here — `?welcome=1`, read server-side. */
@@ -252,6 +258,13 @@ export function PaymentsFlow({
   discount?: DiscountOption | null;
   /** Kept, not burned. Shown so nobody thinks they lost one. */
   otherDiscounts?: DiscountOption[];
+  /**
+   * Live class promos, handed over whole. Eligibility depends on the class the
+   * buyer is about to type and the package they are about to pick — neither of
+   * which the server has seen when this page renders. The server recomputes the
+   * same thing on submit, so this can only ever be a preview.
+   */
+  classPromos?: ClassPromo[];
 }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
@@ -389,7 +402,10 @@ export function PaymentsFlow({
     form.classCode === "Other"
       ? normalizeClassCode(form.classOther)
       : form.classCode;
-  const isLE86 = resolvedClass === "LE86";
+  // Whether THIS class has a promo in THIS period. Was `resolvedClass === "LE86"`,
+  // a class code written into the program; the owner's rule is the class he is
+  // currently in, which moves every semester.
+  const promoClass = isPromoClass(classPromos, resolvedClass, form.scopeKey);
   const resolvedCampus =
     form.campus === OTHER_LOCATION ? form.campusOther.trim() : form.campus;
   // What the server stores: a stable id, not a label.
@@ -404,16 +420,19 @@ export function PaymentsFlow({
           return hit ? t(hit.labelKey) : form.source;
         })();
   const maxDevices = packageMaxDevices(form.pkg);
-  // 0 = not a share package. Story = 1 proof. Broadcast = LE86 → 2, others → 1.
+  // 0 = not a share package. Story = 1 proof. Broadcast = 2 for the class that
+  // is getting the promo this period, 1 for everyone else: the wider broadcast
+  // is what the discount is in exchange for.
   const requiredShareProofs = !isShare
     ? 0
     : form.shareMethod === "story"
       ? 1
-      : isLE86
+      : promoClass
         ? 2
         : 1;
-  // LE86 + Share = Rp20.000 (flat); else the package list price.
-  const listPrice = effectiveBasePrice(form.pkg, resolvedClass);
+  // The package's list price, the same for everyone. The class promo comes off
+  // as a discount below, where the buyer can see it.
+  const listPrice = effectiveBasePrice(form.pkg);
   // Re-priced against the package actually chosen: the server priced the
   // discount against the cheapest one so it had a number before a package
   // existed. Mirrors what the server will charge — this figure is never sent,
@@ -425,17 +444,29 @@ export function PaymentsFlow({
   // a different package. Deciding once, on the cheapest package, would quote a
   // discount the server then disagrees with — and the transfer amount is the
   // only thing the admin has to match the incoming payment against.
+  //
+  // The class promo joins the same comparison rather than sitting outside it.
+  // It used to BE the price (Share cost less for one class), which made it
+  // invisible and unable to lose to anything — a buyer with a bigger discount
+  // available still paid the promo price.
+  const allDiscounts = useMemo(() => {
+    const classOption = classDiscountOption(
+      classPromos,
+      { classCode: resolvedClass, scopeKey: form.scopeKey, pkg: form.pkg },
+      listPrice
+    );
+    return [discount, ...otherDiscounts, classOption].filter(
+      Boolean
+    ) as DiscountOption[];
+  }, [discount, otherDiscounts, classPromos, resolvedClass, form.scopeKey, form.pkg, listPrice]);
+
   const { best: appliedDiscount, amount: discountAmount } = useMemo(
-    () =>
-      pickBestDiscount(
-        [discount, ...otherDiscounts].filter(Boolean) as DiscountOption[],
-        listPrice
-      ),
-    [discount, otherDiscounts, listPrice]
+    () => pickBestDiscount(allDiscounts, listPrice),
+    [allDiscounts, listPrice]
   );
   const losingDiscounts = useMemo(
-    () => [discount, ...otherDiscounts].filter((d): d is DiscountOption => !!d && d !== appliedDiscount),
-    [discount, otherDiscounts, appliedDiscount]
+    () => allDiscounts.filter((d) => d !== appliedDiscount),
+    [allDiscounts, appliedDiscount]
   );
   const price = Math.max(0, listPrice - discountAmount);
   const uniqueAmount = useMemo(
@@ -475,13 +506,13 @@ export function PaymentsFlow({
   }, [form.angkatan, form.jurusan, scopePicked]);
 
   // Drop a stale second broadcast proof when it's no longer required
-  // (method switched to Story, package changed, or class is no longer LE86).
+  // (method switched to Story, package changed, or the class no longer has the promo).
   useEffect(() => {
-    const keepSecond = isShare && form.shareMethod === "broadcast" && isLE86;
+    const keepSecond = isShare && form.shareMethod === "broadcast" && promoClass;
     if (!keepSecond) {
       setForm((f) => (f.shareProof2 ? { ...f, shareProof2: null } : f));
     }
-  }, [isShare, form.shareMethod, isLE86]);
+  }, [isShare, form.shareMethod, promoClass]);
 
   const validateStep = (s: number): Record<string, string> => {
     const e: Record<string, string> = {};
@@ -518,7 +549,7 @@ export function PaymentsFlow({
       if (!form.paymentProof) e.paymentProof = t("payments.err_proof");
       if (isShare && !form.shareMethod) e.shareMethod = t("payments.err_share_method");
       if (isShare && form.shareMethod && !form.shareProof) e.shareProof = t("payments.err_proof");
-      if (isShare && form.shareMethod === "broadcast" && isLE86 && !form.shareProof2)
+      if (isShare && form.shareMethod === "broadcast" && promoClass && !form.shareProof2)
         e.shareProof2 = t("payments.err_proof_share2");
       if (!form.source) e.source = t("payments.err_required");
       else if (form.source === "other" && !form.sourceOther.trim())
@@ -627,7 +658,6 @@ export function PaymentsFlow({
       fd.set("basePrice", String(price));
       fd.set("source", resolvedSource);
       if (isShare) {
-        fd.set("leShareNote", "ack");
         fd.set("shareMethod", form.shareMethod);
       }
       if (form.paymentProof) fd.set("paymentProof", form.paymentProof);
@@ -1104,7 +1134,7 @@ export function PaymentsFlow({
                       checked={form.shareAck}
                       onChange={(v) => set("shareAck", v)}
                       error={errors.shareAck}
-                      isLE86={isLE86}
+                      isPromo={promoClass}
                     />
                   </Section>
                 )}
@@ -1237,7 +1267,7 @@ export function PaymentsFlow({
                               {
                                 value: "broadcast",
                                 label: t("payments.share_method_broadcast"),
-                                description: isLE86
+                                description: promoClass
                                   ? t("payments.share_method_broadcast_desc_le86")
                                   : t("payments.share_method_broadcast_desc"),
                               },
@@ -1273,7 +1303,7 @@ export function PaymentsFlow({
                           </FieldShell>
                         )}
 
-                        {form.shareMethod === "broadcast" && isLE86 && (
+                        {form.shareMethod === "broadcast" && promoClass && (
                           <FieldShell
                             label={t("payments.proof_broadcast2_label")}
                             description={t("payments.proof_broadcast2_desc")}
@@ -1322,7 +1352,7 @@ export function PaymentsFlow({
                     />
                   )}
                   {isShare && <ReviewRow label={t("payments.proof_share_label")} value={form.shareProof ? "✓" : "—"} />}
-                  {isShare && form.shareMethod === "broadcast" && isLE86 && (
+                  {isShare && form.shareMethod === "broadcast" && promoClass && (
                     <ReviewRow label={t("payments.proof_broadcast2_label")} value={form.shareProof2 ? "✓" : "—"} />
                   )}
                   <ReviewRow label={t("payments.source_label")} value={sourceLabel} />
@@ -1529,12 +1559,13 @@ function ShareTerms({
   checked,
   onChange,
   error,
-  isLE86,
+  isPromo,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   error?: string;
-  isLE86: boolean;
+  /** This class has a promo this period: it owes the wider broadcast. */
+  isPromo: boolean;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -1562,9 +1593,9 @@ function ShareTerms({
         {t("payments.share_read_terms")}
       </button>
 
-      {isLE86 && (
+      {isPromo && (
         <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-300">
-          {t("payments.share_le86_note")}
+          {t("payments.share_promo_note")}
         </p>
       )}
 

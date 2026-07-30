@@ -14,6 +14,11 @@ import {
   spendReferralBalance,
 } from "@/lib/referral/rewards";
 import { consumeFeedbackDiscount } from "@/lib/referral/feedback-discount";
+import { classDiscountFor } from "@/lib/referral/class-discount";
+import {
+  pickBestDiscount,
+  type DiscountOption,
+} from "@/lib/referral/discount-pricing";
 import { recordActivity } from "@/lib/admin/activity";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
@@ -95,7 +100,6 @@ export async function POST(request: Request) {
     const deviceLimitRaw = parseInt(getStr(fd, "deviceLimit", 3) || "2", 10);
     const paymentMethod = getStr(fd, "paymentMethod", 20);
     const source = getStr(fd, "source", 80);
-    const leShareNote = getStr(fd, "leShareNote", 20);
     const shareMethod = getStr(fd, "shareMethod", 12);
 
     // ── Validation ──
@@ -141,14 +145,8 @@ export async function POST(request: Request) {
     if (pkg === "share" && !shareProof) {
       return NextResponse.json({ error: "Bukti share wajib diunggah." }, { status: 400 });
     }
-    // Share method gates the proof count: Story = 1, Broadcast = LE86 → 2, else 1.
-    if (pkg === "share") {
-      if (shareMethod !== "broadcast" && shareMethod !== "story") {
-        return NextResponse.json({ error: "Metode berbagi tidak valid." }, { status: 400 });
-      }
-      if (shareMethod === "broadcast" && classCode === "LE86" && !shareProof2) {
-        return NextResponse.json({ error: "Bukti broadcast kedua wajib untuk kelas LE86." }, { status: 400 });
-      }
+    if (pkg === "share" && shareMethod !== "broadcast" && shareMethod !== "story") {
+      return NextResponse.json({ error: "Metode berbagi tidak valid." }, { status: 400 });
     }
     for (const f of [paymentProof, shareProof, shareProof2]) {
       if (!f) continue;
@@ -160,7 +158,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const listPrice = effectiveBasePrice(pkg, classCode);
+    const listPrice = effectiveBasePrice(pkg);
 
     // Dev mode (no Supabase): accept as a no-op success.
     if (!isSupabaseServerConfigured) {
@@ -175,12 +173,37 @@ export async function POST(request: Request) {
     //
     // Discounts do not stack: the largest is applied and the rest are left
     // untouched, still spendable next period.
-    const { best: discountUsed } = await availableDiscounts(
+    const accountDiscounts = await availableDiscounts(supabase, account, listPrice);
+    // The class promo is evaluated here rather than in availableDiscounts
+    // because it depends on the order, not the account: which class was typed,
+    // which period is being bought, which package. Same two pure functions the
+    // checkout screen ran, so the two cannot name a different winner.
+    const { option: classOption, promoClass } = await classDiscountFor(
       supabase,
-      account,
+      scope,
+      classCode,
+      pkg,
       listPrice
     );
-    const discount = discountUsed?.amount ?? 0;
+
+    // The second broadcast proof is the promo class's side of the bargain, so
+    // it is required exactly when the promo applies. It used to be pinned to
+    // the string "LE86", which would have kept demanding it of a class that no
+    // longer gets anything.
+    if (pkg === "share" && shareMethod === "broadcast" && promoClass && !shareProof2) {
+      return NextResponse.json(
+        { error: "Bukti broadcast kedua wajib untuk kelas yang dapat promo." },
+        { status: 400 }
+      );
+    }
+
+    const { best: discountUsed, amount: discountApplied } = pickBestDiscount(
+      [accountDiscounts.best, ...accountDiscounts.others, classOption].filter(
+        Boolean
+      ) as DiscountOption[],
+      listPrice
+    );
+    const discount = discountApplied;
     const basePrice = Math.max(0, listPrice - discount);
     const uniqueAmount = computeUniqueAmount(basePrice, whatsapp);
 
@@ -251,7 +274,6 @@ export async function POST(request: Request) {
       uniqueAmount,
       basePrice,
       source,
-      ...(leShareNote ? { leShareNote } : {}),
       // How the buyer signs in, carried for the admin's approval message. It
       // describes an account that already exists rather than one to be made.
       loginMethod: account.authProvider,

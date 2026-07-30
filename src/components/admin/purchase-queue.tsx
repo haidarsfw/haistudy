@@ -612,9 +612,6 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                               {purchase.approvedAt && (
                                 <DetailRow label="Disetujui" value={new Date(purchase.approvedAt).toLocaleString("id-ID")} />
                               )}
-                              {purchase.meta?.leShareNote && (
-                                <DetailRow label="Catatan LE86" value={purchase.meta.leShareNote} />
-                              )}
                             </div>
 
                             {(purchase.paymentProofUrl || purchase.shareProofUrl || purchase.shareProofUrl2) && (

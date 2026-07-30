@@ -1,7 +1,10 @@
 import { getSubjectKnowledge, getAllSubjectsOverview } from "./knowledge-base";
 import { loadSchedule } from "@/data";
 import { examLabel } from "@/lib/scope";
-import { PACKAGE_PRICES, LE86_SHARE_PRICE } from "@/lib/payments";
+// No class promo here on purpose. It changes every period (see class_discounts,
+// migration 071), and a promo named in a system prompt is a promo the AI will
+// still be quoting a semester after it ended.
+import { PACKAGE_PRICES } from "@/lib/payments";
 import type { ScopeTuple } from "@/types/scope";
 import type { Schedule } from "@/types";
 
@@ -73,7 +76,7 @@ SISTEM AKSES & LICENSE KEY:
 - Setiap license key bersifat personal dan berlaku 30 hari sejak aktivasi.
 - Maksimal 2 perangkat per license key (1 primary + 1 backup).
 - 3 paket tersedia:
-  1. **Paket Share** (Rp 25.000): Konten lengkap, syarat pilih salah satu: (1) share link web ini via broadcast WA ke teman, ATAU (2) repost story Instagram utama (first). Khusus kelas LE86: harga Rp 20.000 jika share ke 2 orang di luar kelas. Max 2 device.
+  1. **Paket Share** (Rp 25.000): Konten lengkap, syarat pilih salah satu: (1) share link web ini via broadcast WA ke teman, ATAU (2) repost story Instagram utama (first). Max 2 device.
   2. **Paket Normal** (Rp 30.000): Konten lengkap tanpa syarat share. Max 2 device.
   3. **Paket VIP** (Rp 35.000): Konten lengkap + AI prioritas (DeepSeek Reasoner) + VIP badge + support lebih cepat. Max 2 device.
 - Cara beli: Pilih paket → Bayar via transfer → Dapatkan license key → Masukkan di halaman login.
@@ -185,7 +188,7 @@ const idr = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
 // AI never quotes a stale price). Injected into every system prompt.
 const PRICING_INFO = `
 ─── HARGA & PAKET (TERKINI) ───
-- Share (${idr(PACKAGE_PRICES.share)}; khusus kelas LE86 ${idr(LE86_SHARE_PRICE)} bila share ke 2 orang di luar kelas): semua konten, syaratnya share haistudy (broadcast WA ke teman ATAU repost Story IG utama).
+- Share (${idr(PACKAGE_PRICES.share)}): semua konten, syaratnya share haistudy (broadcast WA ke teman ATAU repost Story IG utama).
 - Normal (${idr(PACKAGE_PRICES.normal)}): semua konten, tanpa syarat share.
 - VIP (${idr(PACKAGE_PRICES.vip)}): semua konten + AI prioritas (model reasoning yang lebih pintar) + badge VIP + support lebih cepat + bisa DM sesama VIP.
 - Diamond (${idr(PACKAGE_PRICES.diamond)}+): semua benefit VIP + status supporter + nama dengan efek glow eksklusif di chat. Untuk yang ingin mendukung haistudy lebih.

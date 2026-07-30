@@ -16,6 +16,7 @@ import { FeedbackList } from "./feedback-list";
 import { AdminSupportChat } from "./admin-support-chat";
 import { ReferralCodes } from "./referral-codes";
 import { FeedbackDiscounts } from "./feedback-discounts";
+import { ClassDiscounts } from "./class-discounts";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { useAdminPurchaseCount } from "@/hooks/use-admin-purchase-count";
 import {
@@ -161,6 +162,7 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
             <div className="space-y-4">
               <ReferralCodes />
               <FeedbackDiscounts />
+              <ClassDiscounts />
             </div>
           </TabsContent>
         </motion.div>

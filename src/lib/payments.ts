@@ -69,20 +69,24 @@ export const PACKAGE_PRICES: Record<PurchasablePackageId, number> = {
   diamond: 50000,
 };
 
-/** LE86 class gets a special Share price (class promo). */
-export const LE86_SHARE_PRICE = 20000;
-
 /**
- * Effective base price for a buyer. LE86 + Share = Rp20.000 (flat, regardless
- * of share method); everything else = the package list price. Used by BOTH the
- * client flow and the server route so the unique amount, review, success-screen
- * WhatsApp text, admin alert email, and the buyer invoice email all agree.
+ * The list price of a package. One number, the same for everyone.
+ *
+ * This used to special-case `LE86 + Share = Rp20.000`, a class promo pinned into
+ * the code. It was replaced on 2026-07-30 by `class_discounts`, a table of
+ * (class, exam period) → percent: the owner's real rule is only the class HE IS
+ * SITTING IN, only for THAT period, and a constant cannot express "only this
+ * semester" — it kept discounting last year's classmates and took a deploy to
+ * move.
+ *
+ * The class promo is now a DISCOUNT rather than a different price, which also
+ * makes it visible: the buyer sees the full price struck through and what came
+ * off, instead of a cheaper number with no explanation.
  */
 export function effectiveBasePrice(
   pkg: PurchasablePackageId,
-  classCode: string
+  _classCode?: string
 ): number {
-  if (pkg === "share" && classCode === "LE86") return LE86_SHARE_PRICE;
   return PACKAGE_PRICES[pkg];
 }
 

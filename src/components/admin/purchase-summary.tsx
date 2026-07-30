@@ -113,10 +113,10 @@ export function PurchaseSummary({
     const discounted = approved.reduce((sum, p) => {
       const paid = p.meta?.basePrice;
       if (typeof paid !== "number") return sum;
-      const list = effectiveBasePrice(
-        p.package as PurchasablePackageId,
-        p.meta?.classCode ?? ""
-      );
+      // List price, full stop. The class promo used to live inside this call as
+      // a cheaper LE86 price; it is a discount now, so it shows up in
+      // `list - paid` like every other discount instead of hiding in the list.
+      const list = effectiveBasePrice(p.package as PurchasablePackageId);
       return sum + Math.max(0, list - paid);
     }, 0);
 

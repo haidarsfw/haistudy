@@ -15,6 +15,7 @@
 // both change the moment the buyer picks a different package.
 
 export interface DiscountOption {
+  /** "referral_balance" | "referee" | "feedback" | "class" */
   id: string;
   label: string;
   detail: string;

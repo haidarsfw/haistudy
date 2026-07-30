@@ -486,7 +486,13 @@ export interface PurchaseMeta {
   basePrice?: number;
   source?: string;          // how they heard about haistudy
   sourceOther?: string;
-  leShareNote?: string;     // LE86 share acknowledgement
+  /**
+   * Dead field. Every Share order wrote the literal string "ack", so it never
+   * carried information — it is the residue of the old LE86 acknowledgement.
+   * Kept in the type only so historical rows still parse; nothing writes or
+   * reads it as of 2026-07-30.
+   */
+  leShareNote?: string;
   scopeKey?: string;        // e.g. "s2-uts-bm"
   // How the buyer chose to log in. 'google' = Google sign-in, 'password' =
   // email + password. 'key'/'email' only appear on purchases made before the
