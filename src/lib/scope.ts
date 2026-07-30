@@ -12,18 +12,92 @@ export const MAX_SEMESTER = 14;
 
 export const ALLOWED_EXAM_PERIODS: readonly ExamPeriod[] = ["uts", "uas"] as const;
 
-// Initially only Business Management active. Others surface as "Coming soon"
-// placeholders in the landing scope-picker (without specific names).
-export const ALLOWED_JURUSAN: readonly Jurusan[] = ["bm"] as const;
+// Jurusan codes the URL parser will accept at all. A code listed here still
+// needs SCOPE_REGISTRY entries before anything is reachable.
+export const ALLOWED_JURUSAN: readonly Jurusan[] = ["bm", "pba"] as const;
 
-// Re-exported in src/data/index.ts; mirrored here as the authoritative
-// constant. Mutating the manifest changes which scopes the app accepts.
-export const AVAILABLE_SCOPES: ScopeTuple[] = [
-  { semester: 1, examPeriod: "uts", jurusan: "bm" },
-  { semester: 1, examPeriod: "uas", jurusan: "bm" },
-  { semester: 2, examPeriod: "uts", jurusan: "bm" },
-  { semester: 2, examPeriod: "uas", jurusan: "bm" },
+/**
+ * How far along a period is, in the only three states that change behaviour.
+ *
+ *   open      Sold, reachable, listed everywhere. The normal state.
+ *   upcoming  Reachable and listed, but NOT sellable — content is still being
+ *             written. Shown as "Segera" wherever a period can be picked.
+ *   hidden    Exists in the loader map and in the database, reachable by
+ *             nobody. `parseScopePath` refuses it, so the URL 404s, the admin
+ *             switcher never lists it, and /api/payments rejects it. This is a
+ *             folder waiting for the day it is promoted, nothing more.
+ *
+ * Promotion is a one-word edit here. Nothing else needs to change: the folders,
+ * the loaders and the feature-flag rows are already in place.
+ */
+export type ScopeStage = "open" | "upcoming" | "hidden";
+
+export interface ScopeEntry extends ScopeTuple {
+  stage: ScopeStage;
+}
+
+/**
+ * Every period that exists in code, in the order they were opened.
+ *
+ * The single place a period is declared. `AVAILABLE_SCOPES` (what is
+ * reachable), `PURCHASABLE_SCOPES` (what is sellable) and `LATEST_SCOPE` (where
+ * an admin lands) are all derived from it, so they cannot drift apart.
+ */
+export const SCOPE_REGISTRY: readonly ScopeEntry[] = [
+  // BINUS — Business Management. Written, sold, in use.
+  { semester: 1, examPeriod: "uts", jurusan: "bm", stage: "open" },
+  { semester: 1, examPeriod: "uas", jurusan: "bm", stage: "open" },
+  { semester: 2, examPeriod: "uts", jurusan: "bm", stage: "open" },
+  { semester: 2, examPeriod: "uas", jurusan: "bm", stage: "open" },
+  // BINUS — Business Management, semester 3. Empty; UAS not shown yet.
+  { semester: 3, examPeriod: "uts", jurusan: "bm", stage: "upcoming" },
+  { semester: 3, examPeriod: "uas", jurusan: "bm", stage: "hidden" },
+  // UNJ — Pendidikan Bahasa Arab. Semester 1 is for the '26 intake, semester 3
+  // for '25; semesters 2 and 4 follow only if the course is continued.
+  { semester: 1, examPeriod: "uts", jurusan: "pba", stage: "upcoming" },
+  { semester: 1, examPeriod: "uas", jurusan: "pba", stage: "hidden" },
+  { semester: 3, examPeriod: "uts", jurusan: "pba", stage: "upcoming" },
+  { semester: 3, examPeriod: "uas", jurusan: "pba", stage: "hidden" },
 ];
+
+/**
+ * Periods that exist as far as the app is concerned: routable, loadable,
+ * listable. Re-exported by src/data/index.ts so there is one list, not two.
+ *
+ * Excludes `hidden` on purpose — a hidden period must be unreachable, and this
+ * is the list the URL parser and the admin switcher both read.
+ */
+export const AVAILABLE_SCOPES: ScopeTuple[] = SCOPE_REGISTRY.filter(
+  (s) => s.stage !== "hidden"
+).map(({ semester, examPeriod, jurusan }) => ({ semester, examPeriod, jurusan }));
+
+/**
+ * Periods a buyer can actually pay for.
+ *
+ * Selling a period with no material in it is the one expensive mistake here:
+ * the money arrives, the buyer opens an empty app, and there is no way to give
+ * them what they paid for. Waiting costs nothing.
+ */
+export const PURCHASABLE_SCOPES: ScopeTuple[] = SCOPE_REGISTRY.filter(
+  (s) => s.stage === "open"
+).map(({ semester, examPeriod, jurusan }) => ({ semester, examPeriod, jurusan }));
+
+/** The stage of a period, or null if it was never declared. */
+export function scopeStage(s: ScopeTuple | null | undefined): ScopeStage | null {
+  if (!s) return null;
+  const hit = SCOPE_REGISTRY.find(
+    (e) =>
+      e.semester === s.semester &&
+      e.examPeriod === s.examPeriod &&
+      e.jurusan === s.jurusan
+  );
+  return hit?.stage ?? null;
+}
+
+/** Can this period be bought right now? Checked on the server, not just in the UI. */
+export function isPurchasableScope(s: ScopeTuple | null | undefined): boolean {
+  return scopeStage(s) === "open";
+}
 
 export function scopeKey(s: ScopeTuple): ScopeKey {
   return `s${s.semester}-${s.examPeriod}-${s.jurusan}`;
@@ -86,19 +160,21 @@ export function isAvailableScope(s: ScopeTuple): boolean {
 export const DEFAULT_SCOPE: ScopeTuple = { semester: 2, examPeriod: "uts", jurusan: "bm" };
 
 /**
- * The most recent scope in the manifest - last entry of AVAILABLE_SCOPES.
- * Admins land here on every fresh login so they default to the current active
- * exam period without needing to switch manually.
+ * The newest period actually on sale - last `open` entry of SCOPE_REGISTRY.
+ * Admins land here on every fresh login, and it is the default period in
+ * /payments, so it must never be an empty one: landing an admin (or a buyer's
+ * pre-filled order) on a period with no material in it looks like a broken app.
  *
- * Append-only - last entry defines LATEST_SCOPE used by /api/auth/validate.
- * Reordering AVAILABLE_SCOPES will silently flip the admin landing scope.
+ * Append-only. Reordering the `open` entries silently moves both.
  */
-export const LATEST_SCOPE: ScopeTuple = AVAILABLE_SCOPES[AVAILABLE_SCOPES.length - 1];
+export const LATEST_SCOPE: ScopeTuple =
+  PURCHASABLE_SCOPES[PURCHASABLE_SCOPES.length - 1];
 
 // ─── Human-readable labels ───
 
 const JURUSAN_LABELS: Record<string, string> = {
   bm: "Business Management",
+  pba: "Pendidikan Bahasa Arab",
 };
 
 const EXAM_LABELS: Record<string, string> = {

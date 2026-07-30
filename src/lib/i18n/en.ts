@@ -206,6 +206,8 @@ const en: Record<string, string> = {
 
   // Page: Subjects
   "subjects.title": "Subjects",
+  "subjects.empty_period":
+    "No subjects for this period yet. They land closer to the exam period.",
 
   // Voice
   "voice.screen_share": "Share Screen",
@@ -806,7 +808,8 @@ const en: Record<string, string> = {
   "payments.share_ack_desc": "You must share haistudy one of two ways: broadcast/forward it to friends, or post an Instagram Story from your main account (tag @haidarsfw). Upload the proof in the payment step.",
   "payments.share_le86_note": "LE86 class: special Share price Rp20,000. If you pick Broadcast, share with 2 different friends (2 proofs). If Instagram Story, 1 proof is enough.",
   "payments.scope_current": "Period",
-  "payments.scope_switch": "not from batch B29? click here",
+  "payments.scope_switch": "not your period? change it here",
+  "payments.scope_soon_hint": "This period is not on sale yet. The material is still being written.",
   "payments.amount_label": "Transfer Amount",
   "payments.amount_unique_hint": "{base} + the last 3 digits of your WhatsApp number ({digits}). Transfer EXACTLY this — do not round it. That unique amount is how the system recognises your payment and activates your account right away.",
   "payments.method_label": "Payment Method",

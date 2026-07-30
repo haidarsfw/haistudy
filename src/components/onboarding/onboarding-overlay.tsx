@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnboarding } from "@/hooks/use-onboarding";
+import { resolveStepTarget } from "@/lib/onboarding-steps";
 import { useProfile } from "@/hooks/use-profile";
 import { useTranslation } from "@/components/providers/language-provider";
 import { PostTutorialContact } from "./post-tutorial-contact";
@@ -24,12 +25,10 @@ export function OnboardingOverlay() {
   const [spotlight, setSpotlight] = useState<SpotlightRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Resolve the correct target selector based on mobile state
-  const resolvedTarget = (() => {
-    if (!step) return null;
-    if (isMobile && step.mobileTarget !== undefined) return step.mobileTarget;
-    return step.target;
-  })();
+  // Resolve the correct target selector based on mobile state. Shared with
+  // use-onboarding, which uses the same answer to skip steps whose element is
+  // absent — the two must never resolve a step differently.
+  const resolvedTarget = resolveStepTarget(step, isMobile);
 
   // Find target, scroll it into view, then measure. The page scroller is the
   // window on mobile and <main> on desktop; scrolling the target into the

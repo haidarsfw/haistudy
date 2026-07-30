@@ -4,7 +4,7 @@
 // Pure data + helpers only (no React / lucide) so the public API route
 // (/api/payments) and the client flow can both import it cheaply.
 
-import { AVAILABLE_SCOPES } from "@/lib/scope";
+import { AVAILABLE_SCOPES, PURCHASABLE_SCOPES } from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
 import type { PackageTier } from "@/lib/tier";
 
@@ -305,7 +305,22 @@ export function formatIDR(amount: number): string {
   return "Rp " + amount.toLocaleString("id-ID");
 }
 
-/** Scopes (exam periods) a buyer can purchase for. */
+/**
+ * Exam periods a buyer can actually pay for.
+ *
+ * Deliberately NOT every period the app knows about: a period still being
+ * written is reachable and listed, but selling it would take money for an empty
+ * app. The same list is enforced server-side in /api/payments.
+ */
 export function purchasableScopes(): ScopeTuple[] {
+  return PURCHASABLE_SCOPES;
+}
+
+/**
+ * Every period offered in the picker, sellable or not. The ones that are not
+ * sellable render disabled with a "Segera" hint — showing them is how a buyer
+ * learns their period is coming instead of assuming it will never exist.
+ */
+export function offeredScopes(): ScopeTuple[] {
   return AVAILABLE_SCOPES;
 }

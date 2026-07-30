@@ -125,8 +125,14 @@ export function GreetingCard() {
 
   // Scope-aware tips & fun facts - keyed by full scope-key (NOT examPeriod) so
   // each scope is isolated. Static per-scope so the tip is in first paint.
+  //
+  // A scope with no file of its own falls back by exam period rather than to a
+  // fixed one. Both files hold universal study advice, so a new period gets
+  // advice that at least matches the exam it is sitting in — and no scope needs
+  // thirty-odd lines of the same text copied into it just to exist.
   const greeting =
-    (scopeCtx ? GREETING_BY_SCOPE[scopeCtx.scopeKey] : undefined) ?? greetingS2Uts;
+    (scopeCtx ? GREETING_BY_SCOPE[scopeCtx.scopeKey] : undefined) ??
+    (scopeCtx?.scope.examPeriod === "uas" ? greetingS1Uas : greetingS1Uts);
   const rotationIndex = Math.floor(Date.now() / (6 * 3600 * 1000));
   const tipsArr = greeting.TIPS;
   const factsArr = greeting.FUN_FACTS;

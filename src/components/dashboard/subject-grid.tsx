@@ -8,10 +8,12 @@ import { staggerContainer, staggerItem } from "@/lib/motion";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useForumUnread } from "@/hooks/use-forum-unread";
 import { useOptionalScope } from "@/components/providers/scope-provider";
+import { useTranslation } from "@/components/providers/language-provider";
 import { loadCourses } from "@/data";
 import { DEFAULT_SCOPE } from "@/lib/scope";
 
 export function SubjectGrid() {
+  const { t } = useTranslation();
   const { notifications } = useNotifications();
   const forumUnread = useForumUnread(notifications);
   const scopeCtx = useOptionalScope();
@@ -30,9 +32,7 @@ export function SubjectGrid() {
   if (subjects.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-10 text-center">
-        <p className="text-sm text-muted-foreground">
-          Mata kuliah belum tersedia untuk periode ini. Akan diisi mendekati periode ujian.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("subjects.empty_period")}</p>
       </div>
     );
   }

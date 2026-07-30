@@ -210,6 +210,13 @@ export default function NotesPage() {
           <BookOpen className="h-4 w-4 text-primary" />
           {t("notes.per_subject")}
         </h2>
+        {/* A period with no subjects yet used to leave this heading standing
+            over an empty grid, which reads as a page that failed to load. */}
+        {subjectNoteCounts.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-8 text-center">
+            <p className="text-sm text-muted-foreground">{t("subjects.empty_period")}</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {subjectNoteCounts.map(({ subject, hasNotes }) => (
             <Link
@@ -233,6 +240,7 @@ export default function NotesPage() {
             </Link>
           ))}
         </div>
+        )}
       </motion.section>
     </motion.div>
   );

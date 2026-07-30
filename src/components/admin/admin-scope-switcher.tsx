@@ -6,14 +6,22 @@ import { ArrowRightLeft, ChevronDown, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
-import { AVAILABLE_SCOPES, scopeKey, scopePath, examLabel, jurusanLabel } from "@/lib/scope";
+import {
+  AVAILABLE_SCOPES,
+  scopeKey,
+  scopePath,
+  examLabel,
+  jurusanLabel,
+  isPurchasableScope,
+} from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
 import { sounds } from "@/lib/sounds";
-
-/** Compact label for dropdown items: "S2 · UTS · BM" */
-function scopeCompact(s: ScopeTuple): string {
-  return `S${s.semester} · ${examLabel(s)} · ${s.jurusan.toUpperCase()}`;
-}
+// The desktop dropdown and `scopeCompact` used to exist twice: once here and
+// once in scope-dropdown-content.tsx, byte for byte. One copy now.
+import {
+  ScopeDropdownContent,
+  scopeCompact,
+} from "@/components/admin/scope-dropdown-content";
 
 /**
  * Admin-only scope switcher - shows a dropdown of available scopes.
@@ -86,7 +94,7 @@ export function AdminScopeSwitcher({ collapsed }: { collapsed: boolean }) {
             <ScopeDropdownContent
               currentScopeKey={currentScopeKey}
               switching={switching}
-              onSwitch={handleSwitch}
+              onSwitch={(s) => s !== "all" && handleSwitch(s)}
             />
           </div>
         )}
@@ -111,56 +119,11 @@ export function AdminScopeSwitcher({ collapsed }: { collapsed: boolean }) {
           <ScopeDropdownContent
             currentScopeKey={currentScopeKey}
             switching={switching}
-            onSwitch={handleSwitch}
+            onSwitch={(s) => s !== "all" && handleSwitch(s)}
           />
         </div>
       )}
     </div>
-  );
-}
-
-/**
- * Shared dropdown content for both sidebar and mobile.
- * Uses short labels: "S2 · UTS", "S2 · UAS".
- */
-export function ScopeDropdownContent({
-  currentScopeKey,
-  switching,
-  onSwitch,
-}: {
-  currentScopeKey: string | null;
-  switching: boolean;
-  onSwitch: (s: ScopeTuple) => void;
-}) {
-  return (
-    <>
-      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Switch Scope
-      </div>
-      {AVAILABLE_SCOPES.map((s) => {
-        const key = scopeKey(s);
-        const isActive = key === currentScopeKey;
-        return (
-          <button
-            key={key}
-            disabled={switching}
-            onClick={() => onSwitch(s)}
-            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors ${
-              isActive
-                ? "bg-primary/10 text-primary font-semibold"
-                : "text-popover-foreground hover:bg-accent"
-            } ${switching ? "opacity-50 cursor-wait" : ""}`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                isActive ? "bg-primary" : "bg-muted-foreground/30"
-              }`}
-            />
-            <span>{scopeCompact(s)}</span>
-          </button>
-        );
-      })}
-    </>
   );
 }
 
@@ -282,11 +245,15 @@ export function MobileScopeSwitcher() {
                           }`}
                         />
                         <span className="truncate">{scopeCompact(s)}</span>
-                        {isActive && (
+                        {isActive ? (
                           <span className="ml-auto text-[10px] font-medium text-primary/70">
                             Aktif
                           </span>
-                        )}
+                        ) : !isPurchasableScope(s) ? (
+                          <span className="ml-auto text-[10px] font-medium text-muted-foreground">
+                            Segera
+                          </span>
+                        ) : null}
                       </button>
                     );
                   })}

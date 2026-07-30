@@ -7,6 +7,22 @@ export interface OnboardingStep {
   skipOnMobile?: boolean; // Skip this step on mobile
 }
 
+/**
+ * The selector this step will actually spotlight, given the viewport.
+ *
+ * Shared so the overlay (which measures the element) and the hook (which decides
+ * whether the step is worth showing at all) can never disagree about which
+ * element a step is about.
+ */
+export function resolveStepTarget(
+  step: OnboardingStep | undefined,
+  isMobile: boolean
+): string | null {
+  if (!step) return null;
+  if (isMobile && step.mobileTarget !== undefined) return step.mobileTarget;
+  return step.target;
+}
+
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "welcome",

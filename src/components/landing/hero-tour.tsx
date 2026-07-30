@@ -162,7 +162,10 @@ function DashboardSurface({ mobile }: { mobile?: boolean }) {
         </div>
         <div className="my-3 flex items-center gap-2">
           <span className="h-px flex-1 bg-border" />
-          <span className="text-[9px] text-muted-foreground/80">Semester 2 · UAS · Business Management</span>
+          {/* Same wording as the real dashboard (scopeFullLabel). The tour is a
+              picture OF the app, so a different format here reads as a different
+              product. */}
+          <span className="text-[9px] text-muted-foreground/80">Semester 2: UAS Business Management</span>
         </div>
         <div className={`grid gap-3 ${mobile ? "grid-cols-1" : "grid-cols-2"}`}>
           <div className="flex items-start gap-2">

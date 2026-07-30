@@ -77,15 +77,26 @@ export function RadioGroup({
     <div className={cn("grid gap-2", gridClass)} role="radiogroup" aria-label={name}>
       {options.map((o) => {
         const selected = value === o.value;
+        const disabled = !!o.disabled;
+        // A locked row states its reason inline instead of hiding it in a
+        // tooltip. Full-width rows have the space for it, and a reason you have
+        // to hover to find is a reason a phone never shows at all.
+        const sub = o.description ?? (disabled ? o.disabledHint : undefined);
         return (
           <button
             key={o.value}
             type="button"
             role="radio"
             aria-checked={selected}
-            onClick={() => onChange(o.value)}
+            aria-disabled={disabled}
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onChange(o.value);
+            }}
             className={cn(
               "flex items-start gap-2.5 text-left transition-colors",
+              disabled && "cursor-not-allowed opacity-50",
               plain
                 // No border, no fill, not even on hover: the dot carries the
                 // state on its own. Padding stays so the tap target is a row
@@ -95,7 +106,9 @@ export function RadioGroup({
                     "rounded-xl border px-3.5 py-2.5",
                     selected
                       ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                      : "border-border hover:border-primary/30 hover:bg-muted/40"
+                      : disabled
+                        ? "border-border"
+                        : "border-border hover:border-primary/30 hover:bg-muted/40"
                   )
             )}
           >
@@ -109,9 +122,9 @@ export function RadioGroup({
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-medium text-foreground">{o.label}</span>
-              {o.description && (
+              {sub && (
                 <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-                  {o.description}
+                  {sub}
                 </span>
               )}
             </span>

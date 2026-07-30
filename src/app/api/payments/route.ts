@@ -5,7 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { scopeColumns } from "@/lib/auth/scope-check";
-import { parseScopeKey, isAvailableScope, scopeKey, scopeFullLabel } from "@/lib/scope";
+import { parseScopeKey, isPurchasableScope, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { rateLimit } from "@/lib/support/server";
 import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, type PurchasablePackageId } from "@/lib/payments";
 import {
@@ -34,7 +34,7 @@ import { requireAccount } from "@/lib/auth/account-session";
 //
 // scope-exempt: they are buying access TO a scope, not acting inside one, so
 // there is no hs-scope cookie to require. Scope comes from the submitted value
-// and is validated against isAvailableScope() below (mirrors
+// and is validated against isPurchasableScope() below (mirrors
 // /api/webhooks/purchase). Every row written still carries scopeColumns(scope),
 // so nothing lands unscoped.
 //
@@ -121,8 +121,11 @@ export async function POST(request: Request) {
 
     const deviceLimit = Number.isFinite(deviceLimitRaw) ? Math.min(3, Math.max(1, deviceLimitRaw)) : 2;
 
+    // Purchasable, not merely known: a period that exists but has no material
+    // in it must not be sellable even to a hand-crafted request. The picker
+    // greys those out; this is the half that cannot be edited from a browser.
     const scope = parseScopeKey(scopeRaw);
-    if (!scope || !isAvailableScope(scope)) {
+    if (!scope || !isPurchasableScope(scope)) {
       return NextResponse.json({ error: "Periode tidak valid." }, { status: 400 });
     }
     const sk = scopeKey(scope);

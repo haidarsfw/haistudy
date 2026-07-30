@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ONBOARDING_STEPS } from "@/lib/onboarding-steps";
+import { ONBOARDING_STEPS, resolveStepTarget } from "@/lib/onboarding-steps";
 import { useSession } from "@/components/providers/session-provider";
 import { PWA_EVENTS, ONBOARDING_DONE_SESSION_KEY } from "@/lib/pwa-version";
 
@@ -83,7 +83,16 @@ export function useOnboarding() {
   const shouldSkip = useCallback(
     (stepIndex: number) => {
       const s = ONBOARDING_STEPS[stepIndex];
-      return isMobile && s?.skipOnMobile === true;
+      if (isMobile && s?.skipOnMobile === true) return true;
+      // A step whose element is not on the page explains nothing: the overlay
+      // would darken the screen and point its arrow at empty space. That happens
+      // for real — the "here are your subjects" card does not render in a period
+      // whose material has not been written yet. Skip it instead.
+      const target = resolveStepTarget(s, isMobile);
+      if (target && typeof document !== "undefined" && !document.querySelector(target)) {
+        return true;
+      }
+      return false;
     },
     [isMobile]
   );

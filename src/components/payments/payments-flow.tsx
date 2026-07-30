@@ -41,6 +41,7 @@ import {
   getPackage,
   packageMaxDevices,
   purchasableScopes,
+  offeredScopes,
   type PurchasablePackageId,
   type PaymentMethodId,
 } from "@/lib/payments";
@@ -54,7 +55,7 @@ import {
   defaultScopeForAngkatan,
   normalizeClassCode,
 } from "@/data/landing/campus";
-import { LATEST_SCOPE, scopeKey, scopeFullLabel } from "@/lib/scope";
+import { LATEST_SCOPE, scopeKey, scopeFullLabel, isPurchasableScope } from "@/lib/scope";
 import { directionalPanel, NAV } from "@/lib/motion";
 import { WelcomeStrip } from "@/components/account/welcome-strip";
 import {
@@ -1050,10 +1051,21 @@ export function PaymentsFlow({
                                 set("scopeKey", v);
                               }}
                               variant="plain"
-                              options={purchasableScopes().map((s) => ({
-                                value: scopeKey(s),
-                                label: scopeFullLabel(s),
-                              }))}
+                              // Periods still being written are listed but
+                              // locked. Hiding them would read as "my semester
+                              // is not coming"; offering them for sale would
+                              // take money for an empty app.
+                              options={offeredScopes().map((s) => {
+                                const open = isPurchasableScope(s);
+                                return {
+                                  value: scopeKey(s),
+                                  label: scopeFullLabel(s),
+                                  disabled: !open,
+                                  disabledHint: open
+                                    ? undefined
+                                    : t("payments.scope_soon_hint"),
+                                };
+                              })}
                             />
                           </div>
                         )}

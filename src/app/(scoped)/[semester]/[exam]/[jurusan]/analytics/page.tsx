@@ -347,6 +347,13 @@ export default function AnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {/* Without this, a period whose subjects are not written yet shows a
+                titled card with nothing inside it. */}
+            {subjectStats.length === 0 && (
+              <p className="py-2 text-sm text-muted-foreground">
+                {t("subjects.empty_period")}
+              </p>
+            )}
             {subjectStats.map(
               ({
                 subject,

@@ -5,7 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { scopeColumns } from "@/lib/auth/scope-check";
-import { DEFAULT_SCOPE, isAvailableScope, parseScopeKey, scopeFullLabel } from "@/lib/scope";
+import { DEFAULT_SCOPE, isPurchasableScope, parseScopeKey, scopeFullLabel } from "@/lib/scope";
 import { PACKAGE_PRICES, PACKAGE_LABELS, computeUniqueAmount, type PurchasablePackageId } from "@/lib/payments";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 
@@ -35,8 +35,10 @@ export async function POST(request: Request) {
     // Resolve scope from body; fallback to DEFAULT_SCOPE for legacy callers.
     let scope = DEFAULT_SCOPE;
     if (typeof body.scope === "string" && body.scope.length > 0) {
+      // Purchasable, not merely known — same rule as /api/payments. A period
+      // with no material in it is not something a form submission can buy.
       const parsed = parseScopeKey(body.scope);
-      if (!parsed || !isAvailableScope(parsed)) {
+      if (!parsed || !isPurchasableScope(parsed)) {
         return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
       }
       scope = parsed;

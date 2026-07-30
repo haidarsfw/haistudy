@@ -436,6 +436,10 @@ const id: Record<string, string> = {
 
   // Page: Subjects
   "subjects.title": "Mata Kuliah",
+  // One sentence, used everywhere a period has no subjects yet: the grid, the
+  // notes page and the statistics page. Said once so the three cannot disagree.
+  "subjects.empty_period":
+    "Mata kuliah belum tersedia untuk periode ini. Akan diisi mendekati periode ujian.",
 
   // Voice
   "voice.screen_share": "Bagikan Layar",
@@ -1052,7 +1056,8 @@ const id: Record<string, string> = {
   "payments.share_ack_desc": "Kamu wajib berbagi haistudy lewat salah satu cara: broadcast/teruskan ke teman, atau posting Instagram Story dari akun utama (tag @haidarsfw). Buktinya diunggah di langkah pembayaran.",
   "payments.share_le86_note": "Kelas LE86: harga khusus paket Share Rp20.000. Kalau pilih Broadcast, wajib ke 2 teman berbeda (2 bukti). Kalau Instagram Story, cukup 1 bukti.",
   "payments.scope_current": "Periode",
-  "payments.scope_switch": "bukan angkatan B29? klik di sini",
+  "payments.scope_switch": "bukan periode kamu? ganti di sini",
+  "payments.scope_soon_hint": "Periode ini belum bisa dibeli. Materinya masih disusun.",
   "payments.amount_label": "Nominal Transfer",
   "payments.amount_unique_hint": "{base} + 3 digit terakhir nomor WA kamu ({digits}). Transfer PERSIS segini, jangan dibulatkan. Angka unik ini yang bikin sistem langsung kenal pembayaranmu dan aktifin akunmu secepatnya.",
   "payments.method_label": "Metode Pembayaran",

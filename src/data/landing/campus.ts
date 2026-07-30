@@ -1,4 +1,4 @@
-import { AVAILABLE_SCOPES, LATEST_SCOPE } from "@/lib/scope";
+import { PURCHASABLE_SCOPES, LATEST_SCOPE } from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
 
 /**
@@ -15,7 +15,11 @@ export interface Campus {
   label: string;
   /** UNJ is shown but cannot be chosen: there is no material for it yet. */
   available: boolean;
-  /** Scope codes sold under this campus. Empty means nothing to sell. */
+  /**
+   * Jurusan codes taught at this campus. Being listed here does NOT make one
+   * sellable — the picker still intersects this with the purchasable periods, so
+   * a major whose material is unwritten simply never appears as an option.
+   */
   jurusan: string[];
   locations: readonly string[];
 }
@@ -31,17 +35,22 @@ export const CAMPUS_OPTIONS: readonly Campus[] = [
     locations: ["Bekasi", "Kemanggisan", "Alam Sutera"],
   },
   {
+    // Written down in full so opening UNJ is one word — `available: true` — and
+    // not a research task. Still closed: Pendidikan Bahasa Arab has no material
+    // yet, so a buyer who picked UNJ today would reach a dead end with no period
+    // they could pay for.
     id: "UNJ",
     label: "UNJ",
     available: false,
-    jurusan: [],
+    jurusan: ["pba"],
     locations: ["A", "B", "D", "E"],
   },
 ];
 
-/** Full names for the scope's two-letter jurusan codes. */
+/** Full names for the scope's short jurusan codes. */
 export const JURUSAN_LABELS: Record<string, string> = {
   bm: "Business Management",
+  pba: "Pendidikan Bahasa Arab",
 };
 
 /**
@@ -87,11 +96,13 @@ export const ANGKATAN_CHOICES = ["B29", "B30", "2025", "2026"] as const;
  *
  * A default, never a lock — the picker underneath still opens. Newer intakes
  * sit at lower semesters: B30 and '26 are in their first year, B29 and '25 are
- * a year ahead.
+ * a year ahead. The same pairing holds for UNJ once PBA opens: '26 lands on
+ * semester 1, '25 on semester 3.
  *
- * Semester 3 does not exist in AVAILABLE_SCOPES yet, so the older pair falls
- * through to the newest thing on sale. Guessing a period nobody can buy would
- * be worse than not guessing at all.
+ * Semester 3 exists now but is not on sale, so the older pair still falls
+ * through to the newest thing that IS. Pre-filling a period nobody can buy
+ * would be worse than not guessing at all — the buyer would have to notice the
+ * mistake themselves.
  */
 const ANGKATAN_SCOPE: Record<string, { semester: number; examPeriod: "uts" | "uas" }> = {
   B30: { semester: 1, examPeriod: "uts" },
@@ -106,7 +117,10 @@ export function defaultScopeForAngkatan(
 ): ScopeTuple {
   const want = ANGKATAN_SCOPE[String(angkatan ?? "").toUpperCase()];
   if (!want) return LATEST_SCOPE;
-  const match = AVAILABLE_SCOPES.find(
+  // Purchasable only. Matching against every known period would happily
+  // pre-select semester 3, which is listed but not on sale, and the order would
+  // be rejected at the last step for a reason the buyer never chose.
+  const match = PURCHASABLE_SCOPES.find(
     (s) =>
       s.semester === want.semester &&
       s.examPeriod === want.examPeriod &&

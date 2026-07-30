@@ -1,7 +1,7 @@
 "use client";
 
 import type { ScopeTuple } from "@/types/scope";
-import { AVAILABLE_SCOPES, examLabel, scopeKey } from "@/lib/scope";
+import { AVAILABLE_SCOPES, examLabel, scopeKey, isPurchasableScope } from "@/lib/scope";
 
 /** Compact label for dropdown items: "S2 · UTS · BM" */
 export function scopeCompact(s: ScopeTuple): string {
@@ -49,6 +49,13 @@ export function ScopeDropdownContent({
               }`}
             />
             <span>{scopeCompact(s)}</span>
+            {/* Openable, but nobody can buy it yet. Saying so here is what stops
+                an empty period being mistaken for a broken one. */}
+            {!isPurchasableScope(s) && (
+              <span className="ml-auto rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground ring-1 ring-inset ring-border">
+                Segera
+              </span>
+            )}
           </button>
         );
       })}

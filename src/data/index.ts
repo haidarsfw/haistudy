@@ -6,23 +6,21 @@
 // defeat code-splitting heuristics).
 //
 // AVAILABLE_SCOPES drives:
-//   - Landing scope-picker tile rendering
 //   - (scoped) layout 404 check
-//   - Admin "All periods" enumeration
-// When you add a scope, also seed scope_feature_flags rows.
+//   - Admin scope switcher + "All periods" enumeration
+//   - The period picker in /payments (sellable ones are PURCHASABLE_SCOPES)
+// A period is declared once, in SCOPE_REGISTRY in @/lib/scope. Adding one also
+// means: a folder here, a loaders entry below, and scope_feature_flags rows.
 
 import type { ScopeTuple, ScopeKey } from "@/types/scope";
 import type { Subject, SubjectContent, Schedule, ForumThread, SubjectKilat } from "@/types";
 import type { ExamData } from "@/types/exam";
-import { scopeKey } from "@/lib/scope";
+import { scopeKey, AVAILABLE_SCOPES } from "@/lib/scope";
 
-// Authoritative - must match AVAILABLE_SCOPES in src/lib/scope.ts.
-export const AVAILABLE_SCOPES: ScopeTuple[] = [
-  { semester: 1, examPeriod: "uts", jurusan: "bm" },
-  { semester: 1, examPeriod: "uas", jurusan: "bm" },
-  { semester: 2, examPeriod: "uts", jurusan: "bm" },
-  { semester: 2, examPeriod: "uas", jurusan: "bm" },
-];
+// Re-exported, never re-declared. This used to be a second hand-kept copy of
+// the same list with a comment asking the next person to remember; two lists
+// that must agree eventually disagree.
+export { AVAILABLE_SCOPES };
 
 interface ScopeLoaders {
   courses: () => Promise<Subject[]>;
@@ -66,6 +64,53 @@ const loaders: Record<ScopeKey, ScopeLoaders> = {
     pinnedThreads: () => import("./s2/uas/bm/pinned-threads").then((m) => m.PINNED_THREADS),
     kilat:     () => import("./s2/uas/bm/kilat").then((m) => m.kilat),
     examData:  () => import("./s2/uas/bm/exam-data").then((m) => m.examData),
+  },
+  // ─── Registered but empty ───
+  // Every file exists so a period is one content edit away from being real, and
+  // so nothing here can throw "No content loader registered". `kilat` and
+  // `examData` stay unregistered on purpose: the loaders return {} when absent,
+  // which is exactly what an empty period should answer.
+  "s3-uts-bm": {
+    courses:   () => import("./s3/uts/bm/courses").then((m) => m.courses),
+    content:   () => import("./s3/uts/bm/content").then((m) => m.content),
+    schedule:  () => import("./s3/uts/bm/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
+    rangkuman: () => import("./s3/uts/bm/rangkuman").then((m) => m.rangkumanContent),
+    pinnedThreads: () => import("./s3/uts/bm/pinned-threads").then((m) => m.PINNED_THREADS),
+  },
+  "s3-uas-bm": {
+    courses:   () => import("./s3/uas/bm/courses").then((m) => m.courses),
+    content:   () => import("./s3/uas/bm/content").then((m) => m.content),
+    schedule:  () => import("./s3/uas/bm/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
+    rangkuman: () => import("./s3/uas/bm/rangkuman").then((m) => m.rangkumanContent),
+    pinnedThreads: () => import("./s3/uas/bm/pinned-threads").then((m) => m.PINNED_THREADS),
+  },
+  "s1-uts-pba": {
+    courses:   () => import("./s1/uts/pba/courses").then((m) => m.courses),
+    content:   () => import("./s1/uts/pba/content").then((m) => m.content),
+    schedule:  () => import("./s1/uts/pba/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
+    rangkuman: () => import("./s1/uts/pba/rangkuman").then((m) => m.rangkumanContent),
+    pinnedThreads: () => import("./s1/uts/pba/pinned-threads").then((m) => m.PINNED_THREADS),
+  },
+  "s1-uas-pba": {
+    courses:   () => import("./s1/uas/pba/courses").then((m) => m.courses),
+    content:   () => import("./s1/uas/pba/content").then((m) => m.content),
+    schedule:  () => import("./s1/uas/pba/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
+    rangkuman: () => import("./s1/uas/pba/rangkuman").then((m) => m.rangkumanContent),
+    pinnedThreads: () => import("./s1/uas/pba/pinned-threads").then((m) => m.PINNED_THREADS),
+  },
+  "s3-uts-pba": {
+    courses:   () => import("./s3/uts/pba/courses").then((m) => m.courses),
+    content:   () => import("./s3/uts/pba/content").then((m) => m.content),
+    schedule:  () => import("./s3/uts/pba/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
+    rangkuman: () => import("./s3/uts/pba/rangkuman").then((m) => m.rangkumanContent),
+    pinnedThreads: () => import("./s3/uts/pba/pinned-threads").then((m) => m.PINNED_THREADS),
+  },
+  "s3-uas-pba": {
+    courses:   () => import("./s3/uas/pba/courses").then((m) => m.courses),
+    content:   () => import("./s3/uas/pba/content").then((m) => m.content),
+    schedule:  () => import("./s3/uas/pba/schedule").then((m) => ({ weekly: m.weeklySchedule, exam: m.examSchedule })),
+    rangkuman: () => import("./s3/uas/pba/rangkuman").then((m) => m.rangkumanContent),
+    pinnedThreads: () => import("./s3/uas/pba/pinned-threads").then((m) => m.PINNED_THREADS),
   },
 };
 

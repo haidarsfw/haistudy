@@ -28,7 +28,7 @@ export interface ApprovalWaArgs {
   pkgLabel: string;
   /** Pre-formatted amount, e.g. "Rp 50.000". */
   amount: string;
-  /** Scope label, e.g. "Semester 2 · UAS · Business Management". */
+  /** Scope label from scopeFullLabel(), e.g. "Semester 2: UAS Business Management". */
   periode: string;
 }
 
