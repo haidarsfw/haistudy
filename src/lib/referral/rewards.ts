@@ -28,6 +28,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { listAccountReferralCodes } from "@/lib/referral/codes";
+import { feedbackDiscountFor } from "@/lib/referral/feedback-discount";
+import {
+  pickBestDiscount,
+  type DiscountOption,
+} from "@/lib/referral/discount-pricing";
 
 /** Off the referee's first purchase. */
 export const REFEREE_DISCOUNT = 5000;
@@ -169,18 +174,21 @@ export async function consumeRefereeDiscount(
 
 // ─── Choosing between discounts ───
 
-export interface DiscountOption {
-  id: "referral_balance" | "referee" | "feedback";
-  label: string;
-  detail: string;
-  amount: number;
-}
+// The shape and the pricing rule live in ./discount-pricing, which has no
+// server imports, so the checkout screen runs exactly the same arithmetic.
+export type { DiscountOption };
 
 export interface DiscountChoice {
   /** The one being applied — always the largest. */
   best: DiscountOption | null;
   /** The others, kept for next time rather than burned. */
   others: DiscountOption[];
+}
+
+/** The bits of an account this needs. Both required — see the note below. */
+export interface DiscountSubject {
+  id: string;
+  emailLower: string;
 }
 
 /**
@@ -190,15 +198,22 @@ export interface DiscountChoice {
  * applied automatically and the rest are LEFT ALONE, not consumed, so a
  * voucher that lost to a bigger balance is still there next period. Burning
  * the loser is the classic way this pattern is got wrong.
+ *
+ * Takes the account rather than just its id because the evaluation discount is
+ * matched on e-mail. Passing the whole object keeps it impossible to call this
+ * without the address — an optional parameter would mean one forgetful call
+ * site silently charging someone full price, with nothing to notice.
  */
 export async function availableDiscounts(
   supabase: SupabaseClient,
-  accountId: string,
+  account: DiscountSubject,
   listPrice: number
 ): Promise<DiscountChoice> {
-  const [balance, referee] = await Promise.all([
+  const accountId = account.id;
+  const [balance, referee, feedback] = await Promise.all([
     referralBalance(supabase, accountId),
     refereeDiscountFor(supabase, accountId),
+    feedbackDiscountFor(supabase, account.emailLower, listPrice),
   ]);
 
   const options: DiscountOption[] = [];
@@ -221,9 +236,21 @@ export async function availableDiscounts(
       amount: Math.min(referee, listPrice),
     });
   }
+  if (feedback.amount > 0) {
+    options.push({
+      id: "feedback",
+      label: "Terima kasih sudah isi evaluasi",
+      detail: `Potongan ${feedback.percent}%, sekali pakai`,
+      // Already capped at the price inside feedbackDiscountFor.
+      amount: feedback.amount,
+      percent: feedback.percent,
+    });
+  }
 
-  options.sort((a, b) => b.amount - a.amount);
-  return { best: options[0] ?? null, others: options.slice(1) };
+  // Picked with the same function the checkout screen uses, against the same
+  // price, so the two can never name a different winner.
+  const { best } = pickBestDiscount(options, listPrice);
+  return { best, others: options.filter((o) => o !== best) };
 }
 
 // ─── Paying the referrer ───

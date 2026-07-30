@@ -13,6 +13,7 @@ import {
   consumeRefereeDiscount,
   spendReferralBalance,
 } from "@/lib/referral/rewards";
+import { consumeFeedbackDiscount } from "@/lib/referral/feedback-discount";
 import { recordActivity } from "@/lib/admin/activity";
 import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 import { sendPurchaseInvoiceEmail } from "@/lib/notifications/email";
@@ -176,7 +177,7 @@ export async function POST(request: Request) {
     // untouched, still spendable next period.
     const { best: discountUsed } = await availableDiscounts(
       supabase,
-      account.id,
+      account,
       listPrice
     );
     const discount = discountUsed?.amount ?? 0;
@@ -295,6 +296,13 @@ export async function POST(request: Request) {
         account.id,
         discount,
         inserted.id as string
+      );
+    } else if (discountUsed?.id === "feedback") {
+      await consumeFeedbackDiscount(
+        supabase,
+        account.emailLower,
+        account.id,
+        discount
       );
     }
 

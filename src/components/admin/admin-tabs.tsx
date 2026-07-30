@@ -15,6 +15,7 @@ import { DangerZone } from "./danger-zone";
 import { FeedbackList } from "./feedback-list";
 import { AdminSupportChat } from "./admin-support-chat";
 import { ReferralCodes } from "./referral-codes";
+import { FeedbackDiscounts } from "./feedback-discounts";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { useAdminPurchaseCount } from "@/hooks/use-admin-purchase-count";
 import {
@@ -155,7 +156,12 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
             <AdminSupportChat />
           </TabsContent>
           <TabsContent value={8}>
-            <ReferralCodes />
+            {/* Both answer "how does this person end up paying less". Kept on
+                one tab so two discounts cannot quietly contradict each other. */}
+            <div className="space-y-4">
+              <ReferralCodes />
+              <FeedbackDiscounts />
+            </div>
           </TabsContent>
         </motion.div>
       </AnimatePresence>

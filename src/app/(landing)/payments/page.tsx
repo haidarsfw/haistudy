@@ -48,7 +48,7 @@ export default async function PaymentsPage({
   // package is chosen; the flow re-caps it against whatever they pick.
   const supabase = isSupabaseServerConfigured ? createServerClient()! : null;
   const discounts = supabase
-    ? await availableDiscounts(supabase, account.id, MIN_PACKAGE_PRICE)
+    ? await availableDiscounts(supabase, account, MIN_PACKAGE_PRICE)
     : { best: null, others: [] };
 
   return (

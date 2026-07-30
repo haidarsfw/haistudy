@@ -56,6 +56,10 @@ import {
   normalizeClassCode,
 } from "@/data/landing/campus";
 import { LATEST_SCOPE, scopeKey, scopeFullLabel, isPurchasableScope } from "@/lib/scope";
+import {
+  pickBestDiscount,
+  type DiscountOption,
+} from "@/lib/referral/discount-pricing";
 import { directionalPanel, NAV } from "@/lib/motion";
 import { WelcomeStrip } from "@/components/account/welcome-strip";
 import {
@@ -92,12 +96,10 @@ import { cn } from "@/lib/utils";
  * not asked for; anything still blank is asked once here and saved back, so
  * the next purchase asks nothing at all.
  */
-export interface DiscountOption {
-  id: string;
-  label: string;
-  detail: string;
-  amount: number;
-}
+// Re-exported, not re-declared. A second hand-written copy of this shape is how
+// the `percent` field would have gone missing on the screen that has to honour
+// it. The pricing rule lives beside it, in ./discount-pricing.
+export type { DiscountOption };
 
 export interface BuyerAccount {
   email: string;
@@ -412,11 +414,29 @@ export function PaymentsFlow({
         : 1;
   // LE86 + Share = Rp20.000 (flat); else the package list price.
   const listPrice = effectiveBasePrice(form.pkg, resolvedClass);
-  // Re-capped against the package actually chosen: the server priced the
+  // Re-priced against the package actually chosen: the server priced the
   // discount against the cheapest one so it had a number before a package
   // existed. Mirrors what the server will charge — this figure is never sent,
   // so the price cannot be talked down from the browser.
-  const discountAmount = discount ? Math.min(discount.amount, listPrice) : 0;
+  //
+  // The WINNER is re-picked too, not just the amount. A percentage discount is
+  // worth Rp3.750 on Share and Rp7.500 on Diamond, so someone holding Rp5.000
+  // of referral balance as well changes which one is larger simply by choosing
+  // a different package. Deciding once, on the cheapest package, would quote a
+  // discount the server then disagrees with — and the transfer amount is the
+  // only thing the admin has to match the incoming payment against.
+  const { best: appliedDiscount, amount: discountAmount } = useMemo(
+    () =>
+      pickBestDiscount(
+        [discount, ...otherDiscounts].filter(Boolean) as DiscountOption[],
+        listPrice
+      ),
+    [discount, otherDiscounts, listPrice]
+  );
+  const losingDiscounts = useMemo(
+    () => [discount, ...otherDiscounts].filter((d): d is DiscountOption => !!d && d !== appliedDiscount),
+    [discount, otherDiscounts, appliedDiscount]
+  );
   const price = Math.max(0, listPrice - discountAmount);
   const uniqueAmount = useMemo(
     () => computeUniqueAmount(price, form.whatsapp),
@@ -1123,24 +1143,24 @@ export function PaymentsFlow({
                       <Copy className="h-4 w-4 text-muted-foreground" />
                     </button>
 
-                    {discountAmount > 0 && discount && (
+                    {discountAmount > 0 && appliedDiscount && (
                       <div className="mt-2 rounded-lg border border-primary/25 bg-primary/10 px-3 py-2 text-left">
                         <p className="flex items-center justify-between gap-2 text-xs font-semibold text-primary">
-                          <span>{discount.label}</span>
+                          <span>{appliedDiscount.label}</span>
                           <span>−{formatIDR(discountAmount)}</span>
                         </p>
                         <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                          {discount.detail}
+                          {appliedDiscount.detail}
                         </p>
                       </div>
                     )}
 
                     {/* Losing a comparison is not the same as being spent. Say
                         so, or the one that lost looks like it vanished. */}
-                    {otherDiscounts.length > 0 && (
+                    {losingDiscounts.length > 0 && (
                       <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
                         Potongan lain yang kamu punya (
-                        {otherDiscounts.map((d) => d.label).join(", ")}) tidak hangus dan
+                        {losingDiscounts.map((d) => d.label).join(", ")}) tidak hangus dan
                         tetap bisa dipakai lain kali. Potongan tidak bisa digabung, jadi
                         yang terbesar yang dipakai.
                       </p>
