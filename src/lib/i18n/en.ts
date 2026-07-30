@@ -811,7 +811,7 @@ const en: Record<string, string> = {
   "payments.scope_switch": "not your period? change it here",
   "payments.scope_soon_hint": "This period is not on sale yet. The material is still being written.",
   "payments.amount_label": "Transfer Amount",
-  "payments.amount_unique_hint": "{base} + the last 3 digits of your WhatsApp number ({digits}). Transfer EXACTLY this — do not round it. That unique amount is how the system recognises your payment and activates your account right away.",
+  "payments.amount_unique_hint": "{base} + the last 3 digits of your WhatsApp number ({digits}). Transfer EXACTLY this, do not round it. The unique amount is what lets the admin match your transfer to your order straight away, so the check is quick.",
   "payments.method_label": "Payment Method",
   "payments.method_bca": "BCA Transfer",
   "payments.method_ewallet": "E-Wallet",

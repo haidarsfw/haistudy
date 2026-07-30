@@ -43,11 +43,19 @@ export default function ClearCookiesPage() {
         } catch {
           /* ignore */
         }
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ licenseKey, deviceId }),
-        });
+        // BOTH logouts. /api/auth/logout ends the app session and cleans up the
+        // presence row, but it does not touch hs-account — so the page promised
+        // "keluar dari akun" and left the visitor signed into their account,
+        // which is exactly the stale state this hatch exists to clear. The
+        // account one is safe to call with no account session; it just clears.
+        await Promise.allSettled([
+          fetch("/api/auth/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ licenseKey, deviceId }),
+          }),
+          fetch("/api/account/logout", { method: "POST" }),
+        ]);
       } catch {
         /* keep wiping the client even if the network call fails */
       }
@@ -125,7 +133,7 @@ export default function ClearCookiesPage() {
             Membersihkan data kamu...
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Keluar dari akun, hapus cookie & cache. Sebentar ya.
+            Keluar dari akun, hapus cookie &amp; cache. Sebentar ya.
           </p>
         </div>
         <span

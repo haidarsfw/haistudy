@@ -48,12 +48,16 @@ export default async function UnavailablePage({
           >
             {primary.label}
           </Link>
-          <Link
+          {/* Plain anchor: for a preview visitor this points at /preview, a Route
+              Handler that redirects and sets cookies, which next/link cannot
+              follow — the button would flash and stay put. Same for "/", so one
+              element covers both. */}
+          <a
             href={secondary.href}
             className="inline-flex h-10 items-center justify-center rounded-full border border-border px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
             {secondary.label}
-          </Link>
+          </a>
         </div>
       </div>
     </div>

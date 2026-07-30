@@ -269,13 +269,33 @@ function formatDate(iso: string): string {
   });
 }
 
-/** Exactly what goes, said plainly before anything is typed. */
+/**
+ * Exactly what goes, said plainly before anything is typed.
+ *
+ * Two of these used to be wrong, and they were the two that matter most.
+ *
+ * "Semua sesi di semua perangkat langsung berakhir" said LANGSUNG when nothing
+ * happens for seven days, and it was not true even then: the purge deletes the
+ * `accounts` row, while the licence that actually opens the app carries
+ * `on delete set null` and survives it.
+ *
+ * "Akses yang masih berjalan, termasuk yang sudah kamu bayar" said the paid
+ * access goes. It does not. Telling someone their purchase would be destroyed
+ * is the one error here that could talk a person out of a decision they were
+ * entitled to make.
+ */
 const WHAT_GOES = [
   "Cara masuk kamu: email dan password ini tidak bisa dipakai lagi",
   "Data diri: nama, panggilan, WhatsApp, kampus, angkatan, dan foto profil",
-  "Semua sesi di semua perangkat langsung berakhir",
   "Kode referral kamu, beserta hitungan orang yang sudah memakainya",
-  "Akses yang masih berjalan, termasuk yang sudah kamu bayar",
+  "Halaman Akun: mengatur perangkat, melihat riwayat pembelian, semuanya ikut hilang",
+];
+
+/** What survives, said just as plainly. Silence here reads as "it all goes". */
+const WHAT_STAYS = [
+  "Akses yang sudah kamu bayar tetap jalan sampai masa berlakunya habis",
+  "Pesan yang pernah kamu kirim ke orang lain tetap ada di percakapan mereka",
+  "Catatan pembelian disimpan untuk pembukuan",
 ];
 
 /**
@@ -384,9 +404,27 @@ export function AccountDeletion({
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* Said as its own list, not as a footnote. What survives is the half
+          people actually worry about, and burying it under the deletions is how
+          someone concludes their paid access dies with the account. */}
+      <div className="mt-3 rounded-xl border border-border bg-muted/20 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Yang tetap ada
+        </p>
+        <ul className="mt-2 flex flex-col gap-1.5">
+          {WHAT_STAYS.map((line) => (
+            <li key={line} className="flex gap-2 text-xs leading-relaxed text-foreground">
+              <span aria-hidden="true" className="text-muted-foreground">
+                &bull;
+              </span>
+              {line}
+            </li>
+          ))}
+        </ul>
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          Catatan pembelian tetap kami simpan sebagai bukti transaksi, tapi sudah tidak
-          terhubung ke kamu lagi.
+          Semuanya sudah tidak terhubung ke kamu lagi.
         </p>
       </div>
 

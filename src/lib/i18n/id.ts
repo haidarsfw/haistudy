@@ -1059,7 +1059,7 @@ const id: Record<string, string> = {
   "payments.scope_switch": "bukan periode kamu? ganti di sini",
   "payments.scope_soon_hint": "Periode ini belum bisa dibeli. Materinya masih disusun.",
   "payments.amount_label": "Nominal Transfer",
-  "payments.amount_unique_hint": "{base} + 3 digit terakhir nomor WA kamu ({digits}). Transfer PERSIS segini, jangan dibulatkan. Angka unik ini yang bikin sistem langsung kenal pembayaranmu dan aktifin akunmu secepatnya.",
+  "payments.amount_unique_hint": "{base} + 3 digit terakhir nomor WA kamu ({digits}). Transfer PERSIS segini, jangan dibulatkan. Angka unik ini yang bikin admin bisa langsung mencocokkan transferanmu dengan pesananmu, jadi pengecekannya cepat.",
   "payments.method_label": "Metode Pembayaran",
   "payments.method_bca": "Transfer BCA",
   "payments.method_ewallet": "E-Wallet",
