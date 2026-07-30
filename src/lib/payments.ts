@@ -273,7 +273,11 @@ export type PaymentMethodId = (typeof PAYMENT_METHODS)[number]["id"];
 export const WA_ADMIN = "6287839256171";
 
 // ─── Form option sets ───
-export const CAMPUSES = ["Bekasi", "Kemanggisan", "Alam Sutera", "Other"] as const;
+// CAMPUSES lived here and ended in the literal "Other", a token no other screen
+// understood. Campus locations belong to CAMPUS_OPTIONS in
+// src/data/landing/campus.ts, whose escape hatch is OTHER_LOCATION ("Lainnya"),
+// and checkout has always used that one. Two lists meant the account page could
+// store a value checkout could not read back.
 
 export const DEVICE_OPTIONS = [1, 2, 3] as const;
 

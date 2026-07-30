@@ -42,7 +42,7 @@ export default async function RegisterPage({
     // smaller copy of the column next to it.
     <AuthShell
       title="Satu akun, semua periode ujian."
-      subtitle="Beli sekali, aksesnya menempel di akun. Ujian berikutnya tinggal masuk."
+      subtitle="Akses yang kamu beli menempel di akun. Ujian berikutnya tinggal beli dari akun yang sama, tanpa daftar ulang."
       intent={
         pkg ? (
           <PurchaseIntent

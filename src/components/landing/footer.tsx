@@ -33,13 +33,15 @@ export function Footer() {
               Platform belajar buat mahasiswa. Materi, latihan soal, AI, dan
               komunitas dalam satu tempat.
             </p>
-            <Link
+            {/* Plain anchor: /preview is a Route Handler that redirects and sets
+                cookies, which next/link cannot follow. Same as /enter. */}
+            <a
               href="/preview"
               className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
             >
               Preview Gratis
               <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            </a>
             <div className="mt-5 flex items-center gap-2">
               <a
                 href={IG}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Camera, Check, Loader2, Trash2, User } from "lucide-react";
@@ -20,7 +20,7 @@ import {
 import { NICKNAME_MAX } from "@/lib/account/nickname";
 import { Dropdown } from "@/components/payments/fields/dropdown";
 import { ANGKATAN_OPTIONS } from "@/data/landing/angkatan";
-import { CAMPUSES } from "@/lib/payments";
+import { CAMPUS_OPTIONS, OTHER_LOCATION } from "@/data/landing/campus";
 import { compressImageToBudget, heicToJpeg, isHeic } from "@/lib/image";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { refreshAccount } from "@/hooks/use-account";
@@ -72,10 +72,15 @@ export function AccountProfileForm({
   // never been to checkout has neither, and locking them out of a field they
   // have not filled in yet would be nonsense.
   const locked = Boolean(savedNickname) && changesLeft <= 0;
+  // "Jatah ganti habis" was shown to people who had never renamed anything.
+  // A Google signup arrives with a nickname taken from their Google name and a
+  // budget of zero — the budget is only granted by a purchase — so the very
+  // first visit accused them of spending an allowance they never had. The
+  // wording now states the rule instead of a tally, which is true either way.
   const nicknameHint = !savedNickname
     ? "Maksimal dua kata, huruf saja"
     : locked
-      ? "Jatah ganti habis, hubungi admin"
+      ? "Bisa diganti sekali tiap beli akses. Butuh ganti sekarang? Hubungi admin"
       : `Bisa diganti ${changesLeft}x lagi`;
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -83,6 +88,29 @@ export function AccountProfileForm({
   const [uploading, setUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // The same locations checkout offers, plus its "Lainnya" escape. This used to
+  // read a separate CAMPUSES list ending in the literal "Other", a token no
+  // other screen understands: picking it stored "Other", and the next checkout
+  // matched it against neither the location list nor "Lainnya" and silently
+  // blanked the field. A campus already on the account is always kept as an
+  // option too, so an existing value can never render as an empty dropdown.
+  const campusOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [];
+    for (const c of CAMPUS_OPTIONS) {
+      for (const loc of c.locations) {
+        if (seen.has(loc)) continue;
+        seen.add(loc);
+        opts.push({ value: loc, label: loc });
+      }
+    }
+    if (values.campus && !seen.has(values.campus) && values.campus !== OTHER_LOCATION) {
+      opts.push({ value: values.campus, label: values.campus });
+    }
+    opts.push({ value: OTHER_LOCATION, label: OTHER_LOCATION });
+    return opts;
+  }, [values.campus]);
 
   const set = <K extends keyof ProfileValues>(k: K, v: ProfileValues[K]) => {
     setValues((s) => ({ ...s, [k]: v }));
@@ -106,9 +134,13 @@ export function AccountProfileForm({
       const res = await fetch("/api/account/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        // The nickname is sent ONLY when it actually changed. Sending it
+        // always meant an account whose nickname is still blank — every
+        // e-mail+password signup — failed the whole save on a field the person
+        // had not touched, taking their name and WhatsApp down with it.
         body: JSON.stringify({
           fullName: values.fullName,
-          nickname: values.nickname,
+          ...(values.nickname !== savedNickname ? { nickname: values.nickname } : {}),
           whatsapp: values.whatsapp,
           campus: values.campus,
           angkatan: values.angkatan,
@@ -355,7 +387,7 @@ export function AccountProfileForm({
             id="acc-campus"
             value={values.campus}
             onChange={(v) => set("campus", v)}
-            options={CAMPUSES.map((c) => ({ value: c, label: c }))}
+            options={campusOptions}
             placeholder="Pilih kampus"
           />
         </div>

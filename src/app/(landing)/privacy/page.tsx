@@ -68,13 +68,25 @@ export default function PrivacyPage() {
           <li>Jawaban, skor, dan riwayat Latihan Soal kamu.</li>
           <li>Catatan pribadi dan bookmark kamu.</li>
           <li>
-            Data pembelian: nama, nomor WhatsApp, email, kampus, kelas, jumlah
-            perangkat, dari mana kamu tahu haistudy, dan bukti transfer yang
-            kamu unggah.
+            Data pembelian: nama, nama panggilan, nomor WhatsApp, email dari akun
+            kamu, kampus, kelas, angkatan, jumlah perangkat, metode pembayaran,
+            dari mana kamu tahu haistudy, dan bukti transfer yang kamu unggah.
+            Khusus paket Share, juga tangkapan layar bukti kamu membagikan
+            haistudy lewat WhatsApp atau Instagram Story.
           </li>
           <li>
             Notifikasi dan sedikit catatan aktivitas masuk, untuk keamanan dan
             perbaikan bug.
+          </li>
+          <li>
+            Alamat IP serta jenis perangkat dan browser kamu, dicatat saat login,
+            pembelian, dan percobaan yang dibatasi (misalnya salah password
+            berkali-kali). Ini dipakai untuk keamanan dan mencegah
+            penyalahgunaan, bukan untuk mengikuti kamu.
+          </li>
+          <li>
+            Data referral: kode referral kamu, siapa mengajak siapa, dan saldo
+            referral yang terkumpul beserta masa berlakunya.
           </li>
         </LegalList>
       </LegalSection>
@@ -124,9 +136,14 @@ export default function PrivacyPage() {
 
       <LegalSection n={4} title="Cookie dan Penyimpanan di Browser">
         <p>
-          Kami memakai satu cookie login dan penyimpanan di browser untuk
-          mengingat sesi masuk serta preferensi kamu (seperti tema dan
-          progress).
+          Kami memakai beberapa cookie milik haistudy sendiri, semuanya untuk
+          menjalankan aplikasi: satu untuk akun kamu, satu untuk akses periode
+          ujian yang kamu beli, satu untuk periode yang sedang kamu buka, dan
+          satu kode acak untuk menandai browser ini supaya batas jumlah
+          perangkat bisa dihitung. Saat masuk lewat Google ada beberapa cookie
+          berumur pendek yang dipakai selama proses itu saja. Penyimpanan di
+          browser dipakai untuk mengingat preferensi kamu seperti tema dan
+          progress.
         </p>
         <p>
           Kami juga memakai layanan pengukuran yang menghitung kunjungan dan
@@ -139,19 +156,32 @@ export default function PrivacyPage() {
 
       <LegalSection n={5} title="Berapa Lama Data Disimpan">
         <p>
-          Data kamu tetap kami simpan meski masa akses kamu sudah habis, supaya
-          kalau suatu saat kamu beli akses lagi, progress, catatan, dan riwayat
-          belajar kamu masih utuh. Tidak ada penghapusan otomatis.
+          Data belajar kamu tetap kami simpan meski masa akses kamu sudah habis,
+          supaya kalau suatu saat kamu beli akses lagi, progress, catatan, dan
+          riwayat belajar kamu masih utuh. Yang terhapus otomatis cuma dua:
+          catatan status online yang lebih tua dari 7 hari, dan akun yang sudah
+          lewat masa tunggu 7 hari setelah kamu minta dihapus.
         </p>
         <p>
-          Kalau kamu tidak mau begitu, kamu bisa minta data kamu dihapus kapan
-          saja lewat kontak di bawah.
+          Kalau kamu tidak mau begitu, kamu bisa menghapus akun kamu sendiri
+          kapan saja lewat Akun, bagian Kelola akun.
         </p>
       </LegalSection>
 
       <LegalSection n={6} title="Hak Kamu">
         <LegalList>
-          <li>Meminta penghapusan akun dan data dengan menghubungi admin.</li>
+          <li>
+            Menghapus akun kamu sendiri lewat Akun, bagian Kelola akun. Kamu
+            konfirmasi dulu lewat email, lalu akun dihapus setelah masa tunggu 7
+            hari, dan selama masa itu kamu masih bisa membatalkannya. Kalau ada
+            kendala, kamu tetap bisa menghubungi admin.
+          </li>
+          <li>
+            Setelah akun dihapus, identitasmu ikut terhapus. Beberapa catatan
+            tetap tersimpan tanpa lagi terhubung ke akun kamu, yaitu pesan yang
+            sudah kamu kirim ke orang lain, catatan pembelian, dan data belajar
+            yang menempel pada akses yang pernah kamu beli.
+          </li>
           <li>Meminta salinan data kamu yang tersimpan.</li>
           <li>Meminta perbaikan data kamu yang keliru.</li>
           <li>
@@ -159,7 +189,7 @@ export default function PrivacyPage() {
             browser kamu.
           </li>
           <li>
-            Menyembunyikan status online lewat menu Pengaturan, bagian Privasi.
+            Menyembunyikan status online lewat menu Pengaturan, bagian Belajar.
           </li>
         </LegalList>
       </LegalSection>

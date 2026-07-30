@@ -18,7 +18,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: "Gimana cara dapat aksesnya?",
-    a: "Pilih paket di halaman ini, isi formulir pembelian, bayar lewat transfer bank, e-wallet, atau QRIS, terus unggah bukti bayarnya. Admin bakal verifikasi dan langsung ngaktifin akun kamu. Habis itu tinggal login.",
+    a: "Daftar akun dulu, pakai Google atau email plus password. Habis itu pilih paket, isi formulir pembelian, bayar lewat transfer bank, e-wallet, atau QRIS, terus unggah bukti bayarnya. Admin ngecek pembayarannya manual, dan begitu disetujui aksesmu langsung nyala di akun yang sama.",
   },
   {
     q: "Bedanya tiap paket apa?",
@@ -26,7 +26,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: "Berapa lama aksesnya berlaku?",
-    a: "Akses berlaku buat satu periode ujian yang kamu beli, misalnya UAS Semester 2. Jadi kamu bisa pakai semua materinya sampai ujian itu kelar.",
+    a: "Akses aktif 30 hari, dihitungnya dari pertama kali kamu login, bukan dari kapan kamu bayar. Durasi itu disiapin buat nutup satu periode ujian yang kamu beli, misalnya UAS Semester 2.",
   },
   {
     q: "Bisa dipakai di berapa device?",

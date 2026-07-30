@@ -218,6 +218,6 @@ export function wrongMethodMessage(
 ): string | null {
   if (account.authProvider === attempted) return null;
   return account.authProvider === "google"
-    ? "Akun ini dibuat dengan Google. Masuk pakai tombol Lanjut dengan Google."
+    ? "Akun ini dibuat dengan Google. Masuk pakai tombol Google di halaman ini."
     : "Akun ini dibuat dengan email dan password. Masuk pakai email dan passwordmu.";
 }

@@ -117,8 +117,11 @@ export async function POST(request: Request) {
     const key = await generateUniqueKey(supabase);
 
     const maxDevices =
+      // Same package-aware clamp as /api/payments. A flat 3 here would let an
+      // older pending order, or one placed before that fix, still be approved
+      // as a bigger licence than the package sells.
       typeof meta.deviceLimit === "number"
-        ? Math.min(3, Math.max(1, meta.deviceLimit))
+        ? Math.min(packageMaxDevices(pkg), Math.max(1, meta.deviceLimit))
         : packageMaxDevices(pkg);
 
     const { error: keyErr } = await supabase.from("license_keys").insert({

@@ -7,7 +7,7 @@ import {
 import { scopeColumns } from "@/lib/auth/scope-check";
 import { parseScopeKey, isPurchasableScope, scopeKey, scopeFullLabel } from "@/lib/scope";
 import { rateLimit } from "@/lib/support/server";
-import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, type PurchasablePackageId } from "@/lib/payments";
+import { PACKAGE_LABELS, computeUniqueAmount, effectiveBasePrice, formatIDR, packageMaxDevices, type PurchasablePackageId } from "@/lib/payments";
 import {
   availableDiscounts,
   consumeRefereeDiscount,
@@ -124,7 +124,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Lengkapi semua field wajib." }, { status: 400 });
     }
 
-    const deviceLimit = Number.isFinite(deviceLimitRaw) ? Math.min(3, Math.max(1, deviceLimitRaw)) : 2;
+    // Clamped against the PACKAGE, not a flat 3. The picker already greys out
+    // the tiles a package cannot have, but the flat clamp meant a hand-made
+    // request could buy Share and be granted a VIP-sized 3-device licence —
+    // which is one of the things VIP is actually sold for, and which /terms and
+    // the pricing cards both state as a rule.
+    const deviceLimit = Number.isFinite(deviceLimitRaw)
+      ? Math.min(packageMaxDevices(pkg), Math.max(1, deviceLimitRaw))
+      : Math.min(2, packageMaxDevices(pkg));
 
     // Purchasable, not merely known: a period that exists but has no material
     // in it must not be sellable even to a hand-crafted request. The picker

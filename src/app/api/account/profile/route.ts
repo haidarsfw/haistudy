@@ -67,12 +67,18 @@ export async function PATCH(req: Request) {
       const problem = validateNickname(v);
       if (problem) {
         errors.nickname = problem;
+      } else if (!account.nickname) {
+        // Setting it for the FIRST time costs nothing. The budget exists to
+        // stop a name everyone recognises being swapped around; there is no
+        // recognisable name yet. Without this, an e-mail+password account —
+        // which is created with no nickname and a budget of zero — could never
+        // set one at all, because the budget is only granted by a purchase.
+        patch.nickname = v;
       } else if (v.toLowerCase() !== account.nickname.toLowerCase()) {
         nicknameChanging = true;
         if (account.nicknameChangesLeft <= 0) {
-          errors.nickname = account.nickname
-            ? "Jatah mengganti nama panggilan sudah habis. Silakan hubungi admin untuk lebih lanjut."
-            : "Nama panggilan diisi pertama kali saat pembelian.";
+          errors.nickname =
+            "Jatah mengganti nama panggilan sudah habis. Silakan hubungi admin untuk lebih lanjut.";
         } else {
           patch.nickname = v;
         }

@@ -18,7 +18,7 @@ export const ALL_FEATURES: FeatureGroup[] = [
       "Rangkuman lengkap tiap mata kuliah",
       "Belajar Kilat (mode swipe)",
       "Latihan Soal esai & PG + koreksi AI",
-      "3x kuota simulasi ujian",
+      "Kuota simulasi ujian 3x (VIP 5x, Diamond 10x)",
       "Quiz & flashcards interaktif",
     ],
   },
@@ -48,6 +48,6 @@ export const ALL_FEATURES: FeatureGroup[] = [
   },
   {
     group: "Personalisasi",
-    items: ["Tema, warna & font", "Musik lofi + playlist sendiri"],
+    items: ["Tema & font", "Musik lofi + playlist sendiri"],
   },
 ];

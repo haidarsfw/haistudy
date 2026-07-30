@@ -237,13 +237,15 @@ export function FeatureShowcase() {
               {t("landing.features.more.sub")}
             </p>
           </div>
-          <Link
+          {/* Plain anchor: /preview is a Route Handler that redirects and sets
+              cookies, which next/link cannot follow. Same as /enter. */}
+          <a
             href="/preview"
             className="brand-gradient-bg inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white shadow-md shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:ml-auto"
           >
             {t("landing.features.more.cta")}
             <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          </a>
         </div>
       </div>
     </section>

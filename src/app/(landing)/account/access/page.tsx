@@ -51,12 +51,14 @@ export default async function AccountAccessPage({
               Beli akses
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
+            {/* Plain anchor: /preview is a Route Handler that redirects and sets
+                cookies, which next/link cannot follow. Same as /enter. */}
+            <a
               href="/preview"
               className="inline-flex h-11 items-center justify-center rounded-xl border border-border px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
             >
               Coba gratis dulu
-            </Link>
+            </a>
           </div>
         </div>
       ) : (

@@ -94,14 +94,17 @@ export default function TermsPage() {
           bayar kamu masuk.
         </p>
         <p>
-          Akses berlaku <strong>30 hari sejak diaktifkan</strong>. Durasi itu
-          disiapkan untuk menutup satu periode ujian yang kamu beli, misalnya
-          UAS Semester 2.
+          Akses berlaku <strong>30 hari sejak pertama kali kamu buka</strong>,
+          bukan sejak dibayar. Jadi hitungannya mulai saat kamu login pertama
+          kali. Durasi itu disiapkan untuk menutup satu periode ujian yang kamu
+          beli, misalnya UAS Semester 2.
         </p>
         <p>
-          Saat membeli, kamu mengisi nama, nomor WhatsApp, email, kampus, kelas,
-          dan jumlah perangkat, lalu mengunggah bukti transfer. Data itu dipakai
-          untuk memverifikasi pembayaran dan mengaktifkan akses kamu.
+          Saat membeli, kamu mengisi nama, nama panggilan, nomor WhatsApp,
+          kampus, kelas, angkatan, dan jumlah perangkat, lalu mengunggah bukti
+          transfer. Email diambil dari akun yang kamu pakai untuk masuk, jadi
+          tidak perlu diketik lagi. Data itu dipakai untuk memverifikasi
+          pembayaran dan mengaktifkan akses kamu.
         </p>
       </LegalSection>
 

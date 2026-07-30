@@ -175,14 +175,14 @@ const id: Record<string, string> = {
   "landing.features.announce.sample": "Kisi-kisi AI terbaru!",
 
   "landing.features.community.title": "Komunitas",
-  "landing.features.community.desc": "Voice room, chat, forum, DM. Kayak Discord.",
+  "landing.features.community.desc": "Voice room, chat, forum. Kayak Discord. DM khusus VIP.",
   "landing.features.community.online": "30+ online",
 
   "landing.features.music.title": "Musik",
   "landing.features.music.desc": "Lofi bawaan atau playlist SoundCloud sendiri.",
 
   "landing.features.custom.title": "Atur sesukamu",
-  "landing.features.custom.desc": "Tema, warna, font, bahasa. Sesukamu.",
+  "landing.features.custom.desc": "Tema, font, bahasa. Sesukamu. Warna kustom khusus VIP.",
 
   "landing.features.jadwal.title": "Jadwal & countdown",
   "landing.features.jadwal.desc": "Jadwal kuliah plus hitung mundur ujian.",
