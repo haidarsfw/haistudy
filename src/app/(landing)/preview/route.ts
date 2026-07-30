@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { DEFAULT_SCOPE, scopeKey } from "@/lib/scope";
+import { LATEST_SCOPE, scopeKey } from "@/lib/scope";
 
 const SCOPE_RE = /^s\d+-(uts|uas)-[a-z0-9-]{1,16}$/;
 
@@ -24,14 +24,18 @@ export async function GET(request: Request) {
   const existing = jar.get("hs-session")?.value;
   if (existing && existing !== "PREVIEW") {
     const sc = jar.get("hs-scope")?.value;
-    const sk = sc && SCOPE_RE.test(sc) ? sc : scopeKey(DEFAULT_SCOPE);
+    const sk = sc && SCOPE_RE.test(sc) ? sc : scopeKey(LATEST_SCOPE);
     return NextResponse.redirect(
       new URL(`/${sk.replace(/-/g, "/")}/dashboard`, request.url),
       307
     );
   }
 
-  const dashboardPath = `/${scopeKey(DEFAULT_SCOPE).replace(/-/g, "/")}/dashboard`;
+  // The newest period ON SALE, not DEFAULT_SCOPE. Preview exists to sell, and
+  // DEFAULT_SCOPE is a fallback that had drifted into an exam period which has
+  // already happened — so the free trial was showing last term's material, and
+  // would have drifted further with every period added.
+  const dashboardPath = `/${scopeKey(LATEST_SCOPE).replace(/-/g, "/")}/dashboard`;
   const target = new URL(dashboardPath, request.url);
   const res = NextResponse.redirect(target, 307);
   const cookieOpts = {
@@ -42,6 +46,6 @@ export async function GET(request: Request) {
     maxAge: 3600,
   };
   res.cookies.set("hs-session", "PREVIEW", cookieOpts);
-  res.cookies.set("hs-scope", scopeKey(DEFAULT_SCOPE), cookieOpts);
+  res.cookies.set("hs-scope", scopeKey(LATEST_SCOPE), cookieOpts);
   return res;
 }

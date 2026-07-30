@@ -53,6 +53,7 @@ export default async function AccountAccessPage({
             </Link>
             {/* Plain anchor: /preview is a Route Handler that redirects and sets
                 cookies, which next/link cannot follow. Same as /enter. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /preview is a Route Handler, not a page: next/link cannot follow its redirect. */}
             <a
               href="/preview"
               className="inline-flex h-11 items-center justify-center rounded-xl border border-border px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"

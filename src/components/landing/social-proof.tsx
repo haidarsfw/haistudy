@@ -5,9 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import NumberFlow from "@number-flow/react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { BinusMark } from "@/components/landing/binus-mark";
+import { USER_COUNT } from "@/data/landing/claims";
 
-// Total unique users since semester 1. Bump this (or wire to orders later).
-const USER_COUNT = 312;
 
 /**
  * Social-proof line. One smooth, long count-up. Campus logos carry the names;

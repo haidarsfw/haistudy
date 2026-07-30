@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { Star, ArrowRight } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useAccount } from "@/hooks/use-account";
 import { HeroTour } from "@/components/landing/hero-tour";
+import { TESTIMONIAL_RATING, USER_COUNT } from "@/data/landing/claims";
 
 export function Hero() {
   const { t } = useTranslation();
@@ -86,6 +86,7 @@ export function Hero() {
               // navigation follows the redirect the way it is meant to, and it
               // is also required here anyway: /enter sets the access cookies
               // that the next page has to read.
+              // eslint-disable-next-line @next/next/no-html-link-for-pages -- see above
               <a
                 href="/enter"
                 className="brand-gradient-bg inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -134,10 +135,18 @@ export function Hero() {
             ))}
           </span>
           <span>
-            <strong className="font-semibold text-foreground">4.8</strong>/5
+            <strong className="font-semibold text-foreground">
+              {TESTIMONIAL_RATING.value}
+            </strong>
+            /{TESTIMONIAL_RATING.outOf}
           </span>
           <span className="h-4 w-px bg-border" />
-          <span className="text-foreground">{t("landing.hero.count")}</span>
+          {/* Interpolated, not baked into the string: the count used to be typed
+              into the Indonesian copy as well as into social-proof.tsx, so
+              bumping one left the same screen quoting two different totals. */}
+          <span className="text-foreground">
+            {t("landing.hero.count").replace("{n}", String(USER_COUNT))}
+          </span>
           <span className="h-4 w-px bg-border" />
           <span className="border-b border-transparent transition-colors group-hover:border-foreground/40 group-hover:text-foreground">
             {t("landing.hero.trusted")}

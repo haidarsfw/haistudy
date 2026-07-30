@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Megaphone,
   MessagesSquare,
@@ -239,6 +238,7 @@ export function FeatureShowcase() {
           </div>
           {/* Plain anchor: /preview is a Route Handler that redirects and sets
               cookies, which next/link cannot follow. Same as /enter. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /preview is a Route Handler, not a page: next/link cannot follow its redirect. */}
           <a
             href="/preview"
             className="brand-gradient-bg inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white shadow-md shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:ml-auto"

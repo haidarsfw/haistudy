@@ -52,6 +52,12 @@ export default function TermsPage() {
             dan <strong>Diamond</strong> maksimal 3 perangkat.
           </li>
           <li>
+            Kamu bisa mengeluarkan perangkat sendiri dari halaman Akun. Setelah
+            satu perangkat dikeluarkan, perangkat berikutnya baru bisa
+            dikeluarkan <strong>12 jam kemudian</strong>. Jeda ini ada supaya
+            satu akses tidak dipakai bergantian oleh banyak orang.
+          </li>
+          <li>
             Kalau akun kamu dibagikan, dijual, atau dipinjamkan, aksesnya akan{" "}
             <strong>diblokir permanen tanpa pengembalian dana</strong>.
           </li>
@@ -119,8 +125,10 @@ export default function TermsPage() {
         </p>
         <p>
           Naik paket bisa kapan saja dengan membayar selisihnya. Turun paket
-          hanya bisa dalam <strong>1 jam pertama</strong> setelah pembelian kamu
-          disetujui admin.
+          hanya bisa dalam <strong>1 jam pertama</strong> setelah kamu menerima
+          email <strong>&quot;Aksesmu sudah aktif&quot;</strong>. Patokannya
+          email itu, bukan jam persetujuan di sistem, supaya kamu bisa melihat
+          sendiri kapan hitungannya mulai.
         </p>
         <p>
           Rincian lengkapnya, termasuk apa saja yang tidak bisa dikembalikan dan

@@ -35,6 +35,7 @@ export function Footer() {
             </p>
             {/* Plain anchor: /preview is a Route Handler that redirects and sets
                 cookies, which next/link cannot follow. Same as /enter. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /preview is a Route Handler, not a page: next/link cannot follow its redirect. */}
             <a
               href="/preview"
               className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"

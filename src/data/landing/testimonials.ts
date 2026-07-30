@@ -12,7 +12,8 @@ export interface Testimonial {
 }
 
 /** Headline satisfaction rating (avg satisfaction across the sheets → /5). */
-export const TESTIMONIAL_RATING = { value: 4.8, outOf: 5 } as const;
+// Declared in ./claims, which is the one place either public number is edited.
+export { TESTIMONIAL_RATING } from "./claims";
 
 export const TESTIMONIAL_CAMPUSES = ["BINUS"] as const;
 

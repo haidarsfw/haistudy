@@ -16,7 +16,7 @@ export const REFUND_FAQ: FaqItem[] = [
   },
   {
     q: "Gimana kalau salah beli paket?",
-    a: "Naik paket bebas kapan aja, tinggal chat admin dan bayar selisihnya. Turun paket beda ya: cuma bisa dalam 1 jam pertama setelah pembelian kamu disetujui admin, dan selisihnya kita balikin ke kamu. Lewat dari 1 jam, paket kamu udah gak bisa diturunin lagi.",
+    a: "Naik paket bebas kapan aja, tinggal chat admin dan bayar selisihnya. Turun paket beda ya: cuma bisa dalam 1 jam pertama setelah kamu terima email \"Aksesmu sudah aktif\", dan selisihnya kita balikin ke kamu. Lewat dari 1 jam, paket kamu udah gak bisa diturunin lagi.",
   },
   {
     q: "Kondisi apa yang gak bisa direfund?",

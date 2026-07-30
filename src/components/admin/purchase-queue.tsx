@@ -28,6 +28,7 @@ import {
   RotateCcw,
   ChevronDown,
   MailWarning,
+  Clock,
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import type { PurchaseRequest } from "@/types";
@@ -42,6 +43,30 @@ import { PurchaseSummary } from "@/components/admin/purchase-summary";
 import { adminFetch } from "@/lib/admin/admin-fetch";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 import { loginMethodLabel } from "@/lib/auth/login-method";
+
+/**
+ * How close a pending order is to the 24-hour promise.
+ *
+ * /payments tells every buyer: checked within 1x24 jam, and if it is not, they
+ * are owed a partial refund plus login access. Nothing measured that. The age
+ * was on screen, but as one grey item in a row of six, next to the class and
+ * the payment method — so an order 23 hours old looked exactly like one that
+ * arrived at breakfast.
+ *
+ * Purely derived from created_at at render time: no column, no cron, no query.
+ */
+function slaState(createdAt: string): { level: "ok" | "soon" | "late"; hours: number } {
+  const hours = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
+  if (hours >= 24) return { level: "late", hours };
+  if (hours >= 12) return { level: "soon", hours };
+  return { level: "ok", hours };
+}
+
+const SLA_BADGE: Record<"ok" | "soon" | "late", string> = {
+  ok: "border-border text-muted-foreground",
+  soon: "border-warning/40 text-warning",
+  late: "border-destructive/50 text-destructive",
+};
 
 const PACKAGE_LABELS: Record<string, string> = {
   share: "Share (Rp25.000)",
@@ -350,12 +375,29 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       });
     }
     const sorted = [...list];
+    // Pending first, always, whatever the sort. The 24-hour promise is only
+    // ever broken by a row that is waiting, and burying it under a page of
+    // approved orders is how it gets broken.
+    const byPending = (a: PurchaseRequest, b: PurchaseRequest) =>
+      Number(b.status === "pending") - Number(a.status === "pending");
     if (sort === "oldest") {
-      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      sorted.sort(
+        (a, b) =>
+          byPending(a, b) ||
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
     } else if (sort === "amount") {
-      sorted.sort((a, b) => (b.meta?.uniqueAmount ?? 0) - (a.meta?.uniqueAmount ?? 0));
+      sorted.sort(
+        (a, b) => byPending(a, b) || (b.meta?.uniqueAmount ?? 0) - (a.meta?.uniqueAmount ?? 0)
+      );
     } else {
-      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      // Newest first WITHIN pending, so the oldest waiting order still surfaces
+      // above every settled one.
+      sorted.sort(
+        (a, b) =>
+          byPending(a, b) ||
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     }
     return sorted;
   }, [purchases, query, statusFilter, sort]);
@@ -520,6 +562,25 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                               {/* Only on rows still waiting. Once approved the
                                   question is settled and the badge would just
                                   be a permanent accusation. */}
+                              {/* The 24-hour clock, where it cannot be missed.
+                                  Only on rows still waiting — once it is
+                                  approved the clock stopped mattering. */}
+                              {purchase.status === "pending" &&
+                                (() => {
+                                  const sla = slaState(purchase.createdAt);
+                                  return (
+                                    <Badge
+                                      variant="outline"
+                                      className={`gap-1 text-[10px] ${SLA_BADGE[sla.level]}`}
+                                      title="Janji di /payments: dicek maksimal 1x24 jam"
+                                    >
+                                      <Clock className="h-3 w-3" />
+                                      {sla.level === "late"
+                                        ? `Lewat 24 jam (${Math.floor(sla.hours)} jam)`
+                                        : `${Math.floor(sla.hours)} jam`}
+                                    </Badge>
+                                  );
+                                })()}
                               {purchase.emailVerified === false &&
                                 purchase.status === "pending" && (
                                   <Badge
