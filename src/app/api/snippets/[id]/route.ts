@@ -6,6 +6,7 @@ import {
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 import { resolveSessionTier } from "@/lib/auth/session-tier";
 import { canUseVip } from "@/lib/tier";
+import { ownerFilter, accountIdForLicense } from "@/lib/auth/account-link";
 
 // ─── DELETE /api/snippets/[id] ─── remove a snippet the caller owns, in scope.
 export async function DELETE(
@@ -34,7 +35,7 @@ export async function DELETE(
         .from("snippet_library")
         .delete()
         .eq("id", id)
-        .eq("license_key", licenseKey)
+        .or(ownerFilter(licenseKey, await accountIdForLicense(supabase, licenseKey)))
     );
     if (error) throw error;
 

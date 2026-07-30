@@ -12,6 +12,7 @@ import { PACKAGE_LABELS, packageMaxDevices, type PurchasablePackageId } from "@/
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
 import { forgetLicenseAccount } from "@/lib/auth/account-link";
+import { carryForwardIdentity } from "@/lib/auth/identity-carry";
 
 const TIER: Record<string, PurchasablePackageId> = {
   share: "share",
@@ -144,6 +145,12 @@ export async function POST(request: Request) {
     // account, rather than the minutes after approval being the only stretch of
     // their history with no owner recorded.
     forgetLicenseAccount(key);
+
+    // A returning buyer should not arrive at a factory-fresh account. Their
+    // settings and profile are copied onto the new licence here, before they
+    // ever sign in, so the login path stays out of it entirely. Non-fatal by
+    // construction: it logs and returns rather than throwing.
+    await carryForwardIdentity(supabase, accountId, key);
 
     // Invoice number. Idempotent by construction — only assigned when absent,
     // so re-approving keeps the same number.

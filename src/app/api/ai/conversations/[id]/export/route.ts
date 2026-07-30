@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 import { getCaller } from "@/lib/auth/session-license";
+import { ownerFilter, accountIdForLicense } from "@/lib/auth/account-link";
 
 interface ExportMessage {
   role: "user" | "assistant";
@@ -87,7 +88,10 @@ export async function GET(
         .from("ai_conversations")
         .select("title, messages")
         .eq("id", id)
-        .eq("license_key", licenseKey)
+        // Widened with the list read: a conversation you can see is one you can
+        // export. `.single()` is still safe — the id is a primary key, so this
+        // can only ever match one row however many owners it accepts.
+        .or(ownerFilter(licenseKey, await accountIdForLicense(supabase, licenseKey)))
         .single()
     );
 

@@ -6,6 +6,7 @@ import {
 } from "@/lib/supabase/server";
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import { scopeKey } from "@/lib/scope";
+import { ownerFilter, accountIdForLicense } from "@/lib/auth/account-link";
 
 /**
  * GET /api/exam/history?subjectId=bizethics&attemptId=xxx
@@ -45,13 +46,23 @@ export async function GET(request: Request) {
 
     const supabase = createServerClient()!;
 
+    // Identity migration stage 3: "mine" now means this licence OR the account
+    // that owns it, so a score stays reachable after the licence it was earned
+    // under expires. Resolved from the LICENCE, never from the account cookie —
+    // the two are independent, and trusting the cookie would let someone holding
+    // one person's session and another's licence read across both.
+    const owner = ownerFilter(
+      licenseKey,
+      await accountIdForLicense(supabase, licenseKey)
+    );
+
     if (attemptId) {
       // Full detail for a specific attempt
       const { data: attempt } = await supabase
         .from("exam_attempts")
         .select("*")
         .eq("id", attemptId)
-        .eq("license_key", licenseKey)
+        .or(owner)
         .maybeSingle();
 
       if (!attempt) {
@@ -83,7 +94,7 @@ export async function GET(request: Request) {
       .select(
         "id, total_score, max_score, score_pct, started_at, submitted_at, duration_used_seconds, auto_submitted, status, exam_language, created_at"
       )
-      .eq("license_key", licenseKey)
+      .or(owner)
       .eq("scope_key", sk)
       .eq("subject_id", subjectId)
       .neq("status", "abandoned")
@@ -139,12 +150,14 @@ export async function DELETE(request: Request) {
 
     const supabase = createServerClient()!;
 
-    // Delete only if it belongs to the user
+    // Delete only if it belongs to the user. Widened alongside the read above:
+    // an attempt you can see in your own history is one you can remove, whether
+    // or not you still hold the licence you sat it under.
     const { error: deleteError } = await supabase
       .from("exam_attempts")
       .delete()
       .eq("id", attemptId)
-      .eq("license_key", licenseKey);
+      .or(ownerFilter(licenseKey, await accountIdForLicense(supabase, licenseKey)));
 
     if (deleteError) {
       console.error("Delete exam attempt error:", deleteError);

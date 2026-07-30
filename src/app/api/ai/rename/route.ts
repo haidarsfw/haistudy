@@ -6,6 +6,7 @@ import {
 } from "@/lib/supabase/server";
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 import { getCaller } from "@/lib/auth/session-license";
+import { ownerFilter, accountIdForLicense } from "@/lib/auth/account-link";
 
 // ─── Config ───
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
           .from("ai_conversations")
           .update({ title })
           .eq("id", id)
-          .eq("license_key", licenseKey)
+          .or(ownerFilter(licenseKey, await accountIdForLicense(supabase, licenseKey)))
       );
       if (error) {
         console.error("AI rename persist error:", error);

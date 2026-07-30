@@ -12,7 +12,7 @@ import {
 import { resolveSessionTier } from "@/lib/auth/session-tier";
 import { canUseVip } from "@/lib/tier";
 import type { HighlightColor, SnippetLibraryItem } from "@/types";
-import { accountColumns } from "@/lib/auth/account-link";
+import { accountColumns, ownerFilter, accountIdForLicense } from "@/lib/auth/account-link";
 
 type SnippetRow = {
   id: string;
@@ -57,7 +57,10 @@ export async function GET(request: Request) {
       supabase
         .from("snippet_library")
         .select("id, snippet_text, subject_id, source_module, color, created_at")
-        .eq("license_key", licenseKey)
+        // Licence or the account behind it. Still inside scopeEq, so this only
+        // ever widens across a re-issued key within the same cohort — never
+        // across cohorts.
+        .or(ownerFilter(licenseKey, await accountIdForLicense(supabase, licenseKey)))
         .order("created_at", { ascending: false })
         .limit(500)
     );

@@ -9,7 +9,7 @@ import { getCaller } from "@/lib/auth/session-license";
 import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
 import type { PackageTier } from "@/lib/tier";
-import { accountColumns } from "@/lib/auth/account-link";
+import { accountColumns, ownerFilter, accountIdForLicense } from "@/lib/auth/account-link";
 
 // Hard ceiling for GET/mock paths = the largest any tier can hold. Per-tier
 // caps (free 3 / vip 10) are resolved from the license row in POST.
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       supabase
         .from("ai_conversations")
         .select("id, title, messages, created_at, updated_at")
-        .eq("license_key", licenseKey)
+        .or(ownerFilter(licenseKey, await accountIdForLicense(supabase, licenseKey)))
         .order("updated_at", { ascending: false })
         .limit(MAX_CONVERSATIONS)
     );
@@ -202,7 +202,12 @@ export async function PUT(request: Request) {
         .from("ai_conversations")
         .update(updates)
         .eq("id", id)
-        .eq("license_key", caller.licenseKey)
+        .or(
+          ownerFilter(
+            caller.licenseKey,
+            await accountIdForLicense(supabase, caller.licenseKey)
+          )
+        )
         .select("id, title, messages, created_at, updated_at")
         .maybeSingle()
     );
@@ -258,7 +263,7 @@ export async function DELETE(request: Request) {
         .from("ai_conversations")
         .delete()
         .eq("id", id)
-        .eq("license_key", licenseKey)
+        .or(ownerFilter(licenseKey, await accountIdForLicense(supabase, licenseKey)))
     );
 
     if (error) {

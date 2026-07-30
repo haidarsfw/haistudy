@@ -78,6 +78,41 @@ export function forgetLicenseAccount(licenseKey: string | null | undefined): voi
 }
 
 /**
+ * "Belongs to this person" as a PostgREST filter — the licence OR the account.
+ *
+ * Stage 3 of the identity migration, in the only shape that cannot break
+ * anything. Replacing `license_key = X` with `account_id = A` would be a swap
+ * and swaps can lose rows; this is a WIDENING. It matches everything it matched
+ * before, plus rows the same person made under a licence they no longer hold.
+ * There is no cardinality trap either, because it is used on list reads and on
+ * ownership guards, never on a lookup that expects exactly one row.
+ *
+ *   const owner = ownerFilter(licenseKey, accountId);
+ *   supabase.from("snippet_library").select("*").or(owner)
+ *
+ * Falls back to the licence alone when there is no account, which is the correct
+ * answer for the 205 licence holders who predate the account layer.
+ *
+ * ⚠️ NEVER widen a filter that enforces a LIMIT. Applying this to the exam quota
+ * count, for instance, would fold last period's attempts into this period's
+ * allowance and quietly take away something the person paid for. Widening is
+ * only safe where finding more rows is a gift, not a cost.
+ */
+export function ownerFilter(
+  licenseKey: string | null | undefined,
+  accountId: string | null | undefined
+): string {
+  // Both values come from a validated session — a licence key is
+  // [A-Z0-9-] and an account id is a uuid — but this string is spliced into a
+  // query language, so it is filtered here rather than trusted upstream.
+  const key = String(licenseKey ?? "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  const id = String(accountId ?? "").trim().replace(/[^0-9a-fA-F-]/g, "");
+  const parts = [`license_key.eq.${key}`];
+  if (id) parts.push(`account_id.eq.${id}`);
+  return parts.join(",");
+}
+
+/**
  * Owners for many licences at once.
  *
  * For fan-out writes — a notification per member of a cohort — where the licence
