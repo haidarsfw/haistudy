@@ -6,6 +6,7 @@ import {
 import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { resolveAdminScope } from "@/lib/auth/admin-scope";
 import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { accountColumns } from "@/lib/auth/account-link";
 
 function scopeErrorResponse(error: unknown) {
   if (error instanceof ScopeError) {
@@ -251,6 +252,7 @@ export async function POST(req: NextRequest) {
       .from("feedback")
       .insert({
         license_key: licenseKey,
+        ...(await accountColumns(supabase, licenseKey)),
         name: name || "Anonymous",
         category,
         message: message.slice(0, 1000),

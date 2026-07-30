@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { getCaller } from "@/lib/auth/session-license";
 import type { UserProfile } from "@/types";
+import { accountColumns } from "@/lib/auth/account-link";
 
 // ─── Mock store ───
 type MockProfile = UserProfile & { selectedClass?: string };
@@ -150,6 +151,7 @@ export async function PUT(request: Request) {
 
     const upsertData: Record<string, unknown> = {
       license_key: licenseKey,
+      ...(await accountColumns(supabase, licenseKey)),
       updated_at: new Date().toISOString(),
     };
     if (email !== undefined) upsertData.email = email;

@@ -4,6 +4,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { getCaller } from "@/lib/auth/session-license";
+import { accountColumns } from "@/lib/auth/account-link";
 
 /**
  * Cross-device onboarding state. The tour is a once-per-ACCOUNT thing, so its
@@ -53,6 +54,7 @@ export async function POST() {
     .upsert(
       {
         license_key: caller.licenseKey,
+        ...(await accountColumns(supabase, caller.licenseKey)),
         onboarding_completed_at: new Date().toISOString(),
       },
       { onConflict: "license_key" }

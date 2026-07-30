@@ -6,6 +6,7 @@ import {
 import type { UserSettings, SubjectProgress, ThemeId, FontId, CustomAccent, UserHighlight } from "@/types";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { getCaller } from "@/lib/auth/session-license";
+import { accountColumns } from "@/lib/auth/account-link";
 
 function mapRowToSettings(data: Record<string, unknown>): UserSettings {
   return {
@@ -159,6 +160,10 @@ export async function PUT(request: Request) {
     // streak, language, etc. with defaults.
     const row: Record<string, unknown> = {
       license_key: licenseKey,
+      // Identity migration stage 2. Spread, not assigned, so an accountless
+      // licence leaves the column untouched rather than nulling a value the
+      // backfill or another writer already worked out.
+      ...(await accountColumns(supabase, licenseKey)),
       updated_at: now,
     };
     if ("darkMode" in settings) row.dark_mode = settings.darkMode;

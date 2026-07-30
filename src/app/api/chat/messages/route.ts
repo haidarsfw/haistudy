@@ -12,6 +12,7 @@ import { CHAT_MAX_MESSAGES } from "@/lib/constants";
 import { requireScope, scopeColumns, scopeEq, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import { capitalizeFirst } from "@/lib/name";
 import { canUseVip, type PackageTier } from "@/lib/tier";
+import { accountColumns } from "@/lib/auth/account-link";
 
 function normalizeChannel(raw: unknown): ChatChannel {
   return raw === "vip-lounge" ? "vip-lounge" : "global";
@@ -293,6 +294,9 @@ export async function POST(request: Request) {
         author_name: authorName,
         author_class: authorClass || "",
         license_key: authorLicenseKey,
+        // Authorship outlives access: the licence expires every period, the
+        // account does not.
+        ...(await accountColumns(supabase, authorLicenseKey)),
         is_admin: isAdmin || false,
         is_tester: isTester || false,
         package_tier: packageTier || null,

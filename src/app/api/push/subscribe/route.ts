@@ -5,6 +5,7 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { requireScope, scopeColumns, ScopeError } from "@/lib/auth/scope-check";
+import { accountColumns } from "@/lib/auth/account-link";
 
 export const runtime = "nodejs";
 
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.from("push_subscriptions").upsert(
       {
         license_key: licenseKey,
+        ...(await accountColumns(supabase, licenseKey)),
         endpoint,
         p256dh,
         auth,

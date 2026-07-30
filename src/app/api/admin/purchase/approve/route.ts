@@ -11,6 +11,7 @@ import { sendAccessApprovedEmail } from "@/lib/notifications/account-email";
 import { PACKAGE_LABELS, packageMaxDevices, type PurchasablePackageId } from "@/lib/payments";
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
+import { forgetLicenseAccount } from "@/lib/auth/account-link";
 
 const TIER: Record<string, PurchasablePackageId> = {
   share: "share",
@@ -137,6 +138,12 @@ export async function POST(request: Request) {
       console.error("[admin/purchase/approve] license insert failed", keyErr);
       return NextResponse.json({ error: "Gagal membuat akses" }, { status: 500 });
     }
+
+    // This licence has just come into existence already owned. Drop any cached
+    // ownership for the key so the buyer's very first writes carry their
+    // account, rather than the minutes after approval being the only stretch of
+    // their history with no owner recorded.
+    forgetLicenseAccount(key);
 
     // Invoice number. Idempotent by construction — only assigned when absent,
     // so re-approving keeps the same number.

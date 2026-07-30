@@ -12,6 +12,7 @@ import {
 import { resolveSessionTier } from "@/lib/auth/session-tier";
 import { canUseVip } from "@/lib/tier";
 import type { HighlightColor, SnippetLibraryItem } from "@/types";
+import { accountColumns } from "@/lib/auth/account-link";
 
 type SnippetRow = {
   id: string;
@@ -116,6 +117,7 @@ export async function POST(request: Request) {
       .from("snippet_library")
       .insert({
         license_key: licenseKey,
+        ...(await accountColumns(supabase, licenseKey)),
         snippet_text: snippetText,
         subject_id: subjectId,
         source_module: sourceModule,

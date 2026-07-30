@@ -8,6 +8,7 @@ import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import { scopeKey } from "@/lib/scope";
 import type { PackageTier } from "@/lib/tier";
 import { computeQuota, quotaCountFrom } from "@/lib/exam/quota";
+import { accountColumns } from "@/lib/auth/account-link";
 
 /**
  * POST /api/exam/start
@@ -114,6 +115,9 @@ export async function POST(request: Request) {
       .from("exam_attempts")
       .insert({
         license_key: licenseKey,
+        // Identity migration stage 2: the attempt is also stamped with the
+        // account, so a score survives the licence it was earned under.
+        ...(await accountColumns(supabase, licenseKey)),
         scope_key: sk,
         subject_id: subjectId,
         exam_id: examId,

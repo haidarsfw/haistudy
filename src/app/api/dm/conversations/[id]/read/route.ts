@@ -6,6 +6,7 @@ import {
 import { requireScope, scopeEq, ScopeError } from "@/lib/auth/scope-check";
 import { resolveSessionTier } from "@/lib/auth/session-tier";
 import { canUseVip } from "@/lib/tier";
+import { accountColumns } from "@/lib/auth/account-link";
 
 // ─── POST /api/dm/conversations/[id]/read ───
 // Mark the conversation read up to NOW for the caller (last-read pointer).
@@ -47,6 +48,7 @@ export async function POST(
       {
         conversation_id: id,
         license_key: licenseKey,
+        ...(await accountColumns(supabase, licenseKey)),
         last_read_at: new Date().toISOString(),
       },
       { onConflict: "conversation_id,license_key" }

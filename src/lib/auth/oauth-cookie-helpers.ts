@@ -9,6 +9,7 @@ import {
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { normalizeLoginMethod } from "@/lib/auth/login-method";
+import { accountColumns } from "@/lib/auth/account-link";
 
 export interface SessionPayload {
   licenseKey: string;
@@ -229,6 +230,7 @@ export async function activateLicense(
         .upsert(
           {
             license_key: normalizedKey,
+            ...(await accountColumns(supabase, normalizedKey)),
             dark_mode: true,
             theme: "forest",
             font: "jakarta",

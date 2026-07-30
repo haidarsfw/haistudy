@@ -7,6 +7,7 @@ import { validateAdmin } from "@/lib/auth/admin-guard";
 import { resolveAdminScope } from "@/lib/auth/admin-scope";
 import { ScopeError } from "@/lib/auth/scope-check";
 import type { PurchaseRequest, PurchaseMeta } from "@/types";
+import { accountColumns } from "@/lib/auth/account-link";
 
 function scopeErrorResponse(error: unknown) {
   if (error instanceof ScopeError) {
@@ -391,10 +392,17 @@ export async function PATCH(request: Request) {
         const patch: Record<string, unknown> = { license_key: lk };
         if (phone && !existing?.phone) patch.phone = phone;
         if (contactEmail && !existing?.email) patch.email = contactEmail;
+        // The owner is added INSIDE the guard, not into `patch` above: `patch`
+        // starts life holding only the licence, and the length check is what
+        // stops an upsert firing when there is nothing to propagate. Putting a
+        // second key in it unconditionally would make that check always true.
         if (Object.keys(patch).length > 1) {
           const { error: pErr } = await supabase
             .from("user_profiles")
-            .upsert(patch, { onConflict: "license_key" });
+            .upsert(
+              { ...patch, ...(await accountColumns(supabase, lk)) },
+              { onConflict: "license_key" }
+            );
           if (pErr) console.error("[purchase] profile contact propagate failed", pErr);
         }
       }

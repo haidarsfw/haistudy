@@ -101,3 +101,9 @@ graphify-out/
 # Claude Code workspace — hooks, subagents, local rules. Repo is public and this
 # is machine-local working config, not product.
 /.claude/
+
+# Route snapshots — machine-local evidence for before/after comparisons.
+# Deliberately untracked so they SURVIVE a git checkout back to an older tag,
+# which is exactly when you need to compare against them.
+/snapshots/
+/IDENTITY-MIGRATION-SOP.md

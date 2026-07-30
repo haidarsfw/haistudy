@@ -9,6 +9,7 @@ import { getCaller } from "@/lib/auth/session-license";
 import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
 import type { PackageTier } from "@/lib/tier";
+import { accountColumns } from "@/lib/auth/account-link";
 
 // Hard ceiling for GET/mock paths = the largest any tier can hold. Per-tier
 // caps (free 3 / vip 10) are resolved from the license row in POST.
@@ -134,7 +135,13 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("ai_conversations")
-      .insert({ license_key: licenseKey, title: "", messages: [], ...scopeColumns(scope) })
+      .insert({
+        license_key: licenseKey,
+        ...(await accountColumns(supabase, licenseKey)),
+        title: "",
+        messages: [],
+        ...scopeColumns(scope),
+      })
       .select("id, title, messages, created_at, updated_at")
       .single();
 

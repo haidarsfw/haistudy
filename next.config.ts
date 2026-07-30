@@ -1,4 +1,29 @@
+import { execSync } from "node:child_process";
 import type { NextConfig } from "next";
+
+/**
+ * Which commit is this build?
+ *
+ * `NEXT_PUBLIC_BUILD_ID` is a timestamp, which tells you two builds differ but
+ * not what changed between them. During a staged migration that is the whole
+ * question: a bug report has to be pinnable to a stage, not to a clock reading.
+ *
+ * Vercel supplies the SHA and may not ship a .git directory, so its variable
+ * wins; locally we ask git. Never throws — a build must not fail because
+ * someone unpacked a tarball without history.
+ */
+function buildRef(): string {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) {
+    return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7);
+  }
+  try {
+    return execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
+  } catch {
+    return "unknown";
+  }
+}
 
 const nextConfig: NextConfig = {
   // Permit a real device on the LAN (e.g. an iPhone) to load dev-server
@@ -7,6 +32,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.100.25", "10.38.53.48"],
   env: {
     NEXT_PUBLIC_BUILD_ID: Date.now().toString(),
+    NEXT_PUBLIC_BUILD_REF: buildRef(),
   },
   productionBrowserSourceMaps: false,
   turbopack: {

@@ -11,6 +11,7 @@ import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scop
 import type { ExamPeriod } from "@/types/scope";
 import { displayName } from "@/lib/name";
 import type { SupportConversationSummary, SupportMessage } from "@/types";
+import { accountColumns } from "@/lib/auth/account-link";
 
 /* ─────────────────────────── Legacy in-memory fallback ──────────────── */
 
@@ -368,6 +369,13 @@ export async function POST(req: NextRequest) {
       .from("support_messages")
       .insert({
         license_key: licenseKey,
+        // Stamped from `license_key` — the student whose THREAD this is — not
+        // from `author_license_key`. This table has both, and an admin reply
+        // lives in the student's thread, so "whose conversation" is the useful
+        // owner and the one the 066/067 backfill already used. Matching it
+        // matters more than picking the prettier meaning: half a column filled
+        // one way and half the other is worse than either.
+        ...(await accountColumns(supabase, licenseKey)),
         content,
         type,
         media_url: mediaUrl,
@@ -489,6 +497,7 @@ export async function PATCH(req: NextRequest) {
       .from("support_messages")
       .insert({
         license_key: licenseKey,
+        ...(await accountColumns(supabase, licenseKey)),
         content: systemContent,
         type: "system",
         is_admin: true,
