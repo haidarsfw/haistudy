@@ -6,24 +6,17 @@ import { getOptionalAccount } from "@/lib/auth/account-session";
 import { activeAccesses, listAccountAccesses } from "@/lib/auth/account-access";
 import { listAccountDevices } from "@/lib/auth/account-devices";
 import {
+  DEVICE_COOKIE,
+  DEVICE_COOKIE_OPTS,
+  detectDeviceType,
+  readDeviceIdentity,
+} from "@/lib/auth/device-id";
+import {
   activateLicense,
   ActivationError,
   applySessionCookies,
 } from "@/lib/auth/oauth-cookie-helpers";
 
-const DEVICE_COOKIE = "hs-device";
-const DEVICE_COOKIE_OPTS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  maxAge: 365 * 24 * 60 * 60,
-};
-
-function detectDeviceType(ua: string): "mobile" | "desktop" | "tablet" {
-  if (/ipad|tablet/i.test(ua)) return "tablet";
-  return /mobile|android|iphone|ipod/i.test(ua) ? "mobile" : "desktop";
-}
 
 /** Same-origin only — anything else here would be an open redirect. */
 function safeNext(raw: string | null): string {
@@ -97,7 +90,11 @@ export async function GET(req: Request) {
   }
 
   const jar = await cookies();
-  const existingDeviceId = jar.get(DEVICE_COOKIE)?.value ?? "";
+  // Old cookie name included, so a browser that has only ever signed in with
+  // Google is recognised here instead of being sent round the new-device
+  // confirmation and given a second row.
+  const identity = readDeviceIdentity(jar);
+  const existingDeviceId = identity.id;
   const { devices } = await listAccountDevices(supabase, account.id);
   const known =
     Boolean(existingDeviceId) &&
@@ -141,6 +138,11 @@ export async function GET(req: Request) {
 
     const res = NextResponse.redirect(new URL(dest, origin), 303);
     applySessionCookies(res, session);
+    // Recovered from the old name: write the canonical one so this browser
+    // stops depending on a cookie nothing writes any more.
+    if (identity.needsCookie && existingDeviceId) {
+      res.cookies.set(DEVICE_COOKIE, existingDeviceId, DEVICE_COOKIE_OPTS);
+    }
     return res;
   } catch (e) {
     if (e instanceof ActivationError) {

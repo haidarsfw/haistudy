@@ -21,6 +21,13 @@ import {
   normalizeReferralCode,
 } from "@/lib/referral/codes";
 import { activeAccesses, listAccountAccesses } from "@/lib/auth/account-access";
+import {
+  DEVICE_COOKIE,
+  DEVICE_COOKIE_OPTS,
+  detectDeviceType,
+  newDeviceId,
+  readDeviceIdentityFromHeader,
+} from "@/lib/auth/device-id";
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -29,10 +36,6 @@ const COOKIE_OPTS = {
   path: "/",
   maxAge: 30 * 24 * 60 * 60,
 };
-
-function detectDeviceType(ua: string): "mobile" | "desktop" {
-  return /mobile|android|iphone|ipad|ipod/i.test(ua) ? "mobile" : "desktop";
-}
 
 function redirectToLoginError(
   origin: string,
@@ -215,13 +218,16 @@ export async function GET(request: Request) {
     return res;
   }
 
-  const cookieHeader = request.headers.get("cookie") || "";
-  const existingDeviceId = cookieHeader
-    .split(";")
-    .map((p) => p.trim())
-    .find((p) => p.startsWith("hs-device-id="))
-    ?.slice("hs-device-id=".length);
-  const deviceId = existingDeviceId || crypto.randomUUID();
+  // This path used to read and write its OWN cookie name, `hs-device-id`, with
+  // a 30-day life, while the account path used `hs-device` for a year. One
+  // browser therefore held two identities: signing in with Google registered a
+  // device row under one name, and later opening the access from the account
+  // page looked for the other, found nothing, called the browser new, and took
+  // a SECOND slot off a paid licence. The 30-day expiry repeated it monthly.
+  //
+  // Both names are read; only the canonical one is written.
+  const identity = readDeviceIdentityFromHeader(request.headers.get("cookie"));
+  const deviceId = identity.id || newDeviceId();
   const ua = request.headers.get("user-agent") || "";
 
   try {
@@ -241,8 +247,11 @@ export async function GET(request: Request) {
     applySessionCookies(response, session);
     applyAccountCookie(response, sessionToken);
     clearNextCookie(response);
-    if (!existingDeviceId) {
-      response.cookies.set("hs-device-id", deviceId, COOKIE_OPTS);
+    // Canonical name, and a year rather than the 30 days the session cookie
+    // uses: this marker expiring is not a security event, it is a device slot
+    // quietly disappearing and being re-taken by the same browser.
+    if (identity.needsCookie) {
+      response.cookies.set(DEVICE_COOKIE, deviceId, DEVICE_COOKIE_OPTS);
     }
     return response;
   } catch (e) {

@@ -3,7 +3,13 @@ import { NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { AccountError } from "@/lib/auth/account";
 import { requireAccount, requireAccountSession, revokeAllAccountSessions } from "@/lib/auth/account-session";
-import { listAccountDevices, releaseAccountDevice } from "@/lib/auth/account-devices";
+import { cookies } from "next/headers";
+import { readDeviceIdentity } from "@/lib/auth/device-id";
+import {
+  listAccountDevices,
+  releaseAccountDevice,
+  releaseOtherDevices,
+} from "@/lib/auth/account-devices";
 import { formatRetryAfter } from "@/lib/auth/account-rate-limit";
 
 /** Devices signed into any of this account's accesses. */
@@ -50,7 +56,12 @@ export async function DELETE(req: Request) {
     if (body.action === "signout-others") {
       const { account, sessionId } = await requireAccountSession();
       await revokeAllAccountSessions(supabase, account.id, sessionId);
-      return NextResponse.json({ ok: true });
+      // The button says "mengakhiri sesi di semua perangkat selain yang kamu
+      // pakai sekarang". Until this line it only ended sessions on the account
+      // pages; the other device carried on using the app itself.
+      const { id: keepDeviceId } = readDeviceIdentity(await cookies());
+      const released = await releaseOtherDevices(supabase, account.id, keepDeviceId);
+      return NextResponse.json({ ok: true, released });
     }
 
     const account = await requireAccount();

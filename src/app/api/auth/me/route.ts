@@ -13,6 +13,7 @@ import {
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { normalizeLoginMethod } from "@/lib/auth/login-method";
+import { readDeviceIdentity } from "@/lib/auth/device-id";
 
 /**
  * GET /api/auth/me
@@ -86,11 +87,42 @@ export async function GET() {
     return NextResponse.json({ session: null }, { status: 401 });
   }
 
+  // Devices come back embedded rather than as a second round trip: this runs on
+  // every app load and the free tier pays for each query.
   const { data: activation } = await supabase
     .from("activations")
-    .select("*")
+    .select("*, devices(device_id)")
     .eq("license_key", licenseKey)
     .single();
+
+  // Is this browser still one of the devices on the licence?
+  //
+  // Nothing used to ask. "Keluarkan perangkat" deleted the row and freed the
+  // slot, and the device carried on using the app; so did "ganti password" and
+  // "keluar dari perangkat lain", because the app is gated on hs-session alone
+  // and that cookie was never revisited. Three screens promised something none
+  // of them delivered.
+  //
+  // The session cookie is CLEARED rather than merely answering 401: the client
+  // ignores a failed /api/auth/me and keeps its stored session, but it cannot
+  // ignore the cookie being gone — the proxy bounces the next navigation.
+  const registeredDevices = Array.isArray(activation?.devices)
+    ? (activation.devices as { device_id: string }[])
+    : [];
+  if (!license.unlimited_devices && registeredDevices.length > 0) {
+    const { id: callerDeviceId } = readDeviceIdentity(cookieStore);
+    const stillRegistered =
+      Boolean(callerDeviceId) &&
+      registeredDevices.some((d) => d.device_id === callerDeviceId);
+    if (!stillRegistered) {
+      const res = NextResponse.json({ session: null }, { status: 401 });
+      const cleared = { path: "/", maxAge: 0 };
+      res.cookies.set("hs-session", "", cleared);
+      res.cookies.set("hs-scope", "", cleared);
+      res.cookies.set("hs-admin", "", cleared);
+      return res;
+    }
+  }
 
   // Settings (for embedded payload, matches /validate shape)
   const { data: settingsData } = await supabase

@@ -8,6 +8,7 @@ import {
   revokeAllAccountSessions,
 } from "@/lib/auth/account-session";
 import { consumeAccountToken } from "@/lib/auth/account-tokens";
+import { releaseOtherDevices } from "@/lib/auth/account-devices";
 import { hashPassword, validatePassword } from "@/lib/auth/password";
 import { checkServerRateLimit } from "@/lib/auth/server-rate-limit";
 import { getClientIp } from "@/lib/auth/oauth-cookie-helpers";
@@ -88,6 +89,11 @@ export async function POST(req: Request) {
   }
 
   await revokeAllAccountSessions(supabase, account.id);
+  // Every device, with no exception kept. Someone resetting a forgotten
+  // password has no live session to preserve, and the whole point of the reset
+  // is that whoever else was using the account stops. They sign back in on this
+  // browser immediately afterwards, which registers it again.
+  await releaseOtherDevices(supabase, account.id, "");
 
   const sessionToken = await createAccountSession(supabase, account.id, req);
   const res = NextResponse.json({ ok: true, email: account.email });

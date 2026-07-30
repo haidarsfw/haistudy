@@ -124,6 +124,45 @@ export async function listAccountDevices(
   return { devices, slots };
 }
 
+/**
+ * Drop every device on this account EXCEPT the browser asking.
+ *
+ * This is what makes "semua perangkat lain sudah dikeluarkan" true. Revoking
+ * account sessions was never enough on its own: the study app is gated on the
+ * separate hs-session cookie, so another device kept browsing with a password
+ * that had already been changed. Removing the device row is what
+ * /api/auth/me checks, and it clears that cookie on the other device's next
+ * load.
+ *
+ * The releases are NOT written to device_releases, so this does not spend the
+ * self-service cooldown. That budget exists to stop a licence being passed
+ * around a rota; someone changing their password is doing the opposite.
+ *
+ * Returns how many were removed, so the caller can say something true.
+ */
+export async function releaseOtherDevices(
+  supabase: SupabaseClient,
+  accountId: string,
+  keepDeviceId: string
+): Promise<number> {
+  const { devices } = await listAccountDevices(supabase, accountId);
+  const doomed = devices.filter((d) => d.deviceId !== keepDeviceId);
+  if (!doomed.length) return 0;
+
+  const { error } = await supabase
+    .from("devices")
+    .delete()
+    .in(
+      "id",
+      doomed.map((d) => d.id)
+    );
+  if (error) {
+    console.error("[devices] releaseOtherDevices failed", error);
+    return 0;
+  }
+  return doomed.length;
+}
+
 export interface ReleaseDecision {
   allowed: boolean;
   /** Seconds until another release is possible. 0 when allowed. */

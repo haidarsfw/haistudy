@@ -11,6 +11,7 @@ import {
 import { scopeKey as toScopeKey, DEFAULT_SCOPE } from "@/lib/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { allowsKeyLogin, allowsPasswordLogin } from "@/lib/auth/login-method";
+import { DEVICE_COOKIE, DEVICE_COOKIE_OPTS } from "@/lib/auth/device-id";
 import {
   activateLicense,
   ActivationError,
@@ -125,7 +126,13 @@ export async function POST(request: Request) {
         { referralCode }
       );
       void recordLoginAttempt(ip, "ok");
-      return buildSessionResponse(session, embeddedSettings);
+      const res = buildSessionResponse(session, embeddedSettings);
+      // This door registers the device under an id the browser keeps in
+      // localStorage, which the server cannot read on later requests. Writing
+      // it into the canonical cookie is what stops /api/auth/me deciding this
+      // browser is an unregistered device and signing it straight back out.
+      res.cookies.set(DEVICE_COOKIE, deviceId, DEVICE_COOKIE_OPTS);
+      return res;
     } catch (e) {
       if (e instanceof ActivationError) {
         void recordLoginAttempt(ip, "fail");

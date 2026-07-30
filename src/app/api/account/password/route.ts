@@ -9,6 +9,9 @@ import {
   revokeAllAccountSessions,
 } from "@/lib/auth/account-session";
 import { hashPassword, validatePassword, verifyPassword } from "@/lib/auth/password";
+import { cookies } from "next/headers";
+import { readDeviceIdentity } from "@/lib/auth/device-id";
+import { releaseOtherDevices } from "@/lib/auth/account-devices";
 
 /**
  * Change the password while signed in.
@@ -83,6 +86,13 @@ export async function POST(req: Request) {
     }
 
     await revokeAllAccountSessions(supabase, account.id);
+    // And out of the APP, not just the account pages. Revoking account sessions
+    // alone left another device browsing with a password that had already been
+    // changed, because the study app is gated on a separate cookie. Someone
+    // changing their password because they suspect the account is being used by
+    // somebody else is asking for exactly this.
+    const { id: keepDeviceId } = readDeviceIdentity(await cookies());
+    await releaseOtherDevices(supabase, account.id, keepDeviceId);
     const token = await createAccountSession(supabase, account.id, req);
 
     const res = NextResponse.json({ ok: true });

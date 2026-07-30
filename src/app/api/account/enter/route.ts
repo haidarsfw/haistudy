@@ -11,28 +11,13 @@ import {
   ActivationError,
   applySessionCookies,
 } from "@/lib/auth/oauth-cookie-helpers";
-
-/**
- * A durable, RANDOM id per browser. Not a fingerprint.
- *
- * Fingerprinting was considered and rejected: a campus is full of identical
- * iPhones and MacBooks, so two different people would collapse into one slot
- * and share a licence for free. A random value cannot collide, which means the
- * device limit actually counts devices.
- */
-const DEVICE_COOKIE = "hs-device";
-const DEVICE_COOKIE_OPTS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  maxAge: 365 * 24 * 60 * 60,
-};
-
-function detectDeviceType(ua: string): "mobile" | "desktop" | "tablet" {
-  if (/ipad|tablet/i.test(ua)) return "tablet";
-  return /mobile|android|iphone|ipod/i.test(ua) ? "mobile" : "desktop";
-}
+import {
+  DEVICE_COOKIE,
+  DEVICE_COOKIE_OPTS,
+  detectDeviceType,
+  newDeviceId,
+  readDeviceIdentity,
+} from "@/lib/auth/device-id";
 
 /**
  * Open one purchased access.
@@ -91,7 +76,11 @@ export async function POST(req: Request) {
     }
 
     const jar = await cookies();
-    const existingDeviceId = jar.get(DEVICE_COOKIE)?.value ?? "";
+    // Canonical cookie first, the old Google-login name second. Reading only
+    // the canonical one is what let a browser that had signed in with Google be
+    // called new here and handed a SECOND device row.
+    const identity = readDeviceIdentity(jar);
+    const existingDeviceId = identity.id;
 
     const { devices, slots } = await listAccountDevices(supabase, account.id);
     const known =
@@ -119,7 +108,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const deviceId = existingDeviceId || crypto.randomUUID();
+    const deviceId = existingDeviceId || newDeviceId();
     const ua = req.headers.get("user-agent") || "";
 
     const { data: license } = await supabase
@@ -143,7 +132,10 @@ export async function POST(req: Request) {
       const redirect = `/s${session.scope.semester}/${session.scope.examPeriod}/${session.scope.jurusan}/dashboard`;
       const res = NextResponse.json({ ok: true, redirect });
       applySessionCookies(res, session);
-      if (!existingDeviceId) {
+      // Written whenever the browser is not already carrying the canonical
+      // cookie — including when the id was recovered from the old name, so it
+      // converges instead of relying on a cookie nothing writes any more.
+      if (identity.needsCookie) {
         res.cookies.set(DEVICE_COOKIE, deviceId, DEVICE_COOKIE_OPTS);
       }
       return res;
