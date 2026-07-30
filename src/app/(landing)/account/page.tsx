@@ -117,10 +117,13 @@ export default async function AccountPage({
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-5">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">
-                Ada masalah dengan akunmu?
+                Ada kendala dengan akunmu?
               </p>
+              {/* The promise is kept, the tone is not. "Chat admin langsung"
+                  read like a friend's WhatsApp status on a page that also
+                  handles payment and account deletion. */}
               <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                Chat admin langsung, biasanya dibalas di hari yang sama.
+                Hubungi admin lewat WhatsApp. Biasanya dibalas pada hari yang sama.
               </p>
             </div>
             <a
