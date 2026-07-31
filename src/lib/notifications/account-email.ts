@@ -132,7 +132,7 @@ async function send(
   text: string
 ): Promise<SendResult> {
   const r = getClient();
-  if (!r) return { ok: false, error: "missing-resend-key" };
+  if (!r) return fail(to, subject, "missing-resend-key");
   try {
     const res = await r.emails.send({
       from: `haistudy <${FROM}>`,
@@ -142,11 +142,37 @@ async function send(
       html,
       text,
     });
-    if (res.error) return { ok: false, error: res.error.message };
+    if (res.error) return fail(to, subject, res.error.message);
     return { ok: true, id: res.data?.id };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+    return fail(to, subject, e instanceof Error ? e.message : "unknown");
   }
+}
+
+/**
+ * Not throwing is the contract, but staying SILENT was never meant to be part
+ * of it. Every caller ignores the returned SendResult, so a refused mail left
+ * no trace anywhere: the reset route answered `{"ok":true,"code":"SENT"}` while
+ * nothing had been sent, and the person waiting for the link had no way back
+ * into their account.
+ *
+ * The address is logged with its middle removed. Enough to find the row, not
+ * enough to spill an inbox into a log.
+ */
+function fail(to: string, subject: string, error: string): SendResult {
+  console.error(
+    `[email] NOT SENT to=${maskEmail(to)} subject=${JSON.stringify(subject)} error=${error}`
+  );
+  return { ok: false, error };
+}
+
+function maskEmail(raw: string): string {
+  const at = raw.lastIndexOf("@");
+  if (at < 1) return "***";
+  const name = raw.slice(0, at);
+  const domain = raw.slice(at);
+  const head = name.slice(0, 2);
+  return `${head}${"*".repeat(Math.max(1, name.length - 2))}${domain}`;
 }
 
 // Both links are public pages on purpose. People open mail on a phone and

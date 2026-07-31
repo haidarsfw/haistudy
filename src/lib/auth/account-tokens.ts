@@ -27,11 +27,29 @@ const TTL_MS: Record<TokenPurpose, number> = {
 };
 
 /**
- * Issue a token and return the raw value for the e-mail.
+ * Purposes where issuing a new link must kill the old one.
  *
- * Any earlier unused token of the same purpose is burned first: asking for a
- * second reset link must invalidate the first, otherwise an old message
- * forwarded or left in a shared inbox stays live.
+ * `reset` and `delete` are live credentials: an old message forwarded or left
+ * in a shared inbox has to stop working the moment a new one is asked for.
+ * `delete_cancel` follows the deletion it undoes.
+ *
+ * `verify` is deliberately NOT in this set. Nothing about it is a credential —
+ * spending it only confirms an address the holder already receives mail at —
+ * and burning it broke the ordinary funnel: the invoice e-mail mints a verify
+ * link of its own, which silently killed the one in the registration e-mail
+ * sent minutes earlier. Since only the SHA-256 is stored, the older link cannot
+ * be re-sent, so the buyer opening the mail actually titled "Konfirmasi email"
+ * was told the link was "sudah kedaluwarsa atau pernah dipakai" when it was
+ * neither. Every buyer who registered and then ordered hit this.
+ */
+const BURN_PREVIOUS: ReadonlySet<TokenPurpose> = new Set<TokenPurpose>([
+  "reset",
+  "delete",
+  "delete_cancel",
+]);
+
+/**
+ * Issue a token and return the raw value for the e-mail.
  */
 export async function issueAccountToken(
   supabase: SupabaseClient,
@@ -41,12 +59,14 @@ export async function issueAccountToken(
 ): Promise<string> {
   const now = new Date();
 
-  await supabase
-    .from("account_tokens")
-    .update({ used_at: now.toISOString() })
-    .eq("account_id", accountId)
-    .eq("purpose", purpose)
-    .is("used_at", null);
+  if (BURN_PREVIOUS.has(purpose)) {
+    await supabase
+      .from("account_tokens")
+      .update({ used_at: now.toISOString() })
+      .eq("account_id", accountId)
+      .eq("purpose", purpose)
+      .is("used_at", null);
+  }
 
   const { token, tokenHash } = createResetToken();
   const { error } = await supabase.from("account_tokens").insert({
