@@ -2,6 +2,7 @@ import { Compass } from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { parseScopeKey, scopePath, DEFAULT_SCOPE } from "@/lib/scope";
+import { scopeKeyFromCookie } from "@/lib/auth/scope-cookie";
 
 /**
  * Root 404 — handles both `notFound()` calls inside the app and any URL that
@@ -18,7 +19,10 @@ export default async function NotFound() {
   // marketing page. hs-scope is httpOnly, so this has to happen server-side.
   const jar = await cookies();
   const signedIn = !!jar.get("hs-session")?.value;
-  const scope = parseScopeKey(jar.get("hs-scope")?.value) ?? DEFAULT_SCOPE;
+  // The stamp has to come off first, or this parses nothing and every signed-in
+  // visitor gets pointed at DEFAULT_SCOPE instead of their own period.
+  const scope =
+    parseScopeKey(scopeKeyFromCookie(jar.get("hs-scope")?.value)) ?? DEFAULT_SCOPE;
 
   // scopePath() returns "s2/uts/bm" with no leading slash — every caller adds
   // its own. Without it this href is relative and resolves against the missing

@@ -97,7 +97,17 @@ function isAppRoute(pathname: string, segs: string[]): boolean {
 }
 
 function parseScopeCookie(raw: string | undefined): { sem: string; exam: string; jur: string } {
-  const value = raw && /^s\d+-(uts|uas)-[a-z0-9-]{1,16}$/.test(raw) ? raw : DEFAULT_SCOPE_COOKIE;
+  // hs-scope now carries "<scope-key>~<stamp>" (see lib/auth/scope-cookie.ts).
+  // Only the key matters here — this runs before any authorization and merely
+  // decides where to send a legacy URL. Stripping is done inline rather than by
+  // importing the helper, because that module reaches for node:crypto and this
+  // one has to stay loadable in the proxy runtime.
+  //
+  // Without the strip the regex below rejects every stamped cookie and silently
+  // falls back to the default period, which would land people in the wrong
+  // exam period instead of their own.
+  const bare = raw ? raw.split("~")[0] : raw;
+  const value = bare && /^s\d+-(uts|uas)-[a-z0-9-]{1,16}$/.test(bare) ? bare : DEFAULT_SCOPE_COOKIE;
   const [semWithS, exam, jur] = value.split("-");
   return { sem: semWithS.replace(/^s/, ""), exam, jur };
 }

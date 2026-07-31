@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { LATEST_SCOPE, scopeKey } from "@/lib/scope";
+import { signScopeValue } from "@/lib/auth/scope-cookie";
 
 const SCOPE_RE = /^s\d+-(uts|uas)-[a-z0-9-]{1,16}$/;
 
@@ -46,6 +47,13 @@ export async function GET(request: Request) {
     maxAge: 3600,
   };
   res.cookies.set("hs-session", "PREVIEW", cookieOpts);
-  res.cookies.set("hs-scope", scopeKey(LATEST_SCOPE), cookieOpts);
+  // Stamped like any other session. A preview visitor is entitled to the newest
+  // period and nothing else, and the stamp is what stops the cookie being
+  // retyped into an older one.
+  res.cookies.set(
+    "hs-scope",
+    signScopeValue(scopeKey(LATEST_SCOPE), "PREVIEW"),
+    cookieOpts
+  );
   return res;
 }

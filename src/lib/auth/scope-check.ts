@@ -8,6 +8,8 @@
 
 import { cookies } from "next/headers";
 import { parseScopeKey, eqScope, validateScopeTuple } from "@/lib/scope";
+import { isScopeStamped, scopeKeyFromCookie } from "@/lib/auth/scope-cookie";
+import { scopeAllowedFor } from "@/lib/auth/scope-entitlement";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 
 export class ScopeError extends Error {
@@ -39,13 +41,32 @@ export async function assertNotPreview(): Promise<void> {
 }
 
 /**
- * Reads the hs-scope cookie. Throws ScopeError if missing/invalid.
+ * The period this request is for, once it is established the caller may have it.
+ *
+ * This used to be four lines: read the cookie, parse it, hand it back. That is
+ * why a licence bound to s1-uts-bm could be served s2-uas-bm's chat by editing
+ * one cookie value — the cookie was the question AND the answer.
+ *
+ * Now: a cookie carrying a valid stamp is trusted immediately and costs no
+ * database read, which matters on the routes that poll. Anything else — an
+ * older cookie, or a hand-edited one — has to survive a real entitlement check.
  */
 export async function getCookieScope(): Promise<ScopeTuple> {
   const jar = await cookies();
   const raw = jar.get("hs-scope")?.value ?? "";
-  const scope = parseScopeKey(raw);
+  const scope = parseScopeKey(scopeKeyFromCookie(raw));
   if (!scope) throw new ScopeError("Unauthorized: no scope cookie", 401, "NO_SCOPE");
+
+  const sessionKey = jar.get("hs-session")?.value ?? "";
+  if (isScopeStamped(raw, sessionKey)) return scope;
+
+  if (!(await scopeAllowedFor(sessionKey, scope))) {
+    throw new ScopeError(
+      "Periode ini bukan milik akunmu",
+      403,
+      "SCOPE_NOT_ENTITLED"
+    );
+  }
   return scope;
 }
 

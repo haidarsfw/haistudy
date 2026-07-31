@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { parseScopeKey, isAvailableScope, scopeKey, scopePath } from "@/lib/scope";
+import { signScopeValue } from "@/lib/auth/scope-cookie";
 
 /**
  * POST /api/auth/switch-scope
  * Admin-only: switches the hs-scope cookie to a different scope.
  * Body: { scopeKey: "s2-uas-bm" }
+ *
+ * scope-exempt: this route WRITES the scope cookie, so requiring the current
+ * one would be circular. The guard here is isAdminFromSession, which reads
+ * is_admin from the database rather than from the forgeable hs-admin hint.
  */
 export async function POST(request: Request) {
   try {
@@ -29,8 +34,11 @@ export async function POST(request: Request) {
 
     const jar = await cookies();
 
-    // Update the scope cookie
-    jar.set("hs-scope", scopeKey(newScope), {
+    // Update the scope cookie. Stamped against the session that asked, so the
+    // value cannot be lifted into another session or edited afterwards. This
+    // route is admin-only, which is what makes issuing a stamp for a period the
+    // caller did not buy correct here and nowhere else.
+    jar.set("hs-scope", signScopeValue(scopeKey(newScope), jar.get("hs-session")?.value ?? ""), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

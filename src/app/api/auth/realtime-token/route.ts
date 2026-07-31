@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
-import { parseScopeKey } from "@/lib/scope";
+import { requireScope } from "@/lib/auth/scope-check";
 
 // ─── Realtime JWT minting ───
 // License-key auth has no Supabase Auth session, so the browser is the `anon`
@@ -41,8 +41,15 @@ export async function GET() {
     return NextResponse.json({ error: "no-session" }, { status: 401 });
   }
 
-  const scope = parseScopeKey(jar.get("hs-scope")?.value ?? "");
-  if (!scope) {
+  // requireScope, not a raw parse of the cookie. The token minted below carries
+  // the period inside it and is what Realtime checks, so believing an edited
+  // cookie here would hand out a live subscription to another cohort's chat —
+  // the same hole as the REST routes, but harder to notice because the leak
+  // arrives as a push rather than a response.
+  let scope;
+  try {
+    scope = await requireScope();
+  } catch {
     return NextResponse.json({ error: "no-scope" }, { status: 401 });
   }
 

@@ -10,6 +10,7 @@ import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { normalizeLoginMethod } from "@/lib/auth/login-method";
 import { accountColumns } from "@/lib/auth/account-link";
+import { signScopeValue } from "@/lib/auth/scope-cookie";
 
 export interface SessionPayload {
   licenseKey: string;
@@ -384,7 +385,14 @@ const COOKIE_OPTS = {
  */
 export function applySessionCookies(response: NextResponse, session: SessionPayload) {
   response.cookies.set("hs-session", session.licenseKey, COOKIE_OPTS);
-  response.cookies.set("hs-scope", session.scopeKey, COOKIE_OPTS);
+  // Stamped, and bound to this licence — see scope-cookie.ts. An edited value
+  // no longer verifies, so a buyer cannot type their way into a period they
+  // did not buy.
+  response.cookies.set(
+    "hs-scope",
+    signScopeValue(session.scopeKey, session.licenseKey),
+    COOKIE_OPTS
+  );
   if (session.isAdmin) {
     response.cookies.set("hs-admin", "1", COOKIE_OPTS);
   }
