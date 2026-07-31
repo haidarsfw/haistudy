@@ -29,42 +29,47 @@ export interface PurchaseAlertInput {
   loginMethod?: StoredLoginMethod;
 }
 
-/** How long one admin alert mail covers. */
-const QUIET_MINUTES = 30;
+/** One admin alert mail per this many minutes of wall clock. */
+const WINDOW_MINUTES = 30;
 
 /**
- * True at most once per QUIET_MINUTES, for the whole system.
+ * Is this the first order of the current half-hour block?
  *
- * Kept in `account_rate_events`, which already exists for exactly this shape of
- * question, so there is no new table and no cron — the Hobby plan has one cron
- * slot left and this does not deserve it.
+ * Derived from `purchase_requests` itself rather than from a marker row, so
+ * there is no new table, no migration, and no cron — the Hobby plan has one
+ * cron slot left and this does not deserve it.
  *
- * Racy by nature: two orders landing in the same second could both claim it and
- * send two mails. That costs one extra mail and is far better than the
- * alternative failure, which is a lock that jams and sends none.
+ * The window is a fixed wall-clock block, not "30 minutes since the last
+ * order". A sliding window is the obvious version and it is wrong: orders
+ * arriving every 29 minutes would each see the previous one inside the window
+ * and suppress forever, so the owner would get exactly one mail and never
+ * another. Fixed blocks cap the mail at 48 a day and can never starve.
+ *
+ * Ties go to sending. If the count cannot be read we send, because the mail
+ * exists to tell the owner money arrived and bookkeeping must not be what
+ * decides he hears about it.
  */
-async function claimAlertSlot(
-  supabase: ReturnType<typeof createServerClient>
+async function isFirstOrderInWindow(
+  supabase: ReturnType<typeof createServerClient>,
+  requestId: string | null
 ): Promise<boolean> {
   if (!supabase) return false;
   try {
-    const since = new Date(Date.now() - QUIET_MINUTES * 60_000).toISOString();
-    const { data } = await supabase
-      .from("account_rate_events")
-      .select("id")
-      .eq("kind", "admin_purchase_alert")
-      .gte("created_at", since)
-      .limit(1)
-      .maybeSingle();
-    if (data) return false;
+    const ms = WINDOW_MINUTES * 60_000;
+    const blockStart = new Date(Math.floor(Date.now() / ms) * ms).toISOString();
 
-    await supabase
-      .from("account_rate_events")
-      .insert({ kind: "admin_purchase_alert", subject: "purchase", ip: null });
-    return true;
+    let q = supabase
+      .from("purchase_requests")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", blockStart);
+    // Exclude the order being announced — it is already in the table by now.
+    if (requestId) q = q.neq("id", requestId);
+
+    const { count, error } = await q;
+    if (error) throw error;
+    return (count ?? 0) === 0;
   } catch (e) {
-    // Never let the bookkeeping decide whether the owner hears about money.
-    console.error("[purchase-alert] slot check failed, sending anyway", e);
+    console.error("[purchase-alert] window check failed, sending anyway", e);
     return true;
   }
 }
@@ -146,7 +151,10 @@ export async function notifyAdminsOnPurchase(input: PurchaseAlertInput): Promise
     // actually gets looked at. So the mail becomes a digest: at most one per
     // QUIET_MINUTES, naming the newest order and how many are waiting behind
     // it. Same information, a quarter of the quota.
-    if (recipients.size > 0 && (await claimAlertSlot(supabase))) {
+    if (
+      recipients.size > 0 &&
+      (await isFirstOrderInWindow(supabase, input.requestId ?? null))
+    ) {
       const { count } = await supabase
         .from("purchase_requests")
         .select("id", { count: "exact", head: true })

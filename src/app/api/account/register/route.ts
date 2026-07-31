@@ -155,29 +155,39 @@ export async function POST(req: Request) {
     })()
   );
 
-  // Verification never blocks anything: the account is usable immediately and
-  // the account page simply shows an unverified badge until the link is
-  // clicked. Blocking here would strand a buyer at 2am behind a mail queue.
-  waitUntil(
-    (async () => {
-      try {
-        const token = await issueAccountToken(supabase, account.id, "verify", ip);
-        await sendVerifyEmail({
-          to: account.email,
-          name: account.nickname || account.fullName,
-          token,
-        });
-      } catch (e) {
-        console.error("[account/register] verify mail failed", e);
-      }
-    })()
-  );
+  // Awaited, not fired and forgotten.
+  //
+  // This mail used to ride on waitUntil, which was the right call when
+  // confirming was optional. It is not optional any more: an order cannot be
+  // approved until the address is confirmed, so a mail that quietly never
+  // leaves is a buyer who cannot be served. Roughly 300ms, once per account,
+  // in exchange for knowing whether it went.
+  //
+  // Still never fatal. The account exists; if the mail failed the person can
+  // ask for another from the account page, and the invoice mail carries a
+  // fresh link of its own. The response says which way it went so the signup
+  // screen can be honest rather than promising a mail that is not coming.
+  let verifyMailSent = false;
+  try {
+    const token = await issueAccountToken(supabase, account.id, "verify", ip);
+    const res = await sendVerifyEmail({
+      to: account.email,
+      name: account.nickname || account.fullName,
+      token,
+    });
+    verifyMailSent = res.ok;
+  } catch (e) {
+    console.error("[account/register] verify mail failed", e);
+  }
 
   const token = await createAccountSession(supabase, account.id, req);
   await recordLoginAttempt(ip, "ok");
 
   const res = NextResponse.json({
     ok: true,
+    // False means the confirmation mail did not go out. The account is fine;
+    // the screen should offer "kirim ulang" rather than say it has been sent.
+    verifyMailSent,
     account: {
       id: account.id,
       email: account.email,
