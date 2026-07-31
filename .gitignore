@@ -111,3 +111,8 @@ graphify-out/
 # Installed skill packs (npx skills add). Machine-local tooling for how I work,
 # not part of the product — and this repo is public.
 /.agents/
+
+# TestSprite working files, plans and reports. Internal QA output that names
+# internal rules and endpoints — this repo is public, so none of it ships.
+/testsprite_tests/
+/.testsprite/
