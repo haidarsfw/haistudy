@@ -164,31 +164,63 @@ export interface CreateAccountInput {
 }
 
 /**
- * Returns null when the address is already taken — the unique index on
+ * `accounts` carries TWO unique indexes, not one: `email_lower` and
+ * `lower(nickname)`. Both raise 23505, so the constraint has to be named before
+ * the error can be read — treating every 23505 as "e-mail taken" told a brand
+ * new customer their address already had an account, and sent them to a sign-in
+ * that could not work.
+ */
+function isNicknameConflict(error: { message?: string; details?: string | null }): boolean {
+  const text = `${error.message ?? ""} ${error.details ?? ""}`;
+  return text.includes("accounts_nickname_unique");
+}
+
+/**
+ * Returns null when the ADDRESS is already taken — the unique index on
  * email_lower is the arbiter, not a prior SELECT, so two simultaneous
  * registrations cannot both win.
+ *
+ * A taken NICKNAME does not stop a registration. The nickname arriving here is
+ * derived (the first word of whatever name Google handed over, or of the one
+ * typed on the form), never chosen — so a collision is our problem, not the
+ * customer's, and it is settled by leaving the name blank. Checkout asks for
+ * the real one, with a live uniqueness check and suggestions behind it.
+ *
+ * Blank is a legitimate value: the unique index is partial (`WHERE nickname <>
+ * ''`), so any number of accounts may sit nameless.
+ *
+ * Auto-suffixing was the other option and is wrong here — nicknames may not
+ * contain digits, so "Fathan2" would be a name the rules themselves reject.
  */
 export async function createAccount(
   supabase: SupabaseClient,
   input: CreateAccountInput
 ): Promise<Account | null> {
-  const { data, error } = await supabase
-    .from("accounts")
-    .insert({
-      email: input.email.trim(),
-      auth_provider: input.authProvider,
-      password_hash: input.authProvider === "password" ? input.passwordHash : null,
-      email_verified_at: input.emailVerified ? new Date().toISOString() : null,
-      full_name: (input.fullName ?? "").trim().slice(0, 100),
-      nickname: (input.nickname ?? "").trim().slice(0, 24),
-      whatsapp: (input.whatsapp ?? "").trim().slice(0, 30),
-      referred_by_code:
-        input.referralCode?.trim().toUpperCase().slice(0, 32) || null,
-    })
-    .select(ACCOUNT_COLUMNS)
-    .single();
+  const insert = (nickname: string) =>
+    supabase
+      .from("accounts")
+      .insert({
+        email: input.email.trim(),
+        auth_provider: input.authProvider,
+        password_hash: input.authProvider === "password" ? input.passwordHash : null,
+        email_verified_at: input.emailVerified ? new Date().toISOString() : null,
+        full_name: (input.fullName ?? "").trim().slice(0, 100),
+        nickname,
+        whatsapp: (input.whatsapp ?? "").trim().slice(0, 30),
+        referred_by_code:
+          input.referralCode?.trim().toUpperCase().slice(0, 32) || null,
+      })
+      .select(ACCOUNT_COLUMNS)
+      .single();
 
-  // 23505 = unique violation on email_lower.
+  const wanted = (input.nickname ?? "").trim().slice(0, 24);
+  let { data, error } = await insert(wanted);
+
+  if (wanted && error?.code === "23505" && isNicknameConflict(error)) {
+    ({ data, error } = await insert(""));
+  }
+
+  // Whatever is left really is the address.
   if (error?.code === "23505") return null;
   if (error) throw error;
   return data ? mapAccount(data) : null;
