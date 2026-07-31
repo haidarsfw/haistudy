@@ -288,9 +288,15 @@ export async function sendVerifyEmail(opts: {
     greetingName: opts.name || undefined,
     body: [
       "Akun haistudy kamu sudah jadi. Tinggal satu langkah: konfirmasi kalau email ini benar milikmu.",
+      // This used to say confirming was optional — "kamu tetap bisa langsung
+      // pakai akunmu tanpa ini" — while the invoice mail sent minutes later
+      // said the opposite, and the order genuinely cannot be approved until
+      // the address is confirmed. Three places, three different rules. This is
+      // now the one the server actually enforces.
+      //
       // The <strong> deliberately carries no colour: it inherits from .body, so
       // it flips with the theme instead of staying stuck on one palette.
-      "Kamu <strong>tetap bisa langsung pakai akunmu</strong> tanpa ini. Konfirmasi cuma memastikan kamu bisa mengatur ulang password nanti kalau lupa.",
+      "Kalau kamu beli akses, <strong>pesananmu baru bisa kami setujui setelah email ini dikonfirmasi</strong>. Konfirmasi juga yang membuat kamu bisa mengatur ulang password nanti kalau lupa.",
     ],
     ctaLabel: "Konfirmasi email",
     ctaUrl: url,
@@ -303,7 +309,8 @@ export async function sendVerifyEmail(opts: {
     "Akun haistudy kamu sudah jadi. Konfirmasi email kamu lewat tautan ini:",
     url,
     "",
-    "Kamu tetap bisa langsung pakai akunmu tanpa ini. Tautan berlaku 7 hari.",
+    "Kalau kamu beli akses, pesananmu baru bisa kami setujui setelah email ini dikonfirmasi.",
+    "Tautan berlaku 7 hari.",
     "Kalau kamu tidak pernah membuat akun di haistudy, abaikan email ini.",
   ].join("\n");
 

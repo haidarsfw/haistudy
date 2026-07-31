@@ -99,6 +99,15 @@ export interface PurchaseAlertEmailOpts {
   scopeLabel: string;
   whatsapp?: string | null;
   loginMethod?: StoredLoginMethod;
+  /**
+   * How many orders are waiting in total, this one included.
+   *
+   * The mail is throttled to one per half hour to stay inside Resend's 100-a-day
+   * free plan, so it has to describe the QUEUE rather than a single order —
+   * otherwise the orders that arrive during the quiet window would look like
+   * they never happened. Null when the count could not be read.
+   */
+  pendingCount?: number | null;
 }
 
 /**
@@ -185,6 +194,11 @@ function renderPurchaseAlertHtml(a: PurchaseAlertRenderArgs): string {
         ${row("Periode", a.scopeLabel)}
         ${a.whatsapp ? row("WhatsApp", a.whatsapp) : ""}
         ${row("Metode login", loginMethodLabel(a.loginMethod))}
+        ${
+          typeof a.pendingCount === "number" && a.pendingCount > 1
+            ? row("Menunggu di antrian", `${a.pendingCount} pesanan`)
+            : ""
+        }
       </table>
       <a href="${a.url}" style="display:inline-block;background:#22c55e;color:#0f172a;text-decoration:none;font-weight:700;padding:10px 18px;border-radius:8px;font-size:14px">
         Buka Purchase Queue
@@ -206,6 +220,9 @@ function renderPurchaseAlertText(a: PurchaseAlertRenderArgs): string {
     `Periode: ${a.scopeLabel}\n` +
     (a.whatsapp ? `WhatsApp: ${a.whatsapp}\n` : "") +
     `Metode login: ${loginMethodLabel(a.loginMethod)}\n\n` +
+    (typeof a.pendingCount === "number" && a.pendingCount > 1
+      ? `Total ${a.pendingCount} pesanan menunggu di antrian.\n\n`
+      : "") +
     `Buka Purchase Queue: ${a.url}\n`
   );
 }

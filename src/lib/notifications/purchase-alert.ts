@@ -29,6 +29,46 @@ export interface PurchaseAlertInput {
   loginMethod?: StoredLoginMethod;
 }
 
+/** How long one admin alert mail covers. */
+const QUIET_MINUTES = 30;
+
+/**
+ * True at most once per QUIET_MINUTES, for the whole system.
+ *
+ * Kept in `account_rate_events`, which already exists for exactly this shape of
+ * question, so there is no new table and no cron — the Hobby plan has one cron
+ * slot left and this does not deserve it.
+ *
+ * Racy by nature: two orders landing in the same second could both claim it and
+ * send two mails. That costs one extra mail and is far better than the
+ * alternative failure, which is a lock that jams and sends none.
+ */
+async function claimAlertSlot(
+  supabase: ReturnType<typeof createServerClient>
+): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const since = new Date(Date.now() - QUIET_MINUTES * 60_000).toISOString();
+    const { data } = await supabase
+      .from("account_rate_events")
+      .select("id")
+      .eq("kind", "admin_purchase_alert")
+      .gte("created_at", since)
+      .limit(1)
+      .maybeSingle();
+    if (data) return false;
+
+    await supabase
+      .from("account_rate_events")
+      .insert({ kind: "admin_purchase_alert", subject: "purchase", ip: null });
+    return true;
+  } catch (e) {
+    // Never let the bookkeeping decide whether the owner hears about money.
+    console.error("[purchase-alert] slot check failed, sending anyway", e);
+    return true;
+  }
+}
+
 export async function notifyAdminsOnPurchase(input: PurchaseAlertInput): Promise<void> {
   if (!isSupabaseServerConfigured) return;
   const supabase = createServerClient();
@@ -95,7 +135,23 @@ export async function notifyAdminsOnPurchase(input: PurchaseAlertInput): Promise
       }
     }
 
-    if (recipients.size > 0) {
+    // 4) Email, but not one per order.
+    //
+    // Resend's free plan allows 100 mails a DAY (3,000 a month, so the day is
+    // the binding one). Each buyer already costs four: confirm, invoice, this
+    // alert, and "aksesmu sudah aktif". The busiest day on record is 17 orders
+    // — 68 of 100 — and going over does not warn anyone, it just stops sending.
+    //
+    // Push already fires per order above, instantly, which is the channel that
+    // actually gets looked at. So the mail becomes a digest: at most one per
+    // QUIET_MINUTES, naming the newest order and how many are waiting behind
+    // it. Same information, a quarter of the quota.
+    if (recipients.size > 0 && (await claimAlertSlot(supabase))) {
+      const { count } = await supabase
+        .from("purchase_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+
       await sendPurchaseAlertEmail({
         to: Array.from(recipients),
         buyerName: input.name,
@@ -104,6 +160,7 @@ export async function notifyAdminsOnPurchase(input: PurchaseAlertInput): Promise
         scopeLabel: input.scopeLabel,
         whatsapp: input.whatsapp ?? null,
         loginMethod: input.loginMethod ?? null,
+        pendingCount: typeof count === "number" ? count : null,
       });
     }
   } catch (e) {

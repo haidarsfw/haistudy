@@ -184,7 +184,13 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     fetchPurchases();
   }, [fetchPurchases, adminScopeKey, reloadToken]);
 
-  const handleApprove = useCallback(async (purchase: PurchaseRequest) => {
+  const handleApprove = useCallback(async (
+    purchase: PurchaseRequest,
+    // Set only by the "setujui paksa" path in the dialog below. The server
+    // refuses an unconfirmed address without it, so this flag is the whole
+    // difference between a checked approval and a deliberate exception.
+    overrideUnverified = false
+  ) => {
     setProcessingId(purchase.id);
 
     // Exam-quota top-up: the buyer already has a key — no new key minted. Just
@@ -236,7 +242,7 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
       const res = await fetch("/api/admin/purchase/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: purchase.id }),
+        body: JSON.stringify({ id: purchase.id, overrideUnverified }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -841,7 +847,9 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
             onClick={() => {
               const target = approveTarget;
               setApproveTarget(null);
-              if (target) void handleApprove(target);
+              // The server refuses an unconfirmed address unless this is sent,
+              // and it stamps the purchase so the exception stays answerable.
+              if (target) void handleApprove(target, true);
             }}
           >
             Ya, tetap setujui

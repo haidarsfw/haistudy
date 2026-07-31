@@ -77,6 +77,25 @@ export async function POST(request: Request) {
       });
     }
 
+    // A refused order stays refused until someone says otherwise.
+    //
+    // The panel hides the buttons once a row is rejected, so this is only
+    // reachable from a stale tab or a direct call — but it was reachable, and
+    // it minted a real licence and burned a real invoice number for an order
+    // that had been turned down. Reversing a rejection is a legitimate thing to
+    // want; doing it by accident is not, so it goes back through "pending"
+    // where the normal checks apply again.
+    if (purchase.status === "rejected") {
+      return NextResponse.json(
+        {
+          error:
+            "Pembelian ini sudah ditolak. Kembalikan statusnya ke pending dulu kalau memang mau disetujui.",
+          code: "ALREADY_REJECTED",
+        },
+        { status: 409 }
+      );
+    }
+
     const scope: ScopeTuple | null = parseScopeKey(
       `s${purchase.semester}-${purchase.exam_period}-${purchase.jurusan}`
     );
@@ -104,12 +123,35 @@ export async function POST(request: Request) {
 
     const { data: account } = await supabase
       .from("accounts")
-      .select("id, email, full_name, nickname, auth_provider")
+      .select("id, email, full_name, nickname, auth_provider, email_verified_at")
       .eq("id", accountId)
       .maybeSingle();
     if (!account) {
       return NextResponse.json(
         { error: "Akun pembelinya sudah tidak ada.", code: "ACCOUNT_GONE" },
+        { status: 409 }
+      );
+    }
+
+    // A confirmed address is a REAL condition of approval, not a hint in the
+    // admin's browser. It used to live only in the panel — one dialog, one
+    // click past it — so anything that called this route directly sailed
+    // through, and the registration mail cheerfully said confirming was
+    // optional. The buyer's address is where the licence, the invoice and
+    // every later reset link go; approving an unconfirmed one is how access
+    // gets sold into a typo.
+    //
+    // Still overridable, because a hard block would strand a paying customer
+    // whose mail simply never arrived — but the override has to be asked for,
+    // and it is written into the purchase so it is visible afterwards.
+    const overrideUnverified = body.overrideUnverified === true;
+    if (!account.email_verified_at && !overrideUnverified) {
+      return NextResponse.json(
+        {
+          error:
+            "Pembeli belum mengonfirmasi emailnya. Minta dia klik tautan konfirmasi dulu, atau setujui paksa kalau kamu yakin.",
+          code: "EMAIL_UNVERIFIED",
+        },
         { status: 409 }
       );
     }
@@ -173,7 +215,15 @@ export async function POST(request: Request) {
         status: "approved",
         license_key: key,
         approved_at: new Date().toISOString(),
-        meta: { ...meta, ...(orderNo !== null ? { orderNo } : {}) },
+        meta: {
+          ...meta,
+          ...(orderNo !== null ? { orderNo } : {}),
+          // Recorded so an override is answerable later: which orders were let
+          // through without a confirmed address, and when.
+          ...(overrideUnverified && !account.email_verified_at
+            ? { approvedUnverified: new Date().toISOString() }
+            : {}),
+        },
       })
       .eq("id", id);
 

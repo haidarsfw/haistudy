@@ -228,7 +228,11 @@ export async function GET(request: Request) {
   }
 }
 
-// ─── PATCH /api/admin/purchase - Approve or reject ───
+// ─── PATCH /api/admin/purchase - Approve, reject, or return to the queue ───
+//
+// scope-exempt: admin route. There is no hs-scope to require because the admin
+// panel deliberately spans periods; scope comes from resolveAdminScope below
+// and every row touched is checked against it.
 export async function PATCH(request: Request) {
   try {
     const { authorized } = await validateAdmin();
@@ -246,9 +250,18 @@ export async function PATCH(request: Request) {
       );
     }
 
-    if (!["approved", "rejected"].includes(status)) {
+    // "pending" is here so a rejection can be undone.
+    //
+    // Rejecting was a one-way door: the only two accepted values were approved
+    // and rejected, the panel hides the buttons once a row leaves pending, and
+    // the approve route now refuses a rejected order outright. An admin who
+    // rejected the wrong row had no way back short of editing the database by
+    // hand — and rejections are routine here, since unreadable transfer proofs
+    // are common. Returning a row to the queue grants nothing on its own; it
+    // just puts it back where the normal checks apply.
+    if (!["approved", "rejected", "pending"].includes(status)) {
       return NextResponse.json(
-        { error: "status must be 'approved' or 'rejected'" },
+        { error: "status must be 'approved', 'rejected' or 'pending'" },
         { status: 400 }
       );
     }
