@@ -53,6 +53,10 @@ function withWelcome(path: string): string {
 export function RegisterForm({ next }: { next?: string }) {
   /** Set only on the no-destination path — see the two endings in submit(). */
   const [registered, setRegistered] = useState<string | null>(null);
+  // Whether the confirmation mail actually left. The success screen says
+  // something different when it did not, instead of pointing at an inbox that
+  // will stay empty.
+  const [mailSent, setMailSent] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [referral, setReferral] = useState("");
@@ -158,6 +162,8 @@ export function RegisterForm({ next }: { next?: string }) {
         ok?: boolean;
         error?: string;
         field?: string;
+        /** The server waits for the confirmation mail and reports the result. */
+        verifyMailSent?: boolean;
       };
 
       if (!res.ok || !data.ok) {
@@ -201,6 +207,7 @@ export function RegisterForm({ next }: { next?: string }) {
       // this account existed. Dropping it here is what lets the success screen
       // link onward normally instead of forcing a full page load to clear it.
       refreshAccount();
+      setMailSent(data.verifyMailSent !== false);
       setRegistered(email.trim());
     } catch {
       setBanner("Koneksi bermasalah. Coba lagi.");
@@ -261,7 +268,7 @@ export function RegisterForm({ next }: { next?: string }) {
         </div>
 
         <div className="w-full">
-          <VerifyEmailBox email={registered} context="signup" />
+          <VerifyEmailBox email={registered} context="signup" mailSent={mailSent} />
         </div>
       </motion.div>
     );

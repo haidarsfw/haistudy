@@ -103,6 +103,12 @@ export function AccountFrame({ children }: { children: React.ReactNode }) {
  * thing they came to change.
  */
 export function AccountSidebar({ current }: { current: string }) {
+  // `/account` is not in the list, so on the account home NOTHING was
+  // highlighted — six links and no answer to "where am I". What that page
+  // actually shows is the access state, the same thing "Akses saya" leads to,
+  // so that is the entry it belongs to.
+  const aktif = current === "/account" ? "/account/access" : current;
+
   return (
     <nav aria-label="Bagian akun" className="hidden lg:block">
       <ul className="sticky top-10 flex flex-col gap-0.5">
@@ -110,10 +116,10 @@ export function AccountSidebar({ current }: { current: string }) {
           <li key={item.href}>
             <Link
               href={item.href}
-              aria-current={current === item.href ? "page" : undefined}
+              aria-current={aktif === item.href ? "page" : undefined}
               className={cn(
                 "block rounded-lg px-3 py-2 text-sm transition-colors",
-                current === item.href
+                aktif === item.href
                   ? "bg-accent font-semibold text-foreground"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}

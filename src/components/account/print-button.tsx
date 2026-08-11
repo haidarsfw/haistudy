@@ -12,7 +12,7 @@ export function PrintButton() {
     <button
       type="button"
       onClick={() => window.print()}
-      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+      className="inline-flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
     >
       <Printer className="h-4 w-4" />
       Cetak / simpan PDF

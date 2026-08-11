@@ -116,3 +116,4 @@ graphify-out/
 # internal rules and endpoints — this repo is public, so none of it ships.
 /testsprite_tests/
 /.testsprite/
+testsprite_tests/tmp/

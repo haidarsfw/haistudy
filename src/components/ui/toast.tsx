@@ -84,8 +84,23 @@ function removeToast(id: string) {
 }
 
 function addToast(type: ToastType, title: React.ReactNode, opts?: ToastOptions): string {
-  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  // Pressing the same blocked button twice should not stack two identical
+  // notices on top of each other. Seen on the checkout: two "Lengkapi dulu
+  // field yang wajib" cards, one under the other, saying the same thing about
+  // the same fields. The second press restarts the first toast's timer instead,
+  // which is what a repeat actually means — "still true, look again".
   const duration = opts?.duration ?? (type === "error" ? ERROR_DURATION : DEFAULT_DURATION);
+
+  const kembar =
+    typeof title === "string"
+      ? toasts.find((x) => x.type === type && x.title === title)
+      : undefined;
+  if (kembar) {
+    scheduleRemoval(kembar.id, kembar.duration ?? duration);
+    return kembar.id;
+  }
+
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const item: ToastItem = {
     id,
     type,

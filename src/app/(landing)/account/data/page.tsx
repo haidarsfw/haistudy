@@ -65,10 +65,12 @@ export default async function AccountDataPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-8 lg:px-8 lg:py-12">
-      <div className="flex items-center justify-between gap-4 print:hidden">
+      {/* `whitespace-nowrap` because on a 390px phone both of these wrapped
+          onto two lines and the row turned into four ragged fragments. */}
+      <div className="flex items-center justify-between gap-3 print:hidden">
         <Link
           href="/account/manage"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
           Kembali ke akun
@@ -77,7 +79,10 @@ export default async function AccountDataPage() {
       </div>
 
       <div className="mt-8">
-        <Wordmark className="text-sm" />
+        {/* On paper this sheet needs to say whose it is. On screen the account
+            header above it already does, and two wordmarks 380px apart read as
+            a rendering mistake. */}
+        <Wordmark className="hidden text-sm print:block" />
         <h1 className="mt-3 font-display text-2xl font-bold tracking-tight text-foreground">
           Data akun
         </h1>

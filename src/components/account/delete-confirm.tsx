@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 
 import { easeEnter, NAV } from "@/lib/motion";
+import { Wordmark } from "@/components/landing/logo";
 
 /**
  * The two pages an e-mail link can land on.
@@ -19,6 +20,17 @@ type State = "idle" | "busy" | "done" | "error";
 function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-5 py-12">
+      {/* Say whose site this is.
+          These two pages are reached by clicking a link in an e-mail about
+          deleting an account — the single most suspicious message we ever send.
+          They arrived at a bare card floating on a dark background with no mark
+          on it anywhere, which is exactly what a phishing page looks like. */}
+      <Link
+        href="/"
+        className="mb-4 self-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        <Wordmark className="text-sm" />
+      </Link>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}

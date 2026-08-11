@@ -87,25 +87,52 @@ function ResendButton({
 export function VerifyEmailBox({
   email,
   context = "signup",
+  mailSent = true,
 }: {
   email: string;
   /** Changes only the consequence sentence, never the ask. */
   context?: "signup" | "order";
+  /**
+   * Did the confirmation mail actually leave?
+   *
+   * The register endpoint waits for the send and reports the answer, and until
+   * now nothing read it — so on the one occasion the mail failed, the screen
+   * still said "Kami kirim tautan konfirmasi ke ..." about a message that never
+   * existed, and the reader was left waiting for it. Seen for real in this
+   * round: a transient Resend error, logged server-side, invisible on screen.
+   * The resend button was always there; the sentence above it just had to stop
+   * claiming something that had not happened.
+   */
+  mailSent?: boolean;
 }) {
   const { state, message, resend } = useResendVerify();
+  // Once they press the button themselves, the failure is history.
+  const gagal = !mailSent && state !== "sent";
 
   return (
     <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-left">
       <div className="flex items-start gap-2.5">
         <MailWarning className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">Cek emailmu dulu</p>
+          <p className="text-sm font-semibold text-foreground">
+            {gagal ? "Email konfirmasi gagal terkirim" : "Cek emailmu dulu"}
+          </p>
           <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            Kami kirim tautan konfirmasi ke{" "}
-            <span className="font-medium text-foreground">{email}</span>.{" "}
-            {context === "order"
-              ? "Pesananmu sudah masuk, tapi baru bisa kami setujui setelah kamu klik tautan itu."
-              : "Klik tautannya supaya pesananmu nanti bisa langsung kami setujui."}
+            {gagal ? (
+              <>
+                Kami belum berhasil mengirim tautan konfirmasi ke{" "}
+                <span className="font-medium text-foreground">{email}</span>.
+                Akunmu tetap aman dan sudah jadi — coba kirim ulang sebentar lagi.
+              </>
+            ) : (
+              <>
+                Kami kirim tautan konfirmasi ke{" "}
+                <span className="font-medium text-foreground">{email}</span>.{" "}
+                {context === "order"
+                  ? "Pesananmu sudah masuk, tapi baru bisa kami setujui setelah kamu klik tautan itu."
+                  : "Klik tautannya supaya pesananmu nanti bisa langsung kami setujui."}
+              </>
+            )}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <ResendButton state={state} onClick={resend} />
