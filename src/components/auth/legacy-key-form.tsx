@@ -189,7 +189,7 @@ export function LegacyKeyForm() {
     >
       <div className="flex flex-col gap-2">
         <Label htmlFor="license-key" className="text-sm font-medium">
-          License Key
+          {t("login.license_key_label")}
         </Label>
         <div className="relative">
           <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

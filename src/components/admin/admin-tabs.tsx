@@ -89,7 +89,10 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
         {TABS.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5">
             <tab.icon className="h-4 w-4" />
-            <span className="hidden sm:inline">{tab.label}</span>
+            {/* `sr-only` rather than `hidden` on a phone: the tabs collapse to
+                icons there, and `hidden` removed the only text a screen reader
+                had to announce, leaving nine unnamed buttons. */}
+            <span className="sr-only sm:not-sr-only sm:inline">{tab.label}</span>
             {tab.value === 5 && pendingCount > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold text-white">
                 {pendingCount > 9 ? "9+" : pendingCount}

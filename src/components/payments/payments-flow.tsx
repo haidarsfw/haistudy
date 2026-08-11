@@ -1380,7 +1380,11 @@ export function PaymentsFlow({
       {/* Sticky on a phone. The buyer's thumb sits at the bottom of the screen,
           and on a long step the only way to reach Lanjut was to scroll past
           everything they had just filled in. */}
-      <div className="sticky bottom-0 z-20 mx-auto -mx-4 mt-5 flex w-[calc(100%+2rem)] gap-2.5 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-auto sm:mt-7 sm:w-full sm:max-w-xl sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+      {/* No `mx-auto` on the phone breakpoint: it fights `-mx-4` for the same
+          margin property, and when it won the bar stayed 32px wider than its
+          parent without the negative offset that pays for it — the page could
+          be dragged sideways. `sm:mx-auto` still centres it on a desktop. */}
+      <div className="sticky bottom-0 z-20 -mx-4 mt-5 flex w-[calc(100%+2rem)] gap-2.5 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-auto sm:mt-7 sm:w-full sm:max-w-xl sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         {step > 0 && (
           <button
             type="button"

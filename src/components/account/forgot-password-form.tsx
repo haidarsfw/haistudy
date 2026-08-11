@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, MailCheck, UserPlus } from "lucide-react";
+import { AlertCircle, Clock, MailCheck, MessageCircle, UserPlus } from "lucide-react";
 
 import { AuthField, AuthSubmit } from "@/components/account/auth-field";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
+import { WA_ADMIN } from "@/lib/payments";
 
 type Outcome =
   | { kind: "sent"; email: string }
   | { kind: "not_found"; email: string }
-  | { kind: "google"; email: string };
+  | { kind: "google"; email: string }
+  | { kind: "blocked"; email: string }
+  | { kind: "rate_limited"; message: string };
 
 /**
  * Ask for a reset link.
@@ -64,6 +67,19 @@ export function ForgotPasswordForm() {
           return;
         case "GOOGLE_ACCOUNT":
           setOutcome({ kind: "google", email: typed });
+          return;
+        // These two used to fall through to the plain red line under the field.
+        // A blocked account was told to "contact admin" with no way to do it,
+        // and a throttled one got a bare sentence. Both now get the same
+        // explain-and-offer-a-next-step card as the other outcomes.
+        case "BLOCKED":
+          setOutcome({ kind: "blocked", email: typed });
+          return;
+        case "RATE_LIMITED":
+          setOutcome({
+            kind: "rate_limited",
+            message: data.error ?? "Terlalu banyak permintaan. Coba lagi nanti.",
+          });
           return;
         default:
           setError(data.error ?? "Gagal mengirim. Coba lagi.");
@@ -143,6 +159,64 @@ export function ForgotPasswordForm() {
           className="text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Coba email lain
+        </button>
+      </div>
+    );
+  }
+
+  if (outcome?.kind === "blocked") {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+          <div className="text-sm leading-relaxed">
+            <p className="font-semibold text-foreground">Akun ini sedang diblokir</p>
+            <p className="mt-1 text-muted-foreground">
+              {outcome.email} tidak bisa dipakai untuk sekarang, jadi tautan resetnya
+              tidak kami kirim. Admin bisa membukanya lagi.
+            </p>
+          </div>
+        </div>
+        <a
+          href={`https://wa.me/${WA_ADMIN}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="brand-gradient-bg inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5"
+        >
+          <MessageCircle className="h-4 w-4" />
+          Chat admin
+        </a>
+        <button
+          type="button"
+          onClick={() => setOutcome(null)}
+          className="text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Coba email lain
+        </button>
+      </div>
+    );
+  }
+
+  if (outcome?.kind === "rate_limited") {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
+          <Clock className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+          <div className="text-sm leading-relaxed">
+            <p className="font-semibold text-foreground">Tunggu sebentar dulu</p>
+            <p className="mt-1 text-muted-foreground">{outcome.message}</p>
+            <p className="mt-1 text-muted-foreground">
+              Kalau tautan sebelumnya sudah terkirim, cek kotak masuk dan folder
+              spam — mungkin sudah ada di sana.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOutcome(null)}
+          className="text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Kembali
         </button>
       </div>
     );

@@ -551,6 +551,7 @@ const id: Record<string, string> = {
   "login.validating": "Memvalidasi...",
   "login.enter": "Masuk",
   "login.enter_key": "Masukkan license key",
+  "login.license_key_label": "Kunci lisensi",
   "login.enter_license_key": "Masukkan license key...",
   "login.too_many_attempts": "Terlalu banyak percobaan. Coba lagi dalam",
   "login.connection_failed": "Koneksi gagal. Periksa internet Anda.",

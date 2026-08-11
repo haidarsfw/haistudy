@@ -319,6 +319,7 @@ const en: Record<string, string> = {
   "login.validating": "Validating...",
   "login.enter": "Login",
   "login.enter_key": "Enter license key",
+  "login.license_key_label": "License key",
   "login.enter_license_key": "Enter license key...",
   "login.too_many_attempts": "Too many attempts. Try again in",
   "login.connection_failed": "Connection failed. Check your internet.",

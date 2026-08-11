@@ -26,11 +26,16 @@ function formatDateTime(iso: string | null): string {
   });
 }
 
+// A 160px label left 134px for the value on a phone, and an address like
+// haidar.surya+tsfe1@gmail.com is one unbreakable token far wider than that —
+// `min-w-0` let the box shrink but the text still had nowhere to wrap, so the
+// row pushed the whole page sideways. Narrower label below `sm`, and the value
+// may break mid-word.
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-4 border-b border-border/60 py-2 last:border-0">
-      <dt className="w-40 shrink-0 text-sm text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 flex-1 text-sm text-foreground">{value || "-"}</dd>
+      <dt className="w-28 shrink-0 text-sm text-muted-foreground sm:w-40">{label}</dt>
+      <dd className="min-w-0 flex-1 break-words text-sm text-foreground">{value || "-"}</dd>
     </div>
   );
 }
