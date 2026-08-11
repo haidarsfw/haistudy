@@ -195,7 +195,18 @@ function TileGroup({
               <span
                 role="tooltip"
                 className={cn(
+                  // Centred over its tile — except on the last one, where it is
+                  // pinned to the right edge instead.
+                  //
+                  // Centred everywhere, a 208px bubble over the rightmost tile
+                  // of three reached 20px past the edge of a 390px phone. And
+                  // because a hidden element still counts towards scroll width,
+                  // the whole checkout page could be dragged sideways by a
+                  // tooltip nobody could even see. Clamping the width alone does
+                  // not fix it: a centred box near the edge overflows at any
+                  // width worth reading.
                   "pointer-events-none absolute -top-1.5 left-1/2 z-30 w-max max-w-[13rem] -translate-x-1/2 -translate-y-full rounded-lg bg-foreground px-2.5 py-1.5 text-center text-[11px] font-medium leading-snug text-background shadow-lg transition-opacity duration-150",
+                  "group-last:left-auto group-last:right-0 group-last:translate-x-0",
                   "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
                   hintFor === o.value && "opacity-100"
                 )}

@@ -2,12 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Menu, X, Globe, Headset } from "lucide-react";
+import { Menu, X, Globe, Headset, LogOut } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useAccount } from "@/hooks/use-account";
 import { Logo } from "@/components/landing/logo";
-import { UserMenu } from "@/components/landing/user-menu";
+import {
+  UserMenu,
+  useSignOut,
+  useSignedInIdentity,
+} from "@/components/landing/user-menu";
 import { cn } from "@/lib/utils";
 
 // Support entry (WhatsApp) — anon visitors ask pre-sale questions here. Replaces
@@ -122,6 +126,9 @@ export function Header() {
   // anything has an account and no session, and used to be shown a "Masuk"
   // button on the page they had just signed into.
   const loggedIn = Boolean(account) || (!!session && !session.isPreview);
+  // Both only used by the phone panel; on a wide screen UserMenu owns them.
+  const identity = useSignedInIdentity();
+  const { signOut, signingOut } = useSignOut();
   // The header's own action. Deliberately different wording from the hero's
   // so the two never read as the same button twice.
   const hasAccess = access?.hasActive ?? (!!session && !session.isPreview);
@@ -300,6 +307,24 @@ export function Header() {
             <div className="mt-1">
               {loggedIn ? (
                 <div className="flex flex-col gap-1">
+                  {/* Who this is. The desktop dropdown has said the name and
+                      address all along; the phone menu said nothing, so there
+                      was no way to tell one account from another — or to notice
+                      you were still signed in as someone else. */}
+                  {(identity.name || identity.email) && (
+                    <div className="px-3 pb-2">
+                      {identity.name && (
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {identity.name}
+                        </p>
+                      )}
+                      {identity.email && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {identity.email}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {/* Plain anchor: when signed in this points at /enter, which
                       is a redirect, not a page. Client-side navigation cannot
                       follow it and the button just flashes. See hero.tsx. */}
@@ -317,6 +342,15 @@ export function Header() {
                   >
                     {t("landing.menu.profil")}
                   </Link>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    disabled={signingOut}
+                    className="flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-center text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-60"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {t("landing.menu.logout")}
+                  </button>
                 </div>
               ) : (
                 <Link

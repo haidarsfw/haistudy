@@ -38,6 +38,17 @@ export function AuthShell({
 }) {
   return (
     <div className="relative min-h-screen px-5 py-6 lg:px-10 lg:py-8">
+      {/* Top of the SCREEN on a wide one, not top of the card.
+          It used to sit just above the form, inside a column that is centred
+          vertically — so it rode up and down with the card's height. Measured
+          across the family: /register 77px, /login 118px, /verify-email 296px,
+          /reset-password 306px. A 229px swing for the same mark on the same
+          five pages, and on the short ones it ended up floating in the middle
+          of the screen next to nothing. Adrift, which is the exact word the
+          note below uses about the phone layout this already fixed. */}
+      <div className="pointer-events-none absolute right-10 top-8 hidden lg:block">
+        <Wordmark className="pointer-events-auto text-sm" />
+      </div>
       {/* Vertically centred, and the min-height is what keeps it honest: the
           row is at least a screen tall, so it does NOT resize when the card
           grows a little (opening the referral field). Without that floor, both
@@ -80,10 +91,6 @@ export function AuthShell({
         </div>
 
         <div className="w-full lg:max-w-md lg:flex-1">
-          {/* Desktop only. The mobile copy lives up beside the back link. */}
-          <div className="mb-3 hidden justify-end lg:flex">
-            <Wordmark className="text-sm" />
-          </div>
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
             {children}
           </div>

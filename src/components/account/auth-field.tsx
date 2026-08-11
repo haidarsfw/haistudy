@@ -31,6 +31,7 @@ export function AuthField({
   maxLength = 200,
   trailing,
   disabled,
+  inGrid,
 }: {
   id: string;
   label: string;
@@ -48,6 +49,22 @@ export function AuthField({
   trailing?: React.ReactNode;
   /** Readable but not editable. The hint has to say why. */
   disabled?: boolean;
+  /**
+   * This field shares a grid ROW with another one.
+   *
+   * Then the hint moves BELOW the control instead of sitting beside the label.
+   * The label row is one line either way, so the two inputs start at the same
+   * height whatever the hints say. Without it, "Panggilan" — whose hint wraps
+   * onto a second line — pushed its own input 17px below the "WhatsApp" box
+   * next to it.
+   *
+   * Bottom-pinning the control (what `FieldShell` does) was the other option
+   * and is wrong here: this field is not always the whole grid cell — the
+   * nickname has a suggestion block underneath it — so pinning would align the
+   * wrong edge and, with a stretched cell, push that block clean out of its
+   * card. That exact mechanism is what broke the checkout review screen.
+   */
+  inGrid?: boolean;
 }) {
   const [reveal, setReveal] = useState(false);
   const isPassword = type === "password";
@@ -59,7 +76,7 @@ export function AuthField({
         <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
           {label}
         </label>
-        {hint && !error && (
+        {hint && !error && !inGrid && (
           <span className="text-[11px] text-muted-foreground/70">{hint}</span>
         )}
       </div>
@@ -102,6 +119,10 @@ export function AuthField({
           </button>
         )}
       </div>
+
+      {hint && !error && inGrid && (
+        <span className="text-[11px] leading-relaxed text-muted-foreground/70">{hint}</span>
+      )}
 
       {error && (
         <p className="flex items-center gap-1.5 text-[11px] font-medium text-destructive">

@@ -79,7 +79,10 @@ export default async function AccountActivityPage() {
         <section>
           <h3 className="text-sm font-semibold text-foreground">Referral</h3>
           <div className="mt-3">
-            <AccountReferralCard referral={referral} />
+            <AccountReferralCard
+              referral={referral}
+              hasNickname={Boolean(account.nickname)}
+            />
           </div>
         </section>
       </div>

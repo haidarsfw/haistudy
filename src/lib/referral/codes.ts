@@ -25,7 +25,6 @@ import { recordRateEvent } from "@/lib/auth/account-rate-limit";
 // Same alphabet as the licence generator. No 0/O/1/I/L, because these get read
 // off a WhatsApp message and retyped by hand.
 const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-const GROUP = 4;
 
 export const REFERRAL_CODE_MAX = 32;
 
@@ -88,10 +87,6 @@ function randomChars(n: number): string {
   return out;
 }
 
-function randomBlock(): string {
-  return randomChars(GROUP);
-}
-
 /** The two characters that tell two people with the same name apart. */
 function randomPair(): string {
   return randomChars(2);
@@ -144,8 +139,22 @@ export async function mintAccountReferralCode(
 
   const stem = codeStem(String(acc?.nickname ?? ""));
 
+  // No nickname yet → mint NOTHING, and try again later.
+  //
+  // This used to fall back to `REF-4CCB-WERC`, and since /register asks for
+  // nothing but an e-mail and a password, the fallback was not the rare case —
+  // it was every single account that did not come in through Google. Checked
+  // against production: every `+tsfe*` signup carries a REF- code while the
+  // Google ones carry HUSSEIN77, AXEL8Y, DHIKAWQ. The code is frozen at mint
+  // time, so setting a nickname a minute later never caught up.
+  //
+  // A code is only useful once it can be read out loud, and nobody needs one
+  // before they have a name to put in it. Callers re-ask on /account and after
+  // the profile is saved, so the code appears exactly when it becomes sayable.
+  if (!stem) return null;
+
   for (let attempt = 0; attempt < 6; attempt++) {
-    const code = stem ? `${stem}${randomPair()}` : `REF-${randomBlock()}-${randomBlock()}`;
+    const code = `${stem}${randomPair()}`;
     const { error } = await supabase
       .from("referral_codes")
       .insert({ code, kind: "account", account_id: accountId });

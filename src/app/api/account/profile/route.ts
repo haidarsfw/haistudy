@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
+import { mintAccountReferralCode } from "@/lib/referral/codes";
 import { ACCOUNT_COLUMNS, AccountError, mapAccount } from "@/lib/auth/account";
 import { requireAccount } from "@/lib/auth/account-session";
 import {
@@ -160,6 +162,23 @@ export async function PATCH(req: Request) {
           },
         },
         { status: 409 }
+      );
+    }
+
+    // A nickname just landed, so the personal referral code can finally be
+    // built from it. Minting is skipped entirely while the nickname is blank —
+    // otherwise the account is stuck with an unsayable REF-4CCB-WERC forever,
+    // because the code is frozen the moment it is created. Off the critical
+    // path: saving a profile must not fail over a referral row.
+    if (patch.nickname) {
+      waitUntil(
+        (async () => {
+          try {
+            await mintAccountReferralCode(supabase, account.id);
+          } catch (e) {
+            console.error("[account/profile] mint referral failed", e);
+          }
+        })()
       );
     }
 

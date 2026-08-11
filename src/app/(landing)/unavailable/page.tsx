@@ -24,7 +24,10 @@ export default async function UnavailablePage({
 
   const primary = isPreview
     ? { href: "/#harga", label: "Lihat paket" }
-    : { href: "/login", label: "Login" };
+    // "Masuk" everywhere else on the site, so "Login" here read as a different
+    // door. The rest of this page is Indonesian; the button was the only word
+    // that was not.
+    : { href: "/login", label: "Masuk" };
   const secondary = isPreview
     ? { href: "/preview", label: "Balik ke preview" }
     : { href: "/", label: "Beranda" };

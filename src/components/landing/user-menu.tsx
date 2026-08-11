@@ -28,12 +28,64 @@ const TIER: Record<string, string> = {
  *
  * Profil and Keluar were placeholders that did nothing. Both are real now.
  */
+/**
+ * Signing out, shared.
+ *
+ * Lifted out of the dropdown because the phone header needs the same thing and
+ * had nothing: the mobile menu offered "Beli Akses" and "Profil" and no way at
+ * all to leave, so on a phone the only exit was to open the account page first.
+ * On a product where people worry about burning a device slot, not being able
+ * to see who you are signed in as — or get out — is worse than untidy.
+ */
+export function useSignOut() {
+  const [signingOut, setSigningOut] = useState(false);
+
+  const signOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/account/logout", { method: "POST" });
+    } catch {
+      /* cookies are cleared server-side; a failed call still ends here */
+    }
+    // The half that was missing.
+    //
+    // The server clears all four cookies correctly — that was never the
+    // problem. But the session is ALSO mirrored into localStorage under
+    // `hs-session-data` for instant paint, and the session provider restores
+    // from it on mount. So logging out cleared the cookies, the page reloaded,
+    // and the provider immediately drew a signed-in header again from a copy
+    // nothing had touched. The only way out was /clearcookies, which wipes
+    // localStorage wholesale.
+    try {
+      clearStoredSession();
+    } catch {
+      /* private mode can refuse storage; the cookies are already gone */
+    }
+    // Full navigation, not a router push: every provider holding session state
+    // has to be torn down rather than re-rendered.
+    window.location.href = "/";
+  };
+
+  return { signOut, signingOut };
+}
+
+/** The name and address to show for whoever is signed in, or "" if nobody is. */
+export function useSignedInIdentity() {
+  const { session } = useSession();
+  const { account } = useAccount();
+  // Never the email's local part — see the note in UserMenu.
+  const name =
+    session?.shortName || account?.nickname || session?.name || account?.fullName || "";
+  return { name, email: account?.email ?? "" };
+}
+
 export function UserMenu() {
   const { session } = useSession();
   const { account, access } = useAccount();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
+  const { signOut, signingOut } = useSignOut();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,33 +116,6 @@ export function UserMenu() {
   // /enter, not the dashboard path — see hero.tsx. Linking straight to a
   // scoped page without an access cookie bounces to /login.
   const dashboardPath = access?.hasActive || session ? "/enter" : null;
-
-  const signOut = async () => {
-    if (signingOut) return;
-    setSigningOut(true);
-    try {
-      await fetch("/api/account/logout", { method: "POST" });
-    } catch {
-      /* cookies are cleared server-side; a failed call still ends here */
-    }
-    // The half that was missing.
-    //
-    // The server clears all four cookies correctly — that was never the
-    // problem. But the session is ALSO mirrored into localStorage under
-    // `hs-session-data` for instant paint, and the session provider restores
-    // from it on mount. So logging out cleared the cookies, the page reloaded,
-    // and the provider immediately drew a signed-in header again from a copy
-    // nothing had touched. The only way out was /clearcookies, which wipes
-    // localStorage wholesale.
-    try {
-      clearStoredSession();
-    } catch {
-      /* private mode can refuse storage; the cookies are already gone */
-    }
-    // Full navigation, not a router push: every provider holding session state
-    // has to be torn down rather than re-rendered.
-    window.location.href = "/";
-  };
 
   return (
     <div className="relative" ref={ref}>

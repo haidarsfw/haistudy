@@ -235,7 +235,13 @@ function clearDraft() {
 /** A value the account already holds: shown, not asked for. */
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline gap-3">
+    // `min-w-0` on the ROW, not only on the value. These rows sit in a grid,
+    // and a grid item defaults to `min-width: auto` — it refuses to shrink
+    // below its content. A 112px label plus an unbreakable address made the
+    // row 330px wide inside a 320px phone, and the whole checkout page could
+    // be dragged sideways by 43px. The `truncate` on the value was already
+    // there and could not help while its parent would not narrow.
+    <div className="flex min-w-0 items-baseline gap-3">
       <dt className="w-28 shrink-0 text-xs text-muted-foreground">{label}</dt>
       <dd className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{value}</dd>
     </div>
@@ -398,6 +404,9 @@ export function PaymentsFlow({
   }, [form.campus, t]);
 
   const isShare = form.pkg === "share";
+  /** Is there anything left to ask, or does the account already hold it all? */
+  const askAnything =
+    !account.fullName || !account.nickname || !account.angkatan || !account.whatsapp;
   const resolvedClass =
     form.classCode === "Other"
       ? normalizeClassCode(form.classOther)
@@ -874,6 +883,13 @@ export function PaymentsFlow({
                   </dl>
                 </Section>
 
+                {/* Only when there is actually something to ask.
+                    Every field in here is conditional on the account NOT having
+                    it, so a returning buyer — the one the whole redesign
+                    promises "nol pengetikan ulang" to — was shown a titled card
+                    with a subtitle and nothing inside it. An empty box reads as
+                    something that failed to load, not as something not needed. */}
+                {askAnything && (
                 <Section
                   title={t("payments.sec_you")}
                   description={t("payments.sec_you_desc")}
@@ -947,6 +963,7 @@ export function PaymentsFlow({
                     )}
                   </div>
                 </Section>
+                )}
 
                 {/* Kampus → Jurusan → Lokasi → Kelas, in that order and in one
                     place. These four used to be scattered through the form with
@@ -1150,6 +1167,13 @@ export function PaymentsFlow({
               // you scrolled past the account number to find the upload, then
               // scrolled back for the number. Widening the column did nothing
               // for that; only splitting the two jobs does.
+              //
+              // The two cards DO stretch to match each other — that part is
+              // wanted. What was wrong lived one level down: `FieldShell` also
+              // carried `h-full`, so each of the three fields stacked inside the
+              // right card claimed the card's full height and bottom-pinned its
+              // control to it. 483px of nothing between "Metode Pembayaran" and
+              // its own buttons. Fixed in field-shell.tsx, not here.
               <div className="grid gap-4 lg:grid-cols-2 lg:gap-x-5">
                 {/* ── LEFT: what to pay, and where ── */}
                 <Section title={t("payments.sec_pay")}>
@@ -1323,7 +1347,14 @@ export function PaymentsFlow({
             {step === 3 && (
               // Two columns on desktop. Identity and Package are short, so they
               // stack on the left; Payment is the long one and gets its own.
-              <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-x-5">
+              //
+              // `items-start` applies at EVERY width, not just `lg:`. On a phone
+              // the cells stretched, which handed the left cell a definite
+              // height — and the two ReviewSections inside it each ask for
+              // `h-full`. Two 424px cards inside a 424px cell: the second one
+              // spilled out and painted straight over the payment card, 170px
+              // of it, on the last screen before someone pays.
+              <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-x-5">
                 <div className="space-y-4">
                 <ReviewSection title={t("payments.step_identity")} onEdit={() => jumpTo(0)} editLabel={t("common.edit")}>
                   <ReviewRow label={t("payments.account_email")} value={account.email} />

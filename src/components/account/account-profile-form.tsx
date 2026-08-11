@@ -354,6 +354,7 @@ export function AccountProfileForm({
             error={errors.nickname}
             maxLength={NICKNAME_MAX}
             disabled={locked}
+            inGrid
             trailing={<NicknameAdornment state={nickCheck.state} />}
           />
           <NicknameHint
@@ -377,6 +378,7 @@ export function AccountProfileForm({
           hint="Untuk konfirmasi pembayaran"
           error={errors.whatsapp}
           maxLength={30}
+          inGrid
         />
 
         <div className="flex flex-col gap-1.5">

@@ -25,6 +25,13 @@ interface FieldShellProps {
  *    description, one line, or two. Reserving a fixed description height would
  *    look identical today and break on the first one that wraps.
  *
+ *    That stretch comes from the grid itself. There used to be an `h-full`
+ *    here as well, which is a no-op for a direct grid child and actively wrong
+ *    for a stacked one: three of these inside one `space-y-4` each claimed
+ *    100% of the wrapper's height, so the first one alone was 555px tall and
+ *    `mt-auto` dropped its control 483px below its own label. That was the
+ *    hole in the middle of the payment step.
+ *
  * 2. The error is absolutely positioned, so it takes NO space in the flow.
  *    Validating a field must not move the field, or the neighbouring one, or
  *    everything below it. `pb-5` reserves the strip it lands in.
@@ -32,7 +39,7 @@ interface FieldShellProps {
 export function FieldShell({ fieldKey, label, description, required, error, htmlFor, children }: FieldShellProps) {
   return (
     <div
-      className="flex h-full flex-col pb-5"
+      className="flex flex-col pb-5"
       data-field={fieldKey}
       data-field-error={error ? "true" : undefined}
     >

@@ -8,6 +8,12 @@
  * which. The boxes are now at the level that means something: "Data kamu" and
  * "Cara masuk". Inside a section the fields are plain, so the only borders left
  * are the ones a buyer can act on (the inputs) plus the two groups.
+ *
+ * No `h-full`. Two sections side by side already match heights because grid
+ * cells stretch; `h-full` only mattered when a section was stacked with a
+ * sibling inside one cell, and there it was actively harmful — each one claimed
+ * the whole cell, so the second painted straight over the first. That is what
+ * put the payment card on top of the package card on the review step.
  */
 export function Section({
   title,
@@ -22,7 +28,7 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-border bg-card/40 p-4">
+    <section className="flex flex-col rounded-2xl border border-border bg-card/40 p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-display text-sm font-bold text-foreground">{title}</h2>

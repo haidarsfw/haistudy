@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Copy, Gift, Loader2, MailWarning, ShieldAlert } from "lucide-react";
 
@@ -24,7 +25,14 @@ import {
  * bought-and-approved answers that before it is asked, and makes it obvious
  * why the ladder has not moved.
  */
-export function AccountReferralCard({ referral }: { referral: AccountReferral | null }) {
+export function AccountReferralCard({
+  referral,
+  hasNickname = true,
+}: {
+  referral: AccountReferral | null;
+  /** Without one there is nothing to build a code out of — see below. */
+  hasNickname?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   const [showList, setShowList] = useState(false);
   const reduced = useReducedMotion();
@@ -33,9 +41,30 @@ export function AccountReferralCard({ referral }: { referral: AccountReferral | 
     return (
       <div className="rounded-2xl border border-border bg-card p-5">
         <p className="text-sm font-semibold text-foreground">Kode referral</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Kode referralmu belum siap. Muat ulang halaman ini sebentar lagi.
-        </p>
+        {/* Two different reasons, two different answers.
+            "Muat ulang sebentar lagi" is true while the code is still being
+            written, and a lie for someone with no nickname — no amount of
+            reloading will produce one, because the code is built out of the
+            nickname. Sending them to the field that unblocks it is the whole
+            job of this state. */}
+        {hasNickname ? (
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            Kode referralmu belum siap. Muat ulang halaman ini sebentar lagi.
+          </p>
+        ) : (
+          <>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Kodemu dibuat dari nama panggilanmu, biar gampang disebut dan
+              diketik teman. Isi nama panggilan dulu, kodenya langsung jadi.
+            </p>
+            <Link
+              href="/account/profile"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
+            >
+              Isi nama panggilan
+            </Link>
+          </>
+        )}
       </div>
     );
   }
