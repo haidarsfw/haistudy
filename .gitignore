@@ -117,3 +117,7 @@ graphify-out/
 /testsprite_tests/
 /.testsprite/
 testsprite_tests/tmp/
+
+# Playwright MCP session dumps (console logs + page snapshots) from local
+# debugging runs. Working files, and this repo is public.
+/.playwright-mcp/
