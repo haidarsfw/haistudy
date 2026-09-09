@@ -48,6 +48,22 @@ const nextConfig: NextConfig = {
     "/api/cheatsheet": ["./src/content/cheatsheets/**/*"],
     "/api/downloads": ["./src/content/downloads/**/*"],
   },
+  // VERCEL-ONLY. sharp + its libvips binary is ~16MB and file-tracing drags it
+  // into all 40 page/metadata functions, making them 21-25MB against a 1.75MB
+  // median. Nothing in src/ imports it: Next pulls it in for the image
+  // optimizer, and on Vercel `/_next/image` is served by the platform, not by
+  // our function, so those 16MB are uploaded and stored on every deployment
+  // and never executed. Next already drops sharp from its own next-server
+  // trace when NOW_BUILDER is set (collect-build-traces.js, serverIgnores),
+  // but that rule does not reach per-route traces. Verified by building with
+  // NOW_BUILDER=1 and finding sharp still in all 40 .nft.json files.
+  //
+  // ON A SELF-HOSTED MOVE (the VPS plan), DELETE THIS BLOCK. `next start`
+  // optimizes images in-process and needs sharp on disk; without it image
+  // optimization degrades or 500s.
+  outputFileTracingExcludes: {
+    "/*": ["./node_modules/sharp/**/*", "./node_modules/@img/**/*"],
+  },
   // Strip console.log/info/debug in production while keeping console.error
   // and console.warn for runtime visibility in Vercel function logs.
   compiler: {
