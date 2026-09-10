@@ -388,17 +388,27 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     document.body.appendChild(script);
   }, [armed, initWidget]);
 
-  // ── Pre-warm (C1) ──
-  // Mount the SoundCloud iframe + script shortly after login so the widget is
-  // already READY before the first Play → instant start (kills the "slow / stuck
-  // first play, won't go until I re-enter the link" bug). Does NOT auto-play, and
-  // loads from SoundCloud's CDN (not our server), so it doesn't burden the free
-  // tier. Deferred so it never competes with the dashboard's critical load.
-  useEffect(() => {
-    if (!session || armedRef.current) return;
-    const id = window.setTimeout(() => arm(), 2500);
-    return () => window.clearTimeout(id);
-  }, [session, arm]);
+  // ── No pre-warm. Deliberately. ──
+  //
+  // There used to be an effect here that armed the widget 2.5s after login, on
+  // every scoped page, so the first Play would start instantly. It was measured
+  // on 2026-08-12 and the price was far higher than the comment above it
+  // claimed:
+  //
+  //   with pre-warm     353-400 network requests per page, one 73-85ms long
+  //                     task on every single page
+  //   without           36 requests, zero long tasks anywhere
+  //
+  // The iframe pulls 16 track-list calls plus ~90 cover images from
+  // i1.sndcdn.com and a play.google.com/log beacon — about 90% of everything a
+  // page loads, for a feature most readers never touch. The old comment said it
+  // "doesn't burden the free tier", which is true of our server and false of
+  // the student's browser and mobile data.
+  //
+  // arm() now fires only from a real interaction (toggle / next / previous /
+  // seek / shuffle / loop / setPlaylistUrl). toggle() already queues the play
+  // intent while the script loads, so the button still answers instantly — only
+  // the audio itself is ~1-2s late on the very first press, once per session.
 
   // ── READY-timeout fallback (C1) ──
   // If the widget never reports READY within ~8s (script raced / first READY
