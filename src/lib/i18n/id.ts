@@ -8,7 +8,21 @@ const id: Record<string, string> = {
   "landing.nav.compare": "Banding",
   "landing.nav.help": "Bantuan",
   "landing.cta.masuk": "Masuk",
-  "landing.cta.daftar": "Daftar",
+  // Tidak ada lagi "Daftar" di sini: tombolnya menggulir ke daftar harga, bukan
+  // membuka formulir. Sekarang satu tujuan cuma punya satu janji.
+  "landing.cta.daftar": "Lihat paket",
+  // Tiga kali diperbaiki, dan tiap kali alasannya sama: baris ini harus
+  // mengatakan APA yang dibeli, bukan berapa lama servernya menyala.
+  //   "/30 hari"        → terbaca "per 30 hari" = langganan berulang. Salah.
+  //   "untuk 30 hari"   → benar, tapi menjual durasi. Yang dibeli orang bukan
+  //                       durasi, melainkan lulus satu periode ujian.
+  //   "untuk satu periode ujian" → benar, tapi 38 karakter: barisnya jadi lebih
+  //                       lebar daripada tombolnya sendiri, dan itu yang bikin
+  //                       terlihat tidak rata.
+  //   "per periode ujian" → satuan yang dipakai seluruh produk, dan memang
+  //                       dibeli per periode. Enam karakter lebih pendek
+  //                       daripada tombol, jadi terbaca sebagai keterangan.
+  "landing.cta.mulai_dari": "Mulai Rp25.000 per periode ujian",
   "landing.cta.dashboard": "Dashboard",
   // Header vs hero once signed in. Same destination, different words, so the
   // two never read as the same button printed twice.

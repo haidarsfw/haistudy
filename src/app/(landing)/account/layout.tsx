@@ -41,12 +41,15 @@ export default async function AccountLayout({
           <DeletionScheduled scheduledAt={account.deletionRequestedAt} />
         )}
 
-        {/* On every account page too. It is the one thing that can hold up an
-            order, so it should not be possible to be deep in the settings and
-            not know about it. */}
-        {!account.emailVerifiedAt && <VerifyEmailBanner email={account.email} />}
-
         {children}
+
+        {/* Still on every account page — it is the one thing that can hold up
+            an order, so it must not be possible to be deep in the settings and
+            not know about it. But BELOW the content, not above it: someone who
+            just finished signing up was being met by an orange warning before a
+            single useful sentence, which is a poor first thing to say to a
+            person who has done nothing wrong yet. */}
+        {!account.emailVerifiedAt && <VerifyEmailBanner email={account.email} />}
       </div>
     </AccountFrame>
   );

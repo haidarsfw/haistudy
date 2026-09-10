@@ -93,13 +93,24 @@ export function GoogleLoginButton({
         setLoading(false);
         return;
       }
-      // Use the canonical origin in production so the PKCE verifier cookie is
-      // written AND read on ONE host (haistudy.site). window.location.origin can
-      // be a *.vercel.app alias, which splits the cookie from the callback →
-      // "PKCE code verifier not found" (the login failure hitting real users).
-      // Dev/localhost keeps its own origin so local sign-in still works.
-      const origin =
-        process.env.NODE_ENV === "production" ? SITE_URL : window.location.origin;
+      // Send Google back to the host the browser is ALREADY on, so the PKCE
+      // verifier is written and read on one origin.
+      //
+      // The one exception is a Vercel preview alias (`*.vercel.app`): those
+      // rotate per deploy, the verifier lands on an alias the callback never
+      // sees, and that was the real "PKCE code verifier not found" hitting
+      // users. Those get pinned to the canonical site.
+      //
+      // This used to switch on `NODE_ENV === "production"`, which is a
+      // different question and gave the wrong answer: a production BUILD is not
+      // the production SITE. Running `next start` locally set NODE_ENV to
+      // production, so signing in on localhost sent Google to haistudy.site —
+      // the verifier stayed on localhost, the callback ran on the live site,
+      // and the flow died with the exact error it was meant to prevent. It also
+      // broke dev.haistudy.site the same way.
+      const host = window.location.hostname;
+      const isPreviewAlias = host.endsWith(".vercel.app");
+      const origin = isPreviewAlias ? SITE_URL : window.location.origin;
       const redirectTo = `${origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",

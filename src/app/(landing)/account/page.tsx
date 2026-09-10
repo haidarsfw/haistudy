@@ -63,9 +63,12 @@ export default async function AccountPage({
                 Kamu belum punya akses aktif
               </p>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                Akunmu sudah jadi. Tinggal pilih paket untuk periode ujian yang kamu mau.
+                Pilih paket untuk periode ujian yang kamu mau.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2.5">
+              {/* One action, not three of equal weight. "Akunmu sudah jadi" was
+                  also dropped: it states a fact the reader just lived through
+                  instead of telling them what to do next. */}
+              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
                 <Link
                   href="/#harga"
                   className="brand-gradient-bg inline-flex h-11 items-center justify-center gap-1.5 rounded-xl px-5 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5"
@@ -78,7 +81,7 @@ export default async function AccountPage({
                 {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /preview is a Route Handler, not a page: next/link cannot follow its redirect. */}
                 <a
                   href="/preview"
-                  className="inline-flex h-11 items-center justify-center rounded-xl border border-border px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                  className="text-sm font-semibold text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
                 >
                   Coba gratis dulu
                 </a>
@@ -114,28 +117,23 @@ export default async function AccountPage({
             <AccountIndexList />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-5">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground">
-                Ada kendala dengan akunmu?
-              </p>
-              {/* The promise is kept, the tone is not. "Chat admin langsung"
-                  read like a friend's WhatsApp status on a page that also
-                  handles payment and account deletion. */}
-              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                Hubungi admin lewat WhatsApp. Biasanya dibalas pada hari yang sama.
-              </p>
-            </div>
+          {/* A footnote, not a third card competing with the two above it.
+              Help should be findable, not loud — a full bordered card with its
+              own button made "something is wrong" look like one of the page's
+              main jobs. */}
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            Ada kendala dengan akunmu?
             <a
               href={waHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+              className="inline-flex items-center gap-1.5 font-semibold text-foreground underline-offset-4 hover:underline"
             >
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-3.5 w-3.5" />
               Chat admin
             </a>
-          </div>
+            <span className="opacity-70">Biasanya dibalas pada hari yang sama.</span>
+          </p>
         </div>
       </div>
     </>

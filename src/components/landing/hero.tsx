@@ -105,6 +105,10 @@ export function Hero() {
               </a>
             )
           ) : (
+            // Was "Daftar" — a promise the button never kept, since it scrolls
+            // to the price list rather than opening a form. The signed-in
+            // branch above already says "Lihat paket" for this exact
+            // destination; one destination should not carry two promises.
             <a
               href="#harga"
               className="brand-gradient-bg inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -114,7 +118,7 @@ export function Hero() {
           )}
           <a
             href="#cara-kerja"
-            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-foreground"
+            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-foreground sm:h-12"
           >
             <span className="border-b border-transparent transition-colors group-hover:border-foreground/40">
               {t("landing.hero.see_action")}
@@ -122,6 +126,22 @@ export function Hero() {
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </a>
         </div>
+
+        {/* Harga mulai, DI BAWAH SELURUH BARIS — bukan di dalam tombolnya.
+            Ditaruh di dalam, dia memaksa tombol jadi blok yang lebih tinggi
+            daripada tautan di sebelahnya: dua ajakan yang sebaris jadi terasa
+            terpisah, dan barisnya sendiri jadi tidak di tengah karena teks
+            harganya lebih lebar daripada tombol. Sebagai saudara di bawah, dia
+            ikut sumbu tengah yang sama dengan semua isi hero lain. */}
+        {!loggedIn && (
+          <p
+            data-reveal
+            className="mt-3 text-[11px] leading-none text-muted-foreground/80"
+            style={{ transitionDelay: "150ms" }}
+          >
+            {t("landing.cta.mulai_dari")}
+          </p>
+        )}
 
         <a
           href="#testimoni"

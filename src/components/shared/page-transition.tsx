@@ -29,8 +29,26 @@ import { pageEnter } from "@/lib/motion";
  */
 let pendingPop = false;
 
+/**
+ * What counts as "somewhere else".
+ *
+ * `/account` is one screen with six panes, not six pages — the avatar, the
+ * name, the sign-out button and the nav are identical on all of them. Keying
+ * the transition on the full path made every pane switch tear the whole shell
+ * down and fade it back in, so the header you were looking at blinked. That is
+ * the flicker, and it was mistaken for slowness because it arrived on top of a
+ * 100-300ms server round trip.
+ *
+ * Collapsing the section means moving between panes changes only the pane.
+ */
+function sectionOf(pathname: string): string {
+  if (pathname === "/account" || pathname.startsWith("/account/")) return "/account";
+  return pathname;
+}
+
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const section = sectionOf(pathname);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -44,10 +62,10 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   // Derived during render by comparing with the previous path. On the very
   // first render the two are equal, so nothing animates; only a real
   // in-document navigation flips it on.
-  const [prevPath, setPrevPath] = useState(pathname);
+  const [prevSection, setPrevSection] = useState(section);
   const [animate, setAnimate] = useState(false);
-  if (prevPath !== pathname) {
-    setPrevPath(pathname);
+  if (prevSection !== section) {
+    setPrevSection(section);
     // A popstate fired just before this render means Back or Forward.
     setAnimate(!pendingPop);
   }
@@ -65,7 +83,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
 
   return (
     <motion.div
-      key={pathname}
+      key={section}
       variants={pageEnter(flat)}
       initial={animate ? "hidden" : false}
       animate="visible"

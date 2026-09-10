@@ -139,6 +139,29 @@ export function proxy(request: NextRequest) {
   const pathname = url.pathname;
   const segs = pathname.split("/").filter(Boolean);
 
+  // 0b. An OAuth code that landed on the WRONG PATH.
+  //
+  //     Supabase only honours a `redirect_to` that is on its own allow-list. When
+  //     it is not, it silently substitutes the project's Site URL and appends
+  //     `?code=` — so the browser arrives at `/?code=…`, the landing page
+  //     renders, and nothing at all happens. No error, no hint, and the code
+  //     expires unused. That silence is the whole problem: it looks like the
+  //     button did nothing.
+  //
+  //     Handing it to the callback turns that dead end into one of two honest
+  //     outcomes — it signs the person in when the verifier does live on this
+  //     origin, or it fails with a message that names the cause.
+  //
+  //     This is a net, not a cure. If the flow STARTED on another origin the
+  //     verifier is stored over there and no amount of routing can move it; the
+  //     real fix is adding the origin under
+  //     Supabase → Authentication → URL Configuration → Redirect URLs.
+  if (pathname === "/" && url.searchParams.has("code")) {
+    const dest = new URL("/auth/callback", request.url);
+    url.searchParams.forEach((v, k) => dest.searchParams.set(k, v));
+    return NextResponse.redirect(dest);
+  }
+
   // 1. Public paths
   if (isPublicPath(pathname)) {
     return NextResponse.next();
