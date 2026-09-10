@@ -2,10 +2,13 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FieldShellProps {
   /** Key this field validates under. Lets goNext() scroll to the first failure. */
   fieldKey?: string;
+  /** Grid placement only (e.g. `lg:col-span-2`). Never sizing — see (1) below. */
+  className?: string;
   label: string;
   description?: string;
   required?: boolean;
@@ -36,10 +39,10 @@ interface FieldShellProps {
  *    Validating a field must not move the field, or the neighbouring one, or
  *    everything below it. `pb-5` reserves the strip it lands in.
  */
-export function FieldShell({ fieldKey, label, description, required, error, htmlFor, children }: FieldShellProps) {
+export function FieldShell({ fieldKey, className, label, description, required, error, htmlFor, children }: FieldShellProps) {
   return (
     <div
-      className="flex flex-col pb-5"
+      className={cn("flex flex-col pb-5", className)}
       data-field={fieldKey}
       data-field-error={error ? "true" : undefined}
     >

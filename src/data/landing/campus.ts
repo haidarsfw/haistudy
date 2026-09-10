@@ -22,6 +22,13 @@ export interface Campus {
    */
   jurusan: string[];
   locations: readonly string[];
+  /**
+   * How this campus names its intakes. BINUS counts batches (B29, B30); UNJ —
+   * like most state universities — counts the year you enrolled. Offering a
+   * BINUS batch code to a UNJ student is not a harmless extra option, it is a
+   * question they cannot answer.
+   */
+  angkatan: readonly string[];
 }
 
 export const OTHER_LOCATION = "Lainnya";
@@ -33,6 +40,7 @@ export const CAMPUS_OPTIONS: readonly Campus[] = [
     available: true,
     jurusan: ["bm"],
     locations: ["Bekasi", "Kemanggisan", "Alam Sutera"],
+    angkatan: ["B29", "B30"],
   },
   {
     // Written down in full so opening UNJ is one word — `available: true` — and
@@ -44,6 +52,7 @@ export const CAMPUS_OPTIONS: readonly Campus[] = [
     available: false,
     jurusan: ["pba"],
     locations: ["A", "B", "D", "E"],
+    angkatan: ["2025", "2026"],
   },
 ];
 
@@ -83,13 +92,20 @@ export function normalizeClassCode(raw: string): string {
 }
 
 /**
- * Cohorts, trimmed to the four that can actually buy something.
+ * Every cohort any campus offers. Kept for callers that need the full set —
+ * validation, admin filters — never for a picker.
  *
- * The old list ran B27 to B32 plus four calendar years, most of which have
- * either graduated or not arrived. A dropdown of ten where only four are real
- * is ten chances to pick wrong.
+ * A picker must use `angkatanForCampus()`. This flat list is where the bug
+ * lived: it handed BINUS students "2025 / 2026" and would have handed UNJ
+ * students "B29 / B30", because it had no idea who was asking.
  */
-export const ANGKATAN_CHOICES = ["B29", "B30", "2025", "2026"] as const;
+export const ANGKATAN_CHOICES = CAMPUS_OPTIONS.flatMap((c) => c.angkatan);
+
+/** The intakes one campus actually has. Falls back to the first campus's. */
+export function angkatanForCampus(campusId: string): readonly string[] {
+  const hit = CAMPUS_OPTIONS.find((c) => c.id === campusId);
+  return hit?.angkatan ?? CAMPUS_OPTIONS[0].angkatan;
+}
 
 /**
  * Which exam period a cohort is most likely buying.

@@ -6,6 +6,10 @@ import { cn } from "@/lib/utils";
 interface DropdownOption {
   value: string;
   label: string;
+  /** Listed but not choosable — something on the way, not something missing. */
+  disabled?: boolean;
+  /** Appended to the label so the lock has a stated reason, e.g. "Segera". */
+  disabledHint?: string;
 }
 
 interface DropdownProps {
@@ -37,8 +41,13 @@ export function Dropdown({ id, value, onChange, options, placeholder, invalid }:
           </option>
         )}
         {options.map((o) => (
-          <option key={o.value} value={o.value} className="text-foreground">
-            {o.label}
+          <option
+            key={o.value}
+            value={o.value}
+            disabled={o.disabled}
+            className={o.disabled ? "text-muted-foreground" : "text-foreground"}
+          >
+            {o.disabled && o.disabledHint ? `${o.label} — ${o.disabledHint}` : o.label}
           </option>
         ))}
       </select>

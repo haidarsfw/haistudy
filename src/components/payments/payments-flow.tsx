@@ -46,7 +46,7 @@ import {
   type PaymentMethodId,
 } from "@/lib/payments";
 import {
-  ANGKATAN_CHOICES,
+  angkatanForCampus,
   CAMPUS_OPTIONS,
   CLASSES_BY_LOCATION,
   JURUSAN_LABELS,
@@ -287,7 +287,6 @@ export function PaymentsFlow({
   const [showErrors, setShowErrors] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [scopeOpen, setScopeOpen] = useState(false);
   // Set once the buyer overrides the period themselves. After that the cohort
   // default stops moving under them — a guess that keeps overwriting a decision
   // is worse than no guess.
@@ -382,15 +381,35 @@ export function PaymentsFlow({
       })),
     [campusDef, t]
   );
-  // Only the majors this campus actually sells, which is only the ones with
-  // material written for them. Anything else would be a period nobody could be
-  // given after they had paid for it.
+  // Every major this campus teaches — the sellable ones as real choices, the
+  // rest listed and locked. It used to filter the unsellable ones away
+  // entirely, which left a single-item dropdown that had to be rendered as
+  // dead text because a menu that can only say one thing reads as broken.
+  // Showing what is coming fixes both: the control is a real picker again, and
+  // a student whose major is not ready can see it is on the way instead of
+  // concluding haistudy is not for them.
   const jurusanOptions = useMemo(
     () =>
-      campusDef.jurusan
-        .filter((j) => purchasableScopes().some((s) => s.jurusan === j))
-        .map((j) => ({ value: j, label: JURUSAN_LABELS[j] ?? j.toUpperCase() })),
-    [campusDef]
+      campusDef.jurusan.map((j) => {
+        const open = purchasableScopes().some((s) => s.jurusan === j);
+        return {
+          value: j,
+          label: JURUSAN_LABELS[j] ?? j.toUpperCase(),
+          disabled: !open,
+          disabledHint: open ? undefined : t("payments.jurusan_soon"),
+        };
+      }),
+    [campusDef, t]
+  );
+  /** The ones that can actually be bought — what validation cares about. */
+  const jurusanOpen = useMemo(
+    () => jurusanOptions.filter((o) => !o.disabled),
+    [jurusanOptions]
+  );
+  // Intakes belong to the campus: BINUS counts batches, UNJ counts years.
+  const angkatanOptions = useMemo(
+    () => angkatanForCampus(form.university).map((a) => ({ value: a, label: a })),
+    [form.university]
   );
   // Codes seen at THIS location, plus a way out. The shortcut is what stops
   // "Lb-30" being typed by hand; "Lainnya" is what stops next semester's new
@@ -404,9 +423,9 @@ export function PaymentsFlow({
   }, [form.campus, t]);
 
   const isShare = form.pkg === "share";
-  /** Is there anything left to ask, or does the account already hold it all? */
-  const askAnything =
-    !account.fullName || !account.nickname || !account.angkatan || !account.whatsapp;
+  /** Is there anything left to ask, or does the account already hold it all?
+   *  Angkatan is not counted: it moved into the campus card, which always shows. */
+  const askAnything = !account.fullName || !account.nickname || !account.whatsapp;
   const resolvedClass =
     form.classCode === "Other"
       ? normalizeClassCode(form.classOther)
@@ -491,9 +510,16 @@ export function PaymentsFlow({
   // filled in.
   useEffect(() => {
     setForm((f) => {
-      const valid = campusDef.locations.includes(f.campus) || f.campus === OTHER_LOCATION;
-      if (valid) return f;
-      return { ...f, campus: "", campusOther: "", classCode: "", classOther: "" };
+      const lokasiOk = campusDef.locations.includes(f.campus) || f.campus === OTHER_LOCATION;
+      // Angkatan is campus-shaped too: "B29" means nothing at UNJ. Keeping a
+      // stale one would submit a cohort this campus does not have.
+      const angkatanOk = !f.angkatan || campusDef.angkatan.includes(f.angkatan);
+      if (lokasiOk && angkatanOk) return f;
+      return {
+        ...f,
+        ...(lokasiOk ? {} : { campus: "", campusOther: "", classCode: "", classOther: "" }),
+        ...(angkatanOk ? {} : { angkatan: "" }),
+      };
     });
   }, [campusDef]);
 
@@ -542,7 +568,11 @@ export function PaymentsFlow({
       // reported before a missing class, because the class cannot be picked
       // until the campus is.
       if (!campusDef.available) e.university = t("payments.err_campus_soon");
-      if (!jurusanOptions.length) e.jurusan = t("payments.err_jurusan_none");
+      // The picker now LISTS unsellable majors as "Segera", so "is one on sale"
+      // and "did they land on one that is" are two different questions.
+      if (!jurusanOpen.length) e.jurusan = t("payments.err_jurusan_none");
+      else if (!jurusanOpen.some((o) => o.value === form.jurusan))
+        e.jurusan = t("payments.err_jurusan_soon");
       if (!form.campus) e.campus = t("payments.err_required");
       else if (form.campus === OTHER_LOCATION && !form.campusOther.trim())
         e.campusOther = t("payments.err_required");
@@ -874,12 +904,10 @@ export function PaymentsFlow({
                     {account.campus && (
                       <SummaryRow label={t("payments.campus_label")} value={account.campus} />
                     )}
-                    {account.angkatan && (
-                      <SummaryRow
-                        label={t("payments.angkatan_label")}
-                        value={account.angkatan}
-                      />
-                    )}
+                    {/* Angkatan is NOT repeated here. It moved down into the
+                        campus card as an editable field, because it follows the
+                        campus; showing it in both places would state it twice
+                        and imply the one up here is the locked truth. */}
                   </dl>
                 </Section>
 
@@ -943,19 +971,6 @@ export function PaymentsFlow({
                       </FieldShell>
                     )}
 
-                    {!account.angkatan && (
-                      <FieldShell label={t("payments.angkatan_label")} description={t("payments.angkatan_desc")} required error={errors.angkatan} htmlFor="pf-angkatan">
-                        <Dropdown
-                          id="pf-angkatan"
-                          value={form.angkatan}
-                          onChange={(v) => set("angkatan", v)}
-                          placeholder={t("payments.angkatan_ph")}
-                          invalid={!!errors.angkatan}
-                          options={ANGKATAN_CHOICES.map((a) => ({ value: a, label: a }))}
-                        />
-                      </FieldShell>
-                    )}
-
                     {!account.whatsapp && (
                       <FieldShell label={t("payments.wa_label")} description={t("payments.wa_desc")} required error={errors.whatsapp} htmlFor="pf-wa">
                         <ShortAnswer id="pf-wa" type="tel" inputMode="tel" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} placeholder="0878xxxxxxxx" invalid={!!errors.whatsapp} autoComplete="tel" />
@@ -1014,27 +1029,45 @@ export function PaymentsFlow({
                       </FieldShell>
                     </div>
 
-                    {/* One option is a fact, not a choice. Rendering a dropdown
-                        that can only ever say one thing reads as broken; it
-                        becomes a real picker the moment a second major ships. */}
+                    {/* Always a real picker, even while only one major is on
+                        sale. The rest are listed as "Segera" rather than hidden
+                        — a locked row says the product is growing, an absent
+                        one says it is not for you. */}
                     <FieldShell label={t("payments.jurusan_label")} error={errors.jurusan}>
-                      {jurusanOptions.length > 1 ? (
-                        <Dropdown
-                          id="pf-jurusan"
-                          value={form.jurusan}
-                          onChange={(v) => set("jurusan", v)}
-                          placeholder={t("payments.jurusan_ph")}
-                          invalid={!!errors.jurusan}
-                          options={jurusanOptions}
-                        />
-                      ) : (
-                        <div className="flex h-[42px] items-center rounded-xl border border-border bg-muted/20 px-3.5 text-sm text-foreground">
-                          {jurusanOptions[0]?.label ?? t("payments.jurusan_none")}
-                        </div>
-                      )}
+                      <Dropdown
+                        id="pf-jurusan"
+                        value={form.jurusan}
+                        onChange={(v) => set("jurusan", v)}
+                        placeholder={t("payments.jurusan_ph")}
+                        invalid={!!errors.jurusan}
+                        options={jurusanOptions}
+                      />
+                    </FieldShell>
+
+                    {/* Angkatan lives here, not up in "Data kamu", because it
+                        belongs to the campus: BINUS counts batches (B29/B30),
+                        UNJ counts the year you enrolled. Asking it above the
+                        campus meant offering both sets to everyone and letting
+                        the student work out which half was theirs. */}
+                    <FieldShell
+                      label={t("payments.angkatan_label")}
+                      description={t("payments.angkatan_desc")}
+                      required
+                      error={errors.angkatan}
+                      htmlFor="pf-angkatan"
+                    >
+                      <Dropdown
+                        id="pf-angkatan"
+                        value={form.angkatan}
+                        onChange={(v) => set("angkatan", v)}
+                        placeholder={t("payments.angkatan_ph")}
+                        invalid={!!errors.angkatan}
+                        options={angkatanOptions}
+                      />
                     </FieldShell>
 
                     <FieldShell
+                      className="lg:col-span-2"
                       label={t("payments.class_label")}
                       description={t("payments.class_desc")}
                       required
@@ -1093,50 +1126,42 @@ export function PaymentsFlow({
                       </p>
                     </FieldShell>
 
-                    {/* Exam period. Reads as a field like the rest now, instead
-                        of a stray bordered box floating under the form. */}
-                    <FieldShell label={t("payments.scope_current")}>
-                      <div className="rounded-xl border border-border bg-muted/20 p-3">
-                        <p className="text-sm font-medium text-foreground">
-                          {scopeFullLabel(selectedScope)}
-                        </p>
-                        {!scopeOpen ? (
-                          <button
-                            type="button"
-                            onClick={() => setScopeOpen(true)}
-                            className="mt-1 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                          >
-                            {t("payments.scope_switch")}
-                          </button>
-                        ) : (
-                          <div className="mt-2.5">
-                            <RadioGroup
-                              name="scope"
-                              value={form.scopeKey}
-                              onChange={(v) => {
-                                setScopePicked(true);
-                                set("scopeKey", v);
-                              }}
-                              variant="plain"
-                              // Periods still being written are listed but
-                              // locked. Hiding them would read as "my semester
-                              // is not coming"; offering them for sale would
-                              // take money for an empty app.
-                              options={offeredScopes().map((s) => {
-                                const open = isPurchasableScope(s);
-                                return {
-                                  value: scopeKey(s),
-                                  label: scopeFullLabel(s),
-                                  disabled: !open,
-                                  disabledHint: open
-                                    ? undefined
-                                    : t("payments.scope_soon_hint"),
-                                };
-                              })}
-                            />
-                          </div>
-                        )}
-                      </div>
+                    {/* Exam period, as an ordinary dropdown.
+                        It used to be a line of text with "ganti di sini" tucked
+                        under it in 11px grey — the most consequential choice on
+                        the page, hidden. It was also two lines tall next to
+                        one-line device tiles, which is where the 21px
+                        misalignment came from.
+                        A radio list was tried first and rejected on sight:
+                        seven full-width rows left a 490px hole under the device
+                        tiles and outweighed the package cards above. A dropdown
+                        is one line, exactly as tall as the tiles beside it, and
+                        obviously a control. Locked periods stay in the list as
+                        "Segera" — hiding them would read as "my semester is not
+                        coming"; selling them would take money for an empty app. */}
+                    <FieldShell
+                      label={t("payments.scope_current")}
+                      description={t("payments.scope_pick_desc")}
+                      required
+                      htmlFor="pf-scope"
+                    >
+                      <Dropdown
+                        id="pf-scope"
+                        value={form.scopeKey}
+                        onChange={(v) => {
+                          setScopePicked(true);
+                          set("scopeKey", v);
+                        }}
+                        options={offeredScopes().map((s) => {
+                          const open = isPurchasableScope(s);
+                          return {
+                            value: scopeKey(s),
+                            label: scopeFullLabel(s),
+                            disabled: !open,
+                            disabledHint: open ? undefined : t("payments.scope_soon"),
+                          };
+                        })}
+                      />
                     </FieldShell>
                   </div>
                 </Section>
@@ -1232,6 +1257,7 @@ export function PaymentsFlow({
                     <QrisCard
                       label={t("payments.qris_label")}
                       expandHint={t("payments.qris_expand")}
+                      openHint={t("payments.qris_open")}
                       downloadLabel={t("payments.qris_download")}
                     />
                   </div>
@@ -1500,10 +1526,16 @@ function AccountRow({
 function QrisCard({
   label,
   expandHint,
+  openHint,
   downloadLabel,
 }: {
   label: string;
+  /** Shown on the closed card. Tells you what tapping does. */
   expandHint: string;
+  /** Shown inside the open dialog. Telling someone to "tap to enlarge" after
+   *  they already tapped and it is already enlarged is instruction for a step
+   *  they just finished. */
+  openHint: string;
   downloadLabel: string;
 }) {
   const [broken, setBroken] = useState(false);
@@ -1549,7 +1581,7 @@ function QrisCard({
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>QRIS</DialogTitle>
-            <DialogDescription>{expandHint}</DialogDescription>
+            <DialogDescription>{openHint}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
