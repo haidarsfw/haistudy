@@ -76,7 +76,7 @@ export function AdminScopeHeader() {
                 onClick={() => setIsOpen(false)}
                 aria-hidden="true"
               />
-              <div className="absolute left-0 top-full mt-1 w-56 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute left-0 top-full mt-1 w-56 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <ScopeDropdownContent
                   currentScopeKey={currentScopeKey}
                   onSwitch={handleSwitch}

@@ -104,7 +104,7 @@ export function PackageCard({
       // Inline so twMerge can't drop it against a bg-* utility.
       style={{ backgroundColor: NEUTRAL }}
       className={cn(
-        "relative flex h-full cursor-pointer flex-col rounded-2xl border p-3.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:p-4",
+        "relative flex h-full cursor-pointer flex-col rounded-2xl border p-3.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:p-4",
         "border-white/[0.14]",
         // Lifted above its neighbours only while selected. Every card is
         // `relative` with no stacking order of its own, so the later ones in

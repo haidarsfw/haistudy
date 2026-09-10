@@ -1,33 +1,66 @@
 import type { Transition, Variants } from "framer-motion";
 
-// ─── Spring presets ───
-export const springSmooth: Transition = {
+// ═══════════════════════════════════════════════════════════════════════════
+// WATAK GERAK — "Pegas"
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Dipilih pemilik dari tiga peraga di /gerak, 2026-08-12. Wataknya: benda
+// datang cepat lalu MENETAP — melewati tujuannya sedikit, balik, diam. Bukan
+// berhenti mendadak, dan bukan memantul-mantul.
+//
+// Padanan CSS-nya ada di blok WATAK GERAK di `src/app/globals.css`
+// (`--ease-pop`, `--ease-pop-out`, 260ms masuk / 130ms keluar). Dua-duanya
+// harus bergerak bersama: kalau salah satu diubah, ubah yang lain.
+//
+// Diukur sebelum dipakai: 0 frame jatuh dari 931, bahkan saat CPU dilambatkan
+// 4×. Sebabnya semua di berkas ini cuma menggerakkan transform + opacity.
+// Jangan pernah memasukkan width, height, box-shadow, atau filter ke sini —
+// animasi seperti itu terukur menjatuhkan 2,6% frame.
+
+/** Pegas rumah. Dipakai untuk apa pun yang DATANG. */
+export const springPop: Transition = {
   type: "spring",
-  stiffness: 300,
+  stiffness: 420,
   damping: 30,
+  mass: 0.9,
 };
 
-export const springBouncy: Transition = {
+/** Untuk benda kecil yang harus terasa lebih ringan: lencana, ikon, centang. */
+export const springPopSnappy: Transition = {
   type: "spring",
-  stiffness: 400,
-  damping: 17,
+  stiffness: 500,
+  damping: 28,
+  mass: 0.7,
 };
 
-export const springGentle: Transition = {
+/** Untuk benda besar: panel, lembar, kartu lebar. Lebih berat, lebih tenang. */
+export const springPopHeavy: Transition = {
   type: "spring",
-  stiffness: 200,
-  damping: 24,
+  stiffness: 340,
+  damping: 34,
+  mass: 1,
 };
+
+// ─── Nama lama, tetap hidup ───
+// Puluhan komponen sudah memanggil tiga nama di bawah ini. Menghapusnya berarti
+// menyentuh semuanya dalam satu tebasan; menyambungnya ke pegas rumah membuat
+// semuanya seragam tanpa satu pun callsite berubah.
+export const springSmooth: Transition = springPop;
+export const springBouncy: Transition = springPopSnappy;
+export const springGentle: Transition = springPopHeavy;
 
 // ─── Duration presets ───
+// Untuk yang tidak bisa memakai pegas — apa pun yang menganimasikan warna atau
+// tinggi, karena pegas pada nilai non-transform berakhir menghitung ratusan
+// langkah tak berguna. Kurvanya tetap kurva rumah supaya rasanya menyambung.
 export const durationFast: Transition = {
-  duration: 0.2,
-  ease: [0.4, 0, 0.2, 1],
+  duration: 0.13,
+  ease: [0.34, 1.4, 0.5, 1],
 };
 
 export const durationSmooth: Transition = {
-  duration: 0.3,
-  ease: [0.4, 0, 0.2, 1],
+  duration: 0.26,
+  ease: [0.34, 1.4, 0.5, 1],
 };
 
 // ─── Entrance variants ───
@@ -148,16 +181,36 @@ export const hoverButton = {
 //      middle where neither the old nor the new content is readable, which is
 //      exactly what makes a transition feel slow.
 
-/** Fast start, soft landing. The house curve for anything arriving. */
-export const easeEnter = [0.16, 1, 0.3, 1] as const;
-/** Anything leaving. Gets out of the way instead of lingering. */
+/**
+ * The house curve for anything arriving. Overshoots its target by about 5% and
+ * settles — the CSS twin of `springPop`, and the same numbers as `--ease-pop`
+ * in globals.css. Used where a real spring cannot go.
+ */
+export const easeEnter = [0.34, 1.4, 0.5, 1] as const;
+/** Anything leaving. Gets out of the way instead of lingering, and never
+ *  overshoots: a thing on its way out has no target to settle onto. */
 export const easeExit = [0.4, 0, 1, 1] as const;
+
+/**
+ * For the few things that must animate SIZE — a disclosure opening, a panel
+ * growing. Fast start, soft landing, and **never overshoots**.
+ *
+ * `easeEnter` must not be used here. Overshoot on a transform is what makes the
+ * house character feel alive; overshoot on a HEIGHT means the box grows taller
+ * than the content it is revealing and then snaps back, so the text inside jumps
+ * — which reads as broken rather than lively. That is exactly what happened to
+ * the "Hapus akun" card the moment the spring character landed.
+ *
+ * Height is layout, not transform, so every frame reflows everything below it.
+ * Use this sparingly and only where there is no honest alternative.
+ */
+export const easeSize = [0.22, 1, 0.36, 1] as const;
 
 export const NAV = {
   /** Arriving. Long enough to notice, short enough not to wait on. */
-  enter: 0.24,
+  enter: 0.26,
   /** Leaving. */
-  exit: 0.14,
+  exit: 0.13,
   /** Everything collapses to this when the OS asks for less motion. */
   reduced: 0.09,
   /** Travel distance, by surface size. */
@@ -213,7 +266,7 @@ export function directionalPanel(
       opacity: 1,
       x: 0,
       transition: {
-        duration: reduced ? NAV.reduced : 0.22,
+        duration: reduced ? NAV.reduced : NAV.enter,
         ease: easeEnter,
       },
     },
@@ -221,7 +274,7 @@ export function directionalPanel(
       opacity: 0,
       x: -d * (dir || 1),
       transition: {
-        duration: reduced ? NAV.reduced : 0.13,
+        duration: reduced ? NAV.reduced : NAV.exit,
         ease: easeExit,
       },
     }),
@@ -229,8 +282,40 @@ export function directionalPanel(
 }
 
 /** The sliding marker under an active tab. Springs, so it settles rather than stops. */
-export const tabIndicator: Transition = {
-  type: "spring",
-  stiffness: 380,
-  damping: 32,
+export const tabIndicator: Transition = springPop;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Popups that cannot use `ui/dialog.tsx`
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Six of them exist — the exam modals, the announcement, the survey, the
+// device confirmation. They are hand-rolled for real reasons (the exam ones
+// must survive the exam player's own focus handling), and each had invented
+// its own timing: springs at 400/30 and 360/32, tweens at 0.18 and 0.22, three
+// different start scales, two different travel distances.
+//
+// They are not converted to the shared Dialog — that is a structural change
+// with a focus-trap risk that buys nothing the eye can see. They are pointed at
+// the same two variants instead, which is what "seragam" actually requires.
+//
+// Anything NEW that needs a popup should use `ui/dialog.tsx`. These exist
+// because they already did.
+
+/** The dark behind a popup. Faster than the panel: the leap belongs to the card. */
+export const popupOverlay: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.2, ease: easeEnter } },
+  exit: { opacity: 0, transition: { duration: NAV.exit, ease: easeExit } },
+};
+
+/** The popup itself. Springs in, then leaves on a tween — a thing on its way
+ *  out has no target to settle onto, so a spring there only costs time. */
+export const popupPanel: Variants = {
+  hidden: { opacity: 0, scale: 0.94, y: 10 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: springPop },
+  exit: {
+    opacity: 0,
+    scale: 0.97,
+    transition: { duration: NAV.exit, ease: easeExit },
+  },
 };

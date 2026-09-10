@@ -84,11 +84,11 @@ export function TTSPlayerBar({ tts, onClose, inline }: TTSPlayerBarProps) {
 
   return (
     <div className={inline
-      ? "shrink-0 animate-in slide-in-from-bottom duration-300"
+      ? "shrink-0 animate-in slide-in-from-bottom duration-260 ease-pop"
       // Mobile: pinned to the TOP, just under the sticky header (the bottom is now
       // the nav dock + AI FAB). Desktop: bottom bar starting at the sidebar's right
       // edge (var published by Sidebar) so it never overlaps the sidebar.
-      : "fixed left-0 right-0 top-14 z-50 animate-in slide-in-from-top duration-300 sm:top-auto sm:bottom-0 sm:left-[var(--hs-sidebar-w)] sm:slide-in-from-bottom"
+      : "fixed left-0 right-0 top-14 z-50 animate-in slide-in-from-top duration-260 ease-pop sm:top-auto sm:bottom-0 sm:left-[var(--hs-sidebar-w)] sm:slide-in-from-bottom"
     }>
       {/* Progress bar */}
       <div className="h-0.5 bg-muted">

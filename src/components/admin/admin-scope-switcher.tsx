@@ -90,7 +90,7 @@ export function AdminScopeSwitcher({ collapsed }: { collapsed: boolean }) {
           <ArrowRightLeft className="h-4 w-4" />
         </button>
         {isOpen && (
-          <div className="absolute left-full top-0 ml-2 w-40 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in slide-in-from-left-2 duration-150">
+          <div className="absolute left-full top-0 ml-2 w-40 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in slide-in-from-left-2 duration-200">
             <ScopeDropdownContent
               currentScopeKey={currentScopeKey}
               switching={switching}
@@ -115,7 +115,7 @@ export function AdminScopeSwitcher({ collapsed }: { collapsed: boolean }) {
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <ScopeDropdownContent
             currentScopeKey={currentScopeKey}
             switching={switching}

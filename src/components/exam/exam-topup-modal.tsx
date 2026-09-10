@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { popupOverlay, popupPanel } from "@/lib/motion";
 import { X, Check, Upload, Loader2, Copy, Sparkles, Ticket, Download } from "lucide-react";
 import { QUOTA_PACKS } from "@/lib/exam/quota";
 import { PAYMENT_ACCOUNTS, WA_ADMIN } from "@/lib/payments";
@@ -102,9 +103,10 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      variants={popupOverlay}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
       className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
       onClick={onClose}
     >
@@ -114,10 +116,10 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
         aria-modal="true"
         aria-labelledby="exam-topup-title"
         tabIndex={-1}
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 30, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 360, damping: 32 }}
+        variants={popupPanel}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
         className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-card p-5 shadow-2xl outline-none sm:max-w-md sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >

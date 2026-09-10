@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { popupOverlay, popupPanel } from "@/lib/motion";
 import { Megaphone, ArrowRight, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { parseAnnouncementCta } from "@/lib/announcement-cta";
@@ -64,17 +65,18 @@ export function AnnouncementModal() {
     <AnimatePresence>
       {announcement && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          variants={popupOverlay}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
           className="fixed inset-0 z-[70] flex items-center justify-center bg-background/70 backdrop-blur-sm px-4"
           onClick={dismiss}
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 10 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            transition={{ duration: 0.18 }}
+            variants={popupPanel}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             role="dialog"
             aria-labelledby="announcement-modal-title"
             className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"

@@ -39,7 +39,7 @@ export function DemoCursor({
           width="22"
           height="22"
           viewBox="0 0 24 24"
-          className={`relative drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)] transition-transform duration-150 ${
+          className={`relative drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)] transition-transform duration-200 ${
             clicking ? "scale-90" : "scale-100"
           }`}
         >

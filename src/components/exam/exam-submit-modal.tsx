@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { popupOverlay, popupPanel } from "@/lib/motion";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useDialogA11y } from "@/hooks/use-dialog-a11y";
 
@@ -32,9 +33,10 @@ export function ExamSubmitModal({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      variants={popupOverlay}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
       className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onBack}
     >
@@ -44,10 +46,10 @@ export function ExamSubmitModal({
         aria-modal="true"
         aria-labelledby="exam-submit-title"
         tabIndex={-1}
-        initial={{ scale: 0.92, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.92, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        variants={popupPanel}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
         className="mx-4 w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl outline-none"
         onClick={(e) => e.stopPropagation()}
       >

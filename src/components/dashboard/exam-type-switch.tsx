@@ -91,7 +91,7 @@ export function ExamTypeSwitch({ value, onChange, available }: ExamTypeSwitchPro
               <Icon className="h-3.5 w-3.5 shrink-0" />
             </button>
             <span
-              className={`pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-medium text-background shadow-md transition-opacity duration-150 ${
+              className={`pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-medium text-background shadow-md transition-opacity duration-200 ${
                 open ? "opacity-100" : "opacity-0"
               }`}
             >

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Copy, Gift, Loader2, MailWarning, ShieldAlert } from "lucide-react";
 
-import { easeEnter } from "@/lib/motion";
+import { easeSize } from "@/lib/motion";
 
 import { DisclosureCard } from "@/components/account/disclosure-card";
 import { toast } from "@/components/ui/toast";
@@ -181,7 +181,8 @@ export function AccountReferralCard({
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{
-                  height: { duration: reduced ? 0 : 0.24, ease: easeEnter },
+                  // easeSize: tinggi tidak boleh melewati tujuannya — lihat lib/motion.
+                  height: { duration: reduced ? 0 : 0.24, ease: easeSize },
                   opacity: { duration: reduced ? 0 : 0.16 },
                 }}
                 style={{ overflow: "hidden" }}
@@ -253,7 +254,10 @@ function ReferralTrack({
             className="h-full rounded-full bg-primary"
             initial={reduced ? false : { width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ duration: reduced ? 0 : 0.75, ease: easeEnter }}
+            // Bilah kemajuan. Kurva rumah melewati tujuan ~5%, dan bilah yang
+            // melewati angkanya lalu balik itu bukan cuma terlihat aneh —
+            // dia sempat menampilkan persentase yang tidak benar.
+            transition={{ duration: reduced ? 0 : 0.75, ease: easeSize }}
           />
         </div>
         {ticks.map((n) => (

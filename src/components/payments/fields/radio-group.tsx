@@ -205,7 +205,7 @@ function TileGroup({
                   // tooltip nobody could even see. Clamping the width alone does
                   // not fix it: a centred box near the edge overflows at any
                   // width worth reading.
-                  "pointer-events-none absolute -top-1.5 left-1/2 z-30 w-max max-w-[13rem] -translate-x-1/2 -translate-y-full rounded-lg bg-foreground px-2.5 py-1.5 text-center text-[11px] font-medium leading-snug text-background shadow-lg transition-opacity duration-150",
+                  "pointer-events-none absolute -top-1.5 left-1/2 z-30 w-max max-w-[13rem] -translate-x-1/2 -translate-y-full rounded-lg bg-foreground px-2.5 py-1.5 text-center text-[11px] font-medium leading-snug text-background shadow-lg transition-opacity duration-200",
                   "group-last:left-auto group-last:right-0 group-last:translate-x-0",
                   "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
                   hintFor === o.value && "opacity-100"

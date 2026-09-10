@@ -49,7 +49,50 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   WATAK GERAK — "Pegas"
+   ═══════════════════════════════════════════════════════════════════════
+
+   Satu watak untuk seluruh situs, dipilih pemilik dari tiga peraga di /gerak
+   pada 2026-08-12. Wataknya: benda datang cepat lalu MENETAP — melewati
+   tujuannya sedikit, balik, diam. Bukan berhenti mendadak.
+
+   Sebelumnya tidak ada watak sama sekali: 14 durasi berbeda ditulis
+   sendiri-sendiri di komponen (34× duration-200, 21× 300, 8× 150, 8× 100,
+   7× 500, 4× 700, 3× 1000, dst), dan popup memakai `duration-100` dengan
+   kurva datar — itulah yang dia sebut "awkward, flat, terlalu kaku".
+
+   Dua aturan yang berlaku di mana pun:
+     1. Transform + opacity SAJA. Keduanya dikerjakan kartu grafis, jadi tidak
+        ada yang bisa memicu layout atau paint. Terbukti: animasi transform-saja
+        0% frame jatuh, sedangkan animasi width+shadow+blur 2,6%.
+     2. PERGI lebih cepat daripada DATANG. Waktu yang simetris meninggalkan
+        lubang di tengah, dan lubang itulah yang terasa lambat.
+
+   Padanan framer-motion-nya ada di `src/lib/motion.ts` — angkanya harus sama.
+   Kalau salah satu diubah, ubah dua-duanya.
+
+   ── EMPAT TINGKAT WAKTU, dan itu saja ──────────────────────────────────
+   Ini yang menghentikan 14 angka acak kembali tumbuh. Sebelum menulis
+   `duration-*` yang baru, cari tingkatnya di sini dulu:
+
+     130ms  PERGI      apa pun yang menutup atau menghilang
+     180ms  MENU       popover, select, dropdown — popup kecil
+     260ms  DATANG     dialog, lembar, panel, sesuatu yang baru muncul
+     200ms  SENTUHAN   hover, tekan, ganti warna. Tanpa `ease-pop`:
+                       melewati-tujuan pada kursor terasa goyah, bukan hidup
+
+   Di luar keempatnya cuma boleh untuk animasi NILAI — bilah kemajuan, angka
+   yang naik, cincin persentase (500-1000ms). Itu bukan gerak antarmuka, itu
+   data yang sedang bercerita, dan memang harus lebih lambat supaya terbaca.
+
+   `ease-pop` hanya untuk yang DATANG. Jangan dipakai pada hover. */
 @theme inline {
+  /* Datang. Melewati tujuan ~5% lalu menetap — inilah "pegas"-nya. */
+  --ease-pop: cubic-bezier(0.34, 1.4, 0.5, 1);
+  /* Pergi. Tidak berlama-lama, tidak memantul. */
+  --ease-pop-out: cubic-bezier(0.4, 0, 1, 1);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);

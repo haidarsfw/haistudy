@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { popupOverlay, popupPanel } from "@/lib/motion";
 import {
   AlertTriangle,
   ArrowRight,
@@ -172,16 +173,16 @@ export function EnterAccessButton({
           role="dialog"
           aria-modal="true"
           aria-labelledby="device-confirm-title"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.18 }}
+          variants={popupOverlay}
+          initial="hidden"
+          animate="visible"
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
           onClick={() => !busy && setConfirm(null)}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            variants={popupPanel}
+            initial="hidden"
+            animate="visible"
             className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >

@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
-import { NAV, easeEnter, easeExit } from "@/lib/motion";
+import { NAV, easeEnter, easeExit, easeSize } from "@/lib/motion";
 
 /**
  * A card that arrives closed.
@@ -103,7 +103,10 @@ export function DisclosureCard({
             transition={{
               height: {
                 duration: reduced ? NAV.reduced : 0.26,
-                ease: open ? easeEnter : easeExit,
+                // `easeSize`, never `easeEnter`. The house curve overshoots by
+                // design, and a height that overshoots grows past the content
+                // then snaps back — the jolt that made this card read as broken.
+                ease: open ? easeSize : easeExit,
               },
               // Opacity trails the height slightly on the way in and leads it
               // on the way out, so the content is never readable at a height
