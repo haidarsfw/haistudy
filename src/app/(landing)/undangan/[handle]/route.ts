@@ -66,6 +66,25 @@ export async function GET(
     }
   }
 
+  // Who sent them, carried in a cookie rather than looked up on the landing
+  // page. Reading a cookie server-side would make the home page dynamic on
+  // EVERY visit — a Vercel invocation each time, for a banner almost nobody
+  // sees. And a public "whose code is this" endpoint would undo the reason
+  // /api/account/referral/check answers in one bit: you get the name only if
+  // you already had a working link.
+  let inviter = "";
+  if (resolved?.accountId) {
+    const { data: owner } = await supabase
+      .from("accounts")
+      .select("nickname")
+      .eq("id", resolved.accountId)
+      .maybeSingle();
+    inviter = ((owner?.nickname as string) ?? "").slice(0, 32);
+  } else if (resolved?.label) {
+    // Campaign codes have no account; their label is the human-readable name.
+    inviter = resolved.label.slice(0, 32);
+  }
+
   const res = NextResponse.redirect(home);
   // An unknown handle lands on the home page with nothing attached. Saying
   // "that code does not exist" here would turn the route into an oracle for
@@ -80,6 +99,14 @@ export async function GET(
       // value is a public referral code, not a credential.
       httpOnly: false,
     });
+    if (inviter) {
+      res.cookies.set("hs-ref-by", inviter, {
+        path: "/",
+        maxAge: REF_COOKIE_DAYS * 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: false,
+      });
+    }
   }
   return res;
 }

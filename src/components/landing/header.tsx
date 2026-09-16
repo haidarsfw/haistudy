@@ -203,7 +203,8 @@ export function Header() {
   return (
     <header
       ref={outerRef}
-      className="fixed inset-x-0 top-0 z-50"
+      // Offset by the invite bar when one is showing; 0px otherwise.
+      className="fixed inset-x-0 top-[var(--hs-invite-h,0px)] z-50"
       style={{ paddingLeft: "0px", paddingRight: "0px" }}
     >
       <div

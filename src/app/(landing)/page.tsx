@@ -1,6 +1,7 @@
 import { FAQ } from "@/data/landing/faq";
 import { PricingSection } from "@/components/landing/pricing-section";
 import { Header } from "@/components/landing/header";
+import { InviteBanner } from "@/components/landing/invite-banner";
 import { Hero } from "@/components/landing/hero";
 import { SocialProof } from "@/components/landing/social-proof";
 import { HowItWorks } from "@/components/landing/how-it-works";
@@ -30,6 +31,7 @@ export default function LandingPage() {
         }}
       />
 
+      <InviteBanner />
       <Header />
 
       <main className="overflow-x-hidden">
