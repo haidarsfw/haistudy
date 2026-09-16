@@ -131,6 +131,21 @@ export async function GET() {
     .eq("license_key", licenseKey)
     .single();
 
+  // The class is a display label (sidebar, chat, profile), not a gate. It used
+  // to be collected by a blocking screen on first entry, which asked for
+  // something the buyer had already typed at checkout. That screen is gone, so
+  // fall back to the class the account was bought with. One extra read, and
+  // only while user_settings has nothing stored.
+  let classLabel = (settingsData?.selected_class as string) ?? "";
+  if (!classLabel && license.account_id) {
+    const { data: acc } = await supabase
+      .from("accounts")
+      .select("class_code")
+      .eq("id", license.account_id)
+      .maybeSingle();
+    classLabel = (acc?.class_code as string) ?? "";
+  }
+
   const scopeTuple: ScopeTuple = {
     semester:
       typeof license.semester === "number" ? license.semester : DEFAULT_SCOPE.semester,
@@ -152,7 +167,7 @@ export async function GET() {
     isAdmin: license.is_admin,
     isTester: license.is_tester,
     expiry: activation?.expiry ?? null,
-    selectedClass: settingsData?.selected_class ?? "",
+    selectedClass: classLabel,
     isPreview: license.is_preview || false,
     packageTier:
       (license.package_tier as "share" | "normal" | "vip" | "diamond") || "normal",

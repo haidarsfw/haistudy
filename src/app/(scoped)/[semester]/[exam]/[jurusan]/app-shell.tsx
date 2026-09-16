@@ -13,10 +13,7 @@ import { AiTrigger } from "@/components/ai/ai-trigger";
 import { useVoice } from "@/components/providers/voice-provider";
 import { ReminderAlarm } from "@/components/shared/reminder-alarm";
 import { PreviewWatermark } from "@/components/shared/preview-watermark";
-import { ClassSelector } from "@/components/auth/class-selector";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
-import { SurveyPopup } from "@/components/shared/survey-popup";
-import { FEEDBACK_FORM_SCOPE } from "@/lib/feedback-form";
 
 // Lazy-loaded panels - fetched on first open so they stay off the dashboard
 // critical path. ssr:false is legal here because app-shell.tsx is "use client".
@@ -90,7 +87,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const { scopePath, scopeKey } = useScope();
   const dashboardHref = `/${scopePath}/dashboard`;
   // Post-UAS feedback drive — only the s2-uas-bm cohort sees the popup + header CTA.
-  const showFeedback = scopeKey === FEEDBACK_FORM_SCOPE;
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
@@ -198,7 +194,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, session, router]);
 
-  // Sync selectedClass from settings to session (cross-device safety net)
+  // Keep the class label in sync with stored settings. There is no longer a
+  // gate that asks for it: the buyer picks their class at checkout, and
+  // /api/auth/me falls back to the account's class_code when settings are
+  // empty. This effect only carries a value that already exists.
   useEffect(() => {
     if (session && !session.selectedClass && settings?.selectedClass && !settingsLoading) {
       updateSession({ selectedClass: settings.selectedClass });
@@ -345,31 +344,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
   if (!session) return null;
 
-  // Enforce class selection before any feature access
-  if (!session.selectedClass) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <ClassSelector
-            selected={session.selectedClass}
-            onSelect={async (cls) => {
-              try {
-                await fetch("/api/settings", {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    licenseKey: session.licenseKey,
-                    settings: { selectedClass: cls },
-                  }),
-                });
-              } catch {}
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
   const isExamRoute = pathname?.includes("/latihan");
 
   if (isExamRoute) {
@@ -394,7 +368,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       {/* Main content area */}
       <div className="flex min-h-[100dvh] sm:h-[100dvh] flex-1 flex-col min-w-0">
-        <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} showFeedbackCta={showFeedback} />
+        <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} />
         <AnnouncementBanner />
         <EnableNotificationsBanner />
         <SWRegister />
@@ -505,7 +479,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     <AnnouncementModal />
 
     {/* Post-UAS feedback nudge — s2-uas-bm only, once per login session */}
-    {showFeedback && <SurveyPopup />}
 
     {/* PWA install prompt + update pill - both self-gate internally */}
     <InstallBanner />
