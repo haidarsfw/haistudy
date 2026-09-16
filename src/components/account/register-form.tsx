@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -62,6 +62,9 @@ export function RegisterForm({ next }: { next?: string }) {
   const [referral, setReferral] = useState("");
   const [showReferral, setShowReferral] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** Set when the code arrived from a partner link rather than being typed. */
+  const [fromLink, setFromLink] = useState(false);
+
   const [banner, setBanner] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -81,8 +84,11 @@ export function RegisterForm({ next }: { next?: string }) {
     "idle" | "checking" | "valid" | "invalid" | "unchecked"
   >("idle");
 
-  const verifyReferral = async () => {
-    const code = referral.trim();
+  const verifyReferral = async (override?: string) => {
+    // `override` exists for the prefill below: state set in the same tick is
+    // not readable here yet, and a code that never gets checked never reaches
+    // the Google button, which only carries a code once it is confirmed.
+    const code = (override ?? referral).trim();
     if (!code) {
       setRefState("idle");
       return;
@@ -106,6 +112,30 @@ export function RegisterForm({ next }: { next?: string }) {
       setRefState("unchecked");
     }
   };
+
+  // A partner link (`/@nama`) leaves the code in `hs-ref`. Without this the
+  // field stays collapsed and empty, the person never learns a code is in play,
+  // and choosing Google would clear the cookie on the way out — losing the
+  // referral between the link and the signup it was meant to credit.
+  useEffect(() => {
+    try {
+      const hit = document.cookie
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith("hs-ref="));
+      if (!hit) return;
+      const code = decodeURIComponent(hit.slice("hs-ref=".length)).trim();
+      if (!code) return;
+      setReferral(code);
+      setShowReferral(true);
+      setFromLink(true);
+      void verifyReferral(code);
+    } catch {
+      // Cookies unavailable — the field simply stays empty.
+    }
+    // Once, on mount. The cookie does not change under us.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const submit = async (e: React.FormEvent, dropReferral = false) => {
     e.preventDefault();
@@ -341,7 +371,9 @@ export function RegisterForm({ next }: { next?: string }) {
             className="flex items-center gap-1.5 rounded text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <Gift className="h-3.5 w-3.5" />
-            Punya kode referral?
+            {/* A code that arrived on a link was never "typed", so asking
+                whether they have one reads as if nothing happened. */}
+            {fromLink ? "Kode dari undangan temanmu" : "Punya kode referral?"}
             <ChevronDown
               className={`h-3.5 w-3.5 transition-transform duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 showReferral ? "rotate-180" : ""

@@ -31,6 +31,9 @@ const publicPaths = [
   "/cancel-deletion",
   "/preview",
   "/payments",
+  // Where `/@nama` rewrites to. Public for the same reason /register is: the
+  // person following a partner's link has no account yet.
+  "/undangan",
   "/api",
   "/privacy",
   "/terms",
@@ -160,6 +163,22 @@ export function proxy(request: NextRequest) {
     const dest = new URL("/auth/callback", request.url);
     url.searchParams.forEach((v, k) => dest.searchParams.set(k, v));
     return NextResponse.redirect(dest);
+  }
+
+  // 0c. Partner links: `/@nama` → the invite handler.
+  //
+  //     It cannot be a route folder. The app owns the root dynamic segment
+  //     (`(scoped)/[semester]`), and Next refuses a second slug name at the
+  //     same level — `[handle]` next to `[semester]` is a build error. A
+  //     rewrite sidesteps that entirely, and keeps the pretty URL the owner
+  //     wants on an NFC card.
+  //
+  //     `@` cannot begin any real path, so nothing existing can collide.
+  const partner = pathname.match(/^\/@([A-Za-z0-9_-]{2,32})$/);
+  if (partner) {
+    return NextResponse.rewrite(
+      new URL(`/undangan/${encodeURIComponent(partner[1])}`, request.url)
+    );
   }
 
   // 1. Public paths
