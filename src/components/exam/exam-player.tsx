@@ -205,11 +205,24 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
       setAttemptId(result.attemptId);
       setStartedAt(result.startedAt);
       setPhase("exam");
-      setGracePeriodActive(true);
 
-      graceTimerRef.current = setTimeout(() => {
-        setGracePeriodActive(false);
-      }, GRACE_PERIOD_S * 1000);
+      // The grace period belongs to the attempt, not to this page load.
+      //
+      // Arming it unconditionally was safe only while every start really was a
+      // start. Now the server hands back an attempt that was already running,
+      // and exiting during grace ABANDONS it — which returns the quota slot.
+      // Re-open, exit, repeat, and the quota never goes down. So measure from
+      // the attempt's own started_at and give back only what is left of it.
+      const elapsedMs = Date.now() - new Date(result.startedAt).getTime();
+      const graceLeftMs = GRACE_PERIOD_S * 1000 - elapsedMs;
+      const graceOpen = !result.resumed && graceLeftMs > 0;
+      setGracePeriodActive(graceOpen);
+
+      if (graceOpen) {
+        graceTimerRef.current = setTimeout(() => {
+          setGracePeriodActive(false);
+        }, graceLeftMs);
+      }
 
       // Persist the session immediately so an accidental refresh right after
       // starting can resume THIS attempt (no quota wasted, no answers lost).

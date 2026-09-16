@@ -24,6 +24,8 @@ interface StartResult {
   attemptId: string;
   startedAt: string;
   quota: ExamQuota;
+  /** True when the server handed back an attempt that was already running. */
+  resumed?: boolean;
 }
 
 interface SubmitResult {
