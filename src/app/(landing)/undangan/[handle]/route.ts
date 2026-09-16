@@ -18,6 +18,14 @@ import { lookupReferralCode, normalizeReferralCode } from "@/lib/referral/codes"
  * The handle is either the referral code itself (`HAIDAR42`) or the owner's
  * nickname (`haidar`), because both are things a partner will read out loud and
  * neither is worth losing a referral over.
+ *
+ * Deliberately NOT rate-limited, unlike /api/account/referral/check. That one
+ * guards a form; this is a link people click in a group. The throttle there is
+ * per IP and backed by a row in `account_rate_events` — on a public URL that is
+ * a database write per click, and a mentor showing the link to a class on one
+ * campus network would trip it. What the throttle protects is also thinner
+ * here: a referral code is meant to be shared, and learning that one exists
+ * buys nothing but the ability to credit someone else's referral.
  */
 
 /** 7 days — the owner's call. Long enough for "I'll buy it tonight", short
@@ -48,10 +56,14 @@ export async function GET(
   // The code as given, then the nickname it might be.
   let resolved = await lookupReferralCode(supabase, code).catch(() => null);
   if (!resolved) {
+    // `code`, not `raw`. The raw segment reaches ilike with its LIKE wildcards
+    // intact, so /undangan/hai%25 becomes a prefix SEARCH over every nickname
+    // and the list can be walked one character at a time. normalizeReferralCode
+    // strips everything that is not alphanumeric, which nicknames already are.
     const { data: acc } = await supabase
       .from("accounts")
       .select("id")
-      .ilike("nickname", raw)
+      .ilike("nickname", code)
       .maybeSingle();
     if (acc?.id) {
       const { data: own } = await supabase

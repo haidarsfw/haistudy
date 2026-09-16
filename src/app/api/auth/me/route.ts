@@ -144,6 +144,23 @@ export async function GET() {
       .eq("id", license.account_id)
       .maybeSingle();
     classLabel = (acc?.class_code as string) ?? "";
+
+    // Write it back, once. Without this the branch above is not a fallback at
+    // all: the only thing that ever wrote user_settings.selected_class was the
+    // class-selection gate, and that gate is gone — so the column stays empty
+    // forever and this route, which runs on EVERY app load, would carry a
+    // permanent extra read. Fire-and-forget: a slow settings table must not
+    // hold up a session check, and the worst case is simply doing it again.
+    if (classLabel) {
+      void supabase
+        .from("user_settings")
+        .update({ selected_class: classLabel })
+        .eq("license_key", licenseKey)
+        .then(
+          () => {},
+          () => {}
+        );
+    }
   }
 
   const scopeTuple: ScopeTuple = {

@@ -33,6 +33,13 @@ const publicPaths = [
   "/payments",
   // Where `/@nama` rewrites to. Public for the same reason /register is: the
   // person following a partner's link has no account yet.
+  //
+  // isPublicPath matches the bare string OR a `/`-prefix, and every real
+  // request here is `/undangan/<handle>` — the bare path is never requested.
+  // Listed anyway so the route stays public on purpose rather than by accident:
+  // today it survives only because isAppRoute does not recognise the segment,
+  // and anyone tightening that later would silently start bouncing invited
+  // visitors to /login.
   "/undangan",
   "/api",
   "/privacy",
