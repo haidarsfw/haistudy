@@ -112,6 +112,17 @@ function subscribe(
   };
 }
 
+/**
+ * Count across every period, for the badge.
+ *
+ * The badge answers "is anything waiting", and that question is not about the
+ * period the admin happens to be looking at. Scoped, it read 0 while a B30
+ * order sat pending in another period, with nothing on screen to suggest it
+ * existed. Declared once at module scope so the identity is stable and every
+ * consumer collapses onto ONE shared poller — same network cost as before.
+ */
+export const ALL_PERIODS_COUNT_QUERY = () => "?allPeriods=1";
+
 export function useAdminPurchaseCount(opts?: {
   scopeQuery?: () => string;
   pollMs?: number;

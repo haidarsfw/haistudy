@@ -34,6 +34,10 @@ import { toast } from "@/components/ui/toast";
 import type { PurchaseRequest } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import {
+  useAdminPurchaseCount,
+  ALL_PERIODS_COUNT_QUERY,
+} from "@/hooks/use-admin-purchase-count";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeFullLabel } from "@/lib/scope";
 import { buildApprovalWa } from "@/lib/wa-message";
@@ -134,7 +138,12 @@ function waPhone(whatsapp: string): string {
 
 export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
   const { t } = useTranslation();
-  const { adminScopeKey, isAllPeriods, scopeQuery, hydrated } = useAdminScope();
+  const { adminScopeKey, isAllPeriods, scopeQuery, hydrated, setAdminScope } =
+    useAdminScope();
+  // Shares the badge's poller (same URL key), so this costs no extra requests.
+  const { pendingCount: pendingEverywhere } = useAdminPurchaseCount({
+    scopeQuery: ALL_PERIODS_COUNT_QUERY,
+  });
   const [purchases, setPurchases] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -484,6 +493,24 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
         </div>
       </CardHeader>
       <CardContent>
+        {/* A scoped queue hides orders from every other period, and the admin
+            lands on the newest sellable one by default. A B30 order could sit
+            pending in s1-uts-bm with nothing on this screen to say so. */}
+        {!isAllPeriods && pendingEverywhere > pendingCount && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            <span>
+              {pendingEverywhere - pendingCount} pesanan menunggu di periode
+              lain.
+            </span>
+            <button
+              type="button"
+              onClick={() => setAdminScope("all")}
+              className="rounded-full border border-amber-500/40 px-2 py-0.5 font-semibold hover:bg-amber-500/20"
+            >
+              Lihat semua periode
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

@@ -18,7 +18,10 @@ import { ReferralCodes } from "./referral-codes";
 import { FeedbackDiscounts } from "./feedback-discounts";
 import { ClassDiscounts } from "./class-discounts";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
-import { useAdminPurchaseCount } from "@/hooks/use-admin-purchase-count";
+import {
+  useAdminPurchaseCount,
+  ALL_PERIODS_COUNT_QUERY,
+} from "@/hooks/use-admin-purchase-count";
 import {
   Zap,
   KeyRound,
@@ -71,7 +74,10 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
     [reduced]
   );
   const { scopeQuery, adminScopeKey, isAllPeriods } = useAdminScope();
-  const { pendingCount, refresh: refreshPurchaseCount } = useAdminPurchaseCount({ scopeQuery });
+  // Counted across every period on purpose — see ALL_PERIODS_COUNT_QUERY.
+  const { pendingCount, refresh: refreshPurchaseCount } = useAdminPurchaseCount({
+    scopeQuery: ALL_PERIODS_COUNT_QUERY,
+  });
   const [purchaseReload, setPurchaseReload] = useState(0);
 
   useEffect(() => {
