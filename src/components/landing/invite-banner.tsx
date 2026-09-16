@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Gift } from "lucide-react";
+import { Gift, X } from "lucide-react";
+import { useAccount } from "@/hooks/use-account";
 
 /**
  * "Kamu diajak oleh X" — shown only to someone who arrived on a partner link.
@@ -16,6 +17,10 @@ import { Gift } from "lucide-react";
  * into sign-up. Everything else routes through pricing, which is a long way
  * round for someone who was just told "pakai link saya".
  */
+/** Hidden for this browser session only. Never clears the cookie: the code
+ *  still has to survive to the sign-up form. */
+const DISMISS_KEY = "hs-invite-dismissed";
+
 function readCookie(name: string): string {
   if (typeof document === "undefined") return "";
   try {
@@ -33,9 +38,21 @@ export function InviteBanner() {
   // Nothing on the first paint: the cookie is unreadable during SSR, and
   // rendering the bar only to remove it would shift the hero under the reader.
   const [invite, setInvite] = useState<{ code: string; by: string } | null>(null);
+  const [dismissed, setDismissed] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // Already shared by the landing header, from a module-level cache — asking
+  // here costs no extra request.
+  const { account, loading } = useAccount();
 
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem(DISMISS_KEY) === "1") {
+        setDismissed(true);
+        return;
+      }
+    } catch {
+      // Storage unavailable — the bar simply stays dismissable per page load.
+    }
     const code = readCookie("hs-ref");
     if (!code) return;
     setInvite({ code, by: readCookie("hs-ref-by") });
@@ -62,14 +79,18 @@ export function InviteBanner() {
     };
   }, [invite]);
 
-  if (!invite) return null;
+  // The cookie lives 7 days so the code survives until they sign up, which
+  // means the bar would otherwise greet them on every visit for a week — and
+  // greet a SIGNED-IN person with an invitation they cannot use, sometimes
+  // their own. Someone with an account has nothing left to accept.
+  if (!invite || dismissed || loading || account) return null;
 
   return (
     <div
       ref={ref}
       className="fixed inset-x-0 top-0 z-[60] border-b border-primary/20 bg-primary/10 backdrop-blur"
     >
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-3 gap-y-1.5 px-4 py-2.5 text-center text-xs sm:text-sm">
+      <div className="relative mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-3 gap-y-1.5 px-9 py-2.5 text-center text-xs sm:text-sm">
         <span className="flex items-center gap-1.5 text-primary">
           <Gift className="h-4 w-4 shrink-0" />
           {invite.by ? (
@@ -89,6 +110,21 @@ export function InviteBanner() {
         >
           Daftar
         </Link>
+        <button
+          type="button"
+          aria-label="Tutup"
+          onClick={() => {
+            setDismissed(true);
+            try {
+              sessionStorage.setItem(DISMISS_KEY, "1");
+            } catch {
+              // Non-fatal: it just reappears on the next page load.
+            }
+          }}
+          className="absolute right-2 top-1.5 rounded p-1 text-muted-foreground transition-colors hover:text-foreground sm:right-3 sm:top-2"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );
