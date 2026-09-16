@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Copy, Gift, Loader2, MailWarning, ShieldAlert, QrCode } from "lucide-react";
+import { Check, Copy, Gift, Loader2, MailWarning, ShieldAlert } from "lucide-react";
+import { ReferralQr } from "./referral-qr";
 
 import { easeSize } from "@/lib/motion";
 
@@ -35,7 +36,6 @@ export function AccountReferralCard({
 }) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [showQr, setShowQr] = useState(false);
   const [showList, setShowList] = useState(false);
   const reduced = useReducedMotion();
 
@@ -138,38 +138,7 @@ export function AccountReferralCard({
         </button>
       </div>
 
-      {/* Folded away by default. The QR matters to the few people printing a
-          poster or writing an NFC card, and it would be a large silent block
-          for everyone else. Rendered by the server as SVG, so opening this
-          costs the browser no JavaScript. */}
-      <button
-        type="button"
-        onClick={() => setShowQr((v) => !v)}
-        aria-expanded={showQr}
-        className="mt-2 flex items-center gap-1.5 rounded text-xs text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <QrCode className="h-3.5 w-3.5" />
-        {showQr ? "Sembunyikan QR" : "Tampilkan QR"}
-      </button>
-      {showQr && (
-        <div className="mt-2 flex flex-col items-center gap-2 rounded-xl border border-border bg-background p-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`/undangan/${referral.code}/qr`}
-            alt={`QR ke haistudy.site/@${referral.code}`}
-            width={176}
-            height={176}
-            className="h-44 w-44 rounded-lg"
-          />
-          <a
-            href={`/undangan/${referral.code}/qr`}
-            download={`haistudy-${referral.code}.svg`}
-            className="text-xs font-semibold text-primary underline underline-offset-2"
-          >
-            Unduh buat dicetak
-          </a>
-        </div>
-      )}
+      <ReferralQr code={referral.code} />
 
       {/* Two numbers, not one. "Sudah dipakai 4 orang" is the number people
           dispute; separating those who only signed up from those who actually
