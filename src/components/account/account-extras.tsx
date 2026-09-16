@@ -34,6 +34,7 @@ export function AccountReferralCard({
   hasNickname?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [showList, setShowList] = useState(false);
   const reduced = useReducedMotion();
 
@@ -95,7 +96,34 @@ export function AccountReferralCard({
         {formatRupiah(REFERRER_CREDIT)} tiap teman yang beli.
       </p>
 
+      {/* The link first, the code second. 526 codes were minted and one was
+          used; the code had to be remembered and typed into a collapsed field.
+          A link is shared in one tap and fills that field by itself. */}
       <div className="mt-3 flex items-center gap-2">
+        <code className="flex-1 truncate rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-2.5 font-mono text-sm text-primary">
+          haistudy.site/@{referral.code}
+        </code>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(
+                `https://haistudy.site/@${referral.code}`
+              );
+              setLinkCopied(true);
+              setTimeout(() => setLinkCopied(false), 2000);
+            } catch {
+              toast.error("Gagal menyalin");
+            }
+          }}
+          className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+        >
+          {linkCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          {linkCopied ? "Tersalin" : "Salin link"}
+        </button>
+      </div>
+
+      <div className="mt-2 flex items-center gap-2">
         <code className="flex-1 truncate rounded-xl border border-border bg-background px-3.5 py-2.5 font-mono text-sm text-foreground">
           {referral.code}
         </code>
