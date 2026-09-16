@@ -1198,17 +1198,28 @@ export function PaymentsFlow({
                               onClick={async () => {
                                 setNotifyState("sending");
                                 try {
-                                  await fetch("/api/account/scope-interest", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      scope: form.scopeKey,
-                                      package: form.pkg,
-                                    }),
-                                  });
+                                  const res = await fetch(
+                                    "/api/account/scope-interest",
+                                    {
+                                      method: "POST",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        scope: form.scopeKey,
+                                        package: form.pkg,
+                                      }),
+                                    }
+                                  );
+                                  // fetch only throws on a network failure, so
+                                  // the status has to be read. Without this a
+                                  // 500 would still say "done" — a promise they
+                                  // cannot check and we would never keep.
+                                  if (!res.ok) {
+                                    setNotifyState("idle");
+                                    return;
+                                  }
                                 } catch {
-                                  // Saying "done" on a failed write would be a
-                                  // lie they cannot check. Let them try again.
                                   setNotifyState("idle");
                                   return;
                                 }
