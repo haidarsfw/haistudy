@@ -28,12 +28,14 @@ import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeKey, scopeFullLabel } from "@/lib/scope";
 import { scopeCompact } from "@/components/admin/scope-dropdown-content";
 import { buildApprovalWa } from "@/lib/wa-message";
+import { PACKAGE_PRICES, formatIDR } from "@/lib/payments";
+import type { PurchasablePackageId } from "@/lib/payments";
 
 const PACKAGE_OPTIONS = [
-  { id: "share", label: "Share (Rp25.000)", tier: "share" as const },
-  { id: "normal", label: "Normal (Rp30.000)", tier: "normal" as const },
-  { id: "vip", label: "VIP (Rp35.000)", tier: "vip" as const },
-  { id: "diamond", label: "Diamond (Rp50.000+)", tier: "diamond" as const },
+  { id: "share", label: `Share (${formatIDR(PACKAGE_PRICES.share)})`, tier: "share" as const },
+  { id: "normal", label: `Normal (${formatIDR(PACKAGE_PRICES.normal)})`, tier: "normal" as const },
+  { id: "vip", label: `VIP (${formatIDR(PACKAGE_PRICES.vip)})`, tier: "vip" as const },
+  { id: "diamond", label: `Diamond (${formatIDR(PACKAGE_PRICES.diamond)}+)`, tier: "diamond" as const },
   { id: "free", label: "Free", tier: "normal" as const },
 ] as const;
 
@@ -120,8 +122,16 @@ export function QuickLicense() {
         ? freeReason || "Free"
         : ({ share: "Share", normal: "Normal", vip: "VIP", diamond: "Diamond" } as Record<string, string>)[pkg] ??
           pkg;
-    const priceMatch = selectedPackage?.label.match(/\((Rp[\d.]+\+?)\)/);
-    const amount = pkg === "free" ? "Gratis" : priceMatch?.[1] ?? "—";
+    // Read from the price table, not scraped out of the dropdown's label with
+    // a regex. Editing that label — a caption — used to change the amount on
+    // the invoice a buyer receives.
+    const amount =
+      pkg === "free"
+        ? "Gratis"
+        : pkg in PACKAGE_PRICES
+          ? formatIDR(PACKAGE_PRICES[pkg as PurchasablePackageId]) +
+            (pkg === "diamond" ? "+" : "")
+          : "—";
     const periode = scopeFullLabel(adminScope);
 
     try {

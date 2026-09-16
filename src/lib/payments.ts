@@ -62,6 +62,14 @@ export function packageAccent(id: PurchasablePackageId): PackageAccent {
   return "primary";
 }
 
+/**
+ * The prices. Declared once.
+ *
+ * PACKAGES used to repeat each number in its own `price` field, and nothing
+ * compared the two. The cards read one, `effectiveBasePrice` read the other,
+ * and an edit to either would have shown a buyer a figure the server did not
+ * charge.
+ */
 export const PACKAGE_PRICES: Record<PurchasablePackageId, number> = {
   share: 25000,
   normal: 30000,
@@ -103,7 +111,7 @@ export const PACKAGES: PackageDef[] = [
   {
     id: "share",
     tier: "share",
-    price: 25000,
+    price: PACKAGE_PRICES.share,
     maxDevices: 2,
     icon: "Share2",
     nameKey: "pricing.share_name",
@@ -135,7 +143,7 @@ export const PACKAGES: PackageDef[] = [
   {
     id: "normal",
     tier: "normal",
-    price: 30000,
+    price: PACKAGE_PRICES.normal,
     maxDevices: 2,
     icon: "GraduationCap",
     nameKey: "pricing.normal_name",
@@ -167,7 +175,7 @@ export const PACKAGES: PackageDef[] = [
   {
     id: "vip",
     tier: "vip",
-    price: 35000,
+    price: PACKAGE_PRICES.vip,
     maxDevices: 3,
     icon: "Crown",
     nameKey: "pricing.vip_name",
@@ -212,7 +220,7 @@ export const PACKAGES: PackageDef[] = [
   {
     id: "diamond",
     tier: "diamond",
-    price: 50000,
+    price: PACKAGE_PRICES.diamond,
     maxDevices: 3,
     icon: "Gem",
     nameKey: "pricing.diamond_name",
@@ -290,8 +298,11 @@ export const SOURCES = [
   { id: "other", labelKey: "payments.source_other" },
 ] as const;
 
-// ─── Upload limits (mirrored server-side in /api/payments) ───
-export const PROOF_MAX_BYTES = 5 * 1024 * 1024; // reject >5MB before compress
+// ─── Upload limits ───
+// This MUST match MAX_UPLOAD_BYTES in /api/payments. It said 5MB while the
+// server refused anything over 3MB, so a 4MB screenshot passed every check the
+// buyer could see and was rejected after the upload.
+export const PROOF_MAX_BYTES = 3 * 1024 * 1024; // matches the server's cap
 export const PROOF_TARGET_BYTES = 500 * 1024; // compress target per image
 export const PROOF_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
 

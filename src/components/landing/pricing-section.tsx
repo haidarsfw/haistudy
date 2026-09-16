@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { tierBase } from "@/lib/exam/quota";
 
 /**
  * Landing pricing — bespoke, decoupled from the /payments PackageCard.
@@ -83,10 +84,17 @@ const TIER: Record<
 // Rank logo (keyed by PackageDef.icon).
 const ICON: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
 
-// Exam-simulation quota per tier (display only — not wired to a backend limit).
-// Shown as a feature line above the badge on VIP/Diamond; Normal's lives in the
-// "& masih banyak lagi" popup, Share inherits Normal.
-const QUOTA: Record<string, number> = { share: 3, normal: 3, vip: 5, diamond: 10 };
+// Exam-simulation quota per tier, read from the function that ENFORCES it.
+// The old comment claimed this was "display only — not wired to a backend
+// limit", which was never true: tierBase() is what /api/exam/start counts
+// against. The numbers happened to agree, by hand, which is the state right
+// before they stop agreeing.
+const QUOTA: Record<string, number> = {
+  share: tierBase(false, "share"),
+  normal: tierBase(false, "normal"),
+  vip: tierBase(false, "vip"),
+  diamond: tierBase(false, "diamond"),
+};
 
 /** The real in-app tier badge (as shown next to names in chat & forum). */
 function TierBadge({ tier }: { tier: "vip" | "diamond" }) {

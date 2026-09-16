@@ -1,4 +1,5 @@
 import { SITE_URL } from "@/lib/site-url";
+import { PACKAGE_PRICES } from "@/lib/payments";
 
 // Server component: emits WebApplication + Organization structured data as a
 // single JSON-LD graph. Rendered once in the root layout so every page carries
@@ -58,9 +59,12 @@ export function JsonLd() {
         offers: {
           "@type": "AggregateOffer",
           priceCurrency: "IDR",
-          lowPrice: "20000",
-          highPrice: "50000",
-          offerCount: 4,
+          // Derived. These were typed by hand and lowPrice still said 20000 —
+          // the retired LE86 Share price — so Google was being shown a figure
+          // nobody could pay.
+          lowPrice: String(Math.min(...Object.values(PACKAGE_PRICES))),
+          highPrice: String(Math.max(...Object.values(PACKAGE_PRICES))),
+          offerCount: Object.keys(PACKAGE_PRICES).length,
           availability: "https://schema.org/InStock",
         },
       },
