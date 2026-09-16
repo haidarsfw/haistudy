@@ -6,6 +6,7 @@ import { popupOverlay, popupPanel } from "@/lib/motion";
 import { ClipboardList, Gift, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FEEDBACK_FORM_URL } from "@/lib/feedback-form";
+import { useSession } from "@/components/providers/session-provider";
 
 // Post-UAS feedback nudge. Shows once per login session (sessionStorage-gated,
 // so page refreshes and SPA navigation don't re-trigger it) — a new browser
@@ -15,9 +16,13 @@ import { FEEDBACK_FORM_URL } from "@/lib/feedback-form";
 // Purely client-side: no DB / API / realtime → zero free-tier cost.
 const STORAGE_KEY = "hs-feedback-uasbm-session";
 const SHOW_DELAY_MS = 1500;
+// Same key the onboarding tour writes (see @/hooks/use-onboarding).
+const ONBOARDING_KEY = "hs-onboarding-complete";
 
 export function SurveyPopup() {
+  const { session } = useSession();
   const [open, setOpen] = useState(false);
+  const licenseKey = session?.licenseKey;
 
   useEffect(() => {
     let seen = false;
@@ -28,9 +33,25 @@ export function SurveyPopup() {
       return;
     }
     if (seen) return;
+
+    // Wait for the onboarding tour. Two things were wrong without this: on a
+    // phone the tour rendered ON TOP of this panel, so a brand-new user's first
+    // screen was two stacked dialogs; and the copy thanks them for a period
+    // they have not used yet, because the only gate was the scope.
+    // Someone who has finished the tour has at least been inside the app.
+    try {
+      const done =
+        localStorage.getItem(`${ONBOARDING_KEY}:${licenseKey ?? ""}`) ??
+        localStorage.getItem(ONBOARDING_KEY);
+      if (!done) return;
+    } catch {
+      // localStorage unavailable — treat as "tour not finished" and stay quiet.
+      return;
+    }
+
     const timer = window.setTimeout(() => setOpen(true), SHOW_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [licenseKey]);
 
   const markSeen = () => {
     try {
