@@ -31,7 +31,7 @@ import {
   Gift,
 } from "lucide-react";
 
-const TABS = [
+export const TABS = [
   { label: "Quick", icon: Zap, value: 0 },
   { label: "Lisensi", icon: KeyRound, value: 1 },
   { label: "Statistik", icon: BarChart3, value: 2 },
@@ -42,6 +42,9 @@ const TABS = [
   { label: "Support", icon: Headphones, value: 7 },
   { label: "Referral", icon: Gift, value: 8 },
 ] as const;
+
+/** Highest deep-linkable ?tab= value. Derived so it cannot drift from TABS. */
+export const MAX_TAB = TABS.length - 1;
 
 interface AdminTabsProps {
   activeTab: number;

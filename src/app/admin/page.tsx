@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
-import { AdminTabs } from "@/components/admin/admin-tabs";
+import { AdminTabs, MAX_TAB } from "@/components/admin/admin-tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileSearch } from "lucide-react";
 
@@ -14,12 +14,15 @@ export default function AdminPage() {
   const { session } = useSession();
   const [activeTab, setActiveTab] = useState(0);
 
-  // Deep-link: /admin?tab=7 opens the Support tab directly
+  // Deep-link: /admin?tab=8 opens the Referral tab directly.
+  // The bound comes from the tab list itself. It used to be a literal 7, which
+  // stopped matching the day Referral was added as tab 8 — ?tab=8 silently fell
+  // back to Quick, and the purchase-alert push links straight into this panel.
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam) {
       const n = parseInt(tabParam, 10);
-      if (!isNaN(n) && n >= 0 && n <= 7) setActiveTab(n);
+      if (!isNaN(n) && n >= 0 && n <= MAX_TAB) setActiveTab(n);
     }
   }, [searchParams]);
 
