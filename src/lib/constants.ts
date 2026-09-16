@@ -11,7 +11,11 @@ export const APP_NAME = "haistudy";
 export const APP_VERSION = "2.5.5";
 export const APP_DESCRIPTION = "Platform belajar all-in-one untuk mahasiswa BINUS. Materi, quiz, AI, dan komunitas.";
 
-// Classes (label/tag only - same content for all)
+// Classes (label/tag only - same content for all).
+// DEAD as of the class-gate fix: the only reader was the in-app class gate, and
+// it now shares CLASSES_BY_LOCATION with the checkout. Kept for one release in
+// case a stored `selectedClass` needs reading back; delete after that.
+/** @deprecated Use CLASSES_BY_LOCATION in @/data/landing/campus. */
 export const CLASSES = [
   "LA86",
   "LB86",

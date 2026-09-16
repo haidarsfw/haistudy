@@ -3,9 +3,23 @@
 import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, Check } from "lucide-react";
-import { CLASSES } from "@/lib/constants";
+import { CLASSES_BY_LOCATION, OTHER_LOCATION } from "@/data/landing/campus";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { useSession } from "@/components/providers/session-provider";
+
+/**
+ * The same class codes the checkout offers, in one flat list.
+ *
+ * This gate used to read `CLASSES` from @/lib/constants — five Bekasi codes and
+ * "Other". Checkout meanwhile collects from CLASSES_BY_LOCATION, which knows
+ * Kemanggisan and Alam Sutera too. A buyer who picked LB30 at checkout could
+ * not find their own class here, so the only honest answer left was "Other".
+ * One list, declared once, is the fix.
+ */
+const KELAS = [
+  ...new Set(Object.values(CLASSES_BY_LOCATION).flat()),
+  OTHER_LOCATION,
+];
 
 interface ClassSelectorProps {
   onSelect: (cls: string) => void;
@@ -42,7 +56,7 @@ export function ClassSelector({ onSelect, selected }: ClassSelectorProps) {
       </motion.div>
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
-        {CLASSES.map((cls, i) => (
+        {KELAS.map((cls, i) => (
           <motion.button
             key={cls}
             onClick={() => handleSelect(cls)}
