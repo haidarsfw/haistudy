@@ -31,7 +31,6 @@ import { canUseVipFeatures } from "@/lib/tier";
 import { DarkModeToggle } from "./dark-mode-toggle";
 import { ReminderInput } from "./reminder-input";
 import { PrivacyToggle } from "./privacy-toggle";
-import { ReferralCard } from "./referral-card";
 import { SessionInfo } from "./session-info";
 import { ProfileEditor } from "@/components/profile/profile-editor";
 import { NotificationsSettingsTab } from "@/components/notifications/notifications-settings-tab";
@@ -298,11 +297,28 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                       <ProfileEditor onSaved={() => onOpenChange(false)} />
                     </motion.div>
 
+                    {/* The referral card that used to sit here read a SECOND,
+                        older code — the one minted on the licence — so one
+                        person saw two different codes in two places and could
+                        share the wrong one. There is now one code, on the
+                        account, and one place that shows it. */}
                     <motion.div
                       variants={staggerItem}
                       className="w-full min-w-0 rounded-xl bg-card/50 border border-primary/10 shadow-sm p-4 transition-all hover:border-primary/20 hover:shadow-primary/5"
                     >
-                      <ReferralCard />
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-sm font-semibold">Kode referral</p>
+                        <p className="text-xs text-muted-foreground">
+                          Kode dan link ajakanmu ada di halaman akun, lengkap
+                          dengan siapa saja yang sudah pakai.
+                        </p>
+                        <a
+                          href="/account/activity"
+                          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+                        >
+                          Buka Riwayat &amp; referral
+                        </a>
+                      </div>
                     </motion.div>
 
                     <motion.div
