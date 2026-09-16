@@ -815,6 +815,12 @@ const en: Record<string, string> = {
   "payments.scope_pick_desc": "Access only covers the period you pick.",
   "payments.scope_soon": "Coming soon",
   "payments.scope_soon_hint": "This period is not on sale yet. The material is still being written.",
+  "payments.scope_notify_desc":
+    "The material is still being written. Leave your name and you will be the first to hear when this period opens.",
+  "payments.scope_notify_cta":
+    "Tell me when it opens",
+  "payments.scope_notify_done":
+    "Done — we will reach you on the e-mail and WhatsApp already on your account.",
   "payments.amount_label": "Transfer Amount",
   "payments.amount_unique_hint": "{base} + the last 3 digits of your WhatsApp number ({digits}). Transfer EXACTLY this, do not round it. The unique amount is what lets the admin match your transfer to your order straight away, so the check is quick.",
   "payments.method_label": "Payment Method",

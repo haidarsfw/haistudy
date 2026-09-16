@@ -297,6 +297,7 @@ export function PaymentsFlow({
   // default stops moving under them — a guess that keeps overwriting a decision
   // is worse than no guess.
   const [scopePicked, setScopePicked] = useState(false);
+  const [notifyState, setNotifyState] = useState<"idle" | "sending" | "done">("idle");
 
   const [form, setForm] = useState<FormState>({
     // Seeded from the account. Whatever is already there is shown rather than
@@ -555,6 +556,10 @@ export function PaymentsFlow({
     }
   }, [isShare, form.shareMethod, promoClass]);
 
+  // Whether the period they are holding can actually be bought.
+  const pickedScope = parseScopeKey(form.scopeKey);
+  const scopeIsOpen = Boolean(pickedScope && isPurchasableScope(pickedScope));
+
   const validateStep = (s: number): Record<string, string> => {
     const e: Record<string, string> = {};
     if (s === 0) {
@@ -592,10 +597,7 @@ export function PaymentsFlow({
       // "Segera". Saying so here is the point: the alternative is a buyer who
       // fills in payment details and is refused by the server at the very end,
       // for a period they never chose to be on.
-      const picked = parseScopeKey(form.scopeKey);
-      if (!picked || !isPurchasableScope(picked)) {
-        e.scopeKey = t("payments.scope_soon_hint");
-      }
+      if (!scopeIsOpen) e.scopeKey = t("payments.scope_soon_hint");
       if (isShare && !form.shareAck) e.shareAck = t("payments.err_share_ack");
     } else if (s === 2) {
       if (!form.paymentMethod) e.paymentMethod = t("payments.err_required");
@@ -1177,6 +1179,48 @@ export function PaymentsFlow({
                           };
                         })}
                       />
+                      {/* A cohort now lands on its own period even when it is
+                          not on sale. Honest, but it ends the conversation —
+                          and these are exactly the people worth keeping. */}
+                      {!scopeIsOpen && (
+                        <div className="mt-3 rounded-xl border border-border bg-muted/30 p-3">
+                          <p className="text-xs text-muted-foreground">
+                            {t("payments.scope_notify_desc")}
+                          </p>
+                          {notifyState === "done" ? (
+                            <p className="mt-2 text-xs font-medium text-primary">
+                              {t("payments.scope_notify_done")}
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={notifyState === "sending"}
+                              onClick={async () => {
+                                setNotifyState("sending");
+                                try {
+                                  await fetch("/api/account/scope-interest", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      scope: form.scopeKey,
+                                      package: form.pkg,
+                                    }),
+                                  });
+                                } catch {
+                                  // Saying "done" on a failed write would be a
+                                  // lie they cannot check. Let them try again.
+                                  setNotifyState("idle");
+                                  return;
+                                }
+                                setNotifyState("done");
+                              }}
+                              className="mt-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+                            >
+                              {t("payments.scope_notify_cta")}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </FieldShell>
                   </div>
                 </Section>

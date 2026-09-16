@@ -1077,6 +1077,12 @@ const id: Record<string, string> = {
   "payments.scope_pick_desc": "Akses cuma berlaku untuk periode yang dipilih.",
   "payments.scope_soon": "Segera",
   "payments.scope_soon_hint": "Periode ini belum bisa dibeli. Materinya masih disusun.",
+  "payments.scope_notify_desc":
+    "Materinya masih ditulis. Tinggalkan jejak dan kamu yang pertama dikabari begitu periode ini dibuka.",
+  "payments.scope_notify_cta":
+    "Kabari saya kalau sudah buka",
+  "payments.scope_notify_done":
+    "Oke — kamu akan dikabari lewat email dan WhatsApp yang ada di akunmu.",
   "payments.amount_label": "Nominal Transfer",
   "payments.amount_unique_hint": "{base} + 3 digit terakhir nomor WA kamu ({digits}). Transfer PERSIS segini, jangan dibulatkan. Angka unik ini yang bikin admin bisa langsung mencocokkan transferanmu dengan pesananmu, jadi pengecekannya cepat.",
   "payments.method_label": "Metode Pembayaran",
