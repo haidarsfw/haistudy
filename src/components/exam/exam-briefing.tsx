@@ -16,6 +16,8 @@ interface Props {
   onBack: () => void;
   attemptNumber: number;
   maxAttempts: number;
+  /** An attempt is still running: this starts nothing, it continues that one. */
+  resumable?: boolean;
 }
 
 /**
@@ -29,6 +31,7 @@ export function ExamBriefing({
   onBack,
   attemptNumber,
   maxAttempts,
+  resumable = false,
 }: Props) {
   const { t } = useTranslation();
   const [counting, setCounting] = useState(false);
@@ -42,7 +45,10 @@ export function ExamBriefing({
     : t("exam.confirm_quota")
         .replace("{remaining}", String(maxAttempts - attemptNumber + 1))
         .replace("{max}", String(maxAttempts));
-  const confirmMsg = `${quotaMsg}\n\n${t("exam.confirm_rules")}\n\n${t("exam.confirm_proceed")}`;
+  const confirmMsg = resumable
+    ? `${t("exam.confirm_resume")}\n\n${t("exam.confirm_rules")}\n\n${t("exam.confirm_proceed")}`
+    : `${quotaMsg}\n\n${t("exam.confirm_rules")}\n\n${t("exam.confirm_proceed")}`;
+  const ctaLabel = resumable ? t("exam.cta_resume") : t("exam.briefing_cta");
 
   const handleStart = () => {
     setShowConfirmModal(true);
@@ -221,7 +227,7 @@ export function ExamBriefing({
               onClick={handleStart}
               className="hs-press w-full rounded-xl bg-primary py-3.5 text-base font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
             >
-              {t("exam.briefing_cta")}
+              {ctaLabel}
             </button>
           </motion.div>
         </motion.div>
@@ -233,7 +239,7 @@ export function ExamBriefing({
             open={true}
             title={t("exam.briefing_title")}
             message={confirmMsg}
-            confirmText={t("exam.briefing_cta")}
+            confirmText={ctaLabel}
             cancelText={t("exam.submit_back")}
             onConfirm={executeStart}
             onCancel={() => setShowConfirmModal(false)}

@@ -1289,7 +1289,7 @@ const id: Record<string, string> = {
   "exam.briefing_attempt": "Ini akan menjadi percobaan ke-{n} dari {max}.",
   "exam.briefing_cta": "Mulai Ujian",
   "exam.grace_period": "Masa tenggat: {s} detik tersisa. Kamu masih bisa keluar tanpa menggunakan kuota.",
-  "exam.grace_period_short": "Bisa keluar tanpa potong kuota: {s}d",
+  "exam.grace_period_short": "Bisa keluar tanpa potong kuota: {s} detik",
   "exam.answer_placeholder": "Tulis jawabanmu di sini...",
   "exam.nav_panel": "Navigasi Soal",
   "exam.progress": "dijawab",
@@ -1352,6 +1352,8 @@ const id: Record<string, string> = {
   "exam.confirm_quota": "Kamu memiliki {remaining} kesempatan tersisa dari {max}.",
   "exam.confirm_quota_unlimited": "Kamu memiliki kesempatan tak terbatas.",
   "exam.confirm_rules": "Setelah ujian dimulai, kamu tidak bisa keluar sampai selesai mengerjakan. AI Chat akan dinonaktifkan selama ujian.",
+  "exam.confirm_resume":
+    "Kamu punya ujian yang belum selesai. Lanjut dari tempat terakhir — kuota tidak dipotong lagi.",
   "exam.confirm_proceed": "Lanjutkan dan mulai ujian?",
   "exam.delete_title": "Hapus Riwayat",
   "exam.delete_confirm_btn": "Hapus",

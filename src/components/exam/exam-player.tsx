@@ -132,7 +132,8 @@ type Phase = "briefing" | "exam" | "grading" | "results";
 
 export function ExamPlayer({ exam, subjectId, onClose }: Props) {
   const { t } = useTranslation();
-  const { startExam, abandonExam, submitExam, regradeAttempt, quota } = useExam(subjectId);
+  const { startExam, abandonExam, submitExam, regradeAttempt, quota, history } =
+    useExam(subjectId);
 
   // Resume an in-progress session (read once, client-side) so an accidental
   // refresh / auto-refresh drops the user right back into their attempt.
@@ -530,6 +531,10 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
         onBack={onClose}
         attemptNumber={(quota?.used ?? 0) + 1}
         maxAttempts={quota?.max ?? 3}
+        // The server resumes a running attempt instead of starting a new one,
+        // so the button and the confirmation have to say that. Otherwise it
+        // promises a fresh exam and warns about a quota that is not spent.
+        resumable={(history ?? []).some((h) => h.status === "in_progress")}
       />
     );
   }

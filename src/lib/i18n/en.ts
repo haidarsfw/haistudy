@@ -1090,6 +1090,8 @@ const en: Record<string, string> = {
   "exam.confirm_quota": "You have {remaining} attempt(s) remaining out of {max}.",
   "exam.confirm_quota_unlimited": "You have unlimited attempts.",
   "exam.confirm_rules": "Once the exam starts, you cannot exit until you submit. AI Chat will be disabled during the exam.",
+  "exam.confirm_resume":
+    "You have an exam still running. Continue where you left off — no quota is spent.",
   "exam.confirm_proceed": "Continue and start the exam?",
   "exam.delete_title": "Delete History",
   "exam.delete_confirm_btn": "Delete",

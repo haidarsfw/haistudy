@@ -99,6 +99,44 @@ export async function POST(request: Request) {
     const used = count ?? 0;
     const q = computeQuota({ isAdmin, tier, bonus, used });
 
+    // An attempt already running for this subject is RESUMED, never replaced.
+    //
+    // Resuming was already the intended behaviour — the launch screen says so —
+    // but it only ever worked from a localStorage draft, so it was per-browser.
+    // Open the same exam on a second device, or after clearing site data, and
+    // the client asked for a fresh start; this route always inserted one, and
+    // the orphan it left behind counts against the quota forever — the count
+    // above only excludes 'abandoned'. Two taps, two slots gone, on a tier
+    // that has five.
+    //
+    // Returning the existing row costs nothing: it is already counted. It also
+    // makes a duplicate in-progress attempt impossible, which is what let the
+    // rows pile up in the first place. An attempt whose time is long past still
+    // resumes — the player computes the remaining time from started_at and will
+    // submit it — and that is the honest outcome, because the slot was spent.
+    const { data: running } = await supabase
+      .from("exam_attempts")
+      .select("id, started_at")
+      .eq("license_key", licenseKey)
+      .eq("scope_key", sk)
+      .eq("subject_id", subjectId)
+      .eq("status", "in_progress")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (running) {
+      // Quota is reported as-is, not used+1: this attempt was counted when it
+      // was created. The client assigns this straight into its quota display,
+      // so leaving it out would blank the counter on every resume.
+      return NextResponse.json({
+        attemptId: running.id,
+        startedAt: running.started_at,
+        resumed: true,
+        quota: { used, max: q.max, remaining: q.remaining },
+      });
+    }
+
     if (q.max !== -1 && used >= q.max) {
       return NextResponse.json(
         {

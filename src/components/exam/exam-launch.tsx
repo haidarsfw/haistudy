@@ -48,7 +48,13 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
 
   // An unfinished (in-progress) attempt → offer "continue" instead of a fresh
   // start. Resuming reuses the SAME attempt, so it never costs extra quota.
-  const [hasResumable] = useState(() => {
+  //
+  // The local draft is only half the answer: it lives in ONE browser, so the
+  // same unfinished exam looked like a fresh start on a second device. The
+  // server already sends every non-abandoned attempt with its status, so ask it
+  // too — /api/exam/start resumes whatever is still running either way, and the
+  // button should say what is about to happen.
+  const [hasLocalDraft] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
       const raw = localStorage.getItem("hs-exam-session-" + subjectId);
@@ -59,6 +65,10 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
       return false;
     }
   });
+  const hasRunningAttempt = (history ?? []).some(
+    (h) => h.status === "in_progress"
+  );
+  const hasResumable = hasLocalDraft || hasRunningAttempt;
 
   const totalQuestions = exam.questions.length;
 
