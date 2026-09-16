@@ -55,7 +55,13 @@ import {
   defaultScopeForAngkatan,
   normalizeClassCode,
 } from "@/data/landing/campus";
-import { LATEST_SCOPE, scopeKey, scopeFullLabel, isPurchasableScope } from "@/lib/scope";
+import {
+  LATEST_SCOPE,
+  scopeKey,
+  scopeFullLabel,
+  isPurchasableScope,
+  parseScopeKey,
+} from "@/lib/scope";
 import {
   pickBestDiscount,
   type DiscountOption,
@@ -582,6 +588,14 @@ export function PaymentsFlow({
       if (form.whatsapp.replace(/\D/g, "").length < 8) e.whatsapp = t("payments.err_whatsapp");
       if (!form.angkatan) e.angkatan = t("payments.err_required");
     } else if (s === 1) {
+      // A cohort is pre-filled with ITS OWN period, which may be listed as
+      // "Segera". Saying so here is the point: the alternative is a buyer who
+      // fills in payment details and is refused by the server at the very end,
+      // for a period they never chose to be on.
+      const picked = parseScopeKey(form.scopeKey);
+      if (!picked || !isPurchasableScope(picked)) {
+        e.scopeKey = t("payments.scope_soon_hint");
+      }
       if (isShare && !form.shareAck) e.shareAck = t("payments.err_share_ack");
     } else if (s === 2) {
       if (!form.paymentMethod) e.paymentMethod = t("payments.err_required");
@@ -1143,6 +1157,7 @@ export function PaymentsFlow({
                       label={t("payments.scope_current")}
                       description={t("payments.scope_pick_desc")}
                       required
+                      error={errors.scopeKey}
                       htmlFor="pf-scope"
                     >
                       <Dropdown

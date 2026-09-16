@@ -1,4 +1,4 @@
-import { PURCHASABLE_SCOPES, LATEST_SCOPE } from "@/lib/scope";
+import { AVAILABLE_SCOPES, PURCHASABLE_SCOPES, LATEST_SCOPE } from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
 
 /**
@@ -115,10 +115,12 @@ export function angkatanForCampus(campusId: string): readonly string[] {
  * a year ahead. The same pairing holds for UNJ once PBA opens: '26 lands on
  * semester 1, '25 on semester 3.
  *
- * Semester 3 exists now but is not on sale, so the older pair still falls
- * through to the newest thing that IS. Pre-filling a period nobody can buy
- * would be worse than not guessing at all — the buyer would have to notice the
- * mistake themselves.
+ * The cohort's OWN period wins even when it is not on sale yet. Semester 3 is
+ * listed as "Segera", and landing a B29 there says the true thing — your period
+ * is coming — while the old behaviour silently moved them to semester 2 UAS, a
+ * period that has already happened and was never theirs. Step 1 of the checkout
+ * refuses to advance on an unsellable period and says why, so nobody reaches
+ * the payment screen on a period they cannot buy.
  */
 const ANGKATAN_SCOPE: Record<string, { semester: number; examPeriod: "uts" | "uas" }> = {
   B30: { semester: 1, examPeriod: "uts" },
@@ -133,16 +135,16 @@ export function defaultScopeForAngkatan(
 ): ScopeTuple {
   const want = ANGKATAN_SCOPE[String(angkatan ?? "").toUpperCase()];
   if (!want) return LATEST_SCOPE;
-  // Purchasable only. Matching against every known period would happily
-  // pre-select semester 3, which is listed but not on sale, and the order would
-  // be rejected at the last step for a reason the buyer never chose.
-  const match = PURCHASABLE_SCOPES.find(
-    (s) =>
-      s.semester === want.semester &&
-      s.examPeriod === want.examPeriod &&
-      s.jurusan === jurusan
-  );
-  return match ?? LATEST_SCOPE;
+  const hits = (list: readonly ScopeTuple[]) =>
+    list.find(
+      (s) =>
+        s.semester === want.semester &&
+        s.examPeriod === want.examPeriod &&
+        s.jurusan === jurusan
+    );
+  // Their own period first, on sale or not; then the same period on sale for a
+  // different reading of the registry; only then the newest sellable thing.
+  return hits(AVAILABLE_SCOPES) ?? hits(PURCHASABLE_SCOPES) ?? LATEST_SCOPE;
 }
 
 /** The campus a stored location belongs to, for prefilling a returning buyer. */
