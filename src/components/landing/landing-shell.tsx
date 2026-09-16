@@ -90,16 +90,26 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
 
   // Lenis + anchor jumps.
   //
-  // Keyed on `pathname` so it can be SKIPPED per route. Lenis is a marketing-page
-  // nicety: it caches the document height and only re-measures on its own
-  // schedule, which is fine for a static page but wrong for a form whose height
-  // jumps every step. On /payments that stale limit made the page refuse to
-  // scroll past where the previous step ended — scrolling worked, then didn't,
-  // with nothing on screen to explain why. A form does not need momentum; the
-  // native scroller is correct here.
+  // Keyed on `pathname` so it runs per route, and on an ALLOW-list rather than a
+  // deny-list. Lenis is a marketing-page nicety: it caches the document height
+  // and only re-measures on its own schedule, which is fine for a page that is
+  // one fixed length and wrong for anything whose height changes underneath it.
+  //
+  // That stale limit first showed up on /payments, where the page refused to
+  // scroll past where the previous step ended. It was fixed by excluding that
+  // one path — and /account then inherited the identical bug, because its six
+  // sub-routes are different heights and none of them is /payments. On the
+  // referral page the balance track simply could not be reached, and not even
+  // window.scrollTo moved it.
+  //
+  // Named routes only, so the next page added to this group cannot catch it by
+  // saying nothing. Momentum is a nicety; being able to scroll is not.
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isForm = pathname?.startsWith("/payments") ?? false;
+    // Fixed-height content pages. Everything else — /account, /payments,
+    // /register, /login and whatever comes next — uses the native scroller.
+    const SMOOTH_ROUTES = new Set(["/", "/privacy", "/terms", "/refund"]);
+    const smoothOk = SMOOTH_ROUTES.has(pathname ?? "");
 
     // Kill scroll anchoring across the landing (the self-playing demos + Lenis
     // can otherwise nudge the page on their own). Set inline so Lightning CSS
@@ -116,7 +126,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
     const coarse = window.matchMedia("(pointer: coarse)").matches;
     let lenis: Lenis | null = null;
     let raf = 0;
-    if (!coarse && !isForm) {
+    if (!coarse && smoothOk) {
       lenis = new Lenis({
         lerp: 0.16,
         wheelMultiplier: 1,
