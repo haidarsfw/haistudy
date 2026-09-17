@@ -4,14 +4,20 @@ import {
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
 import { getCaller } from "@/lib/auth/session-license";
-import { accountColumns } from "@/lib/auth/account-link";
+import { accountColumns, accountIdForLicense } from "@/lib/auth/account-link";
 
 /**
- * Cross-device onboarding state. The tour is a once-per-ACCOUNT thing, so its
- * "completed" flag lives on user_settings.onboarding_completed_at (keyed by the
- * hs-session license key) instead of per-device localStorage. use-onboarding
- * reads this on load and writes it on finish; localStorage stays as an
- * instant-paint cache only.
+ * Cross-device, cross-PERIOD onboarding state.
+ *
+ * The flag used to live only on user_settings.onboarding_completed_at, and
+ * user_settings is keyed by license_key — one exam period. So buying the next
+ * period handed someone a fresh key, an empty settings row, and the entire tour
+ * again, months into using the app. It now lives on the account, which is the
+ * thing that actually persists.
+ *
+ * Both are read and both are written, in that order, because migration 075 may
+ * not be applied yet and because rows written before it exists still hold the
+ * only answer for those people. localStorage stays an instant-paint cache only.
  */
 
 // GET /api/onboarding → { completed: boolean }
@@ -26,6 +32,26 @@ export async function GET() {
     return NextResponse.json({ completed: false });
   }
   const supabase = createServerClient()!;
+
+  // The account first — it survives a new period. A missing column (migration
+  // 075 not applied) throws rather than returning null, so it is caught and the
+  // per-licence flag answers instead.
+  const accountId = await accountIdForLicense(supabase, caller.licenseKey);
+  if (accountId) {
+    try {
+      const { data: acc, error } = await supabase
+        .from("accounts")
+        .select("onboarding_completed_at")
+        .eq("id", accountId)
+        .maybeSingle();
+      if (!error && acc?.onboarding_completed_at) {
+        return NextResponse.json({ completed: true });
+      }
+    } catch {
+      // Column not there yet. Fall through.
+    }
+  }
+
   const { data } = await supabase
     .from("user_settings")
     .select("onboarding_completed_at")
@@ -63,5 +89,21 @@ export async function POST() {
     console.error("Onboarding POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
+
+  // And on the account, so the next period does not start the tour over. Failure
+  // here is not fatal: the per-licence flag above already stops it for THIS
+  // period, and this column may not exist yet.
+  const accountId = await accountIdForLicense(supabase, caller.licenseKey);
+  if (accountId) {
+    const { error: accErr } = await supabase
+      .from("accounts")
+      .update({ onboarding_completed_at: new Date().toISOString() })
+      .eq("id", accountId)
+      .is("onboarding_completed_at", null);
+    if (accErr) {
+      console.warn("Onboarding account flag skipped:", accErr.message);
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
