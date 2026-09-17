@@ -23,86 +23,39 @@ export function resolveStepTarget(
   return step.target;
 }
 
+/**
+ * Three steps, grouped — not twelve features listed one at a time.
+ *
+ * The old tour walked every button in the shell: sidebar, dashboard, subjects,
+ * chat, ai, voice, pomodoro, notifications, search, settings, plus a welcome
+ * and a goodbye. Twelve screens, and no way out of them: the "Lewati Tutorial"
+ * string existed in both languages and was never rendered.
+ *
+ * Measured completion falls off a cliff with length — around 72% finish a
+ * three-step tour, around 16% finish a seven. Twelve is past the point where
+ * the tour teaches anybody anything; it is just a door people cannot open.
+ *
+ * So: where you are, where you learn, where the people are. Everything else
+ * introduces itself when someone actually opens it.
+ */
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
-    id: "welcome",
-    titleKey: "onboarding.welcome_title",
-    descriptionKey: "onboarding.welcome_desc",
-    target: null,
-  },
-  {
-    id: "sidebar",
-    titleKey: "onboarding.sidebar_title",
-    descriptionKey: "onboarding.sidebar_desc",
-    target: "[data-onboarding='sidebar']",
-    skipOnMobile: true,
-  },
-  {
     id: "dashboard",
-    titleKey: "onboarding.dashboard_title",
-    descriptionKey: "onboarding.dashboard_desc",
+    titleKey: "onboarding.g_home_title",
+    descriptionKey: "onboarding.g_home_desc",
     target: "[data-onboarding='dashboard']",
   },
   {
-    id: "subjects",
-    titleKey: "onboarding.subjects_title",
-    descriptionKey: "onboarding.subjects_desc",
+    id: "belajar",
+    titleKey: "onboarding.g_learn_title",
+    descriptionKey: "onboarding.g_learn_desc",
     target: "[data-onboarding='subjects']",
   },
   {
-    id: "chat",
-    titleKey: "onboarding.chat_title",
-    descriptionKey: "onboarding.chat_desc",
+    id: "komunitas",
+    titleKey: "onboarding.g_social_title",
+    descriptionKey: "onboarding.g_social_desc",
     target: "[data-onboarding='chat']",
     mobileTarget: "[data-onboarding='chat-mobile']",
-  },
-  {
-    id: "ai",
-    titleKey: "onboarding.ai_title",
-    descriptionKey: "onboarding.ai_desc",
-    target: "[data-onboarding='ai']",
-    // Mobile: spotlight the elevated center AI FAB in the floating dock.
-    mobileTarget: "[data-onboarding='ai-mobile']",
-  },
-  {
-    id: "voice",
-    titleKey: "onboarding.voice_title",
-    descriptionKey: "onboarding.voice_desc",
-    target: "[data-onboarding='voice']",
-    mobileTarget: "[data-onboarding='voice-mobile']",
-  },
-  {
-    id: "pomodoro",
-    titleKey: "onboarding.pomodoro_title",
-    descriptionKey: "onboarding.pomodoro_desc",
-    target: "[data-onboarding='pomodoro']",
-    skipOnMobile: true,
-  },
-  {
-    id: "notifications",
-    titleKey: "onboarding.notifications_title",
-    descriptionKey: "onboarding.notifications_desc",
-    target: "[data-onboarding='notifications']",
-    skipOnMobile: true,
-  },
-  {
-    id: "search",
-    titleKey: "onboarding.search_title",
-    descriptionKey: "onboarding.search_desc",
-    target: "[data-onboarding='search']",
-    mobileTarget: "[data-onboarding='search-mobile']",
-  },
-  {
-    id: "settings",
-    titleKey: "onboarding.settings_title",
-    descriptionKey: "onboarding.settings_desc",
-    target: "[data-onboarding='settings']",
-    mobileTarget: "[data-onboarding='settings-mobile']",
-  },
-  {
-    id: "done",
-    titleKey: "onboarding.done_title",
-    descriptionKey: "onboarding.done_desc",
-    target: null,
   },
 ];

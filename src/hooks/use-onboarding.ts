@@ -130,6 +130,21 @@ export function useOnboarding() {
     setPostPhase("contact-form");
   }, [persistComplete]);
 
+  /**
+   * "Lewati" — out, and out of the whole thing.
+   *
+   * Deliberately NOT complete(). Finishing the tour opens two more screens
+   * after it, a contact form and a settings pass. Someone who pressed skip has
+   * just said they want none of this; handing them two forms is the same
+   * refusal to take no for an answer that made the tour unpopular. It is still
+   * marked done, so it never comes back.
+   */
+  const skip = useCallback(() => {
+    persistComplete();
+    setShouldShow(false);
+    setPostPhase("none");
+  }, [persistComplete]);
+
   const advancePostPhase = useCallback(() => {
     setPostPhase((current) => {
       if (current === "contact-form") return "settings-setup";
@@ -165,6 +180,7 @@ export function useOnboarding() {
     next,
     prev,
     complete,
+    skip,
     postPhase,
     advancePostPhase,
   };

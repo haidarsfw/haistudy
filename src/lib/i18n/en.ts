@@ -364,6 +364,18 @@ const en: Record<string, string> = {
   "onboarding.next": "Next",
   "onboarding.prev": "Back",
   "onboarding.skip": "Skip Tutorial",
+  "onboarding.g_home_title":
+    "This is your home",
+  "onboarding.g_home_desc":
+    "Today at a glance: the nearest exam, your progress, and the material you last had open.",
+  "onboarding.g_learn_title":
+    "Where the studying happens",
+  "onboarding.g_learn_desc":
+    "Each course holds the material, summaries, flashcards, quizzes and AI-marked practice exams. Stuck on a line? Select it and ask haistudy AI.",
+  "onboarding.g_social_title":
+    "You are not studying alone",
+  "onboarding.g_social_desc":
+    "Class chat and forum, voice rooms to study together. Up top: pomodoro, music, and notifications when something is announced.",
   "onboarding.finish": "Start Learning!",
   "onboarding.welcome_title": "Welcome to haistudy!",
   "onboarding.welcome_desc": "Let's get to know the features that will help you study more effectively for exams.",

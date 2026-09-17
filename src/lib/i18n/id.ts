@@ -610,6 +610,18 @@ const id: Record<string, string> = {
   "onboarding.next": "Lanjut",
   "onboarding.prev": "Kembali",
   "onboarding.skip": "Lewati Tutorial",
+  "onboarding.g_home_title":
+    "Ini beranda kamu",
+  "onboarding.g_home_desc":
+    "Ringkasan hari ini: ujian terdekat, progres belajar, dan lanjutan materi yang terakhir kamu buka.",
+  "onboarding.g_learn_title":
+    "Tempat belajarnya",
+  "onboarding.g_learn_desc":
+    "Mata kuliah berisi materi, rangkuman, flashcards, quiz, dan latihan soal yang dinilai AI. Nyangkut di satu bagian? Sorot teksnya lalu tanya haistudy AI.",
+  "onboarding.g_social_title":
+    "Kamu nggak belajar sendirian",
+  "onboarding.g_social_desc":
+    "Chat dan forum sekelas, voice room buat belajar bareng. Di atas ada pomodoro, musik, dan notifikasi kalau ada pengumuman.",
   "onboarding.finish": "Mulai Belajar!",
   "onboarding.welcome_title": "Selamat Datang di haistudy!",
   "onboarding.welcome_desc": "Yuk, kenalan dulu dengan fitur-fitur yang akan membantu kamu belajar lebih efektif untuk ujian.",

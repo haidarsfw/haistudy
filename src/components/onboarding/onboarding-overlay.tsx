@@ -18,7 +18,7 @@ interface SpotlightRect {
 }
 
 export function OnboardingOverlay() {
-  const { shouldShow, currentStep, step, totalSteps, isMobile, next, prev, postPhase, advancePostPhase } =
+  const { shouldShow, currentStep, step, totalSteps, isMobile, next, prev, skip, postPhase, advancePostPhase } =
     useOnboarding();
   const { t } = useTranslation();
   const { profile, loading: profileLoading } = useProfile();
@@ -246,8 +246,19 @@ export function OnboardingOverlay() {
               {t(step.descriptionKey)}
             </p>
 
-            {/* Navigation buttons */}
+            {/* Navigation buttons.
+                "Lewati" sits on every step, including the first, and at the same
+                size as the rest. It existed as a translated string that nothing
+                ever rendered — twelve screens with no exit is what people meant
+                by wanting to skip the whole thing. */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={skip}
+                style={{ touchAction: "manipulation" }}
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+              >
+                {t("onboarding.skip")}
+              </button>
               {!isFirstStep && (
                 <button
                   onClick={prev}
