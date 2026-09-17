@@ -28,8 +28,14 @@ const BRAND_1 = "#10b981";
 const BRAND_2 = "#047857";
 const INK = "#0b1210";
 const INK_2 = "#0e1613";
-const PAPER = "#ffffff";
+// Not #ffffff. The research that says "dark on light" also says the light does
+// not have to be white — deep green on a pale, warm ground scans identically
+// and stops the card reading as a printer test page. Contrast is what matters,
+// and near-black on this is far past the threshold.
+const PAPER = "#f4f8f5";
+const MODULE = "#0a1310";
 const MUTED = "#8aa79c";
+const DIM = "#5f7a71";
 
 // The logomark, identical to src/components/landing/logo.tsx. Same paths, same
 // viewBox — if that file changes, this has to change with it.
@@ -76,8 +82,12 @@ async function drawCard(canvas: HTMLCanvasElement, code: string) {
   const qrcode = (await import("qrcode-generator")).default;
   const url = `${window.location.origin}/@${code}`;
 
-  // Level M survives a fold, a scuff, and a cheap camera.
-  const qr = qrcode(0, "M");
+  // Level H, 30% recovery. Not decoration: a logo sits in the middle of this
+  // code, and at level M that cover would eat real data. A centred mark is
+  // worth the larger grid — a QR people recognise as yours is scanned far more
+  // often than an anonymous square, because an unmarked code now reads as
+  // something that might be a scam.
+  const qr = qrcode(0, "H");
   qr.addData(url);
   qr.make();
   const count = qr.getModuleCount();
@@ -87,32 +97,30 @@ async function drawCard(canvas: HTMLCanvasElement, code: string) {
   canvas.width = W;
   canvas.height = H;
   const family = fontStack();
+  const M = 96; // page margin
 
-  // ── Background ──
-  const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, INK);
-  bg.addColorStop(1, INK_2);
+  // ── Ground ──
+  const bg = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  bg.addColorStop(0, INK_2);
+  bg.addColorStop(1, INK);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // A soft brand wash in the top-left, the same move the site's background
-  // makes. Keeps the card from reading as a plain black rectangle.
-  const wash = ctx.createRadialGradient(150, 120, 0, 150, 120, 900);
-  wash.addColorStop(0, "rgba(16,185,129,0.20)");
+  const wash = ctx.createRadialGradient(W, 0, 0, W, 0, 1000);
+  wash.addColorStop(0, "rgba(16,185,129,0.16)");
   wash.addColorStop(1, "rgba(16,185,129,0)");
   ctx.fillStyle = wash;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.strokeStyle = "rgba(16,185,129,0.28)";
-  ctx.lineWidth = 3;
-  roundRect(ctx, 22, 22, W - 44, H - 44, 48);
-  ctx.stroke();
+  // ── Header, left-aligned. Centring every line is what made the first version
+  //    read as a template; an anchored edge gives the eye somewhere to start. ──
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 
-  // ── Logomark ──
-  const markSize = 120;
+  const markSize = 54;
   const scale = markSize / MARK_VIEWBOX.w;
   ctx.save();
-  ctx.translate(W / 2 - markSize / 2, 110);
+  ctx.translate(M, M + 4);
   ctx.scale(scale, scale);
   ctx.translate(-MARK_VIEWBOX.x, -MARK_VIEWBOX.y);
   const markGrad = ctx.createLinearGradient(520, 560, 1520, 1500);
@@ -122,47 +130,36 @@ async function drawCard(canvas: HTMLCanvasElement, code: string) {
   for (const d of MARK_PATHS) ctx.fill(new Path2D(d));
   ctx.restore();
 
-  // ── Wordmark: "hai" in brand, "study" in white, drawn as one centred line ──
-  const wordSize = 76;
-  ctx.font = `700 ${wordSize}px ${family}`;
-  ctx.textBaseline = "alphabetic";
+  const wordY = M + 44;
+  ctx.font = `700 42px ${family}`;
   const wHai = ctx.measureText("hai").width;
-  const wStudy = ctx.measureText("study").width;
-  const wordY = 110 + markSize + 96;
-  let wx = W / 2 - (wHai + wStudy) / 2;
   ctx.fillStyle = BRAND_1;
-  ctx.fillText("hai", wx, wordY);
-  wx += wHai;
-  ctx.fillStyle = "#f2f7f5";
-  ctx.fillText("study", wx, wordY);
+  ctx.fillText("hai", M + markSize + 18, wordY);
+  ctx.fillStyle = "#eef4f1";
+  ctx.fillText("study", M + markSize + 18 + wHai, wordY);
 
-  ctx.textAlign = "center";
-  ctx.fillStyle = MUTED;
-  ctx.font = `500 30px ${family}`;
-  ctx.fillText("Belajar bareng buat siap ujian", W / 2, wordY + 52);
-
-  // ── QR panel ──
-  // White, with a real quiet zone. Contrast and margin are what a scanner
-  // needs; everything else on this card is decoration around them.
-  const panel = 660;
-  const panelX = W / 2 - panel / 2;
-  const panelY = wordY + 104;
+  // ── QR panel. Centred, because a code that is not square to the frame reads
+  //    as an accident, and because this is the only thing on the card with a
+  //    job. ──
+  const panel = W - M * 2;
+  const panelX = M;
+  const panelY = 206;
   ctx.fillStyle = PAPER;
-  roundRect(ctx, panelX, panelY, panel, panel, 44);
+  roundRect(ctx, panelX, panelY, panel, panel, 56);
   ctx.fill();
 
-  // 72px of white on every side. At this panel size that is ~5 modules of
-  // quiet zone — scanners want at least 4, and below that they simply give up.
-  const pad = 72;
+  // ~11% of the panel per side. The floor is 4 modules; the guidance is
+  // 10-15% of total width, and clutter inside it is what stops a scan.
+  const pad = Math.round(panel * 0.11);
   const cell = (panel - pad * 2) / count;
   const originX = panelX + pad;
   const originY = panelY + pad;
-  ctx.fillStyle = "#000000";
+  ctx.fillStyle = MODULE;
   for (let r = 0; r < count; r++) {
     for (let c = 0; c < count; c++) {
       if (qr.isDark(r, c)) {
-        // +1 on the size closes the hairline seams canvas leaves between
-        // adjacent fills, which some scanners read as broken modules.
+        // +1 closes the hairline seams canvas leaves between adjacent fills,
+        // which a scanner can read as a broken module.
         ctx.fillRect(
           Math.floor(originX + c * cell),
           Math.floor(originY + r * cell),
@@ -173,15 +170,56 @@ async function drawCard(canvas: HTMLCanvasElement, code: string) {
     }
   }
 
-  // ── Code + call to action ──
-  const codeY = panelY + panel + 92;
-  ctx.fillStyle = BRAND_1;
-  ctx.font = `700 58px ${family}`;
-  ctx.fillText(`@${code}`, W / 2, codeY);
+  // ── The mark, in the middle of the code ──
+  // Kept to ~19% of the code's width. Level H recovers 30%, so this is well
+  // inside what the code can lose and still be read.
+  const codeSide = panel - pad * 2;
+  const holeSide = Math.round(codeSide * 0.19);
+  const holeX = originX + codeSide / 2 - holeSide / 2;
+  const holeY = originY + codeSide / 2 - holeSide / 2;
+  ctx.fillStyle = PAPER;
+  roundRect(ctx, holeX - 10, holeY - 10, holeSide + 20, holeSide + 20, 22);
+  ctx.fill();
+
+  const inner = holeSide * 0.82;
+  const s2 = inner / MARK_VIEWBOX.w;
+  ctx.save();
+  ctx.translate(holeX + (holeSide - inner) / 2, holeY + (holeSide - inner) / 2);
+  ctx.scale(s2, s2);
+  ctx.translate(-MARK_VIEWBOX.x, -MARK_VIEWBOX.y);
+  const g2 = ctx.createLinearGradient(520, 560, 1520, 1500);
+  g2.addColorStop(0, BRAND_2);
+  g2.addColorStop(1, "#065f46");
+  ctx.fillStyle = g2;
+  for (const d of MARK_PATHS) ctx.fill(new Path2D(d));
+  ctx.restore();
+
+  // ── Footer. Two sizes, not one: the handle is what someone reads across a
+  //    room, the URL is what they type. Same weight everywhere was the flatness. ──
+  // Measured, not guessed: panel bottom + this + the caption offset has to land
+  // inside H with room to breathe. The first pass put the last line at 1360px
+  // on a 1350px card and simply cut it off.
+  const footY = panelY + panel + 96;
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#eef4f1";
+  ctx.font = `700 68px ${family}`;
+  ctx.fillText(`@${code}`, M, footY);
+
+  ctx.fillStyle = DIM;
+  ctx.font = `500 30px ${family}`;
+  ctx.fillText(`haistudy.site/@${code.toLowerCase()}`, M, footY + 44);
+
+  // A single hairline instead of a third sentence.
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(M, footY + 78);
+  ctx.lineTo(W - M, footY + 78);
+  ctx.stroke();
 
   ctx.fillStyle = MUTED;
-  ctx.font = `500 32px ${family}`;
-  ctx.fillText("Scan atau buka haistudy.site/@" + code, W / 2, codeY + 54);
+  ctx.font = `500 27px ${family}`;
+  ctx.fillText("Scan buat gabung", M, footY + 122);
 }
 
 export function ReferralQr({ code }: { code: string }) {
