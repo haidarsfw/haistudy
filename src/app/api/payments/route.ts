@@ -28,6 +28,7 @@ import { issueAccountToken } from "@/lib/auth/account-tokens";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { AccountError } from "@/lib/auth/account";
 import { requireAccount } from "@/lib/auth/account-session";
+import { readDeviceIdentityFromHeader } from "@/lib/auth/device-id";
 
 // ─── POST /api/payments - on-site purchase submission (signed in) ───
 // multipart/form-data.
@@ -271,6 +272,7 @@ export async function POST(request: Request) {
     // unverified / rejected submissions never burn a number. See the PATCH
     // handler in /api/admin/purchase (calls next_scope_invoice → meta.orderNo).
 
+    const buyerDevice = readDeviceIdentityFromHeader(request.headers.get("cookie")).id || null;
     const meta = {
       classCode,
       campus,
@@ -288,6 +290,10 @@ export async function POST(request: Request) {
       scopeKey: sk,
       nickname: cleanNickname,
       ...(pkg === "share" ? { shareMethod } : {}),
+      // The browser this order was placed from. Read at approval to refuse a
+      // partner's commission on an order placed from the partner's own device —
+      // the owner's anti-fraud rule. An id, never anything else about the device.
+      ...(buyerDevice ? { deviceId: buyerDevice } : {}),
     };
 
     const { data: inserted, error: insErr } = await supabase

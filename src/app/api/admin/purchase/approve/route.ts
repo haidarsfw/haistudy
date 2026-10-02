@@ -258,6 +258,7 @@ export async function POST(request: Request) {
       // list price on a discounted sale takes the discount out of the margin
       // twice — once for the buyer, once again for the partner.
       baseAmount: typeof meta.basePrice === "number" ? meta.basePrice : 0,
+      buyerDeviceId: typeof meta.deviceId === "string" ? meta.deviceId : null,
     });
     // Only a clean "not a partner" falls through to the Rp5.000 balance. On an
     // error the referrer may well BE a partner, so paying the balance would be
@@ -283,6 +284,17 @@ export async function POST(request: Request) {
       await creditReferralOnApproval(supabase, accountId, {
         skipCredit: outcome.kind === "recorded" || outcome.kind === "skipped",
       });
+      if (outcome.kind === "skipped" && outcome.reason === "shared-device") {
+        // Logged where the owner looks, because it can also be innocent — a
+        // mentor helping a mentee check out on the mentor's phone in class.
+        // The owner can still credit it by hand.
+        await recordActivity(supabase, {
+          action: "commission_blocked",
+          userName: (purchase.name as string) ?? "",
+          details: `Komisi partner ditolak: pesanan ${id} dibuat dari perangkat partnernya sendiri`,
+          scope,
+        });
+      }
       if (outcome.kind === "recorded") {
         const c = outcome.commission;
         console.log(

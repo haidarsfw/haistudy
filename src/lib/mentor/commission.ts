@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { listAccountDevices } from "@/lib/auth/account-devices";
+
 /**
  * Komisi partner.
  *
@@ -63,7 +65,7 @@ export type CommissionOutcome =
    * Distinct from "none" because the ordinary Rp5.000 balance must not be paid
    * either — a partner is on the cash side of the line, never the balance side.
    */
-  | { kind: "skipped"; reason: "paused" | "already-paid-for-person" }
+  | { kind: "skipped"; reason: "paused" | "already-paid-for-person" | "shared-device" }
   | { kind: "error"; partnerId: string | null; message: string };
 
 /**
@@ -106,9 +108,11 @@ export async function recordPartnerCommission(
     purchaseId: string;
     buyerAccountId: string | null;
     baseAmount: number;
+    /** `meta.deviceId` of the order: the browser it was placed from. */
+    buyerDeviceId?: string | null;
   }
 ): Promise<CommissionOutcome> {
-  const { purchaseId, buyerAccountId, baseAmount } = opts;
+  const { purchaseId, buyerAccountId, baseAmount, buyerDeviceId } = opts;
   if (!buyerAccountId || baseAmount <= 0) return { kind: "none" };
 
   // Siapa yang membawa dia. Satu baris per akun, dibuat saat registrasi.
@@ -171,6 +175,17 @@ export async function recordPartnerCommission(
     .maybeSingle();
   if (earlierErr) return { kind: "error", partnerId, message: earlierErr.message };
   if (earlier) return { kind: "skipped", reason: "already-paid-for-person" };
+
+  // The owner's anti-fraud rule: no commission when the "referred" buyer is on
+  // the partner's own device. That is a partner buying through a second
+  // account to pay themselves 25% back. Checked against every device the
+  // partner has ever entered the app with, and every browser they have placed
+  // their own orders from. Never by IP: a mentor and their class share a campus
+  // network, and an IP match would refuse exactly the mentees this is for.
+  if (buyerDeviceId && referrerId) {
+    const shared = await isPartnerDevice(supabase, referrerId, buyerDeviceId);
+    if (shared) return { kind: "skipped", reason: "shared-device" };
+  }
 
   for (let attempt = 0; attempt < MAX_NTH_RETRIES; attempt++) {
     // The next number is the highest one so far plus one, re-read on every
@@ -283,4 +298,22 @@ export async function partnerSummary(
     earned,
     unpaid,
   };
+}
+
+/** Has this browser ever been the partner's own? */
+async function isPartnerDevice(
+  supabase: SupabaseClient,
+  partnerAccountId: string,
+  deviceId: string
+): Promise<boolean> {
+  const { devices } = await listAccountDevices(supabase, partnerAccountId);
+  if (devices.some((d) => d.deviceId === deviceId)) return true;
+
+  const { data: ownOrders } = await supabase
+    .from("purchase_requests")
+    .select("id")
+    .eq("account_id", partnerAccountId)
+    .eq("meta->>deviceId", deviceId)
+    .limit(1);
+  return (ownOrders ?? []).length > 0;
 }
