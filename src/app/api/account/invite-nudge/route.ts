@@ -54,6 +54,19 @@ export async function GET() {
       .eq("status", "approved");
     if (!approved) return NextResponse.json({ eligible: false, reason: "belum-beli" });
 
+    // Partners are paid in cash, not balance, and have their own page that says
+    // exactly how. Telling one "tiap teman menambah saldo Rp5.000" would be a
+    // false sentence about their own money. Paused partners included: they are
+    // still on the cash side of the line, just not earning this month.
+    const { data: partner } = await supabase
+      .from("partners")
+      .select("status")
+      .eq("account_id", account.id)
+      .maybeSingle();
+    if (partner && (partner.status === "active" || partner.status === "paused")) {
+      return NextResponse.json({ eligible: false, reason: "partner" });
+    }
+
     const code = await getAccountReferralCode(supabase, account.id);
     if (!code) return NextResponse.json({ eligible: false, reason: "no-code" });
 

@@ -52,6 +52,10 @@ export function PartnerList() {
   const [partners, setPartners] = useState<Partner[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sibuk, setSibuk] = useState<string | null>(null);
+  // Which partner is one tap away from being marked paid. Marking is the only
+  // action on this screen with no undo in the panel, and it moves every unpaid
+  // row at once, so it asks first and says exactly how much and to whom.
+  const [konfirmasi, setKonfirmasi] = useState<string | null>(null);
 
   const muat = useCallback(async () => {
     setError(null);
@@ -212,7 +216,7 @@ export function PartnerList() {
                   />
                   <Baris label="Total sepanjang kemitraan" value={formatIDR(p.summary.earned)} />
                   <Baris
-                    label="Pembelian"
+                    label="Orang yang dibawa"
                     value={`${p.summary.sales}, berikutnya ${p.summary.currentPercent}%`}
                   />
                   <Baris label="Dikirim ke" value={tujuan(p)} />
@@ -223,15 +227,13 @@ export function PartnerList() {
                       dibayar. Tombol yang hanya diredupkan tetap terlihat bisa
                       ditekan, dan menekannya tidak menjelaskan apa-apa. */}
                   {p.summary.unpaid > 0 && (
-                    <Button
-                      size="sm"
-                      disabled={sibuk === p.id}
-                      onClick={() => ubah(p.id, { markPaid: true }, "Ditandai dibayar.")}
-                      className="gap-1.5"
-                    >
-                      <Banknote className="h-3.5 w-3.5" />
-                      Tandai sudah ditransfer
-                    </Button>
+                    <TombolBayar
+                      p={p}
+                      sibuk={sibuk}
+                      konfirmasi={konfirmasi}
+                      setKonfirmasi={setKonfirmasi}
+                      onBayar={() => ubah(p.id, { markPaid: true }, "Ditandai dibayar.")}
+                    />
                   )}
                   <Button
                     size="sm"
@@ -248,7 +250,7 @@ export function PartnerList() {
                   <p className="mt-2 text-xs text-muted-foreground">
                     {p.summary.sales > 0
                       ? "Semua komisinya sudah ditandai dibayar."
-                      : "Belum ada pembelian lewat kodenya, jadi belum ada yang perlu ditransfer."}
+                      : "Belum ada orang yang membeli lewat kodenya, jadi belum ada yang perlu ditransfer."}
                   </p>
                 )}
               </article>
@@ -285,16 +287,14 @@ export function PartnerList() {
                     Aktifkan
                   </Button>
                   {p.summary.unpaid > 0 && (
-                    <Button
-                      size="sm"
+                    <TombolBayar
+                      p={p}
+                      sibuk={sibuk}
+                      konfirmasi={konfirmasi}
+                      setKonfirmasi={setKonfirmasi}
+                      onBayar={() => ubah(p.id, { markPaid: true }, "Ditandai dibayar.")}
                       variant="outline"
-                      disabled={sibuk === p.id}
-                      onClick={() => ubah(p.id, { markPaid: true }, "Ditandai dibayar.")}
-                      className="gap-1.5"
-                    >
-                      <Banknote className="h-3.5 w-3.5" />
-                      Tandai sudah ditransfer
-                    </Button>
+                    />
                   )}
                 </div>
               </article>
@@ -302,6 +302,64 @@ export function PartnerList() {
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+
+function TombolBayar({
+  p,
+  sibuk,
+  konfirmasi,
+  setKonfirmasi,
+  onBayar,
+  variant = "default",
+}: {
+  p: Partner;
+  sibuk: string | null;
+  konfirmasi: string | null;
+  setKonfirmasi: (id: string | null) => void;
+  onBayar: () => void;
+  variant?: "default" | "outline";
+}) {
+  if (konfirmasi !== p.id) {
+    return (
+      <Button
+        size="sm"
+        variant={variant}
+        disabled={sibuk === p.id}
+        onClick={() => setKonfirmasi(p.id)}
+        className="gap-1.5"
+      >
+        <Banknote className="h-3.5 w-3.5" />
+        Tandai sudah ditransfer
+      </Button>
+    );
+  }
+  return (
+    <div
+      role="group"
+      aria-label="Konfirmasi pembayaran"
+      className="flex w-full flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2"
+    >
+      <p className="min-w-0 flex-1 text-xs text-foreground">
+        Tandai {formatIDR(p.summary.unpaid)} sudah ditransfer ke{" "}
+        <span className="font-semibold">{p.account?.name || p.account?.email || "partner ini"}</span>?
+        Tidak bisa dibatalkan dari panel.
+      </p>
+      <Button size="sm" variant="ghost" onClick={() => setKonfirmasi(null)}>
+        Batal
+      </Button>
+      <Button
+        size="sm"
+        disabled={sibuk === p.id}
+        onClick={() => {
+          setKonfirmasi(null);
+          onBayar();
+        }}
+      >
+        Ya, sudah ditransfer
+      </Button>
     </div>
   );
 }

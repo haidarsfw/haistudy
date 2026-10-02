@@ -16,6 +16,12 @@ import {
   useInterruptionSlot,
 } from "@/components/providers/interruption-provider";
 import { toast } from "@/components/ui/toast";
+import { useSession } from "@/components/providers/session-provider";
+
+// Per licence, not per device: two people sharing one phone must not answer
+// for each other.
+const cacheKey = (who: string) => `hs-invite-nudge-until:${who}`;
+const CACHE_MS = 24 * 60 * 60 * 1000;
 
 interface Kelayakan {
   eligible: boolean;
@@ -38,6 +44,8 @@ interface Kelayakan {
  * dirinya sudah di tengah jalan.
  */
 export function InviteNudge() {
+  const { session } = useSession();
+  const who = session?.licenseKey ?? "";
   const [data, setData] = useState<Kelayakan | null>(null);
   // Sudah dijawab, bukan "sedang terbuka". Terbuka atau tidak bisa diturunkan
   // dari kelayakan, giliran antrean, dan apakah orangnya sudah menjawab, jadi
@@ -52,12 +60,30 @@ export function InviteNudge() {
   });
 
   useEffect(() => {
+    if (!who) return;
     let batal = false;
+    // The server decides; this device only remembers the last "not yet" for a
+    // day. Without it, every single app load cost a function call and three to
+    // four database reads, to answer a question whose answer changes at most
+    // once a fortnight. A day is short enough that a new purchase still brings
+    // it in promptly.
+    try {
+      const until = Number(localStorage.getItem(cacheKey(who)) ?? "0");
+      if (until > Date.now()) return;
+    } catch {
+      // Storage blocked: ask the server every time, which is only slower.
+    }
     (async () => {
       try {
         const res = await fetch("/api/account/invite-nudge", { credentials: "same-origin" });
         if (!res.ok || batal) return;
-        setData((await res.json()) as Kelayakan);
+        const body = (await res.json()) as Kelayakan;
+        if (!body.eligible) {
+          try {
+            localStorage.setItem(cacheKey(who), String(Date.now() + CACHE_MS));
+          } catch {}
+        }
+        setData(body);
       } catch {
         // Tidak ada yang perlu dikatakan: ini ajakan, bukan fitur yang dicari
         // orang. Gagal memuatnya berarti ia tidak muncul, dan itu sudah benar.
@@ -66,11 +92,14 @@ export function InviteNudge() {
     return () => {
       batal = true;
     };
-  }, []);
+  }, [who]);
 
   const jawab = async (forever: boolean) => {
     setDijawab(true);
     release();
+    try {
+      if (who) localStorage.setItem(cacheKey(who), String(Date.now() + CACHE_MS));
+    } catch {}
     try {
       await fetch("/api/account/invite-nudge", {
         method: "POST",
@@ -121,7 +150,7 @@ export function InviteNudge() {
           <DialogDescription className="text-left">
             {sudah === 0
               ? `Tiap teman yang beli pakai kodemu menambah saldo Rp5.000 ke akunmu. ${target} teman cukup untuk satu periode Share.`
-              : `Kamu sudah mengajak ${sudah} dari ${target}. Temanmu juga dapat potongan Rp5.000 di pembelian pertamanya.`}
+              : `Kamu sudah mengajak ${sudah} dari ${target}. Teman yang daftar lewat linkmu dapat potongan Rp5.000 di pembelian pertamanya.`}
           </DialogDescription>
         </DialogHeader>
 

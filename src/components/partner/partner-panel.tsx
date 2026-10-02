@@ -123,7 +123,7 @@ export function PartnerPanel() {
           Partner haistudy
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ajak teman pakai kodemu, dapat bagian dari tiap pembelian yang disetujui.
+          Ajak teman pakai kodemu, dapat bagian dari pembelian pertama tiap orang yang kamu ajak.
         </p>
       </header>
 
@@ -175,7 +175,7 @@ function PartnerAktif({
       {data.status === "paused" && (
         <p className="rounded-lg border border-warning/30 bg-warning/10 px-3.5 py-2.5 text-sm text-foreground">
           Kemitraanmu sedang dijeda. Komisi yang sudah tercatat tetap dibayar, tapi
-          pembelian baru belum dihitung sampai diaktifkan lagi.
+          orang baru yang membeli belum dihitung sampai diaktifkan lagi.
         </p>
       )}
 
@@ -192,7 +192,7 @@ function PartnerAktif({
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           Total sepanjang kemitraan {formatIDR(s.earned)}, dari{" "}
-          {s.sales === 0 ? "belum ada pembelian" : `${s.sales} pembelian`}.
+          {s.sales === 0 ? "belum ada yang membeli" : `${s.sales} orang yang membeli`}.
         </p>
       </section>
 
@@ -245,13 +245,13 @@ function Tangga({
   return (
     <section>
       <h2 className="font-display text-base font-semibold text-foreground">
-        Pembelian berikutnya dihitung {currentPercent}%
+        Orang berikutnya yang membeli dihitung {currentPercent}%
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         {next
           ? kurang === 1
-            ? `Satu pembelian lagi dengan tarif ini, lalu naik ke ${next.percent}%.`
-            : `${kurang} pembelian lagi dengan tarif ini, lalu naik ke ${next.percent}%.`
+            ? `Satu orang lagi dengan tarif ini, lalu naik ke ${next.percent}%.`
+            : `${kurang} orang lagi dengan tarif ini, lalu naik ke ${next.percent}%.`
           : "Ini tarif tertinggi."}
       </p>
 
@@ -269,7 +269,7 @@ function Tangga({
               )}
             >
               <span>
-                Pembelian ke-{b.from}
+                Orang ke-{b.from}
                 {b.to === null ? " ke atas" : ` sampai ke-${b.to}`}
               </span>
               <span className={cn("font-semibold", aktif && "text-primary")}>
@@ -281,8 +281,9 @@ function Tangga({
       </ul>
 
       <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-        Tarifnya mengikuti posisi tiap pembelian, bukan total keseluruhan. Pembelian
-        ke-6 dihitung 30%, dan lima yang pertama tetap 25% selamanya.
+        Dihitung per orang, sekali saja: pembelian pertama tiap orang yang kamu ajak.
+        Perpanjangan periode berikutnya tidak dihitung lagi. Orang ke-6 dihitung 30%,
+        dan lima orang pertama tetap 25% selamanya.
       </p>
     </section>
   );
@@ -310,7 +311,7 @@ function LinkAjak({ kode }: { kode: string }) {
     <section>
       <h2 className="font-display text-base font-semibold text-foreground">Link ajakanmu</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Siapa pun yang mendaftar lewat link ini terhitung sebagai ajakanmu selama 7 hari.
+        Yang membuka link ini lalu mendaftar dalam 7 hari terhitung sebagai ajakanmu, dan itu berlaku selamanya.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {/* `break-all`, bukan `truncate`: kalau harus memilih antara dua baris
@@ -346,7 +347,7 @@ function Riwayat({ rows }: { rows: Commission[] }) {
           >
             <div className="min-w-0">
               <p className="text-sm text-foreground">
-                Pembelian ke-{r.nth}
+                Orang ke-{r.nth}
                 <span className="text-muted-foreground">
                   {" "}
                   &middot; {r.ratePercent}% dari {formatIDR(r.baseAmount)}
@@ -528,7 +529,7 @@ function Menunggu({ appliedAt }: { appliedAt?: string }) {
       </h2>
       <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
         {appliedAt ? `Dikirim ${tanggal(appliedAt)}. ` : ""}
-        Saya baca satu per satu, jadi jawabannya tidak otomatis. Kalau disetujui,
+        Kami baca satu per satu, jadi jawabannya tidak otomatis. Kalau disetujui,
         halaman ini berganti sendiri jadi rincian komisi.
       </p>
     </section>
@@ -560,8 +561,9 @@ function Tawaran({ ladder, onKirim }: { ladder: Band[]; onKirim: () => void }) {
           Cara kerjanya
         </h2>
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-          Temanmu daftar pakai kodemu dan membeli akses. Begitu pembeliannya saya
-          setujui, bagianmu tercatat. Dibayar sekali per pembelian, bukan langganan.
+          Temanmu daftar pakai kodemu dan membeli akses. Begitu pembeliannya kami
+          setujui, bagianmu tercatat. Sekali per orang: perpanjangannya nanti tidak
+          dihitung lagi.
         </p>
         <ul className="mt-4 space-y-1.5">
           {ladder.map((b) => (
@@ -570,7 +572,7 @@ function Tawaran({ ladder, onKirim }: { ladder: Band[]; onKirim: () => void }) {
               className="flex items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm text-muted-foreground"
             >
               <span>
-                Pembelian ke-{b.from}
+                Orang ke-{b.from}
                 {b.to === null ? " ke atas" : ` sampai ke-${b.to}`}
               </span>
               <span className="font-semibold text-foreground">{b.percent}%</span>
@@ -640,7 +642,7 @@ function Formulir({ onKirim, ctaLabel }: { onKirim: () => void; ctaLabel: string
         Ceritakan sedikit
       </h2>
       <label htmlFor="pr-pitch" className="mt-1 block text-sm text-muted-foreground">
-        Kamu mengajar siapa, kelas apa, kira-kira berapa orang. Itu yang saya baca
+        Kamu mengajar siapa, kelas apa, kira-kira berapa orang. Itu yang kami baca
         saat memutuskan.
       </label>
       <textarea

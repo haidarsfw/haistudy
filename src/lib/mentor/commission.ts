@@ -42,13 +42,54 @@ export interface CommissionResult {
   amount: number;
 }
 
-const MAX_NTH_RETRIES = 3;
+/**
+ * Three outcomes, not two.
+ *
+ * "This buyer did not come from a partner" and "this buyer did, and writing it
+ * down failed" used to both come back as `null`. The approval route reads null
+ * as "not a partner" and pays the Rp5.000 referral balance instead — so a
+ * database blip quietly swapped a partner's cash commission for a balance they
+ * cannot withdraw. An error has to be told apart so the route can pay NOTHING
+ * automatically and leave it for the owner to settle, rather than pay the wrong
+ * thing.
+ */
+export type CommissionOutcome =
+  /** The buyer was not brought by a partner. The ordinary referral rules apply. */
+  | { kind: "none" }
+  | { kind: "recorded"; commission: CommissionResult }
+  /**
+   * The buyer WAS brought by a partner, and this purchase earns nothing: the
+   * partnership is paused, or this person has already been paid for once.
+   * Distinct from "none" because the ordinary Rp5.000 balance must not be paid
+   * either — a partner is on the cash side of the line, never the balance side.
+   */
+  | { kind: "skipped"; reason: "paused" | "already-paid-for-person" }
+  | { kind: "error"; partnerId: string | null; message: string };
+
+/**
+ * Enough for every approval in a burst to get its own number.
+ *
+ * Three was not: with six approvals landing at once (measured, against the real
+ * table) the slowest writers ran out of attempts and their purchases were left
+ * with no commission at all. The owner approves one order at a time, so a burst
+ * like that should never happen — but whether a partner is paid must not depend
+ * on how fast someone clicks.
+ */
+const MAX_NTH_RETRIES = 10;
+
+/** A short random pause, so writers that collided do not collide again in step. */
+function jitter(): Promise<void> {
+  return new Promise((r) => setTimeout(r, 15 + Math.floor(Math.random() * 60)));
+}
 
 /**
  * Catat komisi untuk satu pembelian yang baru disetujui.
  *
- * Mengembalikan `null` kalau pembeli ini tidak datang dari partner aktif — itu
- * jalur yang normal, bukan kegagalan.
+ * SEKALI PER ORANG, bukan per pembelian. Keputusan pemilik: "Sekali bayar,
+ * tidak berulang", dan tabelnya menghitung "Orang ke-". Retensi 64% berarti
+ * mentee memperpanjang dengan sendirinya; komisi yang ikut berulang paling
+ * bagus hanya impas. Jadi pembelian berikutnya dari orang yang sama tidak
+ * dibayar, dan tidak menaikkan partner di tangga. `nth` menghitung ORANG.
  *
  * KENAPA dasarnya `basePrice` dan bukan harga katalog: `basePrice` adalah yang
  * benar-benar dibayar setelah diskon. Membayar 25% dari harga katalog atas
@@ -66,62 +107,88 @@ export async function recordPartnerCommission(
     buyerAccountId: string | null;
     baseAmount: number;
   }
-): Promise<CommissionResult | null> {
+): Promise<CommissionOutcome> {
   const { purchaseId, buyerAccountId, baseAmount } = opts;
-  if (!buyerAccountId || baseAmount <= 0) return null;
+  if (!buyerAccountId || baseAmount <= 0) return { kind: "none" };
 
   // Siapa yang membawa dia. Satu baris per akun, dibuat saat registrasi.
-  const { data: use } = await supabase
+  // Setiap bacaan memeriksa `error`: "tidak ada baris" dan "gagal membaca"
+  // harus berbeda, karena yang kedua tidak boleh berakhir sebagai saldo.
+  const { data: use, error: useErr } = await supabase
     .from("referral_uses")
     .select("code")
     .eq("account_id", buyerAccountId)
     .maybeSingle();
-  if (!use?.code) return null;
+  if (useErr) return { kind: "error", partnerId: null, message: useErr.message };
+  if (!use?.code) return { kind: "none" };
 
-  const { data: codeRow } = await supabase
+  const { data: codeRow, error: codeErr } = await supabase
     .from("referral_codes")
     .select("account_id")
     .eq("code", use.code as string)
     .maybeSingle();
+  if (codeErr) return { kind: "error", partnerId: null, message: codeErr.message };
   const referrerId = (codeRow?.account_id as string | null) ?? null;
   // Kode kampanye tidak punya pemilik, dan tidak ada yang bisa mereferensikan
   // dirinya sendiri.
-  if (!referrerId || referrerId === buyerAccountId) return null;
+  if (!referrerId || referrerId === buyerAccountId) return { kind: "none" };
 
-  const { data: partner } = await supabase
+  const { data: partner, error: partnerErr } = await supabase
     .from("partners")
     .select("id, status")
     .eq("account_id", referrerId)
     .maybeSingle();
-  if (!partner || partner.status !== "active") return null;
+  if (partnerErr) return { kind: "error", partnerId: null, message: partnerErr.message };
+  // Pending and rejected are not partners yet (or any more): an ordinary
+  // referrer, ordinary balance.
+  if (!partner || (partner.status !== "active" && partner.status !== "paused")) {
+    return { kind: "none" };
+  }
+  // Paused means "kept, not earning". Not commission, and not the balance
+  // either, or the pause would be a demotion to a cheaper reward rather than
+  // a pause.
+  if (partner.status === "paused") return { kind: "skipped", reason: "paused" };
 
   const partnerId = partner.id as string;
 
   // Sudah pernah dicatat? Menyetujui ulang pesanan yang sama tidak boleh
   // membayar dua kali. Dicek lebih dulu supaya jalur normal tidak mengandalkan
   // pelanggaran constraint sebagai alur kendali.
-  const { data: existing } = await supabase
+  const { data: existing, error: existingErr } = await supabase
     .from("partner_commissions")
     .select("partner_id, nth, rate_percent, base_amount, amount")
     .eq("purchase_id", purchaseId)
     .maybeSingle();
-  if (existing) {
-    return {
-      partnerId: existing.partner_id as string,
-      nth: existing.nth as number,
-      ratePercent: existing.rate_percent as number,
-      baseAmount: existing.base_amount as number,
-      amount: existing.amount as number,
-    };
-  }
+  if (existingErr) return { kind: "error", partnerId, message: existingErr.message };
+  if (existing) return { kind: "recorded", commission: fromRow(existing) };
+
+  // Already paid for this PERSON, on an earlier purchase: this one is a renewal.
+  const { data: earlier, error: earlierErr } = await supabase
+    .from("partner_commissions")
+    .select("id")
+    .eq("buyer_account", buyerAccountId)
+    .limit(1)
+    .maybeSingle();
+  if (earlierErr) return { kind: "error", partnerId, message: earlierErr.message };
+  if (earlier) return { kind: "skipped", reason: "already-paid-for-person" };
 
   for (let attempt = 0; attempt < MAX_NTH_RETRIES; attempt++) {
-    const { count } = await supabase
+    // The next number is the highest one so far plus one, re-read on every
+    // attempt. It used to be `count + 1 + attempt`: after a collision the
+    // re-read count already included the row that won, so adding `attempt` on
+    // top skipped a number — sale 9 recorded as sale 10, and at a band edge
+    // that is the wrong rate, frozen forever. The highest number also cannot
+    // collide with a gap left by a deleted row, which a count can.
+    const { data: top, error: topErr } = await supabase
       .from("partner_commissions")
-      .select("id", { head: true, count: "exact" })
-      .eq("partner_id", partnerId);
+      .select("nth")
+      .eq("partner_id", partnerId)
+      .order("nth", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (topErr) return { kind: "error", partnerId, message: topErr.message };
 
-    const nth = (count ?? 0) + 1 + attempt;
+    const nth = ((top?.nth as number | undefined) ?? 0) + 1;
     const ratePercent = rateForNth(nth);
     // Dibulatkan ke bawah: pembulatan ke atas membuat total yang dibayarkan
     // melebihi persentase yang dijanjikan, dan selisih itu keluar dari margin.
@@ -138,35 +205,49 @@ export async function recordPartnerCommission(
     });
 
     if (!error) {
-      return { partnerId, nth, ratePercent, baseAmount, amount };
+      return {
+        kind: "recorded",
+        commission: { partnerId, nth, ratePercent, baseAmount, amount },
+      };
     }
     // 23505 = `nth` itu sudah dipakai (persetujuan lain mendahului), atau
-    // pesanan ini sudah punya komisi. Coba nomor berikutnya.
+    // pesanan ini sudah punya komisi. Baca ulang, lalu coba nomor berikutnya.
     if (error.code !== "23505") {
-      console.error("[komisi] gagal mencatat", error);
-      return null;
+      return { kind: "error", partnerId, message: error.message };
     }
     const { data: now } = await supabase
       .from("partner_commissions")
       .select("partner_id, nth, rate_percent, base_amount, amount")
       .eq("purchase_id", purchaseId)
       .maybeSingle();
-    if (now) {
-      return {
-        partnerId: now.partner_id as string,
-        nth: now.nth as number,
-        ratePercent: now.rate_percent as number,
-        baseAmount: now.base_amount as number,
-        amount: now.amount as number,
-      };
-    }
+    if (now) return { kind: "recorded", commission: fromRow(now) };
+    // Two purchases by the SAME person approved at once: the other one won the
+    // one-per-buyer index (migration 080), so this one is the renewal.
+    const { data: sameBuyer } = await supabase
+      .from("partner_commissions")
+      .select("id")
+      .eq("buyer_account", buyerAccountId)
+      .limit(1)
+      .maybeSingle();
+    if (sameBuyer) return { kind: "skipped", reason: "already-paid-for-person" };
+    await jitter();
   }
 
-  console.error("[komisi] menyerah setelah beberapa percobaan nomor urut", {
-    purchaseId,
+  return {
+    kind: "error",
     partnerId,
-  });
-  return null;
+    message: "nomor urut terus bertabrakan setelah beberapa percobaan",
+  };
+}
+
+function fromRow(row: Record<string, unknown>): CommissionResult {
+  return {
+    partnerId: row.partner_id as string,
+    nth: row.nth as number,
+    ratePercent: row.rate_percent as number,
+    baseAmount: row.base_amount as number,
+    amount: row.amount as number,
+  };
 }
 
 /** Ringkasan untuk halaman partner: sudah berapa, tarif sekarang, belum dibayar. */
@@ -192,9 +273,9 @@ export async function partnerSummary(
     .filter((r) => !r.paid_at)
     .reduce((n, r) => n + ((r.amount as number) ?? 0), 0);
 
-  // Tarif "sekarang" adalah tarif yang akan didapat penjualan BERIKUTNYA, bukan
-  // tarif penjualan terakhir — itu yang ingin diketahui orang saat melihat
-  // angkanya sebelum mengajak satu orang lagi.
+  // Tarif "sekarang" adalah tarif untuk ORANG berikutnya yang membeli, bukan
+  // tarif orang terakhir: itu yang ingin diketahui partner sebelum mengajak
+  // satu orang lagi. Satu baris = satu orang (migrasi 080).
   return {
     sales,
     currentPercent: rateForNth(sales + 1),

@@ -251,7 +251,7 @@ export async function POST(request: Request) {
     // they had brought AT THIS MOMENT and the price of the package THEN.
     // Neither can be recovered afterwards, which is why it is written down once
     // and never recomputed.
-    const commission = await recordPartnerCommission(supabase, {
+    const outcome = await recordPartnerCommission(supabase, {
       purchaseId: id,
       buyerAccountId: accountId,
       // What was actually paid, after any discount. Paying a percentage of the
@@ -259,14 +259,37 @@ export async function POST(request: Request) {
       // twice — once for the buyer, once again for the partner.
       baseAmount: typeof meta.basePrice === "number" ? meta.basePrice : 0,
     });
-    await creditReferralOnApproval(supabase, accountId, {
-      skipCredit: commission !== null,
-    });
-    if (commission) {
-      console.log(
-        `[komisi] partner ${commission.partnerId} penjualan ke-${commission.nth}: ` +
-          `${commission.ratePercent}% dari ${commission.baseAmount} = ${commission.amount}`
+    // Only a clean "not a partner" falls through to the Rp5.000 balance. On an
+    // error the referrer may well BE a partner, so paying the balance would be
+    // paying the wrong thing; paying nothing and saying so loudly lets the
+    // owner settle it, and the use stays unsettled so it is not lost.
+    if (outcome.kind === "error") {
+      console.error(
+        `[komisi] GAGAL dicatat untuk pesanan ${id} (partner ${outcome.partnerId ?? "?"}): ${outcome.message}`
       );
+      // Into the activity log the owner already reads, so a failed commission
+      // is visible in the panel and not only in a server log nobody opens.
+      // recordActivity never throws.
+      await recordActivity(supabase, {
+        action: "commission_failed",
+        userName: (purchase.name as string) ?? "",
+        details: `Komisi partner gagal dicatat untuk pesanan ${id}: ${outcome.message}`,
+        scope,
+      });
+    } else {
+      // "recorded" and "skipped" both mean the referrer is a partner, and a
+      // partner never takes the balance: a renewal by someone already paid for,
+      // or a referral during a pause, earns nothing at all.
+      await creditReferralOnApproval(supabase, accountId, {
+        skipCredit: outcome.kind === "recorded" || outcome.kind === "skipped",
+      });
+      if (outcome.kind === "recorded") {
+        const c = outcome.commission;
+        console.log(
+          `[komisi] partner ${c.partnerId} penjualan ke-${c.nth}: ` +
+            `${c.ratePercent}% dari ${c.baseAmount} = ${c.amount}`
+        );
+      }
     }
 
     // A period bought is a rename earned. Tied to approval rather than to
