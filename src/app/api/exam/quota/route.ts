@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     // Get user tier + admin status
     const { data: license } = await supabase
       .from("license_keys")
-      .select("package_tier, is_admin")
+      .select("package_tier, is_admin, referral_exam_bonus")
       .eq("key", licenseKey)
       .maybeSingle();
 
@@ -80,7 +80,14 @@ export async function GET(request: Request) {
       .gte("started_at", quotaCountFrom(resetAt));
 
     const used = count ?? 0;
-    const q = computeQuota({ isAdmin, tier, bonus, used });
+    // The referral perk (+2) rides on the licence, on top of any per-subject
+    // top-up. It raises the allowance only; the attempt count above is untouched.
+    const q = computeQuota({
+      isAdmin,
+      tier,
+      bonus: bonus + ((license?.referral_exam_bonus as number | null | undefined) ?? 0),
+      used,
+    });
 
     // Fetch attempt summaries for history
     const { data: history } = await supabase

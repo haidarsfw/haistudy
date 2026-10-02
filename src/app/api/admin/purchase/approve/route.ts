@@ -167,8 +167,29 @@ export async function POST(request: Request) {
         ? Math.min(packageMaxDevices(pkg), Math.max(1, meta.deviceLimit))
         : packageMaxDevices(pkg);
 
+    // The buyer perk from the plan: "Pembeli pakai kode → Kuota Latihan Soal +2".
+    // Once per person, on the licence bought with the code — their FIRST
+    // approved purchase, the same purchase the Rp5.000 referee discount applies
+    // to. A renewal is not "buying with a code"; the code was spent. It sits on
+    // the licence rather than per subject so it switches on by itself for every
+    // subject the period later gains (Latihan Soal for B30 is not written yet).
+    let referralExamBonus = 0;
+    if (accountId) {
+      const [{ data: use }, { count: earlier }] = await Promise.all([
+        supabase.from("referral_uses").select("code").eq("account_id", accountId).maybeSingle(),
+        supabase
+          .from("purchase_requests")
+          .select("id", { head: true, count: "exact" })
+          .eq("account_id", accountId)
+          .eq("status", "approved")
+          .neq("id", id),
+      ]);
+      if (use?.code && !earlier) referralExamBonus = 2;
+    }
+
     const { error: keyErr } = await supabase.from("license_keys").insert({
       key,
+      referral_exam_bonus: referralExamBonus,
       name: (purchase.name as string) ?? "",
       short_name: (account.nickname as string) || null,
       account_id: accountId,

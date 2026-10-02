@@ -37,12 +37,13 @@ export async function GET(request: Request) {
   // License → scope + tier (drives the credit-model quota per subject).
   const { data: lic } = await supabase
     .from("license_keys")
-    .select("semester, exam_period, jurusan, is_admin, package_tier")
+    .select("semester, exam_period, jurusan, is_admin, package_tier, referral_exam_bonus")
     .eq("key", key)
     .maybeSingle();
 
   const isAdmin = Boolean(lic?.is_admin);
   const tier = (lic?.package_tier as PackageTier) ?? "normal";
+  const perkBonus = (lic?.referral_exam_bonus as number | null) ?? 0;
   const scope: ScopeTuple = {
     semester: (lic?.semester as number) ?? 2,
     examPeriod: (lic?.exam_period as ExamPeriod) ?? "uas",
@@ -161,7 +162,14 @@ export async function GET(request: Request) {
 
   const subjects = Array.from(map.values()).map((e) => {
     const ov = ovMap.get(e.subjectId);
-    const q = computeQuota({ isAdmin, tier, bonus: ov?.bonus ?? 0, used: e.used });
+    // Same allowance the player sees: per-subject top-up plus the licence's
+    // referral perk, so the admin never reads a smaller quota than the student has.
+    const q = computeQuota({
+      isAdmin,
+      tier,
+      bonus: (ov?.bonus ?? 0) + (perkBonus ?? 0),
+      used: e.used,
+    });
     return { ...e, bonus: q.bonus, base: q.base, max: q.max, remaining: q.remaining };
   });
 

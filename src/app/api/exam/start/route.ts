@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     // Get user tier + admin status
     const { data: license } = await supabase
       .from("license_keys")
-      .select("package_tier, is_admin")
+      .select("package_tier, is_admin, referral_exam_bonus")
       .eq("key", licenseKey)
       .maybeSingle();
 
@@ -97,7 +97,14 @@ export async function POST(request: Request) {
     }
 
     const used = count ?? 0;
-    const q = computeQuota({ isAdmin, tier, bonus, used });
+    // The referral perk (+2) rides on the licence, on top of any per-subject
+    // top-up. It raises the allowance only; the attempt count above is untouched.
+    const q = computeQuota({
+      isAdmin,
+      tier,
+      bonus: bonus + ((license?.referral_exam_bonus as number | null | undefined) ?? 0),
+      used,
+    });
 
     // An attempt already running for this subject is RESUMED, never replaced.
     //
