@@ -45,6 +45,10 @@ const AnnouncementModal = dynamic(
   () => import("@/components/shared/announcement-modal").then((m) => ({ default: m.AnnouncementModal })),
   { ssr: false, loading: () => null }
 );
+const InviteNudge = dynamic(
+  () => import("@/components/referral/invite-nudge").then((m) => ({ default: m.InviteNudge })),
+  { ssr: false, loading: () => null }
+);
 const NotificationPopup = dynamic(
   () => import("@/components/notifications/notification-popup").then((m) => ({ default: m.NotificationPopup })),
   { ssr: false, loading: () => null }
@@ -490,6 +494,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
     {/* One-time "what's new" popup after an update - self-gates internally */}
     <PatchNotesPopup />
+
+    {/* "Ajak 5 teman" - queued like the rest, at most once every 14 days */}
+    <InviteNudge />
 
     {/* VIP welcome toast - listens hs:vip-online, dedups per session */}
     <VipWelcomeListener />

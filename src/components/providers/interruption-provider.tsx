@@ -58,6 +58,12 @@ export const INTERRUPTION_PRIORITY = {
   onboarding: 100,
   announcement: 80,
   patchNotes: 50,
+  /**
+   * Di atas ajakan pasang aplikasi karena jauh lebih jarang: hanya untuk yang
+   * sudah membeli, dan paling cepat 14 hari sekali. Yang jarang harus menang,
+   * atau ia tidak pernah mendapat giliran sama sekali.
+   */
+  inviteNudge: 35,
   install: 30,
   /** A standing welcome notice is wallpaper; it yields to a live nudge. */
   announcementInfo: 20,
