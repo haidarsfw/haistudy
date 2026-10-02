@@ -1,8 +1,8 @@
 -- ============================================================================
 -- 075 — The tour is a once-per-PERSON thing, so remember it on the person
 --
--- ⚠️ NOT APPLIED YET. The code reads this column and falls back to the old
--- per-licence flag when it is missing, so nothing breaks before it lands.
+-- ✅ APPLIED to production 2026-10-02. The reader still falls back to the old
+-- per-licence flag, which is what covers anyone who finished the tour earlier.
 --
 -- The flag lived on user_settings.onboarding_completed_at, and user_settings is
 -- keyed by license_key. A licence is ONE EXAM PERIOD. So every time someone

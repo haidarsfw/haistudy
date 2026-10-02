@@ -1,8 +1,7 @@
 -- ============================================================================
 -- 074 — "Ajak teman" nudge: remembering that someone said no
 --
--- ⚠️ NOT APPLIED YET. Written ahead of the code that uses it so everything
--- pending can be applied in one sitting.
+-- ✅ APPLIED to production 2026-10-02. The nudge modal itself is still to be built.
 --
 -- After a purchase the app shows an occasional modal: invite five friends and
 -- the next period is free. Occasional is the whole design — it appears now and

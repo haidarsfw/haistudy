@@ -1,8 +1,8 @@
 -- ============================================================================
 -- 073 — Partners: the people who earn cash for bringing buyers
 --
--- ⚠️ NOT APPLIED YET. Written ahead of the code that uses it so everything
--- pending can be applied in one sitting. Nothing reads these tables until then.
+-- ✅ APPLIED to production 2026-10-02. Nothing reads these tables yet —
+-- the partner UI is still to be built.
 --
 -- Why a table and not a boolean on `accounts`: a partner is a RELATIONSHIP with
 -- a history, not a property of a person. It is applied for, approved by someone
