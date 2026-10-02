@@ -19,6 +19,7 @@ import { FeedbackDiscounts } from "./feedback-discounts";
 import { ClassDiscounts } from "./class-discounts";
 import { PartnerList } from "./partner-list";
 import { ScopeWaitlist } from "./scope-waitlist";
+import { ReferralAttach } from "./referral-attach";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import {
   useAdminPurchaseCount,
@@ -185,7 +186,10 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
             </div>
           </TabsContent>
           <TabsContent value={9}>
-            <PartnerList />
+            <div className="space-y-6">
+              <PartnerList />
+              <ReferralAttach />
+            </div>
           </TabsContent>
         </motion.div>
       </AnimatePresence>
