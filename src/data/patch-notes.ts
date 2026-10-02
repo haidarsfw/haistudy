@@ -11,6 +11,10 @@
  * student just knows what changed, not a technical changelog. No em-dashes.
  *
  * Keep PATCH_NOTES[0].version in sync with APP_VERSION.
+ *
+ * A note about one period's material or features (a cheat sheet, a kisi-kisi,
+ * Latihan Soal) carries `scopes`, so students of other periods never see it,
+ * neither in the popup nor in the bell. Platform-wide notes leave it out.
  */
 
 export interface PatchNote {
@@ -22,12 +26,15 @@ export interface PatchNote {
   title: string;
   /** A few simple bullet points of what changed / what is new. */
   items: string[];
+  /** Scope keys (e.g. "s2-uas-bm") the note is about. Omit for everyone. */
+  scopes?: string[];
 }
 
 export const PATCH_NOTES: PatchNote[] = [
   {
     version: "2.5.5",
     date: "2026-07-01",
+    scopes: ["s2-uas-bm"],
     title: "Cheat Sheet Teori Esai - Operations Management",
     items: [
       "Ada cheat sheet baru untuk Operations Management: versi Teori Esai (4 halaman). Ini KHUSUS untuk soal teori/esai, bukan untuk soal hitungan.",
@@ -37,6 +44,7 @@ export const PATCH_NOTES: PatchNote[] = [
   {
     version: "2.5.4",
     date: "2026-06-29",
+    scopes: ["s2-uas-bm"],
     title: "Optimasi performa & kestabilan",
     items: [
       "Beberapa fitur di balik layar sudah dioptimasi supaya server lebih hemat dan website tetap stabil, terutama saat banyak yang pakai bareng di masa UAS.",
@@ -55,6 +63,7 @@ export const PATCH_NOTES: PatchNote[] = [
   {
     version: "2.5.2",
     date: "2026-06-27",
+    scopes: ["s2-uas-bm"],
     title: "Modul Belajar UAS Akuntansi di Forum",
     items: [
       "Modul belajar interaktif UAS Accounting for Business sekarang ada di Forum mata kuliah. Buka mata kuliah Accounting for Business lalu pilih tab Forum.",
@@ -64,6 +73,7 @@ export const PATCH_NOTES: PatchNote[] = [
   {
     version: "2.5.1",
     date: "2026-06-26",
+    scopes: ["s2-uas-bm"],
     title: "Kisi-kisi Accounting for Business",
     items: [
       "Kisi-kisi UAS Accounting for Business sekarang tersedia. Buka mata kuliah Accounting for Business lalu pilih tab Kisi-Kisi.",
@@ -84,6 +94,7 @@ export const PATCH_NOTES: PatchNote[] = [
   {
     version: "2.4.0",
     date: "2026-06-25",
+    scopes: ["s2-uas-bm"],
     title: "Cheatsheet Operations Management",
     items: [
       "Ada Cheatsheet Operations Management baru! Buka mata kuliah Operations Management lalu pilih tab Cheatsheet.",
@@ -184,6 +195,7 @@ export const PATCH_NOTES: PatchNote[] = [
   {
     version: "2.1.0",
     date: "2026-06-20",
+    scopes: ["s2-uas-bm"],
     title: "Latihan Soal Ujian (Practice Exam)",
     items: [
       "Fitur Latihan Soal baru: Simulasi ujian dengan durasi waktu nyata dan evaluasi AI.",
@@ -216,3 +228,22 @@ export const PATCH_NOTES: PatchNote[] = [
     ],
   },
 ];
+
+/** Numeric semver compare: negative when a < b, 0 when equal, positive when a > b. */
+export function compareVersions(a: string, b: string): number {
+  const pa = a.split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = b.split(".").map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+}
+
+/**
+ * The notes a student of `scopeKey` should see, newest first. With no scope
+ * known, only platform-wide notes: a period's own news never leaks to strangers.
+ */
+export function patchNotesForScope(scopeKey: string | null | undefined): PatchNote[] {
+  return PATCH_NOTES.filter((n) => !n.scopes || (!!scopeKey && n.scopes.includes(scopeKey)));
+}

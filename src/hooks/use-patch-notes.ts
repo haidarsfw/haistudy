@@ -1,9 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "@/components/providers/session-provider";
+import { useOptionalScope } from "@/components/providers/scope-provider";
 import { PWA_EVENTS } from "@/lib/pwa-version";
-import { PATCH_NOTES, type PatchNote } from "@/data/patch-notes";
+import {
+  PATCH_NOTES,
+  compareVersions,
+  patchNotesForScope,
+  type PatchNote,
+} from "@/data/patch-notes";
 
 const READ_KEY = "hs-patch-read"; // JSON string[] of versions the user dismissed
 const POPUP_SEEN_KEY = "hs-patch-popup-seen"; // latest version the popup ran for
@@ -22,10 +28,13 @@ function readArray(key: string): string[] {
   }
 }
 
-// Entries the popup should announce, given the last version it ran for.
-function computePopupNotes(seen: string | null): PatchNote[] {
-  if (seen === LATEST) return []; // already shown for the newest version
-  return PATCH_NOTES.slice(0, 1); // only show the single newest version patch note in the popup
+// Entries the popup should announce, given the last version it ran for and the
+// notes that belong to this period.
+function computePopupNotes(seen: string | null, notes: PatchNote[]): PatchNote[] {
+  const newest = notes[0];
+  if (!newest) return [];
+  if (seen && compareVersions(seen, newest.version) >= 0) return []; // already shown for this version or a later one
+  return [newest]; // only show the single newest version patch note in the popup
 }
 
 export interface UsePatchNotesValue {
@@ -47,6 +56,9 @@ export interface UsePatchNotesValue {
  */
 export function usePatchNotes(): UsePatchNotesValue {
   const { session } = useSession();
+  const scopeKey = useOptionalScope()?.scopeKey ?? session?.scopeKey ?? null;
+  // This period's notes plus the platform-wide ones (see `scopes` in the data file).
+  const notes = useMemo(() => patchNotesForScope(scopeKey), [scopeKey]);
   const [readVersions, setReadVersions] = useState<Set<string>>(new Set());
   const [popupSeen, setPopupSeen] = useState<string | null>(LATEST); // assume seen until loaded → no flash
   const [loaded, setLoaded] = useState(false);
@@ -71,9 +83,10 @@ export function usePatchNotes(): UsePatchNotesValue {
       rawRead = null;
     }
     if (rawRead === null) {
-      // First run: mark everything except the newest release as already seen, so
-      // the bell only flags genuinely new updates (not the historical baseline).
-      const seed = PATCH_NOTES.slice(1).map((p) => p.version);
+      // First run: mark everything except this period's newest release as already
+      // seen, so the bell only flags genuinely new updates (not the historical baseline).
+      const newest = notes[0]?.version;
+      const seed = PATCH_NOTES.filter((p) => p.version !== newest).map((p) => p.version);
       try {
         localStorage.setItem(READ_KEY, JSON.stringify(seed));
       } catch {
@@ -94,7 +107,7 @@ export function usePatchNotes(): UsePatchNotesValue {
       setOnboardingDone(false);
     }
     setLoaded(true);
-  }, [session, onboardingKey]);
+  }, [session, onboardingKey, notes]);
 
   // A brand-new user who finishes onboarding in-session should then be eligible
   // for the popup (without a reload).
@@ -142,29 +155,33 @@ export function usePatchNotes(): UsePatchNotesValue {
   );
 
   const markAllRead = useCallback(() => {
-    commitRead(PATCH_NOTES.map((p) => p.version));
-  }, [commitRead]);
+    commitRead([...readRef.current, ...notes.map((p) => p.version)]);
+  }, [commitRead, notes]);
 
   const dismissPopup = useCallback(() => {
-    setPopupSeen(LATEST);
+    const newest = notes[0]?.version ?? "";
+    // Never move the marker backwards: another period on this device may have
+    // already seen a later note.
+    const next = popupSeen && compareVersions(popupSeen, newest) > 0 ? popupSeen : newest;
+    setPopupSeen(next);
     try {
-      localStorage.setItem(POPUP_SEEN_KEY, LATEST);
+      localStorage.setItem(POPUP_SEEN_KEY, next);
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [notes, popupSeen]);
 
   const isRead = useCallback(
     (version: string) => readVersions.has(version),
     [readVersions]
   );
 
-  const unread = loaded ? PATCH_NOTES.filter((p) => !readVersions.has(p.version)) : [];
+  const unread = loaded ? notes.filter((p) => !readVersions.has(p.version)) : [];
   const popupNotes =
-    loaded && onboardingDone ? computePopupNotes(popupSeen) : [];
+    loaded && onboardingDone ? computePopupNotes(popupSeen, notes) : [];
 
   return {
-    notes: PATCH_NOTES,
+    notes,
     unread,
     unreadCount: unread.length,
     markRead,
