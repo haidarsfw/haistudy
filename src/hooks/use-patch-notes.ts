@@ -83,23 +83,25 @@ export function usePatchNotes(): UsePatchNotesValue {
       rawRead = null;
     }
     if (rawRead === null) {
-      // First run: mark everything except this period's newest release as already
-      // seen, so the bell only flags genuinely new updates (not the historical baseline).
-      const newest = notes[0]?.version;
-      const seed = PATCH_NOTES.filter((p) => p.version !== newest).map((p) => p.version);
+      // First run on this device: someone who just arrived has missed nothing, so
+      // every existing note counts as read and the popup as already shown. Only
+      // releases published after this moment ever announce themselves here.
+      const seed = PATCH_NOTES.map((p) => p.version);
       try {
         localStorage.setItem(READ_KEY, JSON.stringify(seed));
+        localStorage.setItem(POPUP_SEEN_KEY, LATEST);
       } catch {
         /* ignore */
       }
       setReadVersions(new Set(seed));
+      setPopupSeen(LATEST);
     } else {
       setReadVersions(new Set(readArray(READ_KEY)));
-    }
-    try {
-      setPopupSeen(localStorage.getItem(POPUP_SEEN_KEY));
-    } catch {
-      setPopupSeen(null);
+      try {
+        setPopupSeen(localStorage.getItem(POPUP_SEEN_KEY));
+      } catch {
+        setPopupSeen(null);
+      }
     }
     try {
       setOnboardingDone(Boolean(localStorage.getItem(onboardingKey)));
@@ -107,7 +109,7 @@ export function usePatchNotes(): UsePatchNotesValue {
       setOnboardingDone(false);
     }
     setLoaded(true);
-  }, [session, onboardingKey, notes]);
+  }, [session, onboardingKey]);
 
   // A brand-new user who finishes onboarding in-session should then be eligible
   // for the popup (without a reload).
