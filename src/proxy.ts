@@ -193,11 +193,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2a. /account belongs to the identity layer, not the app. It is gated on
-  //     hs-account (who you are), never on hs-session (what you bought) —
-  //     someone with an account and no access must still be able to open it,
-  //     since that is exactly where they go to buy one.
-  if (pathname === "/account" || pathname.startsWith("/account/")) {
+  // 2a. /account and /partner belong to the identity layer, not the app. Both
+  //     are gated on hs-account (who you are), never on hs-session (what you
+  //     bought) — someone with an account and no access must still be able to
+  //     open them, since that is exactly where they go to buy one. A partner
+  //     in particular often holds no licence at all for the period they teach.
+  if (
+    pathname === "/account" ||
+    pathname.startsWith("/account/") ||
+    pathname === "/partner"
+  ) {
     if (!request.cookies.get("hs-account")) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
