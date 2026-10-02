@@ -377,30 +377,6 @@ const en: Record<string, string> = {
   "onboarding.g_social_desc":
     "Class chat and forum, voice rooms to study together. Up top: pomodoro, music, and notifications when something is announced.",
   "onboarding.finish": "Start Learning!",
-  "onboarding.welcome_title": "Welcome to haistudy!",
-  "onboarding.welcome_desc": "Let's get to know the features that will help you study more effectively for exams.",
-  "onboarding.sidebar_title": "Navigation",
-  "onboarding.sidebar_desc": "Use the sidebar to switch between pages. Dashboard, Subjects, Schedule, and more are here.",
-  "onboarding.subjects_title": "Subjects",
-  "onboarding.subjects_desc": "Choose a subject to access materials, summaries (highlight & Ask AI from selected text), topics, flashcards, quiz, and discussion forum.",
-  "onboarding.voice_title": "Voice Room",
-  "onboarding.voice_desc": "Click the mic button to study with friends via voice call right from the browser.",
-  "onboarding.search_title": "Search",
-  "onboarding.search_desc": "Search materials, flashcards, or any topic quickly. Use Ctrl+K or Cmd+K shortcut.",
-  "onboarding.settings_title": "Settings",
-  "onboarding.settings_desc": "Set theme, font, language, dark mode, and study preferences to your liking.",
-  "onboarding.dashboard_title": "Your Dashboard",
-  "onboarding.dashboard_desc": "This is your home base. View your progress, study tips, exam countdown, and quick notes all in one place.",
-  "onboarding.chat_title": "Live Chat",
-  "onboarding.chat_desc": "Chat with classmates in real-time. Share notes, ask questions, and study together.",
-  "onboarding.ai_title": "AI Study Assistant",
-  "onboarding.ai_desc": "The AI button sits in the center of the bottom dock (mobile) or bottom-right (desktop). Ask anything about your course materials, or select text in a summary and tap 'Ask AI'. The AI answers from the content in this platform.",
-  "onboarding.pomodoro_title": "Pomodoro Timer",
-  "onboarding.pomodoro_desc": "Use the built-in timer for focused study sessions. 25 minutes focus, 5 minutes break.",
-  "onboarding.notifications_title": "Notifications",
-  "onboarding.notifications_desc": "Get notified when someone mentions you, replies to your thread, or sends an important message.",
-  "onboarding.done_title": "Ready to Learn!",
-  "onboarding.done_desc": "You are ready to use haistudy. Happy studying and good luck on your exams!",
 
   // Post-tutorial
 
@@ -823,7 +799,8 @@ const en: Record<string, string> = {
   "payments.scope_notify_cta":
     "Tell me when it opens",
   "payments.scope_notify_done":
-    "Done — we will reach you on the e-mail and WhatsApp already on your account.",
+    "Saved. We will message you on the WhatsApp or e-mail on your account once this period opens.",
+  "payments.scope_notify_error": "Not saved yet. Check your connection and tap again.",
   "payments.amount_label": "Transfer Amount",
   "payments.amount_unique_hint": "{base} + the last 3 digits of your WhatsApp number ({digits}). Transfer EXACTLY this, do not round it. The unique amount is what lets the admin match your transfer to your order straight away, so the check is quick.",
   "payments.method_label": "Payment Method",
@@ -898,6 +875,7 @@ const en: Record<string, string> = {
   "payments.file_type_error": "File must be an image (JPG/PNG/WEBP/HEIC)",
   "payments.file_too_large": "Max file size is 5MB",
   "payments.file_compress_error": "Failed to process the image",
+  "payments.file_compress_too_big": "This image could not be shrunk on your device. Try taking a fresh screenshot of the transfer.",
   "payments.file_remove": "Remove",
   "payments.file_compressed": "(compressed)",
   "payments.file_processing": "Processing image...",
@@ -1094,7 +1072,7 @@ const en: Record<string, string> = {
   "exam.confirm_quota_unlimited": "You have unlimited attempts.",
   "exam.confirm_rules": "Once the exam starts, you cannot exit until you submit. AI Chat will be disabled during the exam.",
   "exam.confirm_resume":
-    "You have an exam still running. Continue where you left off — no quota is spent.",
+    "You have an exam still running. Continue where you left off; no quota is spent.",
   "exam.confirm_proceed": "Continue and start the exam?",
   "exam.delete_title": "Delete History",
   "exam.delete_confirm_btn": "Delete",

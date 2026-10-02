@@ -623,30 +623,6 @@ const id: Record<string, string> = {
   "onboarding.g_social_desc":
     "Chat dan forum sekelas, voice room buat belajar bareng. Di atas ada pomodoro, musik, dan notifikasi kalau ada pengumuman.",
   "onboarding.finish": "Mulai Belajar!",
-  "onboarding.welcome_title": "Selamat Datang di haistudy!",
-  "onboarding.welcome_desc": "Yuk, kenalan dulu dengan fitur-fitur yang akan membantu kamu belajar lebih efektif untuk ujian.",
-  "onboarding.sidebar_title": "Navigasi",
-  "onboarding.sidebar_desc": "Gunakan sidebar untuk berpindah antar halaman. Dashboard, Mata Kuliah, Jadwal, dan lainnya ada di sini.",
-  "onboarding.subjects_title": "Mata Kuliah",
-  "onboarding.subjects_desc": "Pilih mata kuliah untuk akses materi, rangkuman (bisa highlight & Tanya AI dari teks terpilih), kisi-kisi, flashcards, quiz, dan forum diskusi.",
-  "onboarding.voice_title": "Voice Room",
-  "onboarding.voice_desc": "Klik tombol mic untuk belajar bareng teman via voice call langsung dari browser.",
-  "onboarding.search_title": "Pencarian",
-  "onboarding.search_desc": "Cari materi, flashcard, atau topik apapun dengan cepat. Gunakan shortcut Ctrl+K atau Cmd+K.",
-  "onboarding.settings_title": "Pengaturan",
-  "onboarding.settings_desc": "Atur tema, font, bahasa, dark mode, dan preferensi belajar lainnya sesuai selera kamu.",
-  "onboarding.dashboard_title": "Dashboard Kamu",
-  "onboarding.dashboard_desc": "Ini adalah pusat belajarmu. Lihat progress, tips belajar, countdown ujian, dan catatan cepat di satu tempat.",
-  "onboarding.chat_title": "Chat Langsung",
-  "onboarding.chat_desc": "Ngobrol dengan teman sekelas secara real-time. Sharing catatan, tanya jawab, dan belajar bareng.",
-  "onboarding.ai_title": "AI Asisten Belajar",
-  "onboarding.ai_desc": "Tombol AI ada di tengah dock bawah (HP) atau pojok kanan (desktop). Tanya apa pun tentang materi kuliahmu, atau seleksi teks di rangkuman lalu 'Tanya AI'. AI menjawab dari konten di platform ini.",
-  "onboarding.pomodoro_title": "Timer Pomodoro",
-  "onboarding.pomodoro_desc": "Gunakan timer bawaan untuk sesi belajar fokus. 25 menit fokus, 5 menit istirahat.",
-  "onboarding.notifications_title": "Notifikasi",
-  "onboarding.notifications_desc": "Dapat notifikasi ketika seseorang menyebut kamu, membalas thread, atau mengirim pesan penting.",
-  "onboarding.done_title": "Siap Belajar!",
-  "onboarding.done_desc": "Kamu sudah siap menggunakan haistudy. Selamat belajar dan semoga sukses ujiannya!",
 
   // Post-tutorial
 
@@ -1085,7 +1061,8 @@ const id: Record<string, string> = {
   "payments.scope_notify_cta":
     "Kabari saya kalau sudah buka",
   "payments.scope_notify_done":
-    "Oke — kamu akan dikabari lewat email dan WhatsApp yang ada di akunmu.",
+    "Tersimpan. Kami kabari lewat WhatsApp atau email di akunmu begitu periodenya dibuka.",
+  "payments.scope_notify_error": "Belum tersimpan. Cek koneksimu lalu tekan lagi.",
   "payments.amount_label": "Nominal Transfer",
   "payments.amount_unique_hint": "{base} + 3 digit terakhir nomor WA kamu ({digits}). Transfer PERSIS segini, jangan dibulatkan. Angka unik ini yang bikin admin bisa langsung mencocokkan transferanmu dengan pesananmu, jadi pengecekannya cepat.",
   "payments.method_label": "Metode Pembayaran",
@@ -1160,6 +1137,7 @@ const id: Record<string, string> = {
   "payments.file_type_error": "File harus berupa gambar (JPG/PNG/WEBP/HEIC)",
   "payments.file_too_large": "Ukuran file maksimal 5MB",
   "payments.file_compress_error": "Gagal memproses gambar",
+  "payments.file_compress_too_big": "Gambar ini tidak bisa diperkecil di perangkatmu. Coba screenshot ulang bukti transfernya.",
   "payments.file_remove": "Hapus",
   "payments.file_compressed": "(dikompres)",
   "payments.file_processing": "Memproses gambar...",
@@ -1356,7 +1334,7 @@ const id: Record<string, string> = {
   "exam.confirm_quota_unlimited": "Kamu memiliki kesempatan tak terbatas.",
   "exam.confirm_rules": "Setelah ujian dimulai, kamu tidak bisa keluar sampai selesai mengerjakan. AI Chat akan dinonaktifkan selama ujian.",
   "exam.confirm_resume":
-    "Kamu punya ujian yang belum selesai. Lanjut dari tempat terakhir — kuota tidak dipotong lagi.",
+    "Kamu punya ujian yang belum selesai. Lanjut dari tempat terakhir, kuota tidak dipotong lagi.",
   "exam.confirm_proceed": "Lanjutkan dan mulai ujian?",
   "exam.delete_title": "Hapus Riwayat",
   "exam.delete_confirm_btn": "Hapus",

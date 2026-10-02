@@ -299,10 +299,22 @@ export const SOURCES = [
 ] as const;
 
 // ─── Upload limits ───
-// This MUST match MAX_UPLOAD_BYTES in /api/payments. It said 5MB while the
-// server refused anything over 3MB, so a 4MB screenshot passed every check the
-// buyer could see and was rejected after the upload.
-export const PROOF_MAX_BYTES = 3 * 1024 * 1024; // matches the server's cap
+// Two limits, checked at two different moments, because they measure two
+// different files.
+//
+// PROOF_MAX_BYTES is the RAW pick, checked before compression. Every piece of
+// copy on the page promises 5MB ("Maks 5MB, otomatis dikompres"), and a 4MB
+// phone photo compresses to well under half a megabyte, so it is fine.
+//
+// PROOF_UPLOAD_MAX_BYTES mirrors MAX_UPLOAD_BYTES in /api/payments and is
+// checked on what will actually be SENT. The gap it closes is narrow but real:
+// compressImageToBudget hands back the original file when it cannot compress
+// (an unusual format, an old browser), and that original then hit the server's
+// 3MB cap after the upload. An earlier fix lowered the raw limit to 3MB
+// instead, which rejected every ordinary 3–5MB photo before trying, under a
+// message that still said "maksimal 5MB".
+export const PROOF_MAX_BYTES = 5 * 1024 * 1024; // raw pick, before compression
+export const PROOF_UPLOAD_MAX_BYTES = 3 * 1024 * 1024; // = server cap, after compression
 export const PROOF_TARGET_BYTES = 500 * 1024; // compress target per image
 export const PROOF_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
 

@@ -57,6 +57,7 @@ export async function POST(req: Request) {
     );
 
     if (error) {
+      console.error("[scope-interest] gagal menyimpan:", error.message);
       return NextResponse.json({ error: "Gagal menyimpan" }, { status: 500 });
     }
     return NextResponse.json({ ok: true });

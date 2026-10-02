@@ -297,7 +297,7 @@ export function PaymentsFlow({
   // default stops moving under them — a guess that keeps overwriting a decision
   // is worse than no guess.
   const [scopePicked, setScopePicked] = useState(false);
-  const [notifyState, setNotifyState] = useState<"idle" | "sending" | "done">("idle");
+  const [notifyState, setNotifyState] = useState<"idle" | "sending" | "done" | "failed">("idle");
 
   const [form, setForm] = useState<FormState>({
     // Seeded from the account. Whatever is already there is shown rather than
@@ -1215,12 +1215,16 @@ export function PaymentsFlow({
                                   // the status has to be read. Without this a
                                   // 500 would still say "done" — a promise they
                                   // cannot check and we would never keep.
+                                  // A refusal is said out loud. Going back to
+                                  // the bare button looked like nothing had
+                                  // happened, which reads as "pressed it, it
+                                  // worked" — the one thing it must not say.
                                   if (!res.ok) {
-                                    setNotifyState("idle");
+                                    setNotifyState("failed");
                                     return;
                                   }
                                 } catch {
-                                  setNotifyState("idle");
+                                  setNotifyState("failed");
                                   return;
                                 }
                                 setNotifyState("done");
@@ -1229,6 +1233,11 @@ export function PaymentsFlow({
                             >
                               {t("payments.scope_notify_cta")}
                             </button>
+                          )}
+                          {notifyState === "failed" && (
+                            <p role="alert" className="mt-2 text-xs text-destructive">
+                              {t("payments.scope_notify_error")}
+                            </p>
                           )}
                         </div>
                       )}

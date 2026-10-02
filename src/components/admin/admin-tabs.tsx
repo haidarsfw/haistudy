@@ -18,6 +18,7 @@ import { ReferralCodes } from "./referral-codes";
 import { FeedbackDiscounts } from "./feedback-discounts";
 import { ClassDiscounts } from "./class-discounts";
 import { PartnerList } from "./partner-list";
+import { ScopeWaitlist } from "./scope-waitlist";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import {
   useAdminPurchaseCount,
@@ -154,6 +155,9 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
           <TabsContent value={5}>
             <div className="space-y-6">
               <PurchaseQueue reloadToken={purchaseReload} />
+              {/* Next to the orders, because these are orders that could not be
+                  placed yet: the people who pressed "Kabari saya". */}
+              <ScopeWaitlist />
               <DangerZone
                 purchaseScopeKey={adminScopeKey}
                 purchaseIsAllPeriods={isAllPeriods}

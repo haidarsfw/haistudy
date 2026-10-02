@@ -5,7 +5,12 @@ import { UploadCloud, Loader2, X, ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { compressImageToBudget } from "@/lib/image";
 import { useTranslation } from "@/components/providers/language-provider";
-import { PROOF_ACCEPT, PROOF_MAX_BYTES, PROOF_TARGET_BYTES } from "@/lib/payments";
+import {
+  PROOF_ACCEPT,
+  PROOF_MAX_BYTES,
+  PROOF_TARGET_BYTES,
+  PROOF_UPLOAD_MAX_BYTES,
+} from "@/lib/payments";
 import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
@@ -58,6 +63,13 @@ export function FileUpload({ value, onChange, invalid }: FileUploadProps) {
         const compressed = await compressImageToBudget(file, {
           maxBytes: PROOF_TARGET_BYTES,
         });
+        // Compression can fail quietly and return the original. Catch that
+        // here, while the buyer can still act on it, instead of letting the
+        // server refuse it after the whole order was filled in.
+        if (compressed.size > PROOF_UPLOAD_MAX_BYTES) {
+          setError(t("payments.file_compress_too_big"));
+          return;
+        }
         onChange(compressed);
       } catch {
         setError(t("payments.file_compress_error"));
