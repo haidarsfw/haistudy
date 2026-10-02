@@ -17,6 +17,7 @@ import { AdminSupportChat } from "./admin-support-chat";
 import { ReferralCodes } from "./referral-codes";
 import { FeedbackDiscounts } from "./feedback-discounts";
 import { ClassDiscounts } from "./class-discounts";
+import { PartnerList } from "./partner-list";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import {
   useAdminPurchaseCount,
@@ -32,6 +33,7 @@ import {
   MessageSquarePlus,
   Headphones,
   Gift,
+  Handshake,
 } from "lucide-react";
 
 export const TABS = [
@@ -44,6 +46,7 @@ export const TABS = [
   { label: "Feedback", icon: MessageSquarePlus, value: 6 },
   { label: "Support", icon: Headphones, value: 7 },
   { label: "Referral", icon: Gift, value: 8 },
+  { label: "Partner", icon: Handshake, value: 9 },
 ] as const;
 
 /** Highest deep-linkable ?tab= value. Derived so it cannot drift from TABS. */
@@ -176,6 +179,9 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
               <FeedbackDiscounts />
               <ClassDiscounts />
             </div>
+          </TabsContent>
+          <TabsContent value={9}>
+            <PartnerList />
           </TabsContent>
         </motion.div>
       </AnimatePresence>

@@ -197,7 +197,19 @@ export function AccountPane({
 export function AccountIndexList() {
   return (
     <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-      {ACCOUNT_NAV.map((item) => (
+      {[
+        ...ACCOUNT_NAV,
+        // Lives outside ACCOUNT_NAV on purpose: that list is also the sidebar
+        // and every sub-page's back link, and /partner is not under /account.
+        // Shown to everyone rather than only to partners, because the deal is
+        // per person: not announced, not hidden either. Someone who is not one
+        // lands on the page that explains it and can apply from there.
+        {
+          href: "/partner",
+          label: "Partner",
+          hint: "Ajak teman pakai kodemu, dan lihat komisimu",
+        },
+      ].map((item) => (
         <li key={item.href}>
           <Link
             href={item.href}
