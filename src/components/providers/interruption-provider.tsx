@@ -10,6 +10,9 @@ import {
   useState,
 } from "react";
 
+import { useSession } from "@/components/providers/session-provider";
+import { MODAL_SPENT_KEY } from "@/lib/interruptions";
+
 /**
  * One queue for everything that interrupts someone on the way in.
  *
@@ -50,6 +53,17 @@ interface InterruptionApi {
 const InterruptionContext = createContext<InterruptionApi | null>(null);
 
 /**
+ * The three actions on their own, in a context whose value never changes.
+ *
+ * The slot hook's effects depend on these. Depending on the whole api object
+ * instead meant every change of holder handed every surface a new object, and
+ * every surface then withdrew and re-claimed in response — harmless only
+ * because React happened to batch the two, which is not something to lean on.
+ */
+type InterruptionActions = Pick<InterruptionApi, "claim" | "withdraw" | "release">;
+const InterruptionActionsContext = createContext<InterruptionActions | null>(null);
+
+/**
  * The order, in one place, so it can be read as a sentence: a first-run
  * tutorial outranks a maintenance notice, which outranks a release note,
  * which outranks an install prompt.
@@ -70,12 +84,12 @@ export const INTERRUPTION_PRIORITY = {
   enableNotifications: 40,
 } as const;
 
-/**
- * sessionStorage, deliberately: a new login in a new tab is a new entry and
- * earns one interruption, while reloading the page you are already on is not
- * and should not bring the popup back.
+/*
+ * sessionStorage, deliberately: reloading the page you are already on is not a
+ * new entry and must not bring the popup back. What it stores is WHICH licence
+ * spent its entry — see `src/lib/interruptions.ts` for why a bare flag was not
+ * enough.
  */
-const MODAL_SPENT_KEY = "hs-interrupt-modal-spent";
 
 /**
  * Everyone registers within a few frames of mount, but not in a fixed order —
@@ -89,6 +103,12 @@ const SETTLE_MS = 400;
 const LANES: InterruptionLane[] = ["modal", "banner"];
 
 export function InterruptionProvider({ children }: { children: React.ReactNode }) {
+  const { session } = useSession();
+  const who = session?.licenseKey ?? "";
+  const whoRef = useRef(who);
+  useEffect(() => {
+    whoRef.current = who;
+  }, [who]);
   const [claims, setClaims] = useState<InterruptionClaim[]>([]);
   const [settled, setSettled] = useState(false);
   const [modalSpent, setModalSpent] = useState(false);
@@ -107,25 +127,36 @@ export function InterruptionProvider({ children }: { children: React.ReactNode }
   }, [holders]);
 
   useEffect(() => {
-    try {
-      setModalSpent(sessionStorage.getItem(MODAL_SPENT_KEY) === "1");
-    } catch {
-      // Private mode / blocked storage: every entry gets its one interruption.
-    }
     const timer = setTimeout(() => setSettled(true), SETTLE_MS);
     return () => clearTimeout(timer);
   }, []);
+
+  // Re-read whenever the person changes: a different licence on the same tab
+  // has not spent anything yet.
+  useEffect(() => {
+    if (!who) return;
+    try {
+      setModalSpent(sessionStorage.getItem(MODAL_SPENT_KEY) === who);
+    } catch {
+      // Private mode / blocked storage: every entry gets its one interruption.
+    }
+  }, [who]);
 
   useEffect(() => {
     if (!settled) return;
     setHolders((prev) => {
       const next = { ...prev };
       for (const lane of LANES) {
-        // A lane keeps its holder until that holder lets go. Without this, an
-        // announcement arriving over realtime could pull a dialog out from
-        // under someone halfway through reading it.
+        // The MODAL lane keeps its holder until that holder lets go. Without
+        // this, an announcement arriving over realtime could pull a dialog out
+        // from under someone halfway through reading it.
+        //
+        // The banner lane does not. A strip under the header can be swapped
+        // without interrupting anything, and it must be: holding it would let
+        // the "aktifkan notifikasi" nudge sit on top of a maintenance warning
+        // that arrived a minute later, for the whole session.
         const current = prev[lane];
-        if (current && claims.some((c) => c.id === current)) continue;
+        if (lane === "modal" && current && claims.some((c) => c.id === current)) continue;
         if (lane === "modal" && modalSpent) {
           next[lane] = null;
           continue;
@@ -166,7 +197,7 @@ export function InterruptionProvider({ children }: { children: React.ReactNode }
     const current = holdersRef.current;
     if (current.modal === id) {
       try {
-        sessionStorage.setItem(MODAL_SPENT_KEY, "1");
+        sessionStorage.setItem(MODAL_SPENT_KEY, whoRef.current || "?");
       } catch {
         // Unwritable storage degrades to one interruption per page load.
       }
@@ -182,11 +213,15 @@ export function InterruptionProvider({ children }: { children: React.ReactNode }
     () => ({ holders, claim, withdraw, release }),
     [holders, claim, withdraw, release]
   );
+  const actions = useMemo<InterruptionActions>(
+    () => ({ claim, withdraw, release }),
+    [claim, withdraw, release]
+  );
 
   return (
-    <InterruptionContext.Provider value={api}>
-      {children}
-    </InterruptionContext.Provider>
+    <InterruptionActionsContext.Provider value={actions}>
+      <InterruptionContext.Provider value={api}>{children}</InterruptionContext.Provider>
+    </InterruptionActionsContext.Provider>
   );
 }
 
@@ -212,23 +247,24 @@ export function useInterruptionSlot(
   opts: { lane: InterruptionLane; priority: number; ready: boolean }
 ): InterruptionSlot {
   const api = useContext(InterruptionContext);
+  const actions = useContext(InterruptionActionsContext);
   const { lane, priority, ready } = opts;
 
   useEffect(() => {
-    if (!api) return;
-    if (ready) api.claim({ id, lane, priority });
-    else api.withdraw(id);
-  }, [api, id, lane, priority, ready]);
+    if (!actions) return;
+    if (ready) actions.claim({ id, lane, priority });
+    else actions.withdraw(id);
+  }, [actions, id, lane, priority, ready]);
 
   // Leaving the page is not a dismissal: withdraw, never spend.
   useEffect(() => {
-    if (!api) return;
-    return () => api.withdraw(id);
-  }, [api, id]);
+    if (!actions) return;
+    return () => actions.withdraw(id);
+  }, [actions, id]);
 
   const release = useCallback(() => {
-    api?.release(id);
-  }, [api, id]);
+    actions?.release(id);
+  }, [actions, id]);
 
   return {
     granted: api ? api.holders[lane] === id : true,

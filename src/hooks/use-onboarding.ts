@@ -79,6 +79,13 @@ export function useOnboarding() {
     })();
     return () => {
       cancelled = true;
+      // A cancelled check must not leave the lane held. `session` changes
+      // identity whenever something calls updateSession (the class label does,
+      // on load), which cancels the request in flight; a re-run that then takes
+      // an early return would otherwise leave `deciding` true for the whole
+      // session, and the queue would keep every other popup waiting on a
+      // tutorial that is never coming.
+      setDeciding(false);
     };
   }, [session, storageKey]);
 

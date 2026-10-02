@@ -1,5 +1,6 @@
 "use client";
 
+import { clearInterruptionEntry } from "@/lib/interruptions";
 import {
   createContext,
   useCallback,
@@ -164,6 +165,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Disconnect from voice channels by removing audio elements
     document.querySelectorAll('audio[data-lk-audio]').forEach((el) => el.remove());
 
+    // The next sign-in is a new entry and earns its own interruption.
+    clearInterruptionEntry();
     setSession(null);
     clearStoredSession();
   }, []);
