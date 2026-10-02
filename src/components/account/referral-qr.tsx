@@ -225,12 +225,15 @@ async function drawCard(canvas: HTMLCanvasElement, code: string) {
 export function ReferralQr({ code }: { code: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!open) return;
     let alive = true;
     setBusy(true);
+    setFailed(false);
     (async () => {
       // Wait for the webfonts, or the card renders in the fallback face and
       // stops looking like haistudy.
@@ -240,13 +243,21 @@ export function ReferralQr({ code }: { code: string }) {
         // Not supported — draw anyway.
       }
       if (!alive || !canvasRef.current) return;
-      await drawCard(canvasRef.current, code);
-      if (alive) setBusy(false);
+      try {
+        await drawCard(canvasRef.current, code);
+      } catch {
+        // The encoder is a lazily loaded chunk; on a flaky connection it can
+        // fail to arrive. Without this the spinner turned forever and the
+        // download button stayed disabled, with nothing on screen to say why.
+        if (alive) setFailed(true);
+      } finally {
+        if (alive) setBusy(false);
+      }
     })();
     return () => {
       alive = false;
     };
-  }, [open, code]);
+  }, [open, code, attempt]);
 
   const download = useCallback(() => {
     const c = canvasRef.current;
@@ -260,7 +271,11 @@ export function ReferralQr({ code }: { code: string }) {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      // Revoked later, not straight after the click. Safari on iOS reads the
+      // blob after this handler returns, and revoking it synchronously could
+      // cancel the very download the owner asked for: PNG exists here
+      // precisely because most people open this on a phone.
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
     }, "image/png");
   }, [code]);
 
@@ -270,7 +285,8 @@ export function ReferralQr({ code }: { code: string }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="mt-2 flex items-center gap-1.5 rounded text-xs text-muted-foreground transition-colors hover:text-foreground"
+        // min-h-11: on a phone this toggle is a real control, not a footnote.
+        className="mt-1 flex min-h-11 items-center gap-1.5 rounded px-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <QrGlyph />
         {open ? "Sembunyikan QR" : "Tampilkan QR"}
@@ -289,11 +305,25 @@ export function ReferralQr({ code }: { code: string }) {
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             )}
+            {failed && !busy && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-background/90 px-4 text-center">
+                <p className="text-xs text-muted-foreground">
+                  QR belum bisa dibuat. Biasanya karena koneksi.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setAttempt((n) => n + 1)}
+                  className="min-h-11 rounded-full border border-border px-3.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+                >
+                  Coba lagi
+                </button>
+              </div>
+            )}
           </div>
           <button
             type="button"
             onClick={download}
-            disabled={busy}
+            disabled={busy || failed}
             className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
           >
             <Download className="h-3.5 w-3.5" />

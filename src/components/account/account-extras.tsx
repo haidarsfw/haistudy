@@ -101,15 +101,20 @@ export function AccountReferralCard({
           used; the code had to be remembered and typed into a collapsed field.
           A link is shared in one tap and fills that field by itself. */}
       <div className="mt-3 flex items-center gap-2">
-        <code className="flex-1 truncate rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-2.5 font-mono text-sm text-primary">
-          haistudy.site/@{referral.code}
+        {/* The page's own host, like the partner page and the QR card. On
+            haistudy.site that IS haistudy.site; on dev it points at dev, where
+            the link works, instead of at a production that may not have the
+            route yet. break-all, not truncate: the code is the part worth
+            reading. */}
+        <code className="flex-1 break-all rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-2.5 font-mono text-sm text-primary">
+          {typeof window === "undefined" ? "haistudy.site" : window.location.host}/@{referral.code}
         </code>
         <button
           type="button"
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(
-                `https://haistudy.site/@${referral.code}`
+                `${window.location.origin}/@${referral.code}`
               );
               setLinkCopied(true);
               setTimeout(() => setLinkCopied(false), 2000);

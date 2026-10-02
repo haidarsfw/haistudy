@@ -126,6 +126,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
     const coarse = window.matchMedia("(pointer: coarse)").matches;
     let lenis: Lenis | null = null;
     let raf = 0;
+    let bodyObserver: ResizeObserver | null = null;
     if (!coarse && smoothOk) {
       lenis = new Lenis({
         lerp: 0.16,
@@ -138,6 +139,16 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
         raf = requestAnimationFrame(loop);
       };
       raf = requestAnimationFrame(loop);
+
+      // Lenis measures the document once and on window resize. Its own observer
+      // watches <html>, whose box does not grow when the content does, so a
+      // page that gets taller after load was left with a stale limit: measured
+      // on the home page, the last 30px were unreachable straight after load
+      // (fonts and images landing late) and 95px once the FAQ was opened. Same
+      // class of bug as /account. Body DOES grow with its content, so watch it
+      // and re-measure.
+      bodyObserver = new ResizeObserver(() => lenis?.resize());
+      bodyObserver.observe(document.body);
     }
 
     // In-page anchor jumps: glide with Lenis on desktop, native smooth-scroll on
@@ -183,6 +194,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
     return () => {
       document.removeEventListener("click", onClick);
       if (raf) cancelAnimationFrame(raf);
+      bodyObserver?.disconnect();
       lenis?.destroy();
     };
   }, [pathname]);

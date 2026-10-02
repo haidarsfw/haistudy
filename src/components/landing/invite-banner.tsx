@@ -62,10 +62,17 @@ export function InviteBanner() {
   // simply covered by it. Rather than reach into that header's scroll
   // animation, publish this bar's height and let the header offset itself by
   // it. Zero when there is no invite, which is the normal case.
+  // Whether the bar is actually on screen. The height effect below keys on
+  // this, not on `invite`: the invite is known on mount while the account check
+  // is often still loading, so keying on `invite` measured a bar that had not
+  // rendered yet, cleared the offset, and never ran again when the bar did
+  // appear, leaving the fixed header sitting on top of it.
+  const shown = Boolean(invite) && !dismissed && !loading && !account;
+
   useEffect(() => {
     const el = ref.current;
     const root = document.documentElement;
-    if (!el) {
+    if (!shown || !el) {
       root.style.removeProperty("--hs-invite-h");
       return;
     }
@@ -77,13 +84,13 @@ export function InviteBanner() {
       ro.disconnect();
       root.style.removeProperty("--hs-invite-h");
     };
-  }, [invite]);
+  }, [shown]);
 
   // The cookie lives 7 days so the code survives until they sign up, which
   // means the bar would otherwise greet them on every visit for a week — and
   // greet a SIGNED-IN person with an invitation they cannot use, sometimes
   // their own. Someone with an account has nothing left to accept.
-  if (!invite || dismissed || loading || account) return null;
+  if (!shown || !invite) return null;
 
   return (
     <div
