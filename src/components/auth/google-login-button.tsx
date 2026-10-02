@@ -51,16 +51,31 @@ function rememberNext(next?: string) {
 }
 
 /**
- * Carry a typed referral code across the Google round trip.
+ * Carry a referral code across the Google round trip.
  *
  * Same cookie trick as `next`, and for the same reason. Before this, someone
  * who entered a friend's code and then chose Google lost it silently: no
  * error, no record, and the friend never credited.
+ *
+ * Three cases, and the difference between the first two is the whole point:
+ *
+ *   undefined — the caller has no opinion (/login, /forgot-password). Leave
+ *               `hs-ref` exactly as it is. It may hold a partner link clicked
+ *               days ago, and /login is where a lot of new people go first:
+ *               "Masuk dengan Google" creates the account for someone who has
+ *               none. Clearing it here erased the link the moment they tapped,
+ *               the account was created with no referral, and because a
+ *               referral can only attach at creation, the mentor lost that
+ *               commission permanently.
+ *   ""        — the sign-up form, with the field empty or rejected. That is a
+ *               decision: no referral. Clear it.
+ *   "CODE"    — a typed or confirmed code. It overrides any link.
  */
 function rememberReferral(code?: string) {
   if (typeof document === "undefined") return;
+  if (code === undefined) return;
   document.cookie = "hs-ref=; path=/; max-age=0; samesite=lax";
-  const safe = (code || "").trim().slice(0, 32);
+  const safe = code.trim().slice(0, 32);
   if (safe) {
     document.cookie = `hs-ref=${encodeURIComponent(safe)}; path=/; max-age=600; samesite=lax`;
   }

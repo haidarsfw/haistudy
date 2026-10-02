@@ -325,7 +325,10 @@ export function RegisterForm({ next }: { next?: string }) {
           <GoogleLoginButton
             next={next}
             label="Daftar dengan Google"
-            referral={refState === "valid" ? referral : undefined}
+            // Always a string here, never undefined: an empty field on the
+            // sign-up form is an answer ("no referral"), unlike /login, which
+            // passes nothing and so leaves a partner link's cookie alone.
+            referral={refState === "valid" ? referral : ""}
             hint="Langsung terkonfirmasi, tanpa cek email"
           />
           <AuthDivider />
