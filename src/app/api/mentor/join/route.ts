@@ -6,6 +6,8 @@ import { AccountError } from "@/lib/auth/account";
 import {
   GROUP_COLUMNS,
   activeMemberCount,
+  checkGroupJoinQuota,
+  recordGroupJoinAttempt,
   toMentorGroup,
   type GroupRow,
 } from "@/lib/mentor/groups";
@@ -38,6 +40,18 @@ export async function POST(req: Request) {
     }
 
     const supabase = createServerClient()!;
+
+    // Dihitung sebelum mencari, dan dihitung juga kalau kodenya benar: kalau
+    // hanya tebakan yang salah yang dihitung, tebakan yang benar jadi gratis.
+    const gate = await checkGroupJoinQuota(supabase, account.id);
+    if (!gate.allowed) {
+      return NextResponse.json(
+        { error: "Terlalu banyak percobaan. Coba lagi sebentar lagi." },
+        { status: 429, headers: { "Retry-After": String(gate.retryAfter) } }
+      );
+    }
+    await recordGroupJoinAttempt(supabase, account.id);
+
     const { data: group } = await supabase
       .from("mentor_groups")
       .select(GROUP_COLUMNS)

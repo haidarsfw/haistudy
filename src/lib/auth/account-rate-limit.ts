@@ -34,7 +34,11 @@ export type RateKind =
   | "nickname_check"
   // Counted per account. Sends mail to a fixed address, so the ceiling is what
   // stops the form being used to flood an inbox.
-  | "delete_request";
+  | "delete_request"
+  // Counted per account. A correct six-letter invite code opens somebody
+  // else's group; an unlimited guess is still a guess that can run forever.
+  // Allowed in the table by migration 079.
+  | "group_join";
 
 export interface RateDecision {
   allowed: boolean;

@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ScopeTuple } from "@/types/scope";
 import { scopeKey } from "@/lib/scope";
+import { recordRateEvent } from "@/lib/auth/account-rate-limit";
 
 /**
  * Grup mentoring, sisi server.
@@ -231,4 +232,47 @@ export async function roleInGroup(
     .eq("status", "active")
     .maybeSingle();
   return (member?.role as MemberRole) ?? null;
+}
+
+// ─── Batas laju masuk grup ───
+//
+// Per AKUN, bukan per IP: yang menebak di sini sudah masuk, jadi akunnya adalah
+// identitas yang paling sulit diganti. Mentee sungguhan memasukkan satu kode,
+// mungkin dua setelah salah ketik; sepuluh dalam lima belas menit sudah bukan
+// orang yang sedang bergabung ke kelasnya.
+
+const JOIN_MAX = 10;
+const JOIN_WINDOW_MS = 15 * 60_000;
+
+export async function checkGroupJoinQuota(
+  supabase: SupabaseClient,
+  accountId: string
+): Promise<{ allowed: boolean; retryAfter: number }> {
+  const since = new Date(Date.now() - JOIN_WINDOW_MS).toISOString();
+  const { data, error } = await supabase
+    .from("account_rate_events")
+    .select("created_at")
+    .eq("kind", "group_join")
+    .eq("subject", `account:${accountId}`)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(JOIN_MAX + 1);
+
+  // Gagal terbuka, sama seperti pembatas lainnya: pembatas yang melempar error
+  // menjatuhkan fitur yang dilindunginya.
+  if (error || !data || data.length < JOIN_MAX) return { allowed: true, retryAfter: 0 };
+
+  const oldest = new Date(data[data.length - 1].created_at as string).getTime();
+  return {
+    allowed: false,
+    retryAfter: Math.max(30, Math.ceil((oldest + JOIN_WINDOW_MS - Date.now()) / 1000)),
+  };
+}
+
+export async function recordGroupJoinAttempt(
+  supabase: SupabaseClient,
+  accountId: string
+): Promise<void> {
+  // Lewat penulis bersama, satu-satunya jalan ke tabel ini.
+  await recordRateEvent(supabase, "group_join", `account:${accountId}`);
 }
