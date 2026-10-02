@@ -264,7 +264,8 @@ export async function availableDiscounts(
  */
 export async function creditReferralOnApproval(
   supabase: SupabaseClient,
-  refereeAccountId: string
+  refereeAccountId: string,
+  opts: { skipCredit?: boolean } = {}
 ): Promise<void> {
   const { data: use } = await supabase
     .from("referral_uses")
@@ -280,6 +281,12 @@ export async function creditReferralOnApproval(
       .eq("id", use.id)
       .is("credited_at", null);
   }
+
+  // `skipCredit` means the referrer was paid in cash instead: they are an active
+  // partner and this sale earned them a commission. The use is still marked
+  // settled above — leaving it open would let a later run pay for it a second
+  // time if the partnership were ever paused. One reward per sale, never two.
+  if (opts.skipCredit) return;
 
   // Campaign codes have no owner, so nobody is paid — correct, since a promo
   // code is the owner's own marketing rather than a referral.

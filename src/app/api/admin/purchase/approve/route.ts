@@ -7,6 +7,7 @@ import { resolveAdminScope } from "@/lib/auth/admin-scope";
 import { generateUniqueKey } from "@/lib/license/generator";
 import { recordActivity } from "@/lib/admin/activity";
 import { creditReferralOnApproval } from "@/lib/referral/rewards";
+import { recordPartnerCommission } from "@/lib/mentor/commission";
 import { sendAccessApprovedEmail } from "@/lib/notifications/account-email";
 import { PACKAGE_LABELS, packageMaxDevices, type PurchasablePackageId } from "@/lib/payments";
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
@@ -243,7 +244,30 @@ export async function POST(request: Request) {
     // This is the moment a referral becomes real. Not at signup — a programme
     // that pays for registrations pays for throwaway addresses. Idempotent, so
     // approving twice cannot mint a second milestone.
-    await creditReferralOnApproval(supabase, accountId);
+    //
+    // A partner is paid in cash INSTEAD of the Rp5.000 balance, not on top of
+    // it: the ladder already pays them several times that. The commission row
+    // is written here, at approval, because the rate depends on how many people
+    // they had brought AT THIS MOMENT and the price of the package THEN.
+    // Neither can be recovered afterwards, which is why it is written down once
+    // and never recomputed.
+    const commission = await recordPartnerCommission(supabase, {
+      purchaseId: id,
+      buyerAccountId: accountId,
+      // What was actually paid, after any discount. Paying a percentage of the
+      // list price on a discounted sale takes the discount out of the margin
+      // twice — once for the buyer, once again for the partner.
+      baseAmount: typeof meta.basePrice === "number" ? meta.basePrice : 0,
+    });
+    await creditReferralOnApproval(supabase, accountId, {
+      skipCredit: commission !== null,
+    });
+    if (commission) {
+      console.log(
+        `[komisi] partner ${commission.partnerId} penjualan ke-${commission.nth}: ` +
+          `${commission.ratePercent}% dari ${commission.baseAmount} = ${commission.amount}`
+      );
+    }
 
     // A period bought is a rename earned. Tied to approval rather than to
     // submitting an order so an unpaid order cannot buy a new identity, and
