@@ -22,6 +22,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
+import {
+  INTERRUPTION_PRIORITY,
+  useInterruptionSlot,
+} from "@/components/providers/interruption-provider";
 import { sounds } from "@/lib/sounds";
 import {
   PWA_EVENTS,
@@ -58,8 +62,31 @@ export function InstallBanner() {
   // Android/desktop with no native prompt: tapping "Pasang" reveals the manual
   // steps inline instead of silently closing (Item 10 fix).
   const [manualOpen, setManualOpen] = useState(false);
+  // Opened from Settings → "Install app". A dialog someone asked for is not an
+  // interruption, so it skips the queue and always shows.
+  const [onRequestOpen, setOnRequestOpen] = useState(false);
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
   const licenseKey = session?.licenseKey;
+
+  // Below the tutorial, a maintenance notice and a release note: useful, never
+  // urgent. Dismissing it is remembered until the next SW_VERSION anyway, so
+  // losing a turn costs nothing.
+  const { granted, release } = useInterruptionSlot("install-prompt", {
+    lane: "modal",
+    priority: INTERRUPTION_PRIORITY.install,
+    ready: open && !onRequestOpen,
+  });
+  const visible = open && (granted || onRequestOpen);
+
+  // Marked when it is actually on screen, not when it asks for a turn — the
+  // notifications banner reads this flag to stay out of the way of a popup that
+  // really appeared.
+  useEffect(() => {
+    if (!visible) return;
+    try {
+      sessionStorage.setItem(INSTALL_SHOWN_KEY, "1");
+    } catch {}
+  }, [visible]);
 
   useEffect(() => {
     if (isStandalone()) return;
@@ -71,12 +98,6 @@ export function InstallBanner() {
         return null;
       }
     };
-    const sset = (k: string, v: string) => {
-      try {
-        sessionStorage.setItem(k, v);
-      } catch {}
-    };
-
     // Seed from the global early-capture (layout.tsx) so a prompt fired before
     // this component mounted (e.g. before login) is still usable.
     if (typeof window !== "undefined" && window.__hsBIP) {
@@ -98,10 +119,15 @@ export function InstallBanner() {
     })();
     let gateOpen = !firstLogin || sget(ONBOARDING_DONE_SESSION_KEY) === "1";
 
+    // `asked` stops the two triggers (beforeinstallprompt and the iOS timer)
+    // from both asking. The session flag is no longer the guard: it is now set
+    // when the dialog is really displayed, which can be never if the queue
+    // hands this entry to something more important.
+    let asked = false;
     const maybeShow = () => {
-      if (!gateOpen) return;
+      if (!gateOpen || asked) return;
       if (sget(INSTALL_SHOWN_KEY) === "1" || isInstallDismissed()) return;
-      sset(INSTALL_SHOWN_KEY, "1");
+      asked = true;
       setOpen(true);
     };
 
@@ -115,7 +141,7 @@ export function InstallBanner() {
 
     // Manual trigger from Settings "Install app" - always shows.
     const onRequest = () => {
-      sset(INSTALL_SHOWN_KEY, "1");
+      setOnRequestOpen(true);
       setOpen(true);
     };
 
@@ -125,6 +151,7 @@ export function InstallBanner() {
       if (typeof window !== "undefined") window.__hsBIP = null;
       setHasPrompt(false);
       setOpen(false);
+      setOnRequestOpen(false);
     };
 
     // First login: surface as soon as onboarding completes.
@@ -158,6 +185,8 @@ export function InstallBanner() {
   const close = () => {
     dismissInstallUntilNextVersion();
     setOpen(false);
+    setOnRequestOpen(false);
+    release();
   };
 
   const handleInstall = async () => {
@@ -176,6 +205,8 @@ export function InstallBanner() {
       if (typeof window !== "undefined") window.__hsBIP = null;
       setHasPrompt(false);
       setOpen(false);
+      setOnRequestOpen(false);
+      release();
       return;
     }
     // No native prompt and not iOS: reveal the manual steps inline instead of
@@ -197,7 +228,7 @@ export function InstallBanner() {
   const showGotIt = isIos || manualOpen;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) close(); }}>
+    <Dialog open={visible} onOpenChange={(o) => { if (!o) close(); }}>
       <DialogContent
         showCloseButton={false}
         className="max-w-sm rounded-2xl border-border/30 bg-background/90 shadow-2xl backdrop-blur-xl duration-200"

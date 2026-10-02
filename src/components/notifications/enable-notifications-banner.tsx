@@ -9,6 +9,10 @@ import { useSession } from "@/components/providers/session-provider";
 import { sounds } from "@/lib/sounds";
 import { toast } from "@/components/ui/toast";
 import { INSTALL_SHOWN_KEY, isInstallDismissed } from "@/lib/pwa-version";
+import {
+  INTERRUPTION_PRIORITY,
+  useInterruptionSlot,
+} from "@/components/providers/interruption-provider";
 
 const DISMISSED_AT_KEY = "hs-notif-banner-dismissed-at";
 const REPROMPT_AFTER_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -50,35 +54,46 @@ export function EnableNotificationsBanner() {
     }
   }, []);
 
-  if (!mounted || !session || dismissed || subscribed) return null;
-  if (!supported && !iosNeedsInstall) return null;
-  if (permission === "denied") return null; // can't re-prompt programmatically
-  if (supported && permission === "granted" && !subscribed) {
-    // permission granted but no subscription - show "Enable" so user can subscribe
-  }
-
   // The iOS "Add to Home Screen" hint duplicates the InstallBanner POPUP, so the
   // popup is primary. This header reminder only appears AFTER the popup has been
   // shown & dismissed once, and never in the same session the popup showed —
   // so mobile first-login stays clean (only the welcome banner there). Returning
   // users see it occasionally (7-day dismiss cooldown above).
-  if (iosNeedsInstall) {
-    const popupDismissed = (() => {
-      try {
-        return isInstallDismissed();
-      } catch {
-        return false;
-      }
-    })();
-    const popupShownThisSession = (() => {
-      try {
-        return sessionStorage.getItem(INSTALL_SHOWN_KEY) === "1";
-      } catch {
-        return false;
-      }
-    })();
-    if (!popupDismissed || popupShownThisSession) return null;
-  }
+  const iosHintReady = (() => {
+    if (!iosNeedsInstall) return true;
+    let popupDismissed = false;
+    let popupShownThisSession = false;
+    try {
+      popupDismissed = isInstallDismissed();
+    } catch {}
+    try {
+      popupShownThisSession = sessionStorage.getItem(INSTALL_SHOWN_KEY) === "1";
+    } catch {}
+    return popupDismissed && !popupShownThisSession;
+  })();
+
+  const eligible =
+    mounted &&
+    Boolean(session) &&
+    !dismissed &&
+    !subscribed &&
+    (supported || iosNeedsInstall) &&
+    // Permission already refused: the browser will not let us ask again, so a
+    // button that cannot work would be a lie.
+    permission !== "denied" &&
+    iosHintReady;
+
+  // Above a standing welcome notice, below a warning. Every condition in
+  // `eligible` is one the hook must see on every render, so the claim goes in
+  // before the first early return — a hook that disappears on some renders
+  // breaks the order React relies on.
+  const { granted } = useInterruptionSlot("enable-notifications", {
+    lane: "banner",
+    priority: INTERRUPTION_PRIORITY.enableNotifications,
+    ready: eligible,
+  });
+
+  if (!eligible || !granted) return null;
 
   const handleDismiss = () => {
     try {

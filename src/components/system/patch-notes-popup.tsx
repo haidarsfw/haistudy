@@ -10,6 +10,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { usePatchNotes } from "@/hooks/use-patch-notes";
+import {
+  INTERRUPTION_PRIORITY,
+  useInterruptionSlot,
+} from "@/components/providers/interruption-provider";
 
 /**
  * One-time "what's new" popup. Shows automatically the first time a user lands
@@ -21,15 +25,26 @@ export function PatchNotesPopup() {
   const { popupNotes, dismissPopup } = usePatchNotes();
   const [open, setOpen] = useState(false);
 
+  // Last in the modal queue on purpose: a release note is the least urgent
+  // thing anyone could be shown on arrival. If it loses its turn the notes stay
+  // in the notification bell, which is where people look for them anyway.
+  const { granted, release } = useInterruptionSlot("patch-notes", {
+    lane: "modal",
+    priority: INTERRUPTION_PRIORITY.patchNotes,
+    ready: popupNotes.length > 0,
+  });
+
   useEffect(() => {
-    if (popupNotes.length > 0) setOpen(true);
-  }, [popupNotes.length]);
+    if (popupNotes.length > 0 && granted) setOpen(true);
+  }, [popupNotes.length, granted]);
 
   const close = () => {
     setOpen(false);
     dismissPopup();
+    release();
   };
 
+  if (!granted) return null;
   if (popupNotes.length === 0 && !open) return null;
 
   return (

@@ -61,6 +61,7 @@ import { toast } from "@/components/ui/toast";
 import { APP_EVENTS } from "@/lib/events";
 import { useSupportUnread } from "@/hooks/use-support-unread";
 import { ActiveSupportProvider } from "@/components/providers/active-support-provider";
+import { InterruptionProvider } from "@/components/providers/interruption-provider";
 import { SWRegister } from "@/components/notifications/sw-register";
 import { EnableNotificationsBanner } from "@/components/notifications/enable-notifications-banner";
 import { useSupportNotifier } from "@/hooks/use-support-notifier";
@@ -72,7 +73,10 @@ import { VipWelcomeListener } from "@/components/system/vip-welcome-listener";
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ActiveSupportProvider>
-      <AppShellInner>{children}</AppShellInner>
+      {/* One interruption per entry; see interruption-provider.tsx. */}
+      <InterruptionProvider>
+        <AppShellInner>{children}</AppShellInner>
+      </InterruptionProvider>
     </ActiveSupportProvider>
   );
 }

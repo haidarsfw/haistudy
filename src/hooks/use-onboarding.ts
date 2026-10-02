@@ -7,14 +7,16 @@ import { PWA_EVENTS, ONBOARDING_DONE_SESSION_KEY } from "@/lib/pwa-version";
 
 const STORAGE_KEY = "hs-onboarding-complete";
 
-export type PostPhase = "none" | "contact-form" | "settings-setup";
-
 export function useOnboarding() {
   const { session } = useSession();
   const [currentStep, setCurrentStep] = useState(0);
   const [shouldShow, setShouldShow] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [postPhase, setPostPhase] = useState<PostPhase>("none");
+  // True while the server is still being asked whether this account finished
+  // the tour elsewhere. The interruption queue holds the modal lane open for
+  // that answer; otherwise whether the tutorial or the release note comes
+  // first on a first login would come down to which fetch returned faster.
+  const [deciding, setDeciding] = useState(false);
 
   const storageKey = session?.licenseKey
     ? `hs-onboarding-${session.licenseKey}`
@@ -48,6 +50,7 @@ export function useOnboarding() {
     }
     // Not cached locally → ask the server whether the ACCOUNT already finished
     // the tour on another device (cross-device, once-only). Cache the answer.
+    setDeciding(true);
     (async () => {
       try {
         const res = await fetch("/api/onboarding", { credentials: "same-origin" });
@@ -58,13 +61,20 @@ export function useOnboarding() {
             try {
               localStorage.setItem(storageKey, new Date().toISOString());
             } catch {}
+            setDeciding(false);
             return; // done elsewhere → never show here
           }
         }
-        if (!cancelled) setShouldShow(true);
+        if (!cancelled) {
+          setShouldShow(true);
+          setDeciding(false);
+        }
       } catch {
         // Network error → show it; localStorage still gates repeats on this device.
-        if (!cancelled) setShouldShow(true);
+        if (!cancelled) {
+          setShouldShow(true);
+          setDeciding(false);
+        }
       }
     })();
     return () => {
@@ -107,7 +117,6 @@ export function useOnboarding() {
       if (nextStep >= ONBOARDING_STEPS.length) {
         persistComplete();
         setShouldShow(false);
-        setPostPhase("contact-form");
         return prev;
       }
       return nextStep;
@@ -124,64 +133,50 @@ export function useOnboarding() {
     });
   }, [shouldSkip]);
 
-  const complete = useCallback(() => {
-    persistComplete();
-    setShouldShow(false);
-    setPostPhase("contact-form");
-  }, [persistComplete]);
-
   /**
    * "Lewati" — out, and out of the whole thing.
    *
-   * Deliberately NOT complete(). Finishing the tour opens two more screens
-   * after it, a contact form and a settings pass. Someone who pressed skip has
-   * just said they want none of this; handing them two forms is the same
-   * refusal to take no for an answer that made the tour unpopular. It is still
-   * marked done, so it never comes back.
+   * Finishing and skipping now end in the same place, which they did not
+   * before: the tour used to hand whoever reached the end two more forms, a
+   * contact form and a settings pass. Both were already editable from the
+   * profile popover and from Settings, and arriving at them by pressing
+   * "Selesai" read as a refusal to take no for an answer. The tour is the one
+   * interruption a first login gets.
    */
   const skip = useCallback(() => {
     persistComplete();
     setShouldShow(false);
-    setPostPhase("none");
   }, [persistComplete]);
 
-  const advancePostPhase = useCallback(() => {
-    setPostPhase((current) => {
-      if (current === "contact-form") return "settings-setup";
-      return "none";
-    });
-  }, []);
-
-  // Fire ONBOARDING_DONE exactly once, when the whole flow (tutorial + post
-  // phases) ends. The install banner waits for this on a first login so it
-  // never overlaps the tutorial spotlight. Side-effect lives in an effect (not
-  // the setState updater) so React strict-mode double-invocation can't dupe it.
-  const wasInPostPhase = useRef(false);
+  // Announce the end of the tour exactly once. The install prompt listens for
+  // this so it never lands on top of the spotlight; the interruption queue is
+  // what actually keeps it from showing in the same entry. Side effect lives in
+  // an effect, not in a setState updater, so strict mode cannot double-fire it.
+  const wasShowing = useRef(false);
   useEffect(() => {
-    if (postPhase === "contact-form" || postPhase === "settings-setup") {
-      wasInPostPhase.current = true;
-    } else if (postPhase === "none" && wasInPostPhase.current) {
-      wasInPostPhase.current = false;
-      try {
-        sessionStorage.setItem(ONBOARDING_DONE_SESSION_KEY, "1");
-        window.dispatchEvent(new Event(PWA_EVENTS.ONBOARDING_DONE));
-      } catch {
-        // storage / dispatch unavailable
-      }
+    if (shouldShow) {
+      wasShowing.current = true;
+      return;
     }
-  }, [postPhase]);
+    if (!wasShowing.current) return;
+    wasShowing.current = false;
+    try {
+      sessionStorage.setItem(ONBOARDING_DONE_SESSION_KEY, "1");
+      window.dispatchEvent(new Event(PWA_EVENTS.ONBOARDING_DONE));
+    } catch {
+      // storage / dispatch unavailable
+    }
+  }, [shouldShow]);
 
   return {
     shouldShow,
+    deciding,
     currentStep,
     step: ONBOARDING_STEPS[currentStep],
     totalSteps: ONBOARDING_STEPS.length,
     isMobile,
     next,
     prev,
-    complete,
     skip,
-    postPhase,
-    advancePostPhase,
   };
 }

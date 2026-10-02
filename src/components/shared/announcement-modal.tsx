@@ -8,6 +8,10 @@ import { Megaphone, ArrowRight, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { parseAnnouncementCta } from "@/lib/announcement-cta";
 import { useAnnouncements } from "@/hooks/use-announcements";
+import {
+  INTERRUPTION_PRIORITY,
+  useInterruptionSlot,
+} from "@/components/providers/interruption-provider";
 import type { Announcement } from "@/types";
 
 // Shows the newest active announcement in a centered modal once per user.
@@ -40,6 +44,15 @@ export function AnnouncementModal() {
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const pickedRef = useRef(false);
 
+  // Queued like everything else on the way in. A notice that loses its turn is
+  // not lost: it stays in the header banner and the notification bell, and it
+  // is still waiting here the next time the person comes in.
+  const { granted, release } = useInterruptionSlot("announcement-modal", {
+    lane: "modal",
+    priority: INTERRUPTION_PRIORITY.announcement,
+    ready: announcement !== null,
+  });
+
   useEffect(() => {
     // Auto-pop at most once per session, when the shared list first arrives.
     if (pickedRef.current || announcements.length === 0) return;
@@ -56,9 +69,10 @@ export function AnnouncementModal() {
   const dismiss = () => {
     if (announcement) markSeen(announcement.id);
     setAnnouncement(null);
+    release();
   };
 
-  if (!announcement) return null;
+  if (!announcement || !granted) return null;
   const { message, cta, title } = parseAnnouncementCta(announcement.message);
 
   return (

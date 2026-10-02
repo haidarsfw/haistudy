@@ -5,6 +5,10 @@ import Link from "next/link";
 import { X, Info, AlertTriangle, Wrench, ArrowRight } from "lucide-react";
 import { parseAnnouncementCta } from "@/lib/announcement-cta";
 import { useAnnouncements } from "@/hooks/use-announcements";
+import {
+  INTERRUPTION_PRIORITY,
+  useInterruptionSlot,
+} from "@/components/providers/interruption-provider";
 
 const TYPE_CONFIG = {
   info: {
@@ -31,17 +35,30 @@ export function AnnouncementBanner() {
   const announcements = useAnnouncements();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
-  const visible = announcements.filter((a) => !dismissed.has(a.id));
-  if (visible.length === 0) return null;
+  const visible = announcements
+    .filter((a) => !dismissed.has(a.id))
+    .filter((a) => !parseAnnouncementCta(a.message).modalOnly);
+
+  // A standing welcome notice is wallpaper and yields to anything with a
+  // deadline; a warning or a maintenance window does not. Same component, two
+  // very different claims on someone's attention.
+  const urgent = visible.some((a) => a.type !== "info");
+  const { granted } = useInterruptionSlot("announcement-banner", {
+    lane: "banner",
+    priority: urgent
+      ? INTERRUPTION_PRIORITY.announcement
+      : INTERRUPTION_PRIORITY.announcementInfo,
+    ready: visible.length > 0,
+  });
+
+  if (visible.length === 0 || !granted) return null;
 
   return (
     // Compact: tight padding + smaller text + leading so the welcome notice
     // doesn't eat vertical space, while keeping all of its content.
     <div className="space-y-1 px-4 pt-1.5">
       {visible.map((ann) => {
-        const { message, cta, modalOnly } = parseAnnouncementCta(ann.message);
-        // Modal-only announcements pop in the center modal, never the banner.
-        if (modalOnly) return null;
+        const { message, cta } = parseAnnouncementCta(ann.message);
         const config = TYPE_CONFIG[ann.type];
         const Icon = config.icon;
 

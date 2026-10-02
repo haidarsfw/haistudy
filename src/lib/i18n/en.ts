@@ -403,15 +403,6 @@ const en: Record<string, string> = {
   "onboarding.done_desc": "You are ready to use haistudy. Happy studying and good luck on your exams!",
 
   // Post-tutorial
-  "onboarding.post_contact_title": "Stay Connected (Optional)",
-  "onboarding.post_contact_desc": "Add your phone or email so we can reach you with important updates.",
-  "onboarding.post_contact_skip": "Skip",
-  "onboarding.post_contact_save": "Save",
-  "onboarding.post_contact_phone": "Phone Number",
-  "onboarding.post_contact_email": "Email",
-  "onboarding.post_settings_title": "Personalize Your Experience",
-  "onboarding.post_settings_desc": "Choose your preferred theme, font, language, and display settings.",
-  "onboarding.post_settings_done": "Start Learning!",
 
   // Support
   "nav.support": "Contact Support",

@@ -649,15 +649,6 @@ const id: Record<string, string> = {
   "onboarding.done_desc": "Kamu sudah siap menggunakan haistudy. Selamat belajar dan semoga sukses ujiannya!",
 
   // Post-tutorial
-  "onboarding.post_contact_title": "Tetap Terhubung (Opsional)",
-  "onboarding.post_contact_desc": "Tambahkan nomor HP atau email agar kami bisa menghubungimu untuk info penting.",
-  "onboarding.post_contact_skip": "Lewati",
-  "onboarding.post_contact_save": "Simpan",
-  "onboarding.post_contact_phone": "Nomor HP",
-  "onboarding.post_contact_email": "Email",
-  "onboarding.post_settings_title": "Personalisasi Tampilanmu",
-  "onboarding.post_settings_desc": "Pilih tema, font, bahasa, dan pengaturan tampilan sesuai selera kamu.",
-  "onboarding.post_settings_done": "Mulai Belajar!",
 
   // Support
   "nav.support": "Layanan Pelanggan",

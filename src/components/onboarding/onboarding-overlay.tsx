@@ -4,10 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import { resolveStepTarget } from "@/lib/onboarding-steps";
-import { useProfile } from "@/hooks/use-profile";
 import { useTranslation } from "@/components/providers/language-provider";
-import { PostTutorialContact } from "./post-tutorial-contact";
-import { PostTutorialSettings } from "./post-tutorial-settings";
+import {
+  INTERRUPTION_PRIORITY,
+  useInterruptionSlot,
+} from "@/components/providers/interruption-provider";
 import { springSmooth } from "@/lib/motion";
 
 interface SpotlightRect {
@@ -18,12 +19,38 @@ interface SpotlightRect {
 }
 
 export function OnboardingOverlay() {
-  const { shouldShow, currentStep, step, totalSteps, isMobile, next, prev, skip, postPhase, advancePostPhase } =
+  const { shouldShow, deciding, currentStep, step, totalSteps, isMobile, next, prev, skip } =
     useOnboarding();
   const { t } = useTranslation();
-  const { profile, loading: profileLoading } = useProfile();
   const [spotlight, setSpotlight] = useState<SpotlightRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // The tutorial outranks everything else on the way in, and it holds the lane
+  // while the server is still being asked whether this account has seen it —
+  // otherwise a release note could claim the slot during that round trip and
+  // a first-time user would get the changelog instead of the tour.
+  const { granted, release } = useInterruptionSlot("onboarding", {
+    lane: "modal",
+    priority: INTERRUPTION_PRIORITY.onboarding,
+    ready: shouldShow || deciding,
+  });
+
+  const visible = shouldShow && granted;
+
+  // Finishing and skipping both end here, so both spend the entry. Only a tour
+  // that actually appeared spends it: holding the lane during the server check
+  // and then learning the account is already done is a withdrawal, not a
+  // dismissal, and the next surface in the queue should still get its turn.
+  const hasShown = useRef(false);
+  useEffect(() => {
+    if (visible) {
+      hasShown.current = true;
+      return;
+    }
+    if (!hasShown.current) return;
+    hasShown.current = false;
+    release();
+  }, [visible, release]);
 
   // Resolve the correct target selector based on mobile state. Shared with
   // use-onboarding, which uses the same answer to skip steps whose element is
@@ -37,7 +64,7 @@ export function OnboardingOverlay() {
   // nothing highlighted). Re-measure on scroll/resize so the hole + tooltip
   // keep tracking the element.
   useEffect(() => {
-    if (!shouldShow || !resolvedTarget) {
+    if (!visible || !resolvedTarget) {
       setSpotlight(null);
       return;
     }
@@ -87,42 +114,9 @@ export function OnboardingOverlay() {
       window.removeEventListener("resize", remeasure);
       window.removeEventListener("scroll", remeasure, true);
     };
-  }, [shouldShow, resolvedTarget]);
+  }, [visible, resolvedTarget]);
 
-  // Auto-skip the post-tutorial contact modal when both phone & email are
-  // already linked to the account (propagated from the purchase at approval).
-  useEffect(() => {
-    if (
-      !shouldShow &&
-      postPhase === "contact-form" &&
-      !profileLoading &&
-      profile.phone &&
-      profile.email
-    ) {
-      advancePostPhase();
-    }
-  }, [shouldShow, postPhase, profileLoading, profile.phone, profile.email, advancePostPhase]);
-
-  // Render post-tutorial phases
-  if (!shouldShow && postPhase === "contact-form") {
-    // Contact already on file → don't show the modal (the effect above advances
-    // the phase). While the profile is still loading, render nothing to avoid a
-    // flash of the form before we know whether to skip it.
-    if (profileLoading) return null;
-    if (profile.phone && profile.email) return null;
-    return (
-      <PostTutorialContact
-        onDone={advancePostPhase}
-        initialPhone={profile.phone ?? ""}
-        initialEmail={profile.email ?? ""}
-      />
-    );
-  }
-  if (!shouldShow && postPhase === "settings-setup") {
-    return <PostTutorialSettings onDone={advancePostPhase} />;
-  }
-
-  if (!shouldShow || !step) return null;
+  if (!visible || !step) return null;
 
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === totalSteps - 1;
