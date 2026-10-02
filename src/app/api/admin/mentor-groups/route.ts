@@ -178,8 +178,42 @@ export async function POST(req: Request) {
     console.error("Grup dibuat tapi baris mentor gagal:", memberError.message);
   }
 
+  // Menjadi mentor = menjadi partner, otomatis (keputusan pemilik, 3 Okt 2026):
+  // satu langkah untuk mentor, bukan dua persetujuan terpisah.
+  //
+  // Satu pengecualian: partner yang sedang DIJEDA tidak diaktifkan diam-diam.
+  // Jeda adalah keputusan pemilik sendiri; membuat grup untuk orang itu belum
+  // tentu berarti mencabutnya, jadi dibiarkan dan dikatakan di respons.
+  let partnerStatus: string = "active";
+  const { data: existingPartner } = await supabase
+    .from("partners")
+    .select("id, status")
+    .eq("account_id", owner.id)
+    .maybeSingle();
+  if (existingPartner?.status === "paused") {
+    partnerStatus = "paused";
+  } else if (existingPartner?.status !== "active") {
+    const now = new Date().toISOString();
+    const { error: partnerError } = await supabase.from("partners").upsert(
+      {
+        account_id: owner.id,
+        status: "active",
+        pitch: `Mentor grup "${name}" (otomatis saat grup dibuat)`,
+        decided_at: now,
+        decided_by: licenseKey,
+        updated_at: now,
+      },
+      { onConflict: "account_id" }
+    );
+    if (partnerError) {
+      // Grupnya tetap jadi; kemitraan bisa disetujui manual dari tab Partner.
+      console.error("Grup dibuat tapi aktivasi partner gagal:", partnerError.message);
+      partnerStatus = "gagal";
+    }
+  }
+
   console.log(
-    `Grup mentoring dibuat oleh ${licenseKey}: ${created.id} untuk ${owner.email}`
+    `Grup mentoring dibuat oleh ${licenseKey}: ${created.id} untuk ${owner.email}, partner=${partnerStatus}`
   );
 
   return NextResponse.json({
@@ -191,5 +225,6 @@ export async function POST(req: Request) {
       },
       memberCount: memberError ? 0 : 1,
     },
+    partnerStatus,
   });
 }

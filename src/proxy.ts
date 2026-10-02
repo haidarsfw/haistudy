@@ -41,6 +41,11 @@ const publicPaths = [
   // and anyone tightening that later would silently start bouncing invited
   // visitors to /login.
   "/undangan",
+  // The group join page. Public on purpose: the person following a mentor's
+  // link usually has no account yet, and should see WHICH group and whose
+  // before being asked to sign up. Joining itself still requires an account —
+  // the page checks, and /api/mentor/join refuses without one.
+  "/grup",
   "/api",
   "/privacy",
   "/terms",
@@ -181,10 +186,13 @@ export function proxy(request: NextRequest) {
   //     wants on an NFC card.
   //
   //     `@` cannot begin any real path, so nothing existing can collide.
-  const partner = pathname.match(/^\/@([A-Za-z0-9_-]{2,32})$/);
+  const partner = pathname.match(/^\/@([A-Za-z0-9_-]{2,32})(\/grup)?$/);
   if (partner) {
+    // `/@nama/grup` is the same link plus "put me in their group" — the
+    // owner's main way into a mentor group (3 Oct 2026).
+    const tail = partner[2] ? "/grup" : "";
     return NextResponse.rewrite(
-      new URL(`/undangan/${encodeURIComponent(partner[1])}`, request.url)
+      new URL(`/undangan/${encodeURIComponent(partner[1])}${tail}`, request.url)
     );
   }
 
