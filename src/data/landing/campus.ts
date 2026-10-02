@@ -1,4 +1,4 @@
-import { AVAILABLE_SCOPES, PURCHASABLE_SCOPES, LATEST_SCOPE } from "@/lib/scope";
+import { AVAILABLE_SCOPES, LATEST_SCOPE } from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
 
 /**
@@ -142,9 +142,9 @@ export function defaultScopeForAngkatan(
         s.examPeriod === want.examPeriod &&
         s.jurusan === jurusan
     );
-  // Their own period first, on sale or not; then the same period on sale for a
-  // different reading of the registry; only then the newest sellable thing.
-  return hits(AVAILABLE_SCOPES) ?? hits(PURCHASABLE_SCOPES) ?? LATEST_SCOPE;
+  // Their own period, on sale or not (every sellable period is also an
+  // available one, so one lookup covers both); otherwise the newest sellable.
+  return hits(AVAILABLE_SCOPES) ?? LATEST_SCOPE;
 }
 
 /** The campus a stored location belongs to, for prefilling a returning buyer. */

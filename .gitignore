@@ -122,3 +122,8 @@ testsprite_tests/tmp/
 # Playwright MCP session dumps (console logs + page snapshots) from local
 # debugging runs. Working files, and this repo is public.
 /.playwright-mcp/
+
+# Local motion demo. Kept on disk on purpose ("may still need it"), never
+# committed: it was swept into 1b99636 once by `git add -A` and removed again.
+/src/app/(landing)/gerak/
+/src/components/gerak/

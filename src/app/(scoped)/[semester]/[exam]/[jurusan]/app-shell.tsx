@@ -92,9 +92,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const pathname = usePathname();
   const { session, isLoading, updateSession } = useSession();
-  const { scopePath, scopeKey } = useScope();
+  const { scopePath } = useScope();
   const dashboardHref = `/${scopePath}/dashboard`;
-  // Post-UAS feedback drive — only the s2-uas-bm cohort sees the popup + header CTA.
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
@@ -485,8 +484,6 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
     {/* One-shot announcement popup (per-user, localStorage-gated) */}
     <AnnouncementModal />
-
-    {/* Post-UAS feedback nudge — s2-uas-bm only, once per login session */}
 
     {/* PWA install prompt + update pill - both self-gate internally */}
     <InstallBanner />

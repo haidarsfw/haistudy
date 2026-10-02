@@ -23,7 +23,6 @@ interface HeaderProps {
   onSettingsOpen?: () => void;
   onVoiceToggle?: () => void;
   activeVoiceRoom?: { id: string; name: string } | null;
-  /** Post-UAS feedback drive CTA — shown only for the s2-uas-bm cohort. */
 }
 
 export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: HeaderProps) {
@@ -103,7 +102,7 @@ export function Header({ onSettingsOpen, onVoiceToggle, activeVoiceRoom }: Heade
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Right: actions - Order: Feedback → Voice → Pomodoro → Dark mode → Notifications (rightmost) */}
+      {/* Right: actions - Order: Voice → Pomodoro → Dark mode → Notifications (rightmost) */}
       <div className="flex items-center gap-1.5">
         {/* Voice rooms - glass styling (desktop hover-expand) */}
         <button

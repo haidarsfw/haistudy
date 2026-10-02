@@ -15,9 +15,9 @@ import { accountColumns, accountIdForLicense } from "@/lib/auth/account-link";
  * again, months into using the app. It now lives on the account, which is the
  * thing that actually persists.
  *
- * Both are read and both are written, in that order, because migration 075 may
- * not be applied yet and because rows written before it exists still hold the
- * only answer for those people. localStorage stays an instant-paint cache only.
+ * Both are read and both are written, account first. Migration 075 is applied;
+ * the per-licence flag stays because rows written before it existed still hold
+ * the only answer for those people. localStorage stays an instant-paint cache.
  */
 
 // GET /api/onboarding → { completed: boolean }
@@ -33,9 +33,9 @@ export async function GET() {
   }
   const supabase = createServerClient()!;
 
-  // The account first — it survives a new period. A missing column (migration
-  // 075 not applied) throws rather than returning null, so it is caught and the
-  // per-licence flag answers instead.
+  // The account first: it survives a new period. supabase-js reports a failed
+  // read as `error`, it does not throw; the try/catch only guards a network
+  // exception. Either way the per-licence flag answers instead.
   const accountId = await accountIdForLicense(supabase, caller.licenseKey);
   if (accountId) {
     try {
@@ -48,7 +48,7 @@ export async function GET() {
         return NextResponse.json({ completed: true });
       }
     } catch {
-      // Column not there yet. Fall through.
+      // Network exception. Fall through to the per-licence flag.
     }
   }
 
@@ -92,7 +92,7 @@ export async function POST() {
 
   // And on the account, so the next period does not start the tour over. Failure
   // here is not fatal: the per-licence flag above already stops it for THIS
-  // period, and this column may not exist yet.
+  // period.
   const accountId = await accountIdForLicense(supabase, caller.licenseKey);
   if (accountId) {
     const { error: accErr } = await supabase
