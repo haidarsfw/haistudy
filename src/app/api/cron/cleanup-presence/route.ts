@@ -3,6 +3,7 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
+import { archiveEndedGroups } from "@/lib/mentor/archive";
 
 /**
  * GET /api/cron/cleanup-presence
@@ -13,6 +14,7 @@ import {
  *    anything > 5 min is definitely not online).
  * 2. Delete rows older than 7 days - users long gone, data unusable.
  * 3. Purge accounts whose 7-day deletion grace period has expired.
+ * 4. Archive mentoring groups 14 days after their period's last exam.
  *
  * Runs DAILY, not weekly. It used to be weekly, which was fine for presence
  * rows but would have turned "deleted after 7 days" into "deleted somewhere
@@ -74,11 +76,20 @@ export async function GET(request: Request) {
     console.error("[cron/cleanup] account purge failed", purgeErr);
   }
 
+  // 4. Archive mentoring groups 14 days after their period's last exam (the
+  //    owner's rule, 4 Oct 2026). Same reasoning as above for riding along
+  //    here instead of taking the last cron slot.
+  const groupsArchived = await archiveEndedGroups(supabase).catch((e) => {
+    console.error("[cron/cleanup] group archive failed", e);
+    return [] as string[];
+  });
+
   return NextResponse.json({
     ok: true,
     flippedStaleOnline: flippedCount ?? 0,
     deletedOlderThan7d: deletedCount ?? 0,
     accountsPurged: purged?.length ?? 0,
+    groupsArchived: groupsArchived.length,
     ranAt: new Date().toISOString(),
   });
 }
