@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { useGroupChat } from "@/hooks/use-group-chat";
 import { GroupSessions } from "@/components/mentor/group-sessions";
+import { GroupRanking } from "@/components/mentor/group-ranking";
 import { GROUP_MESSAGE_MAX } from "@/lib/mentor/chat";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,7 @@ export function GroupTab({
   if (groupId && !groups.some((g) => g.id === groupId)) setGroupId(groups[0]?.id ?? null);
   const [leaving, setLeaving] = useState<"ask" | "busy" | null>(null);
   // A question from the material lands in the chat, whatever was open before.
-  const [view, setView] = useState<"chat" | "pertanyaan" | "jadwal">("chat");
+  const [view, setView] = useState<"chat" | "pertanyaan" | "jadwal" | "peringkat">("chat");
   const [asQuestion, setAsQuestion] = useState(false);
   const [seenQuote, setSeenQuote] = useState<PendingQuote | null>(null);
   const archived = Boolean(groups.find((g) => g.id === groupId)?.archived);
@@ -120,8 +121,9 @@ export function GroupTab({
 
   const viewSwitch = (
     <>
-      <div className="flex items-center gap-1 border-b border-border px-3 py-1.5" role="tablist">
-        {(["chat", "pertanyaan", "jadwal"] as const).map((v) => (
+      {/* One line, scrolling sideways when four tabs and "Keluar grup" do not fit. */}
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-3 py-1.5" role="tablist">
+        {(["chat", "pertanyaan", "jadwal", "peringkat"] as const).map((v) => (
           <button
             key={v}
             type="button"
@@ -129,18 +131,18 @@ export function GroupTab({
             aria-selected={view === v}
             onClick={() => setView(v)}
             className={cn(
-              "min-h-9 rounded-md px-3 text-xs font-medium transition-colors",
+              "min-h-9 shrink-0 whitespace-nowrap rounded-md px-3 text-xs font-medium transition-colors",
               view === v ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            {v === "chat" ? "Chat" : v === "pertanyaan" ? "Pertanyaan" : "Jadwal"}
+            {v === "chat" ? "Chat" : v === "pertanyaan" ? "Pertanyaan" : v === "jadwal" ? "Jadwal" : "Peringkat"}
           </button>
         ))}
         {role === "member" && !archived && leaving === null && (
           <button
             type="button"
             onClick={() => setLeaving("ask")}
-            className="ml-auto min-h-9 rounded-md px-2 text-xs text-muted-foreground hover:text-destructive"
+            className="ml-auto min-h-9 shrink-0 whitespace-nowrap rounded-md px-2 text-xs text-muted-foreground hover:text-destructive"
           >
             Keluar grup
           </button>
@@ -235,6 +237,18 @@ export function GroupTab({
               })}
             </ul>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "peringkat" && groupId) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        {groups.length > 1 && <GroupPicker groups={groups} groupId={groupId} onPick={setGroupId} />}
+        {viewSwitch}
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <GroupRanking key={groupId} groupId={groupId} archived={archived} />
         </div>
       </div>
     );
