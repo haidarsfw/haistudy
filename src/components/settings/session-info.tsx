@@ -37,6 +37,11 @@ export function SessionInfo() {
               VIP
             </Badge>
           )}
+          {session.isMentor && (
+            <Badge variant="mentor-outline" className="text-[9px]">
+              {t("badge.mentor")}
+            </Badge>
+          )}
           {session.isTester && (
             <Badge variant="tester-outline" className="text-[9px]">
               {t("settings.tester_badge")}

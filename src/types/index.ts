@@ -733,6 +733,8 @@ export interface PublicProfile {
   selectedClass: string | null;
   packageTier: "share" | "normal" | "vip" | "diamond" | null;
   isAdmin: boolean;
+  /** Runs an active mentor group right now. Shown as the Mentor badge. */
+  isMentor: boolean;
 }
 
 // Theme & font type unions

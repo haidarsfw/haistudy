@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Loader2, Send, Pencil } from "lucide-react";
+import { Loader2, Send, Pencil, GraduationCap } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -158,6 +158,12 @@ export function PublicProfilePopover({
               {tier === "vip" && (
                 <Badge variant="vip-outline" className="px-1 py-0 text-[9px]">
                   VIP
+                </Badge>
+              )}
+              {profile?.isMentor && (
+                <Badge variant="mentor-outline" className="gap-0.5 px-1 py-0 text-[9px]">
+                  <GraduationCap className="h-2.5 w-2.5" />
+                  {t("badge.mentor")}
                 </Badge>
               )}
               {profile?.selectedClass && (

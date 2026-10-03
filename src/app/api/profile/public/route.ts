@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import { displayName } from "@/lib/name";
+import { mentorAccountsAmong } from "@/lib/mentor/groups";
 import type { PublicProfile } from "@/types";
 
 type ProfileRow = {
@@ -22,12 +23,14 @@ type KeyRow = {
   short_name: string | null;
   package_tier: PublicProfile["packageTier"];
   is_admin: boolean | null;
+  account_id: string | null;
 };
 
 function build(
   key: string,
   profiles: Map<string, ProfileRow>,
-  keys: Map<string, KeyRow>
+  keys: Map<string, KeyRow>,
+  mentors: Set<string>
 ): PublicProfile {
   const p = profiles.get(key);
   const k = keys.get(key);
@@ -48,6 +51,9 @@ function build(
     selectedClass: p?.selected_class ?? null,
     packageTier: k?.package_tier ?? null,
     isAdmin: k?.is_admin ?? false,
+    // Worked out from the groups on every read, so the badge goes away with the
+    // group instead of being written onto old messages.
+    isMentor: k?.account_id ? mentors.has(k.account_id) : false,
   };
 }
 
@@ -68,6 +74,7 @@ async function fetchProfiles(licenseKeys: string[]): Promise<PublicProfile[]> {
       selectedClass: null,
       packageTier: null,
       isAdmin: false,
+      isMentor: false,
     }));
   }
 
@@ -77,7 +84,7 @@ async function fetchProfiles(licenseKeys: string[]): Promise<PublicProfile[]> {
   // are the same person everywhere; there are no scope-private fields to gate.
   const { data: keyRows, error: keyErr } = await supabase
     .from("license_keys")
-    .select("key, name, short_name, package_tier, is_admin")
+    .select("key, name, short_name, package_tier, is_admin, account_id")
     .in("key", keys);
   if (keyErr) throw keyErr;
 
@@ -87,17 +94,24 @@ async function fetchProfiles(licenseKeys: string[]): Promise<PublicProfile[]> {
   const known = [...keyMap.keys()];
   if (known.length === 0) return [];
 
-  const { data: profRows, error: profErr } = await supabase
-    .from("user_profiles")
-    .select("license_key, avatar_url, bio, custom_status, custom_status_emoji, selected_class")
-    .in("license_key", known);
+  const accountIds = [...keyMap.values()]
+    .map((r) => r.account_id)
+    .filter((id): id is string => Boolean(id));
+  const [{ data: profRows, error: profErr }, mentors] = await Promise.all([
+    supabase
+      .from("user_profiles")
+      .select("license_key, avatar_url, bio, custom_status, custom_status_emoji, selected_class")
+      .in("license_key", known),
+    // A failed lookup costs a badge, never the profile.
+    mentorAccountsAmong(supabase, accountIds).catch(() => new Set<string>()),
+  ]);
   if (profErr) throw profErr;
 
   const profMap = new Map<string, ProfileRow>(
     ((profRows as ProfileRow[]) ?? []).map((r) => [r.license_key, r])
   );
 
-  return known.map((k) => build(k, profMap, keyMap));
+  return known.map((k) => build(k, profMap, keyMap, mentors));
 }
 
 // ─── GET /api/profile/public?licenseKey=xxx ─── single profile

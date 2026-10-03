@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Crown,
   Gem,
+  GraduationCap,
   CheckCheck,
   Volume2,
 } from "lucide-react";
@@ -52,6 +53,9 @@ interface MessageBubbleProps {
   onImageClick?: (src: string) => void;
   userRoleMap?: Map<string, UserRole>;
   avatarUrl?: string | null;
+  // The author runs an active mentor group right now (from the profile batch,
+  // never from the message row, so it follows the group and cannot be faked).
+  authorIsMentor?: boolean;
   // "dm" renders WhatsApp/IG-style bubbles: own right + accent, other left +
   // muted, no per-message avatar/name (the thread header already shows who).
   variant?: "default" | "dm";
@@ -76,6 +80,7 @@ export function MessageBubble({
   onImageClick,
   userRoleMap,
   avatarUrl,
+  authorIsMentor = false,
   variant = "default",
   grouped = false,
   dmReadState,
@@ -535,6 +540,15 @@ export function MessageBubble({
             >
               <Crown className="h-2.5 w-2.5" />
               VIP
+            </Badge>
+          )}
+          {authorIsMentor && (
+            <Badge
+              variant="mentor-outline"
+              className="h-4 gap-0.5 px-1 text-[9px]"
+            >
+              <GraduationCap className="h-2.5 w-2.5" />
+              Mentor
             </Badge>
           )}
           {message.isTester && (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Lightbulb, Sparkles, Shield, FlaskConical, Crown, Gem } from "lucide-react";
+import { Lightbulb, Sparkles, Shield, FlaskConical, Crown, Gem, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -172,6 +172,12 @@ export function GreetingCard() {
               <Badge variant="vip-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
                 <Crown className="h-2.5 w-2.5" />
                 {t("badge.vip")}
+              </Badge>
+            )}
+            {session?.isMentor && (
+              <Badge variant="mentor-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
+                <GraduationCap className="h-2.5 w-2.5" />
+                {t("badge.mentor")}
               </Badge>
             )}
             {session?.isTester && (

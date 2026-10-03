@@ -588,6 +588,7 @@ const id: Record<string, string> = {
 
   // Dashboard badges
   "badge.admin": "Admin",
+  "badge.mentor": "Mentor",
   "badge.tester": "Tester",
   "badge.vip": "VIP",
 

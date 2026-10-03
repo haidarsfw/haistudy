@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./message-bubble";
 import { APP_EVENTS } from "@/lib/events";
-import { useAvatars } from "@/hooks/use-avatars";
+import { useAvatars, useMentorKeys } from "@/hooks/use-avatars";
 import { useSession } from "@/components/providers/session-provider";
 import type { ChatMessage } from "@/types";
 
@@ -168,6 +168,7 @@ export function MessageList({
     [messages]
   );
   const avatarMap = useAvatars(licenseKeys);
+  const mentorKeys = useMentorKeys(licenseKeys);
 
   // Build a map of authorName -> role for mention coloring
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -236,6 +237,7 @@ export function MessageList({
                   onImageClick={onImageClick}
                   userRoleMap={userRoleMap}
                   avatarUrl={msg.licenseKey ? avatarMap.get(msg.licenseKey.toUpperCase()) ?? null : null}
+                  authorIsMentor={msg.licenseKey ? mentorKeys.has(msg.licenseKey.toUpperCase()) : false}
                   onReplyQuoteClick={handleReplyQuoteClick}
                 />
               </div>

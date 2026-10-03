@@ -6,6 +6,7 @@ import type { PublicProfile } from "@/types";
 interface CachedProfile {
   avatarUrl: string | null;
   name: string | null;
+  isMentor: boolean;
 }
 
 // Module-level cache shared across every surface that renders avatars and profiles.
@@ -21,11 +22,18 @@ const inFlight = new Set<string>();
 
 const NULL_TTL_MS = 60_000;
 
-function setCache(key: string, url: string | null, name: string | null = null) {
+function setCache(
+  key: string,
+  url: string | null,
+  name: string | null = null,
+  isMentor?: boolean
+) {
   const existing = cache.get(key);
   cache.set(key, {
     avatarUrl: url,
     name: name ?? existing?.name ?? null,
+    // An avatar update carries no role; keep what the last fetch said.
+    isMentor: isMentor ?? existing?.isMentor ?? false,
   });
   if (url === null) nullSince.set(key, Date.now());
   else nullSince.delete(key);
@@ -93,7 +101,7 @@ async function fetchProfiles(wantedKeys: string[]) {
     
     for (const p of data.profiles ?? []) {
       const key = p.licenseKey.toUpperCase();
-      setCache(key, p.avatarUrl ?? null, p.name);
+      setCache(key, p.avatarUrl ?? null, p.name, Boolean(p.isMentor));
       returned.add(key);
     }
     
@@ -183,5 +191,33 @@ export function useResolvedNames(
   for (const k of wanted) {
     out.set(k, cache.get(k)?.name ?? null);
   }
+  return out;
+}
+
+/**
+ * Which of these license keys belong to a mentor, from the same cached batch
+ * the avatars come from: no request of its own. Returns UPPERCASE keys.
+ */
+export function useMentorKeys(licenseKeys: (string | null | undefined)[]): Set<string> {
+  const [, force] = useState(0);
+
+  useEffect(() => {
+    const fn = () => force((n) => n + 1);
+    subscribers.add(fn);
+    return () => {
+      subscribers.delete(fn);
+    };
+  }, []);
+
+  const wanted = normKeys(licenseKeys);
+  const depKey = wanted.slice().sort().join(",");
+
+  useEffect(() => {
+    fetchProfiles(wanted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depKey]);
+
+  const out = new Set<string>();
+  for (const k of wanted) if (cache.get(k)?.isMentor) out.add(k);
   return out;
 }

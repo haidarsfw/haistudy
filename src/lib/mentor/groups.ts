@@ -303,3 +303,34 @@ export async function isMentorLicense(
   if (!accountId) return false;
   return isMentorAccount(supabase, accountId);
 }
+
+/**
+ * Which of these accounts are mentors right now: the batched isMentorAccount,
+ * for screens that show many people at once (the chat list, profile cards).
+ * Two queries for any number of accounts. Same rule: the group must be active.
+ */
+export async function mentorAccountsAmong(
+  supabase: SupabaseClient,
+  accountIds: string[]
+): Promise<Set<string>> {
+  const ids = [...new Set(accountIds.filter(Boolean))];
+  const out = new Set<string>();
+  if (!ids.length) return out;
+  const [{ data: owners }, { data: leads }] = await Promise.all([
+    supabase
+      .from("mentor_groups")
+      .select("owner_account_id")
+      .in("owner_account_id", ids)
+      .eq("status", "active"),
+    supabase
+      .from("group_members")
+      .select("account_id, mentor_groups!inner(status)")
+      .in("account_id", ids)
+      .eq("role", "mentor")
+      .eq("status", "active")
+      .eq("mentor_groups.status", "active"),
+  ]);
+  for (const r of owners ?? []) out.add(r.owner_account_id as string);
+  for (const r of leads ?? []) out.add(r.account_id as string);
+  return out;
+}
