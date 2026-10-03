@@ -8,6 +8,7 @@ import { toast } from "@/components/ui/toast";
 import { AVAILABLE_SCOPES, scopeFullLabel, scopeKey } from "@/lib/scope";
 import type { ScopeTuple } from "@/types/scope";
 import { cn } from "@/lib/utils";
+import { GroupReport } from "@/components/mentor/group-report";
 
 interface AdminGroup {
   id: string;
@@ -308,6 +309,7 @@ function GroupManage({ g, all, onChange }: { g: AdminGroup; all: AdminGroup[]; o
   const [confirm, setConfirm] = useState<"archive" | "handover" | null>(null);
   const [busy, setBusy] = useState(false);
   const [moveTo, setMoveTo] = useState<Record<string, string>>({});
+  const [showReport, setShowReport] = useState(false);
 
   const loadMembers = useCallback(async () => {
     const res = await fetch(`/api/admin/mentor-groups/${g.id}`, { credentials: "same-origin" });
@@ -527,6 +529,17 @@ function GroupManage({ g, all, onChange }: { g: AdminGroup; all: AdminGroup[]; o
           <p className="mt-1 text-xs text-muted-foreground">
             Riwayat: {history.map((m) => `${m.name} (${STATUS_LABEL[m.status] ?? m.status})`).join(", ")}
           </p>
+        )}
+      </div>
+
+      <div className="border-t border-border pt-3">
+        <Button size="sm" variant="outline" onClick={() => setShowReport((v) => !v)} aria-expanded={showReport}>
+          {showReport ? "Tutup laporan" : "Lihat laporan program"}
+        </Button>
+        {showReport && (
+          <div className="mt-3 rounded-lg border border-border p-3">
+            <GroupReport groupId={g.id} />
+          </div>
         )}
       </div>
 

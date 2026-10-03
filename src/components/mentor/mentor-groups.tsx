@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BarChart3, CalendarClock, Check, ChevronDown, Copy, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
+import Link from "next/link";
+import { BarChart3, CalendarClock, Check, ChevronDown, Copy, FileText, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GroupSessions } from "@/components/mentor/group-sessions";
@@ -226,6 +227,14 @@ function GroupCard({ g }: { g: GroupSummary }) {
         <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
         {archived ? "Anggota" : <>Anggota &amp; undangan</>}
       </button>
+
+      <Link
+        href={`/partner/laporan/${g.id}`}
+        className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+      >
+        <FileText className="h-4 w-4 text-muted-foreground" />
+        Laporan program
+      </Link>
 
       {open && (
         <div className="mt-2 space-y-5">
