@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { GraduationCap, Loader2, Send, Trash2, Users, X } from "lucide-react";
+import { CircleHelp, GraduationCap, Loader2, Send, Trash2, Users, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,13 +45,14 @@ export function GroupTab({
 }) {
   const [groupId, setGroupId] = useState<string | null>(groups[0]?.id ?? null);
   // A question from the material lands in the chat, whatever was open before.
-  const [view, setView] = useState<"chat" | "jadwal">("chat");
+  const [view, setView] = useState<"chat" | "pertanyaan" | "jadwal">("chat");
+  const [asQuestion, setAsQuestion] = useState(false);
   const [seenQuote, setSeenQuote] = useState<PendingQuote | null>(null);
   if (pendingQuote !== seenQuote) {
     setSeenQuote(pendingQuote);
     if (pendingQuote) setView("chat");
   }
-  const { messages, loading, hasMore, role, me, error, loadMore, send, remove } = useGroupChat(groupId);
+  const { messages, loading, hasMore, role, me, error, loadMore, send, remove, setAnswered } = useGroupChat(groupId);
   const [text, setText] = useState("");
   // Owned by the app-shell until sent or dismissed, so it survives switching
   // groups or closing the panel half-way through writing the question.
@@ -73,19 +74,20 @@ export function GroupTab({
     const content = text.trim();
     if (!content || sending) return;
     setSending(true);
-    const err = await send(content, quote);
+    const err = await send(content, quote, asQuestion || Boolean(quote));
     setSending(false);
     if (err) {
       toast.error(err);
       return;
     }
     setText("");
+    setAsQuestion(false);
     if (quote) onQuoteConsumed();
   };
 
   const viewSwitch = (
     <div className="flex gap-1 border-b border-border px-3 py-1.5" role="tablist">
-      {(["chat", "jadwal"] as const).map((v) => (
+      {(["chat", "pertanyaan", "jadwal"] as const).map((v) => (
         <button
           key={v}
           type="button"
@@ -97,11 +99,82 @@ export function GroupTab({
             view === v ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
           )}
         >
-          {v === "chat" ? "Chat" : "Jadwal"}
+          {v === "chat" ? "Chat" : v === "pertanyaan" ? "Pertanyaan" : "Jadwal"}
         </button>
       ))}
     </div>
   );
+
+  if (view === "pertanyaan" && groupId) {
+    const questions = messages
+      .filter((m) => m.isQuestion && !m.deleted)
+      .sort(
+        (a, b) =>
+          Number(Boolean(a.answeredAt)) - Number(Boolean(b.answeredAt)) || b.createdAt.localeCompare(a.createdAt)
+      );
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        {groups.length > 1 && <GroupPicker groups={groups} groupId={groupId} onPick={setGroupId} />}
+        {viewSwitch}
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          {questions.length === 0 ? (
+            <div className="mt-8 text-center">
+              <CircleHelp className="mx-auto h-6 w-6 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">
+                Belum ada pertanyaan. Pakai &ldquo;Tanya mentor&rdquo; dari Rangkuman, atau tandai pesanmu sebagai
+                pertanyaan sebelum mengirim.
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {questions.map((m) => {
+                const canMark = role === "mentor" || (me !== null && m.accountId === me);
+                return (
+                  <li key={m.id} className="rounded-lg border border-border p-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-foreground">{m.authorName}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {format(new Date(m.createdAt), "d MMM HH:mm", { locale: idLocale })}
+                      </span>
+                      <span
+                        className={cn(
+                          "ml-auto text-[10px] font-medium",
+                          m.answeredAt ? "text-primary" : "text-muted-foreground"
+                        )}
+                      >
+                        {m.answeredAt ? "Terjawab" : "Belum terjawab"}
+                      </span>
+                    </div>
+                    {m.quote && (
+                      <figure className="mt-1 rounded-lg bg-muted/60 px-2.5 py-1.5">
+                        {m.quoteSource && (
+                          <figcaption className="text-[10px] font-medium text-muted-foreground">{m.quoteSource}</figcaption>
+                        )}
+                        <blockquote className="whitespace-pre-wrap text-xs text-foreground/80">{m.quote}</blockquote>
+                      </figure>
+                    )}
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm text-foreground">{m.content}</p>
+                    {canMark && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const err = await setAnswered(m.id, !m.answeredAt);
+                          if (err) toast.error(err);
+                        }}
+                        className="mt-1.5 min-h-9 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {m.answeredAt ? "Buka lagi" : "Tandai terjawab"}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (view === "jadwal" && groupId) {
     return (
@@ -173,6 +246,11 @@ export function GroupTab({
                     <span className="text-[10px] text-muted-foreground">
                       {format(new Date(m.createdAt), "d MMM HH:mm", { locale: idLocale })}
                     </span>
+                    {m.isQuestion && !m.deleted && (
+                      <span className={cn("text-[10px] font-medium", m.answeredAt ? "text-primary" : "text-muted-foreground")}>
+                        {m.answeredAt ? "· Terjawab" : "· Pertanyaan"}
+                      </span>
+                    )}
                     {canDelete && (
                       <button
                         type="button"
@@ -236,6 +314,22 @@ export function GroupTab({
           </div>
         )}
         <div className="flex items-end gap-2">
+          <button
+            type="button"
+            aria-pressed={asQuestion || Boolean(quote)}
+            disabled={Boolean(quote)}
+            onClick={() => setAsQuestion((v) => !v)}
+            title="Tandai sebagai pertanyaan untuk mentor"
+            aria-label="Tandai sebagai pertanyaan"
+            className={cn(
+              "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors",
+              asQuestion || quote
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <CircleHelp className="h-4 w-4" />
+          </button>
           <textarea
             ref={inputRef}
             value={text}
@@ -247,7 +341,7 @@ export function GroupTab({
               }
             }}
             rows={1}
-            placeholder={quote ? "Tulis pertanyaanmu…" : "Tulis pesan ke grup…"}
+            placeholder={quote || asQuestion ? "Tulis pertanyaanmu…" : "Tulis pesan ke grup…"}
             aria-label="Pesan ke grup"
             className="max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           />

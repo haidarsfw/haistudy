@@ -103,6 +103,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       content?: string;
       quote?: string;
       quoteSource?: string;
+      isQuestion?: boolean;
     };
     const content = String(body.content ?? "").trim();
     if (!content) return NextResponse.json({ error: "Pesannya kosong." }, { status: 400 });
@@ -125,6 +126,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
         content,
         quote,
         quote_source: quoteSource,
+        // A question asked from the material always goes on the board.
+        is_question: Boolean(body.isQuestion) || Boolean(quote),
       })
       .select(GROUP_MESSAGE_COLUMNS)
       .single();
@@ -165,5 +168,43 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
     if (error instanceof Response) return error;
     console.error("[group/messages] DELETE gagal:", error);
     return NextResponse.json({ error: "Gagal menghapus" }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH ?messageId= { answered: boolean } — mark a question answered (or
+ * reopen it). The mentor, or whoever asked it.
+ */
+export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await ctx.params;
+    const g = await gate(id);
+    if ("error" in g) return g.error;
+    const messageId = new URL(req.url).searchParams.get("messageId") ?? "";
+    if (!UUID_RE.test(messageId)) {
+      return NextResponse.json({ error: "Pertanyaan tidak ditemukan" }, { status: 404 });
+    }
+    const body = (await req.json().catch(() => ({}))) as { answered?: boolean };
+    if (typeof body.answered !== "boolean") {
+      return NextResponse.json({ error: "Permintaan tidak valid" }, { status: 400 });
+    }
+    let q = g.supabase
+      .from("group_messages")
+      .update({ answered_at: body.answered ? new Date().toISOString() : null })
+      .eq("id", messageId)
+      .eq("group_id", id)
+      .eq("is_question", true)
+      .eq("deleted", false);
+    if (g.role !== "mentor") q = q.eq("account_id", g.accountId);
+    const { data, error } = await q.select("id");
+    if (error) throw error;
+    if (!(data ?? []).length) {
+      return NextResponse.json({ error: "Pertanyaan tidak ditemukan" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    if (error instanceof Response) return error;
+    console.error("[group/messages] PATCH gagal:", error);
+    return NextResponse.json({ error: "Belum tersimpan" }, { status: 500 });
   }
 }

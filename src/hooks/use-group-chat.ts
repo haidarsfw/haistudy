@@ -112,14 +112,18 @@ export function useGroupChat(groupId: string | null) {
 
   /** Resolves to an error message, or null when sent. */
   const send = useCallback(
-    async (content: string, quote?: { text: string; source?: string } | null): Promise<string | null> => {
+    async (
+      content: string,
+      quote?: { text: string; source?: string } | null,
+      isQuestion = false
+    ): Promise<string | null> => {
       if (!groupId) return "Pilih grup dulu.";
       try {
         const r = await fetch(`/api/mentor/groups/${groupId}/messages`, {
           method: "POST",
           credentials: "same-origin",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ content, quote: quote?.text, quoteSource: quote?.source }),
+          body: JSON.stringify({ content, quote: quote?.text, quoteSource: quote?.source, isQuestion }),
         });
         const body = await r.json().catch(() => ({}));
         if (!r.ok) return body.error ?? "Pesan gagal dikirim.";
@@ -149,5 +153,24 @@ export function useGroupChat(groupId: string | null) {
     [groupId]
   );
 
-  return { messages, loading, hasMore, role, me, error, loadMore, send, remove };
+  /** Mark a question answered or open again; the Realtime echo confirms it. */
+  const setAnswered = useCallback(
+    async (messageId: string, answered: boolean): Promise<string | null> => {
+      if (!groupId) return null;
+      const r = await fetch(`/api/mentor/groups/${groupId}/messages?messageId=${messageId}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ answered }),
+      });
+      if (!r.ok) return ((await r.json().catch(() => ({}))) as { error?: string }).error ?? "Belum tersimpan.";
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, answeredAt: answered ? new Date().toISOString() : null } : m))
+      );
+      return null;
+    },
+    [groupId]
+  );
+
+  return { messages, loading, hasMore, role, me, error, loadMore, send, remove, setAnswered };
 }

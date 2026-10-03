@@ -11,10 +11,13 @@ export interface GroupMessage {
   quoteSource: string | null;
   deleted: boolean;
   createdAt: string;
+  /** On the group's question board ("Tanya mentor" always is). */
+  isQuestion: boolean;
+  answeredAt: string | null;
 }
 
 export const GROUP_MESSAGE_COLUMNS =
-  "id, group_id, account_id, author_name, is_mentor, content, quote, quote_source, deleted, created_at";
+  "id, group_id, account_id, author_name, is_mentor, content, quote, quote_source, deleted, created_at, is_question, answered_at";
 
 export const GROUP_MESSAGE_MAX = 2000;
 export const GROUP_QUOTE_MAX = 600;
@@ -33,5 +36,7 @@ export function toGroupMessage(row: Record<string, unknown>): GroupMessage {
     quoteSource: deleted ? null : ((row.quote_source as string | null) ?? null),
     deleted,
     createdAt: row.created_at as string,
+    isQuestion: Boolean(row.is_question),
+    answeredAt: (row.answered_at as string | null) ?? null,
   };
 }
