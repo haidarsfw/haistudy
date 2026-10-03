@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, ChevronDown, Copy, Loader2, MessageCircle, Trash2, Users } from "lucide-react";
+import { Check, ChevronDown, Copy, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -19,7 +19,7 @@ interface GroupSummary {
 
 interface Detail {
   referralCode: string | null;
-  members: { name: string; role: string; status: string; isYou: boolean }[];
+  members: { memberId: string; name: string; role: string; status: string; isYou: boolean }[];
   invites: { id: string; kind: "email" | "whatsapp"; value: string; joined: boolean }[];
 }
 
@@ -107,10 +107,13 @@ function GroupCard({ g }: { g: GroupSummary }) {
           <p className="text-xs text-muted-foreground">{scope ? scopeFullLabel(scope) : g.scopeKey}</p>
         </div>
         <p className="text-sm text-foreground">
-          {g.memberCount}
+          {/* Live once the detail is in, so an approval shows up in the count. */}
+          {detail ? detail.members.filter((m) => m.status === "active").length : g.memberCount}
           {g.maxMembers ? ` / ${g.maxMembers}` : ""} anggota
         </p>
       </header>
+
+      {detail && <Requests groupId={g.id} members={detail.members} onChange={load} />}
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <code className="min-w-0 flex-1 break-all rounded-lg border border-border bg-muted px-3 py-2.5 font-mono text-xs text-foreground">
@@ -163,15 +166,90 @@ function GroupCard({ g }: { g: GroupSummary }) {
   );
 }
 
+/**
+ * Requests to join, outside the folded list on purpose: they are the one thing
+ * on this card that waits for the mentor. One tap each, and the row leaves.
+ */
+function Requests({
+  groupId,
+  members,
+  onChange,
+}: {
+  groupId: string;
+  members: Detail["members"];
+  onChange: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const pending = members.filter((m) => m.status === "pending");
+  if (!pending.length) return null;
+
+  const answer = async (memberId: string, action: "approve" | "decline") => {
+    setBusy(memberId);
+    try {
+      const res = await fetch(`/api/mentor/groups/${groupId}/requests`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ memberId, action }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) toast.error(body.error ?? "Jawaban belum tersimpan. Coba lagi.");
+      else toast.success(action === "approve" ? "Disetujui, sudah masuk grup." : "Ditolak.");
+      await onChange();
+    } catch {
+      toast.error("Koneksi terputus. Coba lagi.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-3">
+      <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+        <UserPlus className="h-4 w-4 text-primary" />
+        {pending.length === 1 ? "1 orang minta gabung" : `${pending.length} orang minta gabung`}
+      </h4>
+      <ul className="mt-2 space-y-2">
+        {pending.map((m) => (
+          <li key={m.memberId} className="flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 truncate text-sm text-foreground">{m.name}</span>
+            <span className="flex shrink-0 gap-2">
+              <Button
+                size="sm"
+                className="h-11 px-4"
+                disabled={busy !== null}
+                onClick={() => void answer(m.memberId, "approve")}
+              >
+                {busy === m.memberId ? <Loader2 className="h-4 w-4 animate-spin" /> : "Setujui"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-11 px-4"
+                disabled={busy !== null}
+                onClick={() => void answer(m.memberId, "decline")}
+              >
+                Tolak
+              </Button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Members({ members }: { members: Detail["members"] }) {
-  const label: Record<string, string> = { active: "", invited: "diundang", pending: "minta gabung" };
+  const label: Record<string, string> = { active: "", invited: "diundang" };
+  // Requests have their own box above; this list is who is in or invited.
+  const listed = members.filter((m) => m.status !== "pending");
   return (
     <div>
       <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
         <Users className="h-4 w-4 text-muted-foreground" /> Anggota
       </h4>
       <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
-        {members.map((m, i) => (
+        {listed.map((m, i) => (
           <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
             <span className="min-w-0 truncate text-foreground">
               {m.name}

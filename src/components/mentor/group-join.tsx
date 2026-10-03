@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 interface GroupInfo {
   code: string;
+  groupId: string;
   name: string;
   mentor: string;
   period: string;
@@ -18,6 +19,7 @@ export type GroupJoinState =
   | ({ kind: "signed-out"; full: boolean } & GroupInfo)
   | ({ kind: "can-join" } & GroupInfo)
   | ({ kind: "member" } & GroupInfo)
+  | ({ kind: "pending" } & GroupInfo)
   | ({ kind: "full" } & GroupInfo);
 
 /**
@@ -28,7 +30,7 @@ export type GroupJoinState =
  * other. Then exactly one thing to do next.
  */
 export function GroupJoin({ state }: { state: GroupJoinState }) {
-  const [phase, setPhase] = useState<"idle" | "joining" | "joined" | "error">("idle");
+  const [phase, setPhase] = useState<"idle" | "joining" | "joined" | "asked" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
 
   if (state.kind === "invalid") {
@@ -67,8 +69,33 @@ export function GroupJoin({ state }: { state: GroupJoinState }) {
     }
   };
 
+  // Entry path #3 from here: the group is full, so ask the mentor for a seat
+  // instead of being turned away. They answer from their own page.
+  const ask = async () => {
+    setPhase("joining");
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/mentor/groups/${state.groupId}/request`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string; state?: string };
+      if (body.state === "member") return setPhase("joined");
+      if (!res.ok) {
+        setPhase("error");
+        setMessage(body.error ?? "Permintaan belum terkirim. Coba lagi.");
+        return;
+      }
+      setPhase("asked");
+    } catch {
+      setPhase("error");
+      setMessage("Koneksi terputus. Coba lagi.");
+    }
+  };
+
   const next = encodeURIComponent(`/grup/${state.code}`);
   const joined = state.kind === "member" || phase === "joined";
+  const asked = state.kind === "pending" || phase === "asked";
 
   return (
     <section className="mt-10 max-w-lg">
@@ -97,10 +124,40 @@ export function GroupJoin({ state }: { state: GroupJoinState }) {
               Buka akun haistudy
             </Link>
           </div>
-        ) : state.kind === "full" || (state.kind === "signed-out" && state.full) ? (
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            Grup ini sudah penuh. Hubungi {state.mentor} kalau kamu memang bagian dari kelasnya.
+        ) : asked ? (
+          <p className="flex items-start gap-2 text-sm leading-relaxed text-foreground">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            Permintaanmu sudah sampai ke {state.mentor}. Begitu disetujui, kamu langsung masuk grup.
           </p>
+        ) : state.kind === "full" ? (
+          <div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Grup ini sudah penuh. Kalau kamu memang bagian dari kelasnya, minta tempat ke{" "}
+              {state.mentor}. Dia yang memutuskan.
+            </p>
+            <Button onClick={ask} disabled={phase === "joining"} className="mt-4 h-11 gap-2 px-5">
+              {phase === "joining" && <Loader2 className="h-4 w-4 animate-spin" />}
+              {phase === "joining" ? "Mengirim…" : "Minta tempat"}
+            </Button>
+            {phase === "error" && message && (
+              <p role="alert" className="mt-3 text-sm text-destructive">
+                {message}
+              </p>
+            )}
+          </div>
+        ) : state.kind === "signed-out" && state.full ? (
+          <div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Grup ini sudah penuh. Kalau kamu memang bagian dari kelasnya, masuk dulu lalu minta
+              tempat ke {state.mentor}.
+            </p>
+            <a
+              href={`/login?next=${next}`}
+              className="mt-4 inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Masuk
+            </a>
+          </div>
         ) : state.kind === "signed-out" ? (
           <div>
             <p className="text-sm leading-relaxed text-muted-foreground">

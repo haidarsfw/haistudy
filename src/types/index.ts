@@ -422,7 +422,9 @@ export interface Notification {
     | "comment_reply"
     | "support_message"
     | "dm_message"
-    | "exam_quota";
+    | "exam_quota"
+    | "group_request"
+    | "group_approved";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";

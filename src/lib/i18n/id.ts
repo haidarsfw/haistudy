@@ -347,6 +347,8 @@ const id: Record<string, string> = {
   "notification.replied_thread": "membalas thread",
   "notification.default": "Notifikasi",
   "notification.exam_quota": "Kuota latihan ditambahkan",
+  "notification.group_request": "minta gabung ke grupmu",
+  "notification.group_approved": "Permintaan gabung grupmu disetujui",
   "notification.announcement": "Pengumuman baru",
   "notification.new_thread": "membuat thread baru",
   "notification.voted_poll": "memilih di polling",

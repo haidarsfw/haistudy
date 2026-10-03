@@ -17,6 +17,7 @@ import { canUseVipFeatures } from "@/lib/tier";
 import { resolveRole, getRoleNameClass } from "@/lib/role-colors";
 import { openDmTo, openProfileEditor } from "@/lib/events";
 import { isCropLocked } from "@/lib/crop-lock";
+import { toast } from "@/components/ui/toast";
 import type { PublicProfile } from "@/types";
 
 interface PublicProfilePopoverProps {
@@ -206,6 +207,12 @@ export function PublicProfilePopover({
           </>
         )}
 
+        {/* Only while open: the batch behind avatars must not turn into one
+            request per mentor message. */}
+        {open && profile?.isMentor && !isSelf && licenseKey && (
+          <MentorGroupsBlock licenseKey={licenseKey} />
+        )}
+
         {showDmButton && (
           <>
             <Separator />
@@ -254,5 +261,108 @@ export function PublicProfilePopover({
         )}
       </PopoverContent>
     </Popover>
+  );
+}
+
+type ViewerState = "none" | "pending" | "invited" | "member" | "declined" | "self";
+interface MentorGroupLite {
+  id: string;
+  name: string;
+  members: number;
+  maxMembers: number | null;
+  state: ViewerState;
+}
+
+/**
+ * A mentor's groups in the period being viewed, and the viewer's way in: entry
+ * path #3, "mentee minta gabung, mentor setujui sekali ketuk". Someone who sees
+ * the Mentor badge in chat can ask from the same card that shows it.
+ */
+function MentorGroupsBlock({ licenseKey }: { licenseKey: string }) {
+  const [data, setData] = useState<{ groups: MentorGroupLite[]; canRequest: boolean } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/mentor/by-license?licenseKey=${encodeURIComponent(licenseKey)}`, {
+      credentials: "same-origin",
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && d) setData(d);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [licenseKey]);
+
+  const groups = (data?.groups ?? []).filter((g) => g.state !== "self");
+  if (!groups.length) return null;
+
+  const ask = async (id: string) => {
+    setBusy(id);
+    try {
+      const res = await fetch(`/api/mentor/groups/${id}/request`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string; state?: ViewerState };
+      if (body.state) {
+        setData((d) =>
+          d ? { ...d, groups: d.groups.map((g) => (g.id === id ? { ...g, state: body.state! } : g)) } : d
+        );
+      }
+      if (!res.ok && body.error) toast.error(body.error);
+    } catch {
+      toast.error("Koneksi terputus. Coba lagi.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const note: Partial<Record<ViewerState, string>> = {
+    pending: "Menunggu persetujuan mentor",
+    member: "Kamu anggota grup ini",
+    declined: "Permintaanmu belum disetujui",
+  };
+
+  return (
+    <>
+      <Separator />
+      <div className="space-y-3 p-3">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          Grup mentoring
+        </p>
+        {groups.map((g) => (
+          <div key={g.id}>
+            <p className="truncate text-xs font-medium text-foreground">{g.name}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {g.members}
+              {g.maxMembers ? ` / ${g.maxMembers}` : ""} anggota
+            </p>
+            {g.state === "none" || g.state === "invited" ? (
+              data?.canRequest ? (
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={() => void ask(g.id)}
+                  className="mt-1.5 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                >
+                  {busy === g.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  {g.state === "invited" ? "Terima undangan" : "Minta gabung"}
+                </button>
+              ) : (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Masuk dengan akunmu untuk minta gabung.
+                </p>
+              )
+            ) : (
+              <p className="mt-1 text-[11px] text-foreground/80">{note[g.state]}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

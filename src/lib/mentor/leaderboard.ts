@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { displayName } from "@/lib/name";
+import { displayNamesForAccounts } from "@/lib/mentor/names";
 
 export interface LeaderboardRow {
   rank: number;
@@ -92,17 +92,9 @@ export async function partnerLeaderboard(
   );
   if (!shown.length) return { top: [], you: null };
 
-  const { data: accounts } = await supabase
-    .from("accounts")
-    .select("id, nickname, full_name")
-    .in(
-      "id",
-      shown.map((p) => p.account_id)
-    );
-  const nameOf = new Map(
-    ((accounts ?? []) as { id: string; nickname: string | null; full_name: string | null }[]).map(
-      (a) => [a.id, displayName({ shortName: a.nickname, name: a.full_name })]
-    )
+  const nameOf = await displayNamesForAccounts(
+    supabase,
+    shown.map((p) => p.account_id)
   );
 
   return {

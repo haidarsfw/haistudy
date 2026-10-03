@@ -9,6 +9,8 @@ import {
   Megaphone,
   BarChart,
   Ticket,
+  UserPlus,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { openChatToMessage, openDmTo } from "@/lib/events";
@@ -29,6 +31,8 @@ export function isInteractiveNotification(n: Notification): boolean {
   }
   // DM notifications open the chat DM with the sender (context = sender key).
   if (n.type === "dm_message" && n.context) return true;
+  // A join request is answered on the mentor's own page.
+  if (n.type === "group_request") return true;
   // Forum-context notifications navigate to the thread/subject.
   if (n.context === "forum" && (n.subjectId || n.threadId)) {
     return (
@@ -61,6 +65,10 @@ export function notificationIcon(n: Notification): LucideIcon {
       return MessageCircle;
     case "exam_quota":
       return Ticket;
+    case "group_request":
+      return UserPlus;
+    case "group_approved":
+      return Users;
     default:
       return Bell;
   }
@@ -104,6 +112,10 @@ export function notificationLabel(
       return n.senderName ? `${n.senderName} mengirim pesan` : "Pesan baru";
     case "exam_quota":
       return t("notification.exam_quota");
+    case "group_request":
+      return `${n.senderName ?? "Seseorang"} ${t("notification.group_request")}`;
+    case "group_approved":
+      return t("notification.group_approved");
     default:
       return t("notification.default");
   }
@@ -171,6 +183,11 @@ export function routeToNotification(
   }
   if (n.type === "dm_message" && n.context) {
     openDmTo(n.context);
+    return true;
+  }
+  if (n.type === "group_request") {
+    // Outside the scoped app: "Grup kamu" lives on /partner.
+    window.location.assign("/partner");
     return true;
   }
   return false;

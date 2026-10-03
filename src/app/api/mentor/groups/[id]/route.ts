@@ -5,6 +5,7 @@ import { requireAccount } from "@/lib/auth/account-session";
 import { AccountError } from "@/lib/auth/account";
 import { GROUP_COLUMNS, roleInGroup, toMentorGroup, type GroupRow } from "@/lib/mentor/groups";
 import { mintAccountReferralCode } from "@/lib/referral/codes";
+import { displayNamesForAccounts } from "@/lib/mentor/names";
 
 /**
  * One group, as its mentor sees it: who is in, who is invited, who was asked
@@ -36,9 +37,10 @@ export async function GET(
       supabase.from("mentor_groups").select(GROUP_COLUMNS).eq("id", id).single(),
       supabase
         .from("group_members")
-        .select("account_id, role, status, joined_at, created_at")
+        .select("id, account_id, role, status, joined_at, created_at")
         .eq("group_id", id)
-        .neq("status", "left")
+        // Left and declined are history, not the group.
+        .not("status", "in", "(left,declined)")
         .order("created_at", { ascending: true }),
       supabase
         .from("group_invites")
@@ -47,12 +49,11 @@ export async function GET(
         .order("created_at", { ascending: false }),
     ]);
 
-    const ids = [...new Set((members ?? []).map((m) => m.account_id as string))];
-    const { data: accounts } = ids.length
-      ? await supabase.from("accounts").select("id, nickname, full_name").in("id", ids)
-      : { data: [] };
-    const nameOf = new Map(
-      (accounts ?? []).map((a) => [a.id as string, (a.nickname as string) || (a.full_name as string) || "Tanpa nama"])
+    // Nickname, else the name on their licence: "Tanpa nama" told the mentor
+    // nothing about who had joined.
+    const nameOf = await displayNamesForAccounts(
+      supabase,
+      (members ?? []).map((m) => m.account_id as string)
     );
 
     // Minted if missing, so the group link shown here can always carry it.
@@ -62,6 +63,8 @@ export async function GET(
       group: toMentorGroup(group as GroupRow),
       referralCode: referral,
       members: (members ?? []).map((m) => ({
+        // The handle the mentor's approve/decline buttons answer with.
+        memberId: m.id,
         name: nameOf.get(m.account_id as string) ?? "Tanpa nama",
         role: m.role,
         status: m.status,

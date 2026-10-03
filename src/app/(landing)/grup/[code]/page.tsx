@@ -53,6 +53,7 @@ export default async function GroupJoinPage({
         .maybeSingle();
       const base = {
         code,
+        groupId: group.id as string,
         name: group.name as string,
         mentor: ((owner?.nickname as string) || (owner?.full_name as string) || "mentormu").slice(0, 40),
         period: scope ? scopeFullLabel(scope) : "",
@@ -75,6 +76,7 @@ export default async function GroupJoinPage({
           .eq("account_id", account.id)
           .maybeSingle();
         if (member?.status === "active") state = { kind: "member", ...base };
+        else if (member?.status === "pending") state = { kind: "pending", ...base };
         else if (full) state = { kind: "full", ...base };
         else state = { kind: "can-join", ...base };
       }
