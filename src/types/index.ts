@@ -12,6 +12,8 @@ export interface Session {
   shortName: string;
   isAdmin: boolean;
   isTester: boolean;
+  /** Owns or co-runs an active mentor group. Never implies admin. */
+  isMentor?: boolean;
   expiry: string | null;
   selectedClass: string;
   isPreview?: boolean;

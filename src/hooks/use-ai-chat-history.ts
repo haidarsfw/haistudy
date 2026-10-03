@@ -5,14 +5,15 @@ import { toast } from "@/components/ui/toast";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { useTranslation } from "@/components/providers/language-provider";
-import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
+import { aiConversationLimit, MENTOR_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
 import { canUseVipFeatures } from "@/lib/tier";
 import type { AiMessage } from "./use-ai-chat";
 
 const STORAGE_KEY_PREFIX = "hs-ai-chats";
-// Hard local storage ceiling = the most any tier can hold. The actual per-tier
-// cap (free 3 / vip 10) is enforced as a block in createConversation.
-const MAX_CONVERSATIONS = VIP_AI_CONVERSATION_LIMIT;
+// Hard local storage ceiling = the most anyone can hold (a mentor). The actual
+// per-person cap (free 3 / vip 10 / mentor 100) is enforced as a block in
+// createConversation.
+const MAX_CONVERSATIONS = MENTOR_AI_CONVERSATION_LIMIT;
 const SAVE_DEBOUNCE_MS = 1500;
 
 export interface AiConversation {
@@ -54,7 +55,14 @@ function loadLocalConversations(storageKey: string): AiConversation[] {
 
 function persistLocal(storageKey: string, conversations: AiConversation[]) {
   if (!storageKey) return;
-  localStorage.setItem(storageKey, JSON.stringify(conversations));
+  // A full browser store throws here, inside a state updater. The server holds
+  // the real copy, so a local copy that could not be written is only a slower
+  // next load, never a reason to break the chat.
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(conversations));
+  } catch {
+    /* storage full or blocked */
+  }
 }
 
 export function useAiChatHistory() {
@@ -63,11 +71,17 @@ export function useAiChatHistory() {
   const scopeCtx = useOptionalScope();
   const scopeKey = scopeCtx?.scopeKey ?? "default";
 
-  // Per-tier cap on saved conversations (free 3 / vip 10 / admin 10).
+  // Cap on saved conversations (free 3 / vip 10 / admin 10 / mentor 100).
   const convLimit = aiConversationLimit(
     session?.isAdmin ?? false,
-    session?.packageTier
+    session?.packageTier,
+    session?.isMentor ?? false
   );
+  // A mentor at the cap is told to delete one, never to buy VIP.
+  const limitMessageKey =
+    canUseVipFeatures(session) || session?.isMentor
+      ? "ai.limit_reached_vip"
+      : "ai.limit_reached_free";
 
   // Storage key scoped to license key + scope so conversations never mix
   const storageKey = session
@@ -271,9 +285,7 @@ export function useAiChatHistory() {
     // return the current active id (or first conv) instead of creating a new one.
     const used = conversationsRef.current.filter((c) => c.messages.length > 0).length;
     if (used >= convLimit) {
-      const isVip = canUseVipFeatures(session);
-      const key = isVip ? "ai.limit_reached_vip" : "ai.limit_reached_free";
-      toast.error(t(key).replace("{limit}", String(convLimit)));
+      toast.error(t(limitMessageKey).replace("{limit}", String(convLimit)));
       const fallbackId =
         conversationsRef.current[0]?.id ?? activeId ?? "";
       return fallbackId;
@@ -309,9 +321,7 @@ export function useAiChatHistory() {
       // bail to an existing conversation rather than falling through to a
       // local `chat-` id, which would silently bypass the limit.
       if (res.status === 409) {
-        const isVip = canUseVipFeatures(session);
-        const key = isVip ? "ai.limit_reached_vip" : "ai.limit_reached_free";
-        toast.error(t(key).replace("{limit}", String(convLimit)));
+        toast.error(t(limitMessageKey).replace("{limit}", String(convLimit)));
         return conversationsRef.current[0]?.id ?? activeId ?? "";
       }
 
@@ -347,7 +357,7 @@ export function useAiChatHistory() {
     });
     setActiveId(id);
     return id;
-  }, [session, convLimit, activeId, t]);
+  }, [session, convLimit, limitMessageKey, activeId, t]);
 
   const deleteConversation = useCallback(
     async (id: string) => {

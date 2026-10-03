@@ -57,8 +57,14 @@ export function computeQuota(args: {
   tier: PackageTier | null | undefined;
   bonus: number;
   used: number;
+  /**
+   * A mentor (runs an active group): no limit, per the plan's mentor perks.
+   * Its own flag rather than passing isAdmin: true, so nothing that reads
+   * "admin" ever starts meaning "mentor" by accident. Mentor is never admin.
+   */
+  unlimited?: boolean;
 }): QuotaInfo {
-  const base = tierBase(args.isAdmin, args.tier);
+  const base = args.unlimited ? -1 : tierBase(args.isAdmin, args.tier);
   const bonus = Math.max(0, args.bonus | 0);
   if (base === -1) {
     return { used: args.used, max: -1, remaining: -1, bonus, base };

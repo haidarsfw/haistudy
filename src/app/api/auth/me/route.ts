@@ -14,6 +14,7 @@ import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { normalizeLoginMethod } from "@/lib/auth/login-method";
 import { readDeviceIdentity } from "@/lib/auth/device-id";
+import { isMentorAccount } from "@/lib/mentor/groups";
 
 /**
  * GET /api/auth/me
@@ -86,6 +87,12 @@ export async function GET() {
   if (!license) {
     return NextResponse.json({ session: null }, { status: 401 });
   }
+
+  // Started now, read at the end: it runs alongside the reads below instead of
+  // adding a round trip to a route every app load waits on.
+  const mentorCheck: Promise<boolean> = license.account_id
+    ? isMentorAccount(supabase, license.account_id as string).catch(() => false)
+    : Promise.resolve(false);
 
   // Devices come back embedded rather than as a second round trip: this runs on
   // every app load and the free tier pays for each query.
@@ -183,6 +190,9 @@ export async function GET() {
     ),
     isAdmin: license.is_admin,
     isTester: license.is_tester,
+    // For the mentor perks the client has to know about (the AI chat cap).
+    // The server re-checks on every write; this only shapes the screen.
+    isMentor: await mentorCheck,
     expiry: activation?.expiry ?? null,
     selectedClass: classLabel,
     isPreview: license.is_preview || false,

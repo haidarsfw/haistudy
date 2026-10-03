@@ -180,12 +180,16 @@ export async function isMentorAccount(
     .eq("status", "active");
   if (owns) return true;
 
+  // Only a group that is still running. Archiving a group leaves its member
+  // rows in place (history), so without the join an archived group's mentors,
+  // its owner included, would stay mentors and keep the perks forever.
   const { count: leads } = await supabase
     .from("group_members")
-    .select("id", { head: true, count: "exact" })
+    .select("id, mentor_groups!inner(status)", { head: true, count: "exact" })
     .eq("account_id", accountId)
     .eq("role", "mentor")
-    .eq("status", "active");
+    .eq("status", "active")
+    .eq("mentor_groups.status", "active");
   return Boolean(leads);
 }
 
@@ -275,4 +279,27 @@ export async function recordGroupJoinAttempt(
 ): Promise<void> {
   // Lewat penulis bersama, satu-satunya jalan ke tabel ini.
   await recordRateEvent(supabase, "group_join", `account:${accountId}`);
+}
+
+/**
+ * Is the owner of this licence a mentor? For the mentor perks: Latihan Soal and
+ * AI without limits (plan, Perk table).
+ *
+ * Derived from the groups, like isMentorAccount, never stored: the day a group
+ * is archived the perk ends with it, with nothing to remember to switch off.
+ * Two indexed lookups; called on exam start, the quota read, the AI
+ * conversation calls and the session check.
+ */
+export async function isMentorLicense(
+  supabase: SupabaseClient,
+  licenseKey: string
+): Promise<boolean> {
+  const { data: lic } = await supabase
+    .from("license_keys")
+    .select("account_id")
+    .eq("key", licenseKey)
+    .maybeSingle();
+  const accountId = (lic?.account_id as string | null) ?? null;
+  if (!accountId) return false;
+  return isMentorAccount(supabase, accountId);
 }

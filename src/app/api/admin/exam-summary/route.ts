@@ -7,6 +7,7 @@ import { validateAdmin } from "@/lib/auth/admin-guard";
 import { scopeKey } from "@/lib/scope";
 import { loadCourses } from "@/data";
 import { computeQuota, quotaCountFrom } from "@/lib/exam/quota";
+import { isMentorAccount } from "@/lib/mentor/groups";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import type { PackageTier } from "@/lib/tier";
 
@@ -37,13 +38,17 @@ export async function GET(request: Request) {
   // License → scope + tier (drives the credit-model quota per subject).
   const { data: lic } = await supabase
     .from("license_keys")
-    .select("semester, exam_period, jurusan, is_admin, package_tier, referral_exam_bonus")
+    .select("semester, exam_period, jurusan, is_admin, package_tier, referral_exam_bonus, account_id")
     .eq("key", key)
     .maybeSingle();
 
   const isAdmin = Boolean(lic?.is_admin);
   const tier = (lic?.package_tier as PackageTier) ?? "normal";
   const perkBonus = (lic?.referral_exam_bonus as number | null) ?? 0;
+  // Same rule as the player's: a mentor has no limit, so the admin reads ∞ too.
+  const unlimited = lic?.account_id
+    ? await isMentorAccount(supabase, lic.account_id as string)
+    : false;
   const scope: ScopeTuple = {
     semester: (lic?.semester as number) ?? 2,
     examPeriod: (lic?.exam_period as ExamPeriod) ?? "uas",
@@ -169,6 +174,7 @@ export async function GET(request: Request) {
       tier,
       bonus: (ov?.bonus ?? 0) + (perkBonus ?? 0),
       used: e.used,
+      unlimited,
     });
     return { ...e, bonus: q.bonus, base: q.base, max: q.max, remaining: q.remaining };
   });

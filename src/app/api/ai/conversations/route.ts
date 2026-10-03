@@ -7,13 +7,15 @@ import { requireScope, scopeEq, scopeColumns, ScopeError } from "@/lib/auth/scop
 import { checkCooldown } from "@/lib/auth/cooldown";
 import { getCaller } from "@/lib/auth/session-license";
 import { isAdminFromSession } from "@/lib/auth/admin-guard";
-import { aiConversationLimit, VIP_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
+import { aiConversationLimit, MENTOR_AI_CONVERSATION_LIMIT } from "@/lib/ai-limits";
+import { isMentorAccount } from "@/lib/mentor/groups";
 import type { PackageTier } from "@/lib/tier";
 import { accountColumns, ownerFilter, accountIdForLicense } from "@/lib/auth/account-link";
 
-// Hard ceiling for GET/mock paths = the largest any tier can hold. Per-tier
-// caps (free 3 / vip 10) are resolved from the license row in POST.
-const MAX_CONVERSATIONS = VIP_AI_CONVERSATION_LIMIT;
+// Hard ceiling for GET/mock paths = the largest anyone can hold (a mentor).
+// Per-person caps (free 3 / vip 10 / mentor 100) are resolved in POST, so
+// nobody else ever reaches this ceiling.
+const MAX_CONVERSATIONS = MENTOR_AI_CONVERSATION_LIMIT;
 
 // In-memory mock store for when Supabase is not configured
 const mockStore = new Map<string, Array<{
@@ -106,15 +108,17 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()!;
 
-    // Resolve the per-tier cap from the license row (free 3 / vip 10 / admin 10).
+    // Resolve the cap from the license row (free 3 / vip 10 / admin 10 / mentor 100).
     const { data: license } = await supabase
       .from("license_keys")
-      .select("package_tier")
+      .select("package_tier, account_id")
       .eq("key", licenseKey)
       .single();
-    const tier = (license as { package_tier?: PackageTier } | null)?.package_tier ?? "normal";
+    const lic = license as { package_tier?: PackageTier; account_id?: string | null } | null;
+    const tier = lic?.package_tier ?? "normal";
     const isAdmin = await isAdminFromSession();
-    const limit = aiConversationLimit(isAdmin, tier);
+    const isMentor = lic?.account_id ? await isMentorAccount(supabase, lic.account_id) : false;
+    const limit = aiConversationLimit(isAdmin, tier, isMentor);
 
     // Hard block at the cap (scoped count). Unlike the old eviction behaviour,
     // we refuse to create so the user explicitly deletes or upgrades. The

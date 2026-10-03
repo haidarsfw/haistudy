@@ -8,6 +8,7 @@ import { requireScope, ScopeError } from "@/lib/auth/scope-check";
 import { scopeKey } from "@/lib/scope";
 import type { PackageTier } from "@/lib/tier";
 import { computeQuota, quotaCountFrom } from "@/lib/exam/quota";
+import { isMentorAccount } from "@/lib/mentor/groups";
 
 /**
  * GET /api/exam/quota?subjectId=bizethics
@@ -47,12 +48,16 @@ export async function GET(request: Request) {
     // Get user tier + admin status
     const { data: license } = await supabase
       .from("license_keys")
-      .select("package_tier, is_admin, referral_exam_bonus")
+      .select("package_tier, is_admin, referral_exam_bonus, account_id")
       .eq("key", licenseKey)
       .maybeSingle();
 
     const isAdmin = Boolean(license?.is_admin);
     const tier = (license?.package_tier as PackageTier) ?? "normal";
+    // Mentor perk: no limit while they run an active group.
+    const unlimited = license?.account_id
+      ? await isMentorAccount(supabase, license.account_id as string)
+      : false;
 
     // Per-subject bonus credits (top-ups) + reset marker (credit model).
     let bonus = 0;
@@ -87,6 +92,7 @@ export async function GET(request: Request) {
       tier,
       bonus: bonus + ((license?.referral_exam_bonus as number | null | undefined) ?? 0),
       used,
+      unlimited,
     });
 
     // Fetch attempt summaries for history
