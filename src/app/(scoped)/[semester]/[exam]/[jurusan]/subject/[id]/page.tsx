@@ -236,9 +236,11 @@ export default function SubjectPage() {
 
   if (!subject || !content) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Materi belum tersedia untuk periode ini.
+          {subject?.pending
+            ? `Materi ${subject.name} sedang disiapkan. Begitu siap, langsung muncul di sini.`
+            : "Materi belum tersedia untuk periode ini."}
         </p>
         <button
           onClick={() => router.push(dashboardHref)}

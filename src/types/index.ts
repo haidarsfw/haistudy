@@ -38,6 +38,12 @@ export interface Subject {
   icon: string; // Lucide icon name
   description: string;
   color: string; // Tailwind color class
+  /**
+   * Tested in this period but its material is not written yet ("materi
+   * menyusul"). Listed so buyers can see the subject is covered; it has no
+   * content entry, so progress, agendas and reports pass over it.
+   */
+  pending?: boolean;
 }
 
 export interface Schedule {

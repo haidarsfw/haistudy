@@ -17,11 +17,12 @@ export function QuickStudyCard() {
 
   // Show last 3 visited subjects, padded with defaults to always show 3
   const recentIds = settings.recentSubjects ?? [];
+  // A subject whose material is still coming has nothing to continue.
   const recentSubjects = recentIds
-    .map((id) => subjects.find((s) => s.id === id))
+    .map((id) => subjects.find((s) => s.id === id && !s.pending))
     .filter(Boolean) as typeof subjects;
   // Pad with subjects not already in recent list
-  const remaining = subjects.filter((s) => !recentIds.includes(s.id));
+  const remaining = subjects.filter((s) => !recentIds.includes(s.id) && !s.pending);
   const quickSubjects = [...recentSubjects, ...remaining].slice(0, 3);
 
   if (quickSubjects.length === 0) return null;

@@ -119,7 +119,8 @@ export default function AnalyticsPage() {
   const subjectName = (id: string) =>
     subjects.find((s) => s.id === id)?.name ?? id;
 
-  const subjectStats = subjects.map((subject) => {
+  // A subject whose material is still coming would only add a 0% to the average.
+  const subjectStats = subjects.filter((s) => !s.pending).map((subject) => {
     const content = scopedContent[subject.id];
     const sp = progress[subject.id];
 

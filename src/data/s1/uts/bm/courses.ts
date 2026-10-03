@@ -40,6 +40,16 @@ export const subjects: Subject[] = [
     "icon": "Scale",
     "description": "Ideologi & nilai-nilai Pancasila",
     "color": "text-red-600 dark:text-red-400"
+  },
+  // Tested in the B30 UTS (owner, 4 Oct 2026); material not written yet.
+  {
+    "id": "matbis",
+    "name": "Business Mathematics",
+    "shortName": "Business Math",
+    "icon": "Calculator",
+    "description": "Matematika untuk keputusan bisnis",
+    "color": "text-indigo-600 dark:text-indigo-400",
+    "pending": true
   }
 ];
 
