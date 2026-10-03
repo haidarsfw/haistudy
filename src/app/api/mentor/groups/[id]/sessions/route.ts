@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
-import { roleInGroup } from "@/lib/mentor/groups";
+import { ARCHIVED_ERROR, isGroupArchived, roleInGroup } from "@/lib/mentor/groups";
 import { requestingAccountId } from "@/lib/mentor/requests";
 import { SESSION_COLUMNS, parseSessionInput, toGroupSession, type GroupSession } from "@/lib/mentor/sessions";
 import { displayNamesForAccounts } from "@/lib/mentor/names";
@@ -92,9 +92,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const role = accountId && UUID_RE.test(id) ? await roleInGroup(supabase, id, accountId) : null;
     if (role !== "mentor") return NextResponse.json({ error: "Grup tidak ditemukan" }, { status: 404 });
 
-    const { data: group } = await supabase.from("mentor_groups").select("status").eq("id", id).maybeSingle();
-    if (group?.status !== "active") {
-      return NextResponse.json({ error: "Grup ini sudah diarsipkan." }, { status: 409 });
+    if (await isGroupArchived(supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;

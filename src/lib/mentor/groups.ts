@@ -116,8 +116,13 @@ export const GROUP_COLUMNS =
  */
 export async function loadGroupsForAccount(
   supabase: SupabaseClient,
-  accountId: string
+  accountId: string,
+  // Archived groups only where someone READS them (the group lists). Anything
+  // that grants something, perks, "Tanya mentor", reminders, a place to
+  // write, keeps asking for running groups only.
+  { includeArchived = false }: { includeArchived?: boolean } = {}
 ): Promise<{ mentoring: MentorGroup[]; joined: MentorGroup[] }> {
+  const statuses = includeArchived ? ["active", "archived"] : ["active"];
   const { data: memberships } = await supabase
     .from("group_members")
     .select("group_id, role")
@@ -132,7 +137,7 @@ export async function loadGroupsForAccount(
     .from("mentor_groups")
     .select(GROUP_COLUMNS)
     .eq("owner_account_id", accountId)
-    .eq("status", "active");
+    .in("status", statuses);
 
   const byId = new Map<string, GroupRow>();
   for (const row of (owned ?? []) as GroupRow[]) byId.set(row.id, row);
@@ -142,7 +147,7 @@ export async function loadGroupsForAccount(
       .from("mentor_groups")
       .select(GROUP_COLUMNS)
       .in("id", ids)
-      .eq("status", "active");
+      .in("status", statuses);
     for (const row of (joinedRows ?? []) as GroupRow[]) byId.set(row.id, row);
   }
 
@@ -208,6 +213,64 @@ export async function activeMemberCount(
     .eq("group_id", groupId)
     .eq("status", "active");
   return count ?? 0;
+}
+
+/**
+ * Menjadi mentor = menjadi partner, otomatis (keputusan pemilik, 3 Okt 2026):
+ * satu langkah untuk mentor, bukan dua persetujuan terpisah. Dipakai saat grup
+ * dibuat dan saat grup diserahkan ke mentor lain.
+ *
+ * Satu pengecualian: partner yang sedang DIJEDA tidak diaktifkan diam-diam.
+ * Jeda adalah keputusan pemilik sendiri; memberi orang itu grup belum tentu
+ * berarti mencabutnya, jadi dibiarkan dan dikatakan di respons.
+ *
+ * Returns "active", "paused", or "gagal" (the group stands either way; the
+ * partnership can then be approved by hand from the Partner tab).
+ */
+export async function activateMentorPartner(
+  supabase: SupabaseClient,
+  accountId: string,
+  pitch: string,
+  decidedBy: string | null
+): Promise<"active" | "paused" | "gagal"> {
+  const { data: existing } = await supabase
+    .from("partners")
+    .select("id, status")
+    .eq("account_id", accountId)
+    .maybeSingle();
+  if (existing?.status === "paused") return "paused";
+  if (existing?.status === "active") return "active";
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("partners").upsert(
+    {
+      account_id: accountId,
+      status: "active",
+      pitch,
+      decided_at: now,
+      decided_by: decidedBy,
+      updated_at: now,
+    },
+    { onConflict: "account_id" }
+  );
+  if (error) {
+    console.error("Aktivasi partner mentor gagal:", error.message);
+    return "gagal";
+  }
+  return "active";
+}
+
+/** What every write to an archived group answers. */
+export const ARCHIVED_ERROR = "Grup ini sudah diarsipkan, jadi isinya hanya bisa dibaca.";
+
+/**
+ * Whether a group is archived. Every route that WRITES to a group asks this,
+ * after its role check: an archived group keeps its chat, sessions and notes
+ * readable (the promise in migration 076) but takes nothing new. Reads do not
+ * ask.
+ */
+export async function isGroupArchived(supabase: SupabaseClient, groupId: string): Promise<boolean> {
+  const { data } = await supabase.from("mentor_groups").select("status").eq("id", groupId).maybeSingle();
+  return data?.status === "archived";
 }
 
 /**

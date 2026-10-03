@@ -18,6 +18,8 @@ export interface MyGroup {
   id: string;
   name: string;
   scopeKey: string;
+  /** Over: chat, questions and schedule stay readable, nothing new goes in. */
+  archived?: boolean;
 }
 
 export interface PendingQuote {
@@ -48,9 +50,14 @@ export function GroupTab({
   const [view, setView] = useState<"chat" | "pertanyaan" | "jadwal">("chat");
   const [asQuestion, setAsQuestion] = useState(false);
   const [seenQuote, setSeenQuote] = useState<PendingQuote | null>(null);
+  const archived = Boolean(groups.find((g) => g.id === groupId)?.archived);
   if (pendingQuote !== seenQuote) {
     setSeenQuote(pendingQuote);
-    if (pendingQuote) setView("chat");
+    if (pendingQuote) {
+      setView("chat");
+      // A question needs a group that still takes messages.
+      if (archived) setGroupId(groups.find((g) => !g.archived)?.id ?? groupId);
+    }
   }
   const { messages, loading, hasMore, role, me, error, loadMore, send, remove, setAnswered } = useGroupChat(groupId);
   const [text, setText] = useState("");
@@ -121,14 +128,20 @@ export function GroupTab({
             <div className="mt-8 text-center">
               <CircleHelp className="mx-auto h-6 w-6 text-muted-foreground" />
               <p className="mt-2 text-sm text-muted-foreground">
-                Belum ada pertanyaan. Pakai &ldquo;Tanya mentor&rdquo; dari Rangkuman, atau tandai pesanmu sebagai
-                pertanyaan sebelum mengirim.
+                {archived ? (
+                  "Grup ini tidak punya pertanyaan."
+                ) : (
+                  <>
+                    Belum ada pertanyaan. Pakai &ldquo;Tanya mentor&rdquo; dari Rangkuman, atau tandai pesanmu sebagai
+                    pertanyaan sebelum mengirim.
+                  </>
+                )}
               </p>
             </div>
           ) : (
             <ul className="space-y-2">
               {questions.map((m) => {
-                const canMark = role === "mentor" || (me !== null && m.accountId === me);
+                const canMark = !archived && (role === "mentor" || (me !== null && m.accountId === me));
                 return (
                   <li key={m.id} className="rounded-lg border border-border p-2.5">
                     <div className="flex items-center gap-1.5">
@@ -191,7 +204,7 @@ export function GroupTab({
               .
             </p>
           )}
-          <GroupSessions key={groupId} groupId={groupId} canEdit={false} />
+          <GroupSessions key={groupId} groupId={groupId} canEdit={false} readOnly={archived} />
         </div>
       </div>
     );
@@ -212,7 +225,9 @@ export function GroupTab({
           <div className="mt-8 text-center">
             <Users className="mx-auto h-6 w-6 text-muted-foreground" />
             <p className="mt-2 text-sm text-muted-foreground">
-              Belum ada pesan. Yang kamu tulis di sini hanya terbaca oleh anggota grup dan mentornya.
+              {archived
+                ? "Grup ini tidak punya pesan."
+                : "Belum ada pesan. Yang kamu tulis di sini hanya terbaca oleh anggota grup dan mentornya."}
             </p>
           </div>
         ) : (
@@ -230,7 +245,7 @@ export function GroupTab({
             )}
             {messages.map((m) => {
               const own = me !== null && m.accountId === me;
-              const canDelete = !m.deleted && (own || role === "mentor");
+              const canDelete = !archived && !m.deleted && (own || role === "mentor");
               return (
                 <li key={m.id} className="group/msg">
                   <div className="flex items-center gap-1.5">
@@ -294,6 +309,12 @@ export function GroupTab({
         <div ref={bottomRef} />
       </div>
 
+      {archived ? (
+        <p className="border-t border-border px-3 py-3 text-xs text-muted-foreground">
+          Grup ini sudah diarsipkan. Pesan, pertanyaan, dan jadwalnya tetap bisa dibaca, tapi tidak bisa
+          ditambah.
+        </p>
+      ) : (
       <div className="border-t border-border p-3">
         {quote && (
           <div className="mb-2 flex items-start gap-2 rounded-lg bg-muted/60 px-2.5 py-1.5">
@@ -356,6 +377,7 @@ export function GroupTab({
           </Button>
         </div>
       </div>
+      )}
     </div>
   );
 }
@@ -384,6 +406,7 @@ function GroupPicker({
           )}
         >
           {g.name}
+          {g.archived && <span className="font-normal opacity-70"> · arsip</span>}
         </button>
       ))}
     </div>

@@ -17,6 +17,7 @@ interface GroupSummary {
   inviteCode: string;
   memberCount: number;
   maxMembers: number | null;
+  status: "active" | "archived";
 }
 
 interface Detail {
@@ -35,6 +36,7 @@ interface Detail {
  */
 export function MentorGroups() {
   const [groups, setGroups] = useState<GroupSummary[] | null>(null);
+  const [showOver, setShowOver] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -56,19 +58,48 @@ export function MentorGroups() {
 
   if (!groups || groups.length === 0) return null;
 
+  // Groups whose period is over stay here to be read (the schedule, the
+  // notes, the members' final progress), folded under the running ones.
+  const running = groups.filter((g) => g.status !== "archived");
+  const over = groups.filter((g) => g.status === "archived");
+  const overOpen = showOver || running.length === 0;
+
   return (
     <section className="mt-8">
       <h2 className="font-display text-lg font-bold tracking-tight text-foreground">Grup kamu</h2>
-      <div className="mt-3 space-y-3">
-        {groups.map((g) => (
-          <GroupCard key={g.id} g={g} />
-        ))}
-      </div>
+      {running.length > 0 && (
+        <div className="mt-3 space-y-3">
+          {running.map((g) => (
+            <GroupCard key={g.id} g={g} />
+          ))}
+        </div>
+      )}
+      {over.length > 0 && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowOver((v) => !v)}
+            aria-expanded={overOpen}
+            className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform", overOpen && "rotate-180")} />
+            Sudah selesai ({over.length})
+          </button>
+          {overOpen && (
+            <div className="mt-2 space-y-3">
+              {over.map((g) => (
+                <GroupCard key={g.id} g={g} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }
 
 function GroupCard({ g }: { g: GroupSummary }) {
+  const archived = g.status === "archived";
   const [open, setOpen] = useState(false);
   const [schedule, setSchedule] = useState(false);
   const [progress, setProgress] = useState(false);
@@ -114,33 +145,45 @@ function GroupCard({ g }: { g: GroupSummary }) {
           {/* Live once the detail is in, so an approval shows up in the count. */}
           {detail ? detail.members.filter((m) => m.status === "active").length : g.memberCount}
           {g.maxMembers ? ` / ${g.maxMembers}` : ""} anggota
+          {archived && <span className="ml-2 text-xs font-medium text-muted-foreground">· Diarsipkan</span>}
         </p>
       </header>
 
-      {detail && <Requests groupId={g.id} members={detail.members} onChange={load} />}
+      {archived && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Periode grup ini sudah selesai. Jadwal, catatan sesi, dan progres anggotanya tetap bisa dibaca, tapi tidak
+          bisa ditambah.
+        </p>
+      )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <code className="min-w-0 flex-1 break-all rounded-lg border border-border bg-muted px-3 py-2.5 font-mono text-xs text-foreground">
-          {link.replace(/^https?:\/\//, "")}
-        </code>
-        <Button variant="outline" className="h-11 shrink-0 gap-2" onClick={copy}>
-          {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-          {copied ? "Tersalin" : "Salin"}
-        </Button>
-        <a
-          href={`https://wa.me/?text=${waText}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-        >
-          <MessageCircle className="h-4 w-4" />
-          Bagikan ke WA
-        </a>
-      </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Untuk dibacakan di kelas: kode <span className="font-mono font-semibold text-foreground">{g.inviteCode}</span>{" "}
-        di haistudy.site/grup/{g.inviteCode}
-      </p>
+      {detail && !archived && <Requests groupId={g.id} members={detail.members} onChange={load} />}
+
+      {!archived && (
+        <>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <code className="min-w-0 flex-1 break-all rounded-lg border border-border bg-muted px-3 py-2.5 font-mono text-xs text-foreground">
+              {link.replace(/^https?:\/\//, "")}
+            </code>
+            <Button variant="outline" className="h-11 shrink-0 gap-2" onClick={copy}>
+              {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+              {copied ? "Tersalin" : "Salin"}
+            </Button>
+            <a
+              href={`https://wa.me/?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Bagikan ke WA
+            </a>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Untuk dibacakan di kelas: kode <span className="font-mono font-semibold text-foreground">{g.inviteCode}</span>{" "}
+            di haistudy.site/grup/{g.inviteCode}
+          </p>
+        </>
+      )}
 
       <button
         type="button"
@@ -154,7 +197,7 @@ function GroupCard({ g }: { g: GroupSummary }) {
       </button>
       {schedule && (
         <div className="mt-2">
-          <GroupSessions groupId={g.id} canEdit scope={scope ?? undefined} />
+          <GroupSessions groupId={g.id} canEdit={!archived} readOnly={archived} scope={scope ?? undefined} />
         </div>
       )}
 
@@ -181,7 +224,7 @@ function GroupCard({ g }: { g: GroupSummary }) {
         className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground"
       >
         <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
-        Anggota &amp; undangan
+        {archived ? "Anggota" : <>Anggota &amp; undangan</>}
       </button>
 
       {open && (
@@ -193,7 +236,7 @@ function GroupCard({ g }: { g: GroupSummary }) {
           ) : (
             <>
               <Members members={detail.members} />
-              <Invites groupId={g.id} invites={detail.invites} onChange={load} />
+              {!archived && <Invites groupId={g.id} invites={detail.invites} onChange={load} />}
             </>
           )}
         </div>

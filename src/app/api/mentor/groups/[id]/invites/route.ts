@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { requireAccount } from "@/lib/auth/account-session";
 import { AccountError } from "@/lib/auth/account";
-import { roleInGroup } from "@/lib/mentor/groups";
+import { ARCHIVED_ERROR, isGroupArchived, roleInGroup } from "@/lib/mentor/groups";
 import { findAccountByContact, markInvited, parseInviteList } from "@/lib/mentor/invites";
 
 /** A class list, not a mailing list. Enough for any real class, small enough to stop a paste of a whole directory. */
@@ -35,6 +35,9 @@ export async function POST(
     const supabase = createServerClient()!;
     if ((await roleInGroup(supabase, id, account.id)) !== "mentor") {
       return NextResponse.json({ error: "Grup tidak ditemukan" }, { status: 404 });
+    }
+    if (await isGroupArchived(supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
     }
 
     const body = (await req.json().catch(() => ({}))) as { entries?: string };
@@ -113,6 +116,9 @@ export async function DELETE(
     const supabase = createServerClient()!;
     if ((await roleInGroup(supabase, id, account.id)) !== "mentor") {
       return NextResponse.json({ error: "Grup tidak ditemukan" }, { status: 404 });
+    }
+    if (await isGroupArchived(supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
     }
     const inviteId = new URL(req.url).searchParams.get("inviteId") ?? "";
     // Only an invite nobody has used yet. One that matched a person is part of

@@ -18,6 +18,7 @@ import { ReferralCodes } from "./referral-codes";
 import { FeedbackDiscounts } from "./feedback-discounts";
 import { ClassDiscounts } from "./class-discounts";
 import { PartnerList } from "./partner-list";
+import { MentorGroupAdmin } from "./mentor-group-admin";
 import { ScopeWaitlist } from "./scope-waitlist";
 import { ReferralAttach } from "./referral-attach";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
@@ -188,6 +189,7 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
           <TabsContent value={9}>
             <div className="space-y-6">
               <PartnerList />
+              <MentorGroupAdmin />
               <ReferralAttach />
             </div>
           </TabsContent>

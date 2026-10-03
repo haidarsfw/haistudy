@@ -79,8 +79,13 @@ export function ChatPanel({
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!alive || !d) return;
-        const all = [...(d.mentoring ?? []), ...(d.joined ?? [])] as MyGroup[];
-        setMyGroups(all.map((g) => ({ id: g.id, name: g.name, scopeKey: g.scopeKey })));
+        const all = [...(d.mentoring ?? []), ...(d.joined ?? [])] as (MyGroup & { status?: string })[];
+        setMyGroups(
+          all
+            .map((g) => ({ id: g.id, name: g.name, scopeKey: g.scopeKey, archived: g.status === "archived" }))
+            // Running groups first, so the tab opens on one that can be written to.
+            .sort((a, b) => Number(a.archived) - Number(b.archived))
+        );
       })
       .catch(() => {});
     return () => {

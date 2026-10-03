@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
-import { roleInGroup } from "@/lib/mentor/groups";
+import { ARCHIVED_ERROR, isGroupArchived, roleInGroup } from "@/lib/mentor/groups";
 import { requestingAccountId } from "@/lib/mentor/requests";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,6 +34,9 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string; ses
     const { id, sessionId } = await ctx.params;
     const c = await context(id, sessionId);
     if (!c) return NextResponse.json({ error: "Sesi tidak ditemukan" }, { status: 404 });
+    if (await isGroupArchived(c.supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
+    }
     const ends = Date.parse(c.session.starts_at as string) + (c.session.duration_minutes as number) * 60_000;
     if (c.session.status !== "scheduled" || ends < Date.now()) {
       return NextResponse.json({ error: "Sesi ini sudah lewat atau batal." }, { status: 409 });
@@ -71,6 +74,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string; s
     const { id, sessionId } = await ctx.params;
     const c = await context(id, sessionId);
     if (!c || c.role !== "mentor") return NextResponse.json({ error: "Sesi tidak ditemukan" }, { status: 404 });
+    if (await isGroupArchived(c.supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
+    }
     const body = (await req.json().catch(() => ({}))) as { accountId?: string; attended?: boolean | null };
     const target = String(body.accountId ?? "");
     if (!UUID_RE.test(target) || (body.attended !== true && body.attended !== false && body.attended !== null)) {

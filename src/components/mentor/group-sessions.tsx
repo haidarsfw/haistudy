@@ -36,14 +36,18 @@ const DURATIONS = [60, 90, 120, 180];
  */
 export function GroupSessions({
   groupId,
-  canEdit,
+  canEdit: canEditProp,
   scope,
+  readOnly = false,
 }: {
   groupId: string;
   canEdit: boolean;
   /** The period the group teaches; gives the mentor the agenda template. */
   scope?: ScopeTuple;
+  /** An archived group: the schedule and notes are history, no answers or edits. */
+  readOnly?: boolean;
 }) {
+  const canEdit = canEditProp && !readOnly;
   const [sessions, setSessions] = useState<GroupSession[] | null>(null);
   const [adding, setAdding] = useState(false);
   // Read once when the list mounts: which sessions are still ahead is a
@@ -117,16 +121,18 @@ export function GroupSessions({
 
       {upcoming.length === 0 && past.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {canEdit
-            ? "Belum ada sesi. Jadwalkan yang pertama; anggota grup melihatnya di aplikasi dan diingatkan sehari sebelumnya."
-            : "Mentormu belum menjadwalkan sesi."}
+          {readOnly
+            ? "Grup ini tidak punya sesi."
+            : canEdit
+              ? "Belum ada sesi. Jadwalkan yang pertama; anggota grup melihatnya di aplikasi dan diingatkan sehari sebelumnya."
+              : "Mentormu belum menjadwalkan sesi."}
         </p>
       ) : (
         <>
           {upcoming.length > 0 && (
             <ul className="space-y-2">
               {upcoming.map((s) => (
-                <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} onChange={load} now={now} plan={plan} />
+                <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} readOnly={readOnly} onChange={load} now={now} plan={plan} />
               ))}
             </ul>
           )}
@@ -137,7 +143,7 @@ export function GroupSessions({
               <p className="mb-2 text-xs font-medium text-muted-foreground">Riwayat</p>
               <ul className="space-y-2">
                 {past.map((s) => (
-                  <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} onChange={load} now={now} plan={plan} />
+                  <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} readOnly={readOnly} onChange={load} now={now} plan={plan} />
                 ))}
               </ul>
             </div>
@@ -152,6 +158,7 @@ function SessionRow({
   s,
   groupId,
   canEdit,
+  readOnly,
   onChange,
   now,
   plan,
@@ -159,6 +166,7 @@ function SessionRow({
   s: GroupSession;
   groupId: string;
   canEdit: boolean;
+  readOnly: boolean;
   onChange: () => Promise<void>;
   plan: AgendaPlan | null;
   now: number;
@@ -246,7 +254,7 @@ function SessionRow({
         </div>
       )}
 
-      {!canEdit && s.status === "scheduled" && !ended && (
+      {!canEdit && !readOnly && s.status === "scheduled" && !ended && (
         <Rsvp groupId={groupId} sessionId={s.id} initial={s.myRsvp ?? null} />
       )}
       {canEdit && s.status !== "cancelled" && s.attendance && s.attendance.length > 0 && (

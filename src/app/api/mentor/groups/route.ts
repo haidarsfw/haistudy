@@ -24,7 +24,13 @@ export async function GET() {
     }
 
     const supabase = createServerClient()!;
-    const { mentoring, joined } = await loadGroupsForAccount(supabase, account.id);
+    // Archived groups too: their chat, sessions and notes stay readable, and
+    // the lists say which ones are over. Running groups first.
+    const loaded = await loadGroupsForAccount(supabase, account.id, { includeArchived: true });
+    const runningFirst = (a: { status: string }, b: { status: string }) =>
+      Number(a.status === "archived") - Number(b.status === "archived");
+    const mentoring = loaded.mentoring.sort(runningFirst);
+    const joined = loaded.joined.sort(runningFirst);
 
     // Jumlah anggota hanya untuk grup yang dia ajar. Mentee tidak perlu tahu
     // berapa banyak orang di grup, dan menghitungnya untuk mereka adalah query

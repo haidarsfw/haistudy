@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
-import { roleInGroup } from "@/lib/mentor/groups";
+import { ARCHIVED_ERROR, isGroupArchived, roleInGroup } from "@/lib/mentor/groups";
 import { requestingAccountId } from "@/lib/mentor/requests";
 import { SESSION_COLUMNS, parseSessionInput, toGroupSession } from "@/lib/mentor/sessions";
 import { notify } from "@/lib/mentor/requests";
@@ -32,6 +32,9 @@ export async function PATCH(
         ? await roleInGroup(supabase, id, accountId)
         : null;
     if (role !== "mentor") return NextResponse.json({ error: "Sesi tidak ditemukan" }, { status: 404 });
+    if (await isGroupArchived(supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
+    }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const parsed = parseSessionInput(body, true);

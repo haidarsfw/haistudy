@@ -6,6 +6,7 @@ import { mintAccountReferralCode } from "@/lib/referral/codes";
 import { parseScopeKey, isAvailableScope } from "@/lib/scope";
 import {
   GROUP_COLUMNS,
+  activateMentorPartner,
   generateUniqueGroupCode,
   toMentorGroup,
   type GroupRow,
@@ -187,39 +188,12 @@ export async function POST(req: Request) {
     console.error("Kode referral mentor gagal dibuat:", e)
   );
 
-  // Menjadi mentor = menjadi partner, otomatis (keputusan pemilik, 3 Okt 2026):
-  // satu langkah untuk mentor, bukan dua persetujuan terpisah.
-  //
-  // Satu pengecualian: partner yang sedang DIJEDA tidak diaktifkan diam-diam.
-  // Jeda adalah keputusan pemilik sendiri; membuat grup untuk orang itu belum
-  // tentu berarti mencabutnya, jadi dibiarkan dan dikatakan di respons.
-  let partnerStatus: string = "active";
-  const { data: existingPartner } = await supabase
-    .from("partners")
-    .select("id, status")
-    .eq("account_id", owner.id)
-    .maybeSingle();
-  if (existingPartner?.status === "paused") {
-    partnerStatus = "paused";
-  } else if (existingPartner?.status !== "active") {
-    const now = new Date().toISOString();
-    const { error: partnerError } = await supabase.from("partners").upsert(
-      {
-        account_id: owner.id,
-        status: "active",
-        pitch: `Mentor grup "${name}" (otomatis saat grup dibuat)`,
-        decided_at: now,
-        decided_by: licenseKey,
-        updated_at: now,
-      },
-      { onConflict: "account_id" }
-    );
-    if (partnerError) {
-      // Grupnya tetap jadi; kemitraan bisa disetujui manual dari tab Partner.
-      console.error("Grup dibuat tapi aktivasi partner gagal:", partnerError.message);
-      partnerStatus = "gagal";
-    }
-  }
+  const partnerStatus = await activateMentorPartner(
+    supabase,
+    owner.id as string,
+    `Mentor grup "${name}" (otomatis saat grup dibuat)`,
+    licenseKey
+  );
 
   console.log(
     `Grup mentoring dibuat oleh ${licenseKey}: ${created.id} untuk ${owner.email}, partner=${partnerStatus}`

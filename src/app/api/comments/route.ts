@@ -24,10 +24,19 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 type Row = Record<string, unknown>;
 
-/** The viewer's groups in this period: what "grup" visibility can mean for them. */
-async function groupsHere(supabase: SupabaseClient, accountId: string | null, scope: ScopeTuple) {
+/**
+ * The viewer's groups in this period: what "grup" visibility can mean for
+ * them. Reading includes archived groups (their threads stay readable);
+ * writing does not (nothing new goes into an archived group).
+ */
+async function groupsHere(
+  supabase: SupabaseClient,
+  accountId: string | null,
+  scope: ScopeTuple,
+  { includeArchived = false }: { includeArchived?: boolean } = {}
+) {
   if (!accountId) return [];
-  const { mentoring, joined } = await loadGroupsForAccount(supabase, accountId);
+  const { mentoring, joined } = await loadGroupsForAccount(supabase, accountId, { includeArchived });
   const here = (g: { scope: ScopeTuple }) =>
     g.scope.semester === scope.semester &&
     g.scope.examPeriod === scope.examPeriod &&
@@ -65,7 +74,7 @@ export async function GET(req: Request) {
     }
     const supabase = createServerClient()!;
     const accountId = await requestingAccountId(supabase);
-    const groups = await groupsHere(supabase, accountId, scope);
+    const groups = await groupsHere(supabase, accountId, scope, { includeArchived: true });
 
     const { data, error } = await supabase
       .from("material_comments")
@@ -121,13 +130,15 @@ export async function GET(req: Request) {
         canResolve:
           !r.parent_id &&
           (Boolean(accountId && r.account_id === accountId) ||
-            (r.visibility === "group" && groups.some((g) => g.mentor && g.id === r.group_id))),
+            (r.visibility === "group" &&
+              groups.some((g) => g.mentor && g.status === "active" && g.id === r.group_id))),
       };
     });
 
     return NextResponse.json({
       comments,
-      groups: groups.map((g) => ({ id: g.id, name: g.name })),
+      // Where a new comment can go: running groups only.
+      groups: groups.filter((g) => g.status === "active").map((g) => ({ id: g.id, name: g.name })),
       canComment: Boolean(accountId),
     });
   } catch (error) {

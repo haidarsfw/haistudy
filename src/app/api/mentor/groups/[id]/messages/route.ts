@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { checkCooldown } from "@/lib/auth/cooldown";
-import { roleInGroup } from "@/lib/mentor/groups";
+import { ARCHIVED_ERROR, isGroupArchived, roleInGroup } from "@/lib/mentor/groups";
 import { requestingAccountId } from "@/lib/mentor/requests";
 import { displayNamesForAccounts } from "@/lib/mentor/names";
 import {
@@ -81,13 +81,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const g = await gate(id);
     if ("error" in g) return g.error;
 
-    const { data: group } = await g.supabase
-      .from("mentor_groups")
-      .select("status")
-      .eq("id", id)
-      .maybeSingle();
-    if (group?.status !== "active") {
-      return NextResponse.json({ error: "Grup ini sudah diarsipkan." }, { status: 409 });
+    if (await isGroupArchived(g.supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
     }
 
     // Same gentle flood guard as the class chat.
@@ -145,6 +140,9 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
     const { id } = await ctx.params;
     const g = await gate(id);
     if ("error" in g) return g.error;
+    if (await isGroupArchived(g.supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
+    }
     const messageId = new URL(req.url).searchParams.get("messageId") ?? "";
     if (!UUID_RE.test(messageId)) {
       return NextResponse.json({ error: "Pesan tidak ditemukan" }, { status: 404 });
@@ -180,6 +178,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     const { id } = await ctx.params;
     const g = await gate(id);
     if ("error" in g) return g.error;
+    if (await isGroupArchived(g.supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
+    }
     const messageId = new URL(req.url).searchParams.get("messageId") ?? "";
     if (!UUID_RE.test(messageId)) {
       return NextResponse.json({ error: "Pertanyaan tidak ditemukan" }, { status: 404 });

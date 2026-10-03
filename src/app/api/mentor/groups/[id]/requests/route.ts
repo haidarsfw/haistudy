@@ -4,7 +4,7 @@ import { waitUntil } from "@vercel/functions";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { requireAccount } from "@/lib/auth/account-session";
 import { AccountError } from "@/lib/auth/account";
-import { GROUP_COLUMNS, activeMemberCount, roleInGroup, type GroupRow } from "@/lib/mentor/groups";
+import { ARCHIVED_ERROR, GROUP_COLUMNS, activeMemberCount, isGroupArchived, roleInGroup, type GroupRow } from "@/lib/mentor/groups";
 import { notifyRequestApproved } from "@/lib/mentor/requests";
 
 /**
@@ -33,6 +33,9 @@ export async function POST(
     const supabase = createServerClient()!;
     if ((await roleInGroup(supabase, id, account.id)) !== "mentor") {
       return NextResponse.json({ error: "Grup tidak ditemukan" }, { status: 404 });
+    }
+    if (await isGroupArchived(supabase, id)) {
+      return NextResponse.json({ error: ARCHIVED_ERROR }, { status: 409 });
     }
 
     const body = (await req.json().catch(() => ({}))) as { memberId?: string; action?: string };
