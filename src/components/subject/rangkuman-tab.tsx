@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   Sun,
   Moon,
@@ -15,6 +15,7 @@ import {
   Headphones,
   Eraser,
   Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { parseRangkuman } from "@/lib/content-parser";
 import { loadRangkuman } from "@/data";
@@ -31,6 +32,10 @@ import {
   applyHighlightsToDOM,
 } from "./highlight-tooltip";
 import { TTSController } from "./tts-controller";
+import { MaterialCommentsPanel } from "./material-comments-panel";
+import { applyCommentsToDOM, revealComment, setActiveComment } from "./comment-anchors";
+import { useMaterialComments } from "@/hooks/use-material-comments";
+import { commentPath, type CommentAnchor } from "@/lib/comments";
 import { toast } from "@/components/ui/toast";
 import { askMentor, openAiWithReference } from "@/lib/events";
 import { ChipMark, ModuleMarker } from "@/components/subject/module-marker";
@@ -45,12 +50,15 @@ interface RangkumanTabProps {
   subjectId: string;
   initialModule?: string;
   highlightText?: string;
+  /** A comment thread to open (a link from a notification). */
+  initialComment?: string;
 }
 
 export function RangkumanTab({
   subjectId,
   initialModule,
   highlightText,
+  initialComment,
 }: RangkumanTabProps) {
   const { dark } = useTheme();
   const { t } = useTranslation();
@@ -119,7 +127,7 @@ export function RangkumanTab({
     setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
   }, []);
 
-  const { scope, scopeKey } = useScope();
+  const { scope, scopeKey, scopePath } = useScope();
   const [rangkumanData, setRangkumanData] = useState<Record<string, string> | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -131,6 +139,12 @@ export function RangkumanTab({
     };
   }, [scope, subjectId]);
   const modules = rangkumanData ? Object.keys(rangkumanData) : [];
+  // A link may name the module by id ("m3"), which survives a retitle;
+  // comment links do. Swap it for the title the content is keyed by.
+  if (rangkumanData && selectedModule && !(selectedModule in rangkumanData)) {
+    const byId = modules.find((m) => moduleIdOf(m) === selectedModule);
+    if (byId) setSelectedModule(byId);
+  }
 
   const { highlights, addHighlight, removeHighlight, clearAll } = useHighlights(
     scopeKey,
@@ -199,6 +213,70 @@ export function RangkumanTab({
     });
     return () => cancelAnimationFrame(frame);
   }, [fullscreen, highlights, selectedModule, onClickHighlight, rangkumanData]);
+
+  // Material comments (B phase 2): threads on passages of this module.
+  const commentModuleId =
+    selectedModule && rangkumanData?.[selectedModule] ? moduleIdOf(selectedModule) : null;
+  const comments = useMaterialComments(subjectId, commentModuleId);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentDraft, setCommentDraft] = useState<CommentAnchor | null>(null);
+  const [activeComment, setActiveCommentId] = useState<string | null>(null);
+  const [placement, setPlacement] = useState<{ roots: unknown; ids: Set<string> } | null>(null);
+  // A thread named by a link, opened once it has loaded. A new link while the
+  // page is already open (a notification tapped mid-study) starts over.
+  const [pendingComment, setPendingComment] = useState<string | null>(initialComment ?? null);
+  const [commentProp, setCommentProp] = useState(initialComment);
+  if (initialComment !== commentProp) {
+    setCommentProp(initialComment);
+    setPendingComment(initialComment ?? null);
+    if (initialModule) setSelectedModule(initialModule);
+  }
+  // Another module: its own threads, and no half-written comment carried over.
+  const [commentsFor, setCommentsFor] = useState(commentModuleId);
+  if (commentsFor !== commentModuleId) {
+    setCommentsFor(commentModuleId);
+    setCommentDraft(null);
+    setActiveCommentId(null);
+  }
+
+  const commentRoots = useMemo(
+    () =>
+      comments.comments
+        .filter((c) => !c.parentId)
+        .map((c) => ({ id: c.id, anchor: c.anchor, resolved: Boolean(c.resolvedAt) })),
+    [comments.comments]
+  );
+  // Known only once the marks are on the current threads; until then no
+  // thread is listed as "teks sudah berubah".
+  const placedComments = placement && placement.roots === commentRoots ? placement.ids : null;
+  const openCommentCount = commentRoots.filter((r) => !r.resolved).length;
+
+  const onClickComment = useCallback((id: string) => {
+    setCommentsOpen(true);
+    setActiveCommentId(id);
+  }, []);
+
+  // Same timing as the highlights above: after the content has painted.
+  useEffect(() => {
+    if (!selectedModule || !rangkumanData?.[selectedModule]) return;
+    const frame = requestAnimationFrame(() => {
+      const el = contentRef.current;
+      if (!el) return;
+      const ids = applyCommentsToDOM(el, commentRoots, onClickComment);
+      setPlacement({ roots: commentRoots, ids });
+      if (pendingComment && commentRoots.some((r) => r.id === pendingComment)) {
+        setCommentsOpen(true);
+        setActiveCommentId(pendingComment);
+        setPendingComment(null);
+        if (ids.has(pendingComment)) revealComment(el, pendingComment, isMobile ? "start" : "center");
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [commentRoots, selectedModule, rangkumanData, onClickComment, pendingComment, isMobile]);
+
+  useEffect(() => {
+    if (contentRef.current) setActiveComment(contentRef.current, activeComment);
+  }, [activeComment, placement]);
 
   // Show tooltip on mouseup/touchend when there's a text selection.
   const handleSelectionEnd = useCallback(() => {
@@ -388,6 +466,22 @@ export function RangkumanTab({
     setPendingAnchor(null);
     window.getSelection()?.removeAllRanges();
   }, [pendingAnchor, subjectName, selectedModule]);
+
+  // "Komentar": the selection becomes the passage of a new thread, written
+  // in the panel.
+  const handleComment = useCallback(() => {
+    if (!pendingAnchor) return;
+    setCommentDraft({
+      text: pendingAnchor.text,
+      line: pendingAnchor.ttsLine,
+      start: pendingAnchor.startOffset,
+      end: pendingAnchor.endOffset,
+    });
+    setCommentsOpen(true);
+    setTooltipPos(null);
+    setPendingAnchor(null);
+    window.getSelection()?.removeAllRanges();
+  }, [pendingAnchor]);
 
   // Follow global theme unless manually overridden
   useEffect(() => {
@@ -613,8 +707,25 @@ export function RangkumanTab({
           })}
         </div>
 
-        {/* Reading mode + TTS + fullscreen */}
+        {/* Comments + reading mode + TTS + fullscreen */}
         <div className="flex gap-1 shrink-0 ml-2">
+          {(comments.canComment || commentRoots.length > 0) && (
+            <>
+              <button
+                onClick={() => setCommentsOpen((v) => !v)}
+                aria-pressed={commentsOpen}
+                aria-label={openCommentCount ? `Komentar (${openCommentCount})` : "Komentar"}
+                title="Komentar"
+                className={`flex items-center gap-1 rounded-md p-1.5 text-xs font-medium transition-colors ${
+                  commentsOpen ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                {openCommentCount > 0 && <span className="tabular-nums">{openCommentCount}</span>}
+              </button>
+              <div className="w-px bg-border mx-0.5" />
+            </>
+          )}
           <button
             onClick={() => handleModeChange("light")}
             className={`rounded-md p-1.5 ${mode === "light" ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
@@ -703,27 +814,72 @@ export function RangkumanTab({
         </div>
       )}
 
-      {/* Content */}
-      {selectedModule && rangkumanData[selectedModule] ? (
-        <div
-          ref={contentRef}
-          className={`rounded-xl border border-border p-5 ${modeStyles[mode]} [&_img]:cursor-zoom-in`}
-          onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}
-          onCopy={isAdmin ? undefined : handleBlockCopy}
-          onCut={isAdmin ? undefined : handleBlockCopy}
-          onClick={handleContentClick}
-          onMouseUp={handleSelectionEnd}
-          onTouchEnd={handleSelectionEnd}
-        >
-          {parseRangkuman(rangkumanData[selectedModule])}
-        </div>
-      ) : selectedModule ? (
-        <div className="rounded-xl border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            {t("rangkuman.placeholder")}
-          </p>
-        </div>
-      ) : null}
+      {/* Content, and the comments beside it: a column on wide screens, a
+          floating card on tablets, a bottom sheet on phones (over the dock,
+          which hides on scroll and would leave a gap under a sheet above it). */}
+      <div
+        className={
+          commentsOpen && commentModuleId
+            ? "xl:grid xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start xl:gap-3"
+            : undefined
+        }
+      >
+        {selectedModule && rangkumanData[selectedModule] ? (
+          <div
+            ref={contentRef}
+            className={`rounded-xl border border-border p-5 ${modeStyles[mode]} [&_img]:cursor-zoom-in`}
+            onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}
+            onCopy={isAdmin ? undefined : handleBlockCopy}
+            onCut={isAdmin ? undefined : handleBlockCopy}
+            onClick={handleContentClick}
+            onMouseUp={handleSelectionEnd}
+            onTouchEnd={handleSelectionEnd}
+          >
+            {parseRangkuman(rangkumanData[selectedModule])}
+          </div>
+        ) : selectedModule ? (
+          <div className="rounded-xl border border-border p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              {t("rangkuman.placeholder")}
+            </p>
+          </div>
+        ) : null}
+
+        {commentsOpen && commentModuleId && (
+          <aside
+            aria-label="Komentar"
+            className="fixed left-0 right-0 bottom-0 z-[45] flex max-h-[60dvh] flex-col overflow-hidden rounded-t-3xl border-t border-border bg-background pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgb(0_0_0/0.12)] dark:shadow-[0_-8px_30px_rgb(0_0_0/0.5)] sm:left-auto sm:right-4 sm:bottom-4 sm:w-96 sm:max-h-[70dvh] sm:rounded-2xl sm:border sm:bg-popover sm:pb-0 sm:shadow-xl xl:sticky xl:left-auto xl:right-auto xl:bottom-auto xl:top-3 xl:z-auto xl:w-auto xl:max-h-[calc(100dvh-9rem)] xl:rounded-xl xl:bg-card xl:shadow-none"
+          >
+            <MaterialCommentsPanel
+              comments={comments.comments}
+              groups={comments.groups}
+              canComment={comments.canComment}
+              placed={placedComments}
+              activeId={activeComment}
+              onActivate={(id) => {
+                setActiveCommentId(id);
+                if (contentRef.current) revealComment(contentRef.current, id, isMobile ? "start" : "center");
+              }}
+              draft={commentDraft}
+              onDraftDone={() => setCommentDraft(null)}
+              onCreate={comments.create}
+              onReply={comments.reply}
+              onEdit={comments.edit}
+              onResolve={comments.resolve}
+              onRemove={comments.remove}
+              onReact={comments.react}
+              linkFor={(id) =>
+                `${window.location.origin}/${scopePath}/${commentPath(subjectId, commentModuleId, id)}`
+              }
+              onClose={() => {
+                setCommentsOpen(false);
+                setCommentDraft(null);
+                setActiveCommentId(null);
+              }}
+            />
+          </aside>
+        )}
+      </div>
 
       {/* Highlight tooltip */}
       {tooltipPos && (
@@ -744,6 +900,9 @@ export function RangkumanTab({
             onAskAI={tooltipMode === "create" ? handleAskAI : undefined}
             onAskMentor={
               tooltipMode === "create" && session?.inGroup ? handleAskMentor : undefined
+            }
+            onComment={
+              tooltipMode === "create" && comments.canComment ? handleComment : undefined
             }
             variant={isMobile ? "bar" : "floating"}
           />

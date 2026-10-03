@@ -34,6 +34,8 @@ export interface MaterialComment {
   deleted: boolean;
   createdAt: string;
   reactions: { emoji: string; count: number; mine: boolean }[];
+  /** On a root: whether the viewer may mark it done (its author, or a mentor of its group). */
+  canResolve: boolean;
 }
 
 export const COMMENT_COLUMNS =

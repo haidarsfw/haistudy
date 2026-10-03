@@ -351,6 +351,7 @@ const id: Record<string, string> = {
   "notification.group_approved": "Permintaan gabung grupmu disetujui",
   "notification.package_upgraded": "Paketmu sudah naik",
   "notification.session_summary": "Catatan sesi mentoring",
+  "notification.material_comment": "menulis untukmu di komentar materi",
   "notification.announcement": "Pengumuman baru",
   "notification.new_thread": "membuat thread baru",
   "notification.voted_poll": "memilih di polling",

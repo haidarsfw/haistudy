@@ -13,6 +13,7 @@ import {
   Users,
   ArrowUpCircle,
   NotebookText,
+  MessageSquareText,
   type LucideIcon,
 } from "lucide-react";
 import { openChatToMessage, openDmTo } from "@/lib/events";
@@ -35,6 +36,8 @@ export function isInteractiveNotification(n: Notification): boolean {
   if (n.type === "dm_message" && n.context) return true;
   // A join request is answered on the mentor's own page.
   if (n.type === "group_request") return true;
+  // A material comment opens its module with the thread showing.
+  if (n.type === "material_comment" && n.messageId) return true;
   // Forum-context notifications navigate to the thread/subject.
   if (n.context === "forum" && (n.subjectId || n.threadId)) {
     return (
@@ -75,6 +78,8 @@ export function notificationIcon(n: Notification): LucideIcon {
       return ArrowUpCircle;
     case "session_summary":
       return NotebookText;
+    case "material_comment":
+      return MessageSquareText;
     default:
       return Bell;
   }
@@ -126,6 +131,8 @@ export function notificationLabel(
       return n.threadTitle || t("notification.package_upgraded");
     case "session_summary":
       return `${t("notification.session_summary")}${n.threadTitle ? ` · ${n.threadTitle}` : ""}`;
+    case "material_comment":
+      return `${n.senderName ?? "Seseorang"} ${t("notification.material_comment")}`;
     default:
       return t("notification.default");
   }
@@ -188,6 +195,11 @@ export function routeToNotification(
     return true;
   }
   if (n.context === "forum" && (n.subjectId || n.threadId)) {
+    navigateForum?.(n);
+    return true;
+  }
+  // The caller's scope-aware navigation also carries the comment path.
+  if (n.type === "material_comment" && n.messageId) {
     navigateForum?.(n);
     return true;
   }

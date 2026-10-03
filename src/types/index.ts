@@ -428,7 +428,8 @@ export interface Notification {
     | "group_request"
     | "group_approved"
     | "package_upgraded"
-    | "session_summary";
+    | "session_summary"
+    | "material_comment";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";

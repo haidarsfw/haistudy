@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, BookmarkX, Trash2, Lock, Sparkles, GraduationCap } from "lucide-react";
+import { Bookmark, BookmarkX, Trash2, Lock, Sparkles, GraduationCap, MessageSquarePlus } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { HighlightColor, UserHighlight } from "@/types";
 
@@ -250,6 +250,8 @@ interface HighlightTooltipProps {
   onAskAI?: () => void;
   /** Only for someone in a mentoring group: ask the mentor about this text. */
   onAskMentor?: () => void;
+  /** Only for someone with an account: start a comment thread on this text. */
+  onComment?: () => void;
   // "floating" anchors above the selection (desktop). "bar" pins a full-width
   // action bar to the bottom of the screen (mobile), so the native iOS
   // selection menu can never cover the actions.
@@ -267,6 +269,7 @@ export function HighlightTooltip({
   onRemoveSnippet,
   onAskAI,
   onAskMentor,
+  onComment,
   variant = "floating",
 }: HighlightTooltipProps) {
   const { t } = useTranslation();
@@ -335,6 +338,17 @@ export function HighlightTooltip({
           className="flex h-6 w-6 items-center justify-center rounded-full text-primary hover:bg-primary/10"
         >
           <Bookmark className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {onComment && (
+        <button
+          onClick={onComment}
+          title="Komentar"
+          aria-label="Komentar"
+          className="flex h-6 w-6 items-center justify-center rounded-full text-foreground hover:bg-muted"
+        >
+          <MessageSquarePlus className="h-3.5 w-3.5" />
         </button>
       )}
     </>

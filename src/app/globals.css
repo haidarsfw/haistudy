@@ -429,6 +429,31 @@ html:has(.landing-root) {
 .dark .hs-hl-pink   { background-color: rgba(249, 140, 193, 0.62); }
 .dark .hs-hl-red    { background-color: rgba(252, 135, 135, 0.66); }
 
+/* Material comments (rangkuman): a dotted underline in the text's own colour,
+   so it reads on the light, dark and sepia reading modes and still shows on
+   top of a highlight. Clicking it opens the thread. */
+.hs-comment {
+  color: inherit;
+  background-color: transparent;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklab, currentColor 60%, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  scroll-margin-top: 5rem;
+}
+.hs-comment:hover,
+.hs-comment[data-active="true"] {
+  background-color: color-mix(in oklab, currentColor 12%, transparent);
+}
+.hs-comment-flash { animation: hs-comment-flash 1.8s ease-out; }
+@keyframes hs-comment-flash {
+  0%, 35% { background-color: color-mix(in oklab, var(--primary) 40%, transparent); }
+  100% { background-color: transparent; }
+}
+
 /* ============================================
    Custom Utilities
    ============================================ */

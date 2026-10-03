@@ -28,12 +28,14 @@ type Row = Record<string, unknown>;
 async function groupsHere(supabase: SupabaseClient, accountId: string | null, scope: ScopeTuple) {
   if (!accountId) return [];
   const { mentoring, joined } = await loadGroupsForAccount(supabase, accountId);
-  return [...mentoring, ...joined].filter(
-    (g) =>
-      g.scope.semester === scope.semester &&
-      g.scope.examPeriod === scope.examPeriod &&
-      g.scope.jurusan === scope.jurusan
-  );
+  const here = (g: { scope: ScopeTuple }) =>
+    g.scope.semester === scope.semester &&
+    g.scope.examPeriod === scope.examPeriod &&
+    g.scope.jurusan === scope.jurusan;
+  return [
+    ...mentoring.filter(here).map((g) => ({ ...g, mentor: true })),
+    ...joined.filter(here).map((g) => ({ ...g, mentor: false })),
+  ];
 }
 
 /** The filter that keeps a viewer to the comments they may read. */
@@ -116,6 +118,10 @@ export async function GET(req: Request) {
         deleted,
         createdAt: r.created_at as string,
         reactions: [...byEmoji.entries()].map(([emoji, v]) => ({ emoji, ...v })),
+        canResolve:
+          !r.parent_id &&
+          (Boolean(accountId && r.account_id === accountId) ||
+            (r.visibility === "group" && groups.some((g) => g.mentor && g.id === r.group_id))),
       };
     });
 

@@ -68,6 +68,11 @@ export function NotificationItem({
   const navigateForum = useCallback(
     (n: Notification) => {
       const base = scopeCtx ? `/${scopeCtx.scopePath}` : "";
+      if (n.type === "material_comment" && n.messageId) {
+        // messageId holds the scope-relative path to the module and thread.
+        router.push(`${base}/${n.messageId}`);
+        return;
+      }
       if (n.subjectId) {
         // Forum lives in the subject page as a tab (index 5).
         router.push(`${base}/subject/${n.subjectId}?tab=5`);

@@ -75,6 +75,14 @@ export default function SubjectPage() {
     setActiveTab(tab);
     setVisited((v) => (v.has(tab) ? v : new Set(v).add(tab)));
   }, []);
+  // A comment link opened while this page is already showing (a notification
+  // tapped mid-study) still has to land on Rangkuman, where the thread is.
+  const commentLink = searchParams.get("comment");
+  const [seenCommentLink, setSeenCommentLink] = useState(commentLink);
+  if (commentLink !== seenCommentLink) {
+    setSeenCommentLink(commentLink);
+    if (commentLink) handleTabChange(1);
+  }
   // Sub-view inside the merged "Hafalan & Kuis" tab (id 11).
   const [hkSub, setHkSub] = useState<"flash" | "quiz">("flash");
 
@@ -261,7 +269,10 @@ export default function SubjectPage() {
   const materiSoal = content.materi.filter((m) => m.tab === "soal");
 
   return (
-    <div className="mx-auto max-w-5xl overflow-x-hidden">
+    // clip, not hidden: hidden makes this a scroll container, which stops the
+    // comments column in Rangkuman from staying in view (sticky). flow-root
+    // keeps the block formatting context that hidden used to create.
+    <div className="mx-auto flow-root max-w-5xl overflow-x-clip">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 px-4 pt-3 pb-1 text-xs text-muted-foreground overflow-hidden">
         <button
@@ -439,6 +450,7 @@ export default function SubjectPage() {
                 subjectId={subjectId}
                 initialModule={searchParams.get("module") || undefined}
                 highlightText={searchParams.get("highlight") || undefined}
+                initialComment={commentLink || undefined}
               />
             </PreviewLock>
           )}

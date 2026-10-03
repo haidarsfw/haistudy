@@ -39,6 +39,11 @@ export function NotificationPopup({
   const navigateForum = useCallback(
     (n: Notification) => {
       const base = scopeCtx ? `/${scopeCtx.scopePath}` : "";
+      if (n.type === "material_comment" && n.messageId) {
+        // messageId holds the scope-relative path to the module and thread.
+        router.push(`${base}/${n.messageId}`);
+        return;
+      }
       if (n.subjectId) {
         router.push(`${base}/subject/${n.subjectId}?tab=5`);
       }
