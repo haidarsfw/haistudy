@@ -107,15 +107,27 @@ export function normalizeEmail(raw: string): string {
   return raw.trim().toLowerCase();
 }
 
+/**
+ * The account with this e-mail, or null when there is none.
+ *
+ * Throws an AccountError (503) when the lookup itself fails. "No account" and
+ * "could not look" must not read the same: treated as null, a database hiccup
+ * told someone their password was wrong (and counted it toward their
+ * lockout), or that their e-mail had no account.
+ */
 export async function findAccountByEmail(
   supabase: SupabaseClient,
   email: string
 ): Promise<Account | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("accounts")
     .select(ACCOUNT_COLUMNS)
     .eq("email_lower", normalizeEmail(email))
     .maybeSingle();
+  if (error) {
+    console.error("[account] lookup by e-mail failed:", error.message);
+    throw new AccountError("Server sedang sibuk. Coba lagi sebentar.", 503, "UNAVAILABLE");
+  }
   return data ? mapAccount(data) : null;
 }
 

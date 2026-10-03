@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import {
+  AccountError,
   findAccountByEmail,
   readPasswordHashForLogin,
   touchLastLogin,
@@ -77,7 +78,16 @@ export async function POST(req: Request) {
     );
   }
 
-  const account = await findAccountByEmail(supabase, email);
+  // A lookup that FAILED is not a wrong password: no fail is recorded.
+  let account: Awaited<ReturnType<typeof findAccountByEmail>>;
+  try {
+    account = await findAccountByEmail(supabase, email);
+  } catch (e) {
+    if (e instanceof AccountError) {
+      return NextResponse.json({ error: e.message, code: e.code }, { status: e.status });
+    }
+    throw e;
+  }
 
   if (!account) {
     await Promise.all([

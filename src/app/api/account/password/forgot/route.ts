@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
-import { EMAIL_RE, findAccountByEmail, normalizeEmail } from "@/lib/auth/account";
+import { AccountError, EMAIL_RE, findAccountByEmail, normalizeEmail } from "@/lib/auth/account";
 import { issueAccountToken } from "@/lib/auth/account-tokens";
 import { sendPasswordResetEmail } from "@/lib/notifications/account-email";
 import {
@@ -69,7 +69,17 @@ export async function POST(req: Request) {
   // same as a hit.
   await recordResetRequest(supabase, emailLower, ip);
 
-  const account = await findAccountByEmail(supabase, email);
+  // A failed lookup is not "no account": that answer sent people to register
+  // an e-mail that already had one.
+  let account: Awaited<ReturnType<typeof findAccountByEmail>>;
+  try {
+    account = await findAccountByEmail(supabase, email);
+  } catch (e) {
+    if (e instanceof AccountError) {
+      return NextResponse.json({ error: e.message, code: e.code }, { status: e.status });
+    }
+    throw e;
+  }
 
   if (!account) {
     return NextResponse.json(

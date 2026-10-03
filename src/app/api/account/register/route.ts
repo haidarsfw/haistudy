@@ -4,6 +4,7 @@ import { waitUntil } from "@vercel/functions";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import {
+  AccountError,
   EMAIL_RE,
   createAccount,
   findAccountByEmail,
@@ -83,7 +84,15 @@ export async function POST(req: Request) {
 
   // Friendly pre-check. The unique index is still the real arbiter below, so a
   // race between two simultaneous signups cannot create a duplicate.
-  const existing = await findAccountByEmail(supabase, email);
+  let existing: Awaited<ReturnType<typeof findAccountByEmail>>;
+  try {
+    existing = await findAccountByEmail(supabase, email);
+  } catch (e) {
+    if (e instanceof AccountError) {
+      return NextResponse.json({ error: e.message, code: e.code }, { status: e.status });
+    }
+    throw e;
+  }
   if (existing) {
     return NextResponse.json(
       {

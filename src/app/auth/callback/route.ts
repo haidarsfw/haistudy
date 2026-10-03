@@ -10,6 +10,7 @@ import {
   applySessionCookies,
 } from "@/lib/auth/oauth-cookie-helpers";
 import {
+  AccountError,
   createAccount,
   findAccountByEmail,
   touchLastLogin,
@@ -136,7 +137,19 @@ export async function GET(request: Request) {
 
   const supabase = createServerClient()!;
 
-  let account = await findAccountByEmail(supabase, email);
+  // A lookup that failed must not be taken for "no account yet" and turn
+  // into a sign-up attempt.
+  const lookup = async () => {
+    try {
+      return { account: await findAccountByEmail(supabase, email) };
+    } catch (e) {
+      if (e instanceof AccountError) return { failed: true as const };
+      throw e;
+    }
+  };
+  const first = await lookup();
+  if ("failed" in first) return redirectToLoginError(origin, "server_error", email);
+  let account = first.account;
 
   if (account && account.authProvider !== "google") {
     // One account, one way in — chosen at registration and never changed.
@@ -162,7 +175,8 @@ export async function GET(request: Request) {
     });
     if (!account) {
       // Lost a race against a simultaneous sign-in; the row exists now.
-      account = await findAccountByEmail(supabase, email);
+      const again = await lookup();
+      account = "failed" in again ? null : again.account;
     }
     if (!account) return redirectToLoginError(origin, "server_error", email);
 
