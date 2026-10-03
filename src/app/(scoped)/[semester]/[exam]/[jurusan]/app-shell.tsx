@@ -103,6 +103,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const [aiReference, setAiReference] = useState<{ text: string; subjectId: string | null } | null>(null);
   // Issue 4d: pending DM target license key (open chat → DM tab → thread).
   const [pendingDmKey, setPendingDmKey] = useState<string | null>(null);
+  // "Tanya mentor": the materi quote waiting for the chat's group tab.
+  const [mentorQuote, setMentorQuote] = useState<{ text: string; source?: string } | null>(null);
+  const clearMentorQuote = useCallback(() => setMentorQuote(null), []);
 
   // Lazy mount flags - flip true on first open, never back. Keeps the panel
   // mounted across close so AnimatePresence exit animations still play, while
@@ -274,6 +277,17 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(APP_EVENTS.OPEN_CHAT, handleOpenChat);
   }, []);
 
+  // "Tanya mentor": open the chat on the group tab with the quote attached.
+  useEffect(() => {
+    const handleAskMentor = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { text: string; source?: string } | undefined;
+      if (detail?.text) setMentorQuote(detail);
+      setIsChatOpen(true);
+    };
+    window.addEventListener(APP_EVENTS.ASK_MENTOR, handleAskMentor);
+    return () => window.removeEventListener(APP_EVENTS.ASK_MENTOR, handleAskMentor);
+  }, []);
+
   // Issue 10: open AI panel pre-seeded with a materi reference ("Tanya AI").
   useEffect(() => {
     const handleOpenAi = (e: Event) => {
@@ -412,6 +426,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           onClose={handleChatClose}
           pendingDmKey={pendingDmKey}
           onDmKeyConsumed={() => setPendingDmKey(null)}
+          pendingMentorQuote={mentorQuote}
+          onMentorQuoteConsumed={clearMentorQuote}
         />
       )}
 

@@ -32,7 +32,8 @@ import {
 } from "./highlight-tooltip";
 import { TTSController } from "./tts-controller";
 import { toast } from "@/components/ui/toast";
-import { openAiWithReference } from "@/lib/events";
+import { askMentor, openAiWithReference } from "@/lib/events";
+import { useScopedData } from "@/components/providers/scoped-data-provider";
 import type { HighlightColor, SnippetLibraryItem } from "@/types";
 
 type ReadingMode = "light" | "dark" | "sepia";
@@ -364,6 +365,23 @@ export function RangkumanTab({
     setPendingAnchor(null);
     window.getSelection()?.removeAllRanges();
   }, [pendingAnchor, subjectId]);
+
+  // "Tanya mentor": the same selection, sent to the group chat as a quote,
+  // labelled with where it came from so the mentor can find it.
+  const { subjects } = useScopedData();
+  const subjectName = subjects.find((s) => s.id === subjectId)?.name ?? "";
+  const handleAskMentor = useCallback(() => {
+    const text =
+      pendingAnchor?.text || window.getSelection()?.toString().trim() || "";
+    if (!text) return;
+    askMentor({
+      text: text.slice(0, 600),
+      source: [subjectName, selectedModule].filter(Boolean).join(" · ").slice(0, 120),
+    });
+    setTooltipPos(null);
+    setPendingAnchor(null);
+    window.getSelection()?.removeAllRanges();
+  }, [pendingAnchor, subjectName, selectedModule]);
 
   // Follow global theme unless manually overridden
   useEffect(() => {
@@ -703,6 +721,9 @@ export function RangkumanTab({
                 : undefined
             }
             onAskAI={tooltipMode === "create" ? handleAskAI : undefined}
+            onAskMentor={
+              tooltipMode === "create" && session?.inGroup ? handleAskMentor : undefined
+            }
             variant={isMobile ? "bar" : "floating"}
           />
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, type PointerEvent as ReactPointerEvent } from "react";
-import { X, MessageCircle, Trash2, Crown, Lock, Send, UserCog } from "lucide-react";
+import { X, MessageCircle, Trash2, Crown, Lock, Send, UserCog, Users } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { PinnedMessages } from "./pinned-messages";
 import { DmTab } from "./dm-tab";
+import { GroupTab, type MyGroup, type PendingQuote } from "./group-tab";
 import { MediaPreviewer } from "@/components/shared/media-previewer";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ChatChannel, ChatMessage } from "@/types";
@@ -39,9 +40,20 @@ interface ChatPanelProps {
   onUnreadChange?: (count: number) => void;
   pendingDmKey?: string | null;
   onDmKeyConsumed?: () => void;
+  /** "Tanya mentor": a materi quote to attach on the group tab. */
+  pendingMentorQuote?: PendingQuote | null;
+  onMentorQuoteConsumed?: () => void;
 }
 
-export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmKeyConsumed }: ChatPanelProps) {
+export function ChatPanel({
+  isOpen,
+  onClose,
+  onUnreadChange,
+  pendingDmKey,
+  onDmKeyConsumed,
+  pendingMentorQuote = null,
+  onMentorQuoteConsumed,
+}: ChatPanelProps) {
   const { session } = useSession();
   // Mobile: rise from the bottom (matches the bottom-nav button origin).
   // Desktop: slide in from the right (matches the right-side FAB).
@@ -55,7 +67,36 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
   };
   const { t } = useTranslation();
   const canVip = canUseVipFeatures(session);
-  const [tab, setTab] = useState<"chat" | "dm">("chat");
+  const [tab, setTab] = useState<"chat" | "dm" | "group">("chat");
+  // The mentoring groups this person is in, mentor or member. Fetched once
+  // when the panel first opens; the tab only exists for someone with a group.
+  // null = not loaded yet, which is not the same as "has no group".
+  const [myGroups, setMyGroups] = useState<MyGroup[] | null>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    let alive = true;
+    fetch("/api/mentor/groups", { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive || !d) return;
+        const all = [...(d.mentoring ?? []), ...(d.joined ?? [])] as MyGroup[];
+        setMyGroups(all.map((g) => ({ id: g.id, name: g.name, scopeKey: g.scopeKey })));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // Once per mount is enough: groups change rarely, and reopening the panel
+    // after joining one remounts nothing but refetches here.
+  }, [isOpen]);
+  // A new "Tanya mentor" quote switches to the group tab. Done while
+  // rendering (React's pattern for reacting to a changed prop), not in an
+  // effect, so the panel never paints one frame on the wrong tab.
+  const [seenQuote, setSeenQuote] = useState<PendingQuote | null>(null);
+  if (pendingMentorQuote !== seenQuote) {
+    setSeenQuote(pendingMentorQuote);
+    if (pendingMentorQuote) setTab("group");
+  }
   const [channel, setChannel] = useState<ChatChannel>("global");
   const {
     messages,
@@ -301,7 +342,9 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
               onPointerDown={startSheetDrag}
               className="flex touch-none items-center gap-3 border-b border-border px-4 py-3 sm:touch-auto"
             >
-              {tab === "dm" ? (
+              {tab === "group" ? (
+                <Users className="h-5 w-5 text-primary" />
+              ) : tab === "dm" ? (
                 <Send className="h-5 w-5 text-primary" />
               ) : channel === "vip-lounge" ? (
                 <Crown className="h-5 w-5 text-amber-500" />
@@ -310,13 +353,15 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
               )}
               <div className="flex-1">
                 <h2 className="text-sm font-semibold">
-                  {tab === "dm"
+                  {tab === "group"
+                    ? "Grup mentoring"
+                    : tab === "dm"
                     ? t("dm.title")
                     : channel === "vip-lounge"
                     ? t("chat.channel_vip")
                     : t("chat.channel_global")}
                 </h2>
-                {tab !== "dm" && (
+                {tab === "chat" && (
                   <p className="text-[10px] text-muted-foreground">
                     {users.length} online
                   </p>
@@ -436,9 +481,43 @@ export function ChatPanel({ isOpen, onClose, onUnreadChange, pendingDmKey, onDmK
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                 )}
               </button>
+              {(myGroups?.length ?? 0) > 0 && (
+                <button
+                  onClick={() => {
+                    if (tab !== "group") { sounds.click(); setTab("group"); }
+                  }}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+                    tab === "group"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Users className="h-3 w-3" />
+                  Grup
+                </button>
+              )}
             </div>
 
-            {tab === "dm" ? (
+            {tab === "group" ? (
+              myGroups === null ? (
+                <div className="flex flex-1 items-center justify-center p-6">
+                  <p className="text-sm text-muted-foreground">Memuat grup…</p>
+                </div>
+              ) : myGroups.length > 0 ? (
+                <GroupTab
+                  groups={myGroups}
+                  pendingQuote={pendingMentorQuote}
+                  onQuoteConsumed={() => onMentorQuoteConsumed?.()}
+                />
+              ) : (
+                <div className="flex flex-1 items-center justify-center p-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Kamu belum ada di grup mentoring. Minta link grup ke mentormu, atau minta gabung
+                    dari profilnya di chat.
+                  </p>
+                </div>
+              )
+            ) : tab === "dm" ? (
               <DmTab pendingDmKey={pendingDmKey} onDmKeyConsumed={onDmKeyConsumed} />
             ) : (
               <>

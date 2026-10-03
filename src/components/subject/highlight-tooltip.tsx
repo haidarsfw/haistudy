@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, BookmarkX, Trash2, Lock, Sparkles } from "lucide-react";
+import { Bookmark, BookmarkX, Trash2, Lock, Sparkles, GraduationCap } from "lucide-react";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { HighlightColor, UserHighlight } from "@/types";
 
@@ -248,6 +248,8 @@ interface HighlightTooltipProps {
   onRemove: () => void;
   onRemoveSnippet?: () => void;
   onAskAI?: () => void;
+  /** Only for someone in a mentoring group: ask the mentor about this text. */
+  onAskMentor?: () => void;
   // "floating" anchors above the selection (desktop). "bar" pins a full-width
   // action bar to the bottom of the screen (mobile), so the native iOS
   // selection menu can never cover the actions.
@@ -264,6 +266,7 @@ export function HighlightTooltip({
   onRemove,
   onRemoveSnippet,
   onAskAI,
+  onAskMentor,
   variant = "floating",
 }: HighlightTooltipProps) {
   const { t } = useTranslation();
@@ -274,7 +277,7 @@ export function HighlightTooltip({
       ? Math.min(Math.max(x, 90), window.innerWidth - 90)
       : x;
 
-  const inner = (
+  const tools = (
     <>
       {mode === "create" &&
         HIGHLIGHT_COLORS.map((color) => {
@@ -334,7 +337,11 @@ export function HighlightTooltip({
           <Bookmark className="h-3.5 w-3.5" />
         </button>
       )}
+    </>
+  );
 
+  const asks = (
+    <>
       {onAskAI && (
         <button
           onClick={onAskAI}
@@ -343,9 +350,28 @@ export function HighlightTooltip({
           className="flex h-7 items-center justify-center gap-1 rounded-full bg-primary px-2.5 text-primary-foreground transition-opacity hover:opacity-90"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span className="text-[11px] font-semibold">{t("rangkuman.ask_ai")}</span>
+          <span className="whitespace-nowrap text-[11px] font-semibold">{t("rangkuman.ask_ai")}</span>
         </button>
       )}
+
+      {onAskMentor && (
+        <button
+          onClick={onAskMentor}
+          title="Tanya mentor"
+          aria-label="Tanya mentor"
+          className="flex h-7 items-center justify-center gap-1 rounded-full border border-border px-2.5 text-foreground transition-colors hover:bg-muted"
+        >
+          <GraduationCap className="h-3.5 w-3.5" />
+          <span className="whitespace-nowrap text-[11px] font-semibold">Tanya mentor</span>
+        </button>
+      )}
+    </>
+  );
+
+  const inner = (
+    <>
+      {tools}
+      {asks}
     </>
   );
 
@@ -354,13 +380,25 @@ export function HighlightTooltip({
   // the very bottom edge where the dock/FAB covered it. preventDefault on
   // pointer-down keeps the text selection alive when a control is tapped.
   if (variant === "bar") {
+    // Two asks no longer fit one phone-wide row next to the colours (390px
+    // broke both labels in half), so they get a row of their own.
+    const twoRows = Boolean(onAskAI && onAskMentor);
     return (
       <div
-        className="fixed left-1/2 z-[120] flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-popover px-2.5 py-2 shadow-xl"
+        className={`fixed left-1/2 z-[120] flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2 border border-border bg-popover px-2.5 py-2 shadow-xl ${
+          twoRows ? "flex-col items-center gap-2 rounded-2xl" : "items-center gap-1.5 rounded-full"
+        }`}
         style={{ bottom: "calc(var(--hs-mobile-nav) + env(safe-area-inset-bottom) + 0.5rem)" }}
         onPointerDown={(e) => e.preventDefault()}
       >
-        {inner}
+        {twoRows ? (
+          <>
+            <div className="flex items-center gap-1.5">{tools}</div>
+            <div className="flex items-center gap-2">{asks}</div>
+          </>
+        ) : (
+          inner
+        )}
       </div>
     );
   }

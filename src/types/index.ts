@@ -14,6 +14,8 @@ export interface Session {
   isTester: boolean;
   /** Owns or co-runs an active mentor group. Never implies admin. */
   isMentor?: boolean;
+  /** In any running mentoring group, as mentor or member ("Tanya mentor"). */
+  inGroup?: boolean;
   expiry: string | null;
   selectedClass: string;
   isPreview?: boolean;

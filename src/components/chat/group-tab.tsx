@@ -1,0 +1,235 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { format } from "date-fns";
+import { id as idLocale } from "date-fns/locale/id";
+import { GraduationCap, Loader2, Send, Trash2, Users, X } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
+import { useGroupChat } from "@/hooks/use-group-chat";
+import { GROUP_MESSAGE_MAX } from "@/lib/mentor/chat";
+import { cn } from "@/lib/utils";
+
+export interface MyGroup {
+  id: string;
+  name: string;
+  scopeKey: string;
+}
+
+export interface PendingQuote {
+  text: string;
+  source?: string;
+}
+
+/**
+ * The group chat inside the chat panel: one mentoring group at a time, its
+ * members and mentors only.
+ *
+ * Lean on purpose. The class chat carries pins, voice rooms, images and
+ * mentions; a group of a mentor and a handful of mentees needs to talk, see
+ * who the mentor is, and quote the material they are stuck on ("Tanya
+ * mentor" arrives here with the quote already attached).
+ */
+export function GroupTab({
+  groups,
+  pendingQuote,
+  onQuoteConsumed,
+}: {
+  groups: MyGroup[];
+  pendingQuote: PendingQuote | null;
+  onQuoteConsumed: () => void;
+}) {
+  const [groupId, setGroupId] = useState<string | null>(groups[0]?.id ?? null);
+  const { messages, loading, hasMore, role, me, error, loadMore, send, remove } = useGroupChat(groupId);
+  const [text, setText] = useState("");
+  // Owned by the app-shell until sent or dismissed, so it survives switching
+  // groups or closing the panel half-way through writing the question.
+  const quote = pendingQuote;
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // "Tanya mentor" hands over a quote: put the cursor where the question goes.
+  useEffect(() => {
+    if (pendingQuote) inputRef.current?.focus();
+  }, [pendingQuote]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ block: "end" });
+  }, [messages.length, groupId]);
+
+  const submit = async () => {
+    const content = text.trim();
+    if (!content || sending) return;
+    setSending(true);
+    const err = await send(content, quote);
+    setSending(false);
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    setText("");
+    if (quote) onQuoteConsumed();
+  };
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      {groups.length > 1 && (
+        <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
+          {groups.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => setGroupId(g.id)}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+                g.id === groupId
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        {loading ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Memuat chat grup
+          </p>
+        ) : error ? (
+          <p className="text-sm text-destructive">{error}</p>
+        ) : messages.length === 0 ? (
+          <div className="mt-8 text-center">
+            <Users className="mx-auto h-6 w-6 text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">
+              Belum ada pesan. Yang kamu tulis di sini hanya terbaca oleh anggota grup dan mentornya.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {hasMore && (
+              <li className="text-center">
+                <button
+                  type="button"
+                  onClick={() => void loadMore()}
+                  className="min-h-9 text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Muat pesan sebelumnya
+                </button>
+              </li>
+            )}
+            {messages.map((m) => {
+              const own = me !== null && m.accountId === me;
+              const canDelete = !m.deleted && (own || role === "mentor");
+              return (
+                <li key={m.id} className="group/msg">
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn("text-sm font-semibold", own ? "text-primary" : "text-foreground")}>
+                      {m.authorName}
+                    </span>
+                    {m.isMentor && (
+                      <Badge variant="mentor-outline" className="h-4 gap-0.5 px-1 text-[9px]">
+                        <GraduationCap className="h-2.5 w-2.5" />
+                        Mentor
+                      </Badge>
+                    )}
+                    <span className="text-[10px] text-muted-foreground">
+                      {format(new Date(m.createdAt), "d MMM HH:mm", { locale: idLocale })}
+                    </span>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        aria-label="Hapus pesan"
+                        onClick={async () => {
+                          const err = await remove(m.id);
+                          if (err) toast.error(err);
+                        }}
+                        className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/msg:opacity-100 [@media(hover:none)]:opacity-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {m.deleted ? (
+                    <p className="text-sm italic text-muted-foreground">Pesan dihapus</p>
+                  ) : (
+                    <>
+                      {m.quote && (
+                        <figure className="mt-1 rounded-lg bg-muted/60 px-2.5 py-1.5">
+                          {m.quoteSource && (
+                            <figcaption className="text-[10px] font-medium text-muted-foreground">
+                              {m.quoteSource}
+                            </figcaption>
+                          )}
+                          <blockquote className="whitespace-pre-wrap text-xs text-foreground/80">
+                            {m.quote}
+                          </blockquote>
+                        </figure>
+                      )}
+                      <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-foreground">
+                        {m.content}
+                      </p>
+                    </>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="border-t border-border p-3">
+        {quote && (
+          <div className="mb-2 flex items-start gap-2 rounded-lg bg-muted/60 px-2.5 py-1.5">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-medium text-muted-foreground">
+                Bertanya tentang{quote.source ? ` · ${quote.source}` : ""}
+              </p>
+              <p className="line-clamp-3 text-xs text-foreground/80">{quote.text}</p>
+            </div>
+            <button
+              type="button"
+              aria-label="Batalkan kutipan"
+              onClick={onQuoteConsumed}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+        <div className="flex items-end gap-2">
+          <textarea
+            ref={inputRef}
+            value={text}
+            onChange={(e) => setText(e.target.value.slice(0, GROUP_MESSAGE_MAX))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void submit();
+              }
+            }}
+            rows={1}
+            placeholder={quote ? "Tulis pertanyaanmu…" : "Tulis pesan ke grup…"}
+            aria-label="Pesan ke grup"
+            className="max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+          />
+          <Button
+            size="icon"
+            className="h-11 w-11 shrink-0"
+            onClick={() => void submit()}
+            disabled={sending || !text.trim()}
+            aria-label="Kirim"
+          >
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

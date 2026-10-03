@@ -9,6 +9,7 @@ export const APP_EVENTS = {
   OPEN_AI: "app:open-ai",
   OPEN_DM: "app:open-dm",
   OPEN_PROFILE: "app:open-profile",
+  ASK_MENTOR: "app:ask-mentor",
 } as const;
 
 /**
@@ -55,4 +56,13 @@ export function openDmTo(licenseKey: string) {
  */
 export function openProfileEditor() {
   window.dispatchEvent(new CustomEvent(APP_EVENTS.OPEN_PROFILE));
+}
+
+/**
+ * "Tanya mentor": open the chat on the group tab with the selected materi text
+ * attached as a quote. Same shape as openAiWithReference; the app-shell keeps
+ * the quote and hands it to the chat panel once it is mounted.
+ */
+export function askMentor(quote: { text: string; source?: string }) {
+  window.dispatchEvent(new CustomEvent(APP_EVENTS.ASK_MENTOR, { detail: quote }));
 }

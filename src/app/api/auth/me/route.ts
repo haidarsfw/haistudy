@@ -14,7 +14,7 @@ import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import { firstWord, capitalizeFirst } from "@/lib/name";
 import { normalizeLoginMethod } from "@/lib/auth/login-method";
 import { readDeviceIdentity } from "@/lib/auth/device-id";
-import { isMentorAccount } from "@/lib/mentor/groups";
+import { hasActiveGroup, isMentorAccount } from "@/lib/mentor/groups";
 
 /**
  * GET /api/auth/me
@@ -93,6 +93,12 @@ export async function GET() {
   const mentorCheck: Promise<boolean> = license.account_id
     ? isMentorAccount(supabase, license.account_id as string).catch(() => false)
     : Promise.resolve(false);
+  // A mentor is in a group by definition; only a non-mentor costs the lookup.
+  const groupCheck: Promise<boolean> = mentorCheck.then((m) =>
+    m || !license.account_id
+      ? m
+      : hasActiveGroup(supabase, license.account_id as string).catch(() => false)
+  );
 
   // Devices come back embedded rather than as a second round trip: this runs on
   // every app load and the free tier pays for each query.
@@ -193,6 +199,7 @@ export async function GET() {
     // For the mentor perks the client has to know about (the AI chat cap).
     // The server re-checks on every write; this only shapes the screen.
     isMentor: await mentorCheck,
+    inGroup: await groupCheck,
     expiry: activation?.expiry ?? null,
     selectedClass: classLabel,
     isPreview: license.is_preview || false,

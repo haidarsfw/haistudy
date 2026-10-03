@@ -92,3 +92,12 @@ export function flagsChannel(scope: ScopeTuple): string {
 export function scopeRealtimeFilter(scope: ScopeTuple): string {
   return `semester=eq.${scope.semester}`;
 }
+
+/**
+ * A mentoring group's chat. Not scope-prefixed: a group's audience is its
+ * members, not a cohort (a semester-3 mentor teaches semester 1), and the
+ * row-level policy on group_messages is what keeps it to them (migration 085).
+ */
+export function groupChatChannel(groupId: string): string {
+  return `group:${groupId}:chat`;
+}

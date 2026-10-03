@@ -334,3 +334,27 @@ export async function mentorAccountsAmong(
   for (const r of leads ?? []) out.add(r.account_id as string);
   return out;
 }
+
+/**
+ * Is this account in any running group, as mentor or member? For "Tanya
+ * mentor" in the material: the button only makes sense for someone who has a
+ * group to ask. Owners first (a group need not have its owner's member row).
+ */
+export async function hasActiveGroup(
+  supabase: SupabaseClient,
+  accountId: string
+): Promise<boolean> {
+  const { count: owns } = await supabase
+    .from("mentor_groups")
+    .select("id", { head: true, count: "exact" })
+    .eq("owner_account_id", accountId)
+    .eq("status", "active");
+  if (owns) return true;
+  const { count: inside } = await supabase
+    .from("group_members")
+    .select("id, mentor_groups!inner(status)", { head: true, count: "exact" })
+    .eq("account_id", accountId)
+    .eq("status", "active")
+    .eq("mentor_groups.status", "active");
+  return Boolean(inside);
+}
