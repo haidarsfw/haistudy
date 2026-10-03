@@ -427,7 +427,8 @@ export interface Notification {
     | "exam_quota"
     | "group_request"
     | "group_approved"
-    | "package_upgraded";
+    | "package_upgraded"
+    | "session_summary";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";

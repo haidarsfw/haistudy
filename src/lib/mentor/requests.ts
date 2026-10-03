@@ -32,11 +32,11 @@ type LicenceRow = { key: string; semester: number; exam_period: string; jurusan:
  * in the other. Capped at five; someone with no licence yet (a mentee who has
  * not bought) has no inbox and sees the answer on the group page instead.
  */
-async function notify(
+export async function notify(
   supabase: SupabaseClient,
   accountId: string,
   g: Pick<GroupRow, "id" | "name">,
-  type: "group_request" | "group_approved",
+  type: "group_request" | "group_approved" | "session_summary",
   senderName: string | null,
   preview: string
 ): Promise<void> {

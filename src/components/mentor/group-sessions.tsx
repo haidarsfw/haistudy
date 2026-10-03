@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { Bookmark, CalendarClock, CalendarPlus, Check, Loader2, MapPin } from "lucide-react";
+import { Bookmark, CalendarClock, CalendarPlus, Check, ChevronDown, Loader2, MapPin, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -203,6 +203,13 @@ function SessionRow({
           <p className="text-[10px] font-medium text-muted-foreground">Catatan sesi</p>
           <p className="whitespace-pre-wrap text-sm text-foreground">{s.notes}</p>
         </div>
+      )}
+
+      {!canEdit && s.status === "scheduled" && !ended && (
+        <Rsvp groupId={groupId} sessionId={s.id} initial={s.myRsvp ?? null} />
+      )}
+      {canEdit && s.status !== "cancelled" && s.attendance && s.attendance.length > 0 && (
+        <AttendanceList groupId={groupId} sessionId={s.id} rows={s.attendance} onChange={onChange} />
       )}
 
       {canEdit && s.status !== "cancelled" && (
@@ -511,6 +518,180 @@ function ModuleRequests({
           );
         })}
       </ul>
+    </div>
+  );
+}
+
+/** A member's answer for an upcoming session: hadir, or tidak bisa with a reason. */
+function Rsvp({
+  groupId,
+  sessionId,
+  initial,
+}: {
+  groupId: string;
+  sessionId: string;
+  initial: { rsvp: "going" | "not_going" | null; reason: string | null } | null;
+}) {
+  const [rsvp, setRsvp] = useState(initial?.rsvp ?? null);
+  const [reason, setReason] = useState(initial?.reason ?? "");
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const send = async (next: "going" | "not_going", why?: string) => {
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/mentor/groups/${groupId}/sessions/${sessionId}/attendance`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rsvp: next, reason: why }),
+      });
+      const b = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        toast.error(b.error ?? "Jawaban belum tersimpan.");
+        return;
+      }
+      setRsvp(next);
+      setAsking(false);
+      toast.success(next === "going" ? "Dicatat: kamu hadir." : "Dicatat. Mentormu akan tahu alasannya.");
+    } catch {
+      toast.error("Koneksi terputus. Coba lagi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 rounded-md bg-muted/40 p-2.5">
+      <p className="text-xs font-medium text-foreground">
+        {rsvp === "going" ? "Kamu akan hadir." : rsvp === "not_going" ? `Kamu tidak bisa hadir${reason ? `: ${reason}` : "."}` : "Kamu hadir?"}
+      </p>
+      {asking ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value.slice(0, 200))}
+            placeholder="Alasannya (opsional)"
+            aria-label="Alasan tidak hadir"
+            className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+          />
+          <Button className="h-11" disabled={busy} onClick={() => void send("not_going", reason)}>
+            Kirim
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button
+            variant={rsvp === "going" ? "default" : "outline"}
+            className="h-11"
+            disabled={busy}
+            onClick={() => void send("going")}
+          >
+            Hadir
+          </Button>
+          <Button
+            variant={rsvp === "not_going" ? "default" : "outline"}
+            className="h-11"
+            disabled={busy}
+            onClick={() => setAsking(true)}
+          >
+            Tidak bisa
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The mentor's attendance list for one session: what each member answered,
+ * and a tap to record who actually came. Whoever is not marked present gets
+ * the notes when the session is closed.
+ */
+function AttendanceList({
+  groupId,
+  sessionId,
+  rows,
+  onChange,
+}: {
+  groupId: string;
+  sessionId: string;
+  rows: NonNullable<GroupSession["attendance"]>;
+  onChange: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const going = rows.filter((r) => r.rsvp === "going").length;
+  const came = rows.filter((r) => r.attended === true).length;
+
+  const mark = async (accountId: string, attended: boolean) => {
+    setBusy(accountId);
+    try {
+      const r = await fetch(`/api/mentor/groups/${groupId}/sessions/${sessionId}/attendance`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ accountId, attended }),
+      });
+      if (!r.ok) toast.error("Kehadiran belum tersimpan.");
+      await onChange();
+    } catch {
+      toast.error("Koneksi terputus. Coba lagi.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex min-h-9 items-center gap-1.5 text-xs font-medium text-foreground"
+      >
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+        <Users className="h-3.5 w-3.5 text-muted-foreground" />
+        Kehadiran · {going} bilang hadir{came ? ` · ${came} tercatat hadir` : ""}
+      </button>
+      {open && (
+        <ul className="mt-1 divide-y divide-border rounded-lg border border-border">
+          {rows.map((r) => (
+            <li key={r.accountId} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">{r.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {r.rsvp === "going"
+                    ? "Bilang hadir"
+                    : r.rsvp === "not_going"
+                      ? `Tidak bisa${r.reason ? `: ${r.reason}` : ""}`
+                      : "Belum menjawab"}
+                </p>
+              </div>
+              <div className="flex gap-1.5" role="group" aria-label={`Kehadiran ${r.name}`}>
+                <Button
+                  variant={r.attended === true ? "default" : "outline"}
+                  className="h-9 px-3 text-xs"
+                  aria-pressed={r.attended === true}
+                  disabled={busy === r.accountId}
+                  onClick={() => void mark(r.accountId, true)}
+                >
+                  Hadir
+                </Button>
+                <Button
+                  variant={r.attended === false ? "default" : "outline"}
+                  className="h-9 px-3 text-xs"
+                  aria-pressed={r.attended === false}
+                  disabled={busy === r.accountId}
+                  onClick={() => void mark(r.accountId, false)}
+                >
+                  Absen
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

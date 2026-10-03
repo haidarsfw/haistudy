@@ -19,6 +19,16 @@ export interface GroupSession {
   notes: string | null;
   status: SessionStatus;
   createdAt: string;
+  /** The caller's own answer (members). */
+  myRsvp?: { rsvp: "going" | "not_going" | null; reason: string | null } | null;
+  /** Everyone's answers and attendance (mentors only). */
+  attendance?: {
+    accountId: string;
+    name: string;
+    rsvp: "going" | "not_going" | null;
+    reason: string | null;
+    attended: boolean | null;
+  }[];
 }
 
 export const SESSION_COLUMNS =
@@ -99,4 +109,15 @@ export function parseSessionInput(
     v.status = s;
   }
   return { ok: true, values: v };
+}
+
+export type Rsvp = "going" | "not_going";
+
+/** One member's answer and attendance for a session, as the mentor sees it. */
+export interface AttendanceRow {
+  accountId: string;
+  name: string;
+  rsvp: Rsvp | null;
+  reason: string | null;
+  attended: boolean | null;
 }

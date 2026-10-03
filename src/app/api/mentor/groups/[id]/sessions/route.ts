@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { roleInGroup } from "@/lib/mentor/groups";
 import { requestingAccountId } from "@/lib/mentor/requests";
-import { SESSION_COLUMNS, parseSessionInput, toGroupSession } from "@/lib/mentor/sessions";
+import { SESSION_COLUMNS, parseSessionInput, toGroupSession, type GroupSession } from "@/lib/mentor/sessions";
+import { displayNamesForAccounts } from "@/lib/mentor/names";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,10 +33,47 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       .order("starts_at", { ascending: true })
       .limit(200);
     if (error) throw error;
-    return NextResponse.json({
-      sessions: (data ?? []).map((r) => toGroupSession(r as Record<string, unknown>)),
-      role,
-    });
+    const sessions: GroupSession[] = (data ?? []).map((r) => toGroupSession(r as Record<string, unknown>));
+
+    // Attendance rides along: a member sees their own answer, a mentor sees
+    // every member's, so neither needs a second request per session.
+    if (sessions.length) {
+      const { data: att } = await supabase
+        .from("session_attendance")
+        .select("session_id, account_id, rsvp, reason, attended")
+        .in("session_id", sessions.map((s) => s.id));
+      const rows = att ?? [];
+      if (role === "mentor") {
+        const { data: members } = await supabase
+          .from("group_members")
+          .select("account_id")
+          .eq("group_id", id)
+          .eq("status", "active")
+          .eq("role", "member");
+        const memberIds = (members ?? []).map((m) => m.account_id as string);
+        const names = await displayNamesForAccounts(supabase, memberIds);
+        for (const s of sessions) {
+          s.attendance = memberIds.map((acc) => {
+            const r = rows.find((x) => x.session_id === s.id && x.account_id === acc);
+            return {
+              accountId: acc,
+              name: names.get(acc) ?? "Pengguna",
+              rsvp: (r?.rsvp as "going" | "not_going" | null) ?? null,
+              reason: (r?.reason as string | null) ?? null,
+              attended: (r?.attended as boolean | null) ?? null,
+            };
+          });
+        }
+      } else {
+        for (const s of sessions) {
+          const r = rows.find((x) => x.session_id === s.id && x.account_id === accountId);
+          s.myRsvp = r
+            ? { rsvp: (r.rsvp as "going" | "not_going" | null) ?? null, reason: (r.reason as string | null) ?? null }
+            : null;
+        }
+      }
+    }
+    return NextResponse.json({ sessions, role });
   } catch (error) {
     if (error instanceof Response) return error;
     console.error("[group/sessions] GET gagal:", error);

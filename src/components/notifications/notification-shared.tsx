@@ -12,6 +12,7 @@ import {
   UserPlus,
   Users,
   ArrowUpCircle,
+  NotebookText,
   type LucideIcon,
 } from "lucide-react";
 import { openChatToMessage, openDmTo } from "@/lib/events";
@@ -72,6 +73,8 @@ export function notificationIcon(n: Notification): LucideIcon {
       return Users;
     case "package_upgraded":
       return ArrowUpCircle;
+    case "session_summary":
+      return NotebookText;
     default:
       return Bell;
   }
@@ -121,6 +124,8 @@ export function notificationLabel(
       return t("notification.group_approved");
     case "package_upgraded":
       return n.threadTitle || t("notification.package_upgraded");
+    case "session_summary":
+      return `${t("notification.session_summary")}${n.threadTitle ? ` · ${n.threadTitle}` : ""}`;
     default:
       return t("notification.default");
   }
