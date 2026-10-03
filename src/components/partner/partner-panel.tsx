@@ -44,6 +44,11 @@ interface Commission {
   createdAt: string;
 }
 
+interface Leaderboard {
+  top: { rank: number; name: string; people: number; isYou: boolean }[];
+  you: { rank: number; people: number } | null;
+}
+
 interface PartnerData {
   status: "none" | "pending" | "active" | "paused" | "rejected";
   appliedAt?: string;
@@ -63,6 +68,7 @@ interface PartnerData {
   ladder: Band[];
   codes?: string[];
   commissions?: Commission[];
+  leaderboard?: Leaderboard | null;
 }
 
 function tanggal(iso: string): string {
@@ -204,6 +210,10 @@ function PartnerAktif({
 
       {kode && <LinkAjak kode={kode} />}
 
+      {data.leaderboard && (
+        <Peringkat board={data.leaderboard} paused={data.status === "paused"} />
+      )}
+
       {s.sales === 0 ? (
         <section className="rounded-xl border border-dashed border-border px-5 py-6">
           <h2 className="font-display text-base font-semibold text-foreground">
@@ -289,6 +299,68 @@ function Tangga({
         Perpanjangan periode berikutnya tidak dihitung lagi. Orang ke-6 dihitung 30%,
         dan lima orang pertama tetap 25% selamanya.
       </p>
+    </section>
+  );
+}
+
+/**
+ * Papan peringkat partner.
+ *
+ * Orang, bukan uang: partner lain hanya melihat nama panggilan dan jumlah
+ * orangnya. Baris sendiri ditandai seperti pita tarif yang sedang berlaku di
+ * atasnya, dan kalau posisimu di luar sepuluh besar, letaknya disebut di bawah
+ * daftar supaya tidak perlu dicari.
+ */
+function Peringkat({ board, paused }: { board: Leaderboard; paused: boolean }) {
+  const diLuarDaftar = board.you !== null && board.you.rank > board.top.length;
+
+  return (
+    <section>
+      <h2 className="font-display text-base font-semibold text-foreground">Peringkat partner</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Urut dari jumlah orang yang membeli lewat kode masing-masing. Partner lain hanya
+        melihat nama panggilan dan jumlah orangnya, bukan komisinya.
+      </p>
+
+      {board.top.length === 0 ? (
+        <p className="mt-4 rounded-lg border border-dashed border-border px-3.5 py-3 text-sm text-muted-foreground">
+          Belum ada partner yang punya pembeli. Yang pertama akan muncul di sini.
+        </p>
+      ) : (
+        <ol className="mt-4 space-y-1.5">
+          {board.top.map((r) => (
+            <li
+              key={r.rank}
+              className={cn(
+                "flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm",
+                r.isYou ? "border-primary/40 bg-primary/5" : "border-border"
+              )}
+            >
+              <span className="w-6 shrink-0 text-right font-semibold tabular-nums text-muted-foreground">
+                {r.rank}
+              </span>
+              <span className="min-w-0 flex-1 truncate font-medium text-foreground">
+                {r.name}
+                {r.isYou && <span className="ml-1.5 text-xs font-normal text-primary">kamu</span>}
+              </span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">{r.people} orang</span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {diLuarDaftar && board.you && (
+        <p className="mt-3 text-sm text-foreground">
+          Kamu di peringkat {board.you.rank} dengan {board.you.people} orang.
+        </p>
+      )}
+      {board.you === null && (
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          {paused
+            ? "Selama kemitraanmu dijeda, namamu tidak tampil di peringkat."
+            : "Kamu belum masuk peringkat. Orang pertama yang membeli lewat kodemu memasukkanmu ke sini."}
+        </p>
+      )}
     </section>
   );
 }

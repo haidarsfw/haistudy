@@ -5,6 +5,7 @@ import { requireAccount } from "@/lib/auth/account-session";
 import { AccountError } from "@/lib/auth/account";
 import { partnerSummary, COMMISSION_LADDER } from "@/lib/mentor/commission";
 import { listAccountReferralCodes } from "@/lib/referral/codes";
+import { partnerLeaderboard } from "@/lib/mentor/leaderboard";
 
 /**
  * Halaman partner, datanya.
@@ -49,7 +50,14 @@ export async function GET() {
       });
     }
 
-    const summary = await partnerSummary(supabase, partner.id as string);
+    const showBoard = partner.status === "active" || partner.status === "paused";
+    const [summary, leaderboard] = await Promise.all([
+      partnerSummary(supabase, partner.id as string),
+      // A failed board costs the board, never the page about your own money.
+      showBoard
+        ? partnerLeaderboard(supabase, partner.id as string).catch(() => null)
+        : Promise.resolve(null),
+    ]);
 
     // Riwayat hanya ditarik untuk partner yang benar-benar punya penghasilan.
     const { data: rows } = summary.sales
@@ -72,6 +80,7 @@ export async function GET() {
         name: partner.payout_name,
       },
       summary,
+      leaderboard,
       ladder: COMMISSION_LADDER,
       codes,
       // `admin_note` sengaja TIDAK ikut: itu catatan pemilik untuk dirinya
