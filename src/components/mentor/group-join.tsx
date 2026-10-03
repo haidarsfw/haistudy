@@ -185,6 +185,10 @@ export function GroupJoin({ state }: { state: GroupJoinState }) {
           </div>
         ) : (
           <div>
+            <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+              Setelah bergabung, {state.mentor} bisa melihat progres belajarmu di periode ini,
+              supaya sesinya membahas yang kamu perlukan.
+            </p>
             <Button onClick={join} disabled={phase === "joining"} className="h-11 gap-2 px-5">
               {phase === "joining" && <Loader2 className="h-4 w-4 animate-spin" />}
               {phase === "joining" ? "Bergabung…" : "Gabung grup"}

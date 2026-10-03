@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarClock, Check, ChevronDown, Copy, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
+import { BarChart3, CalendarClock, Check, ChevronDown, Copy, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GroupSessions } from "@/components/mentor/group-sessions";
+import { GroupProgress } from "@/components/mentor/group-progress";
 import { toast } from "@/components/ui/toast";
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,7 @@ export function MentorGroups() {
 function GroupCard({ g }: { g: GroupSummary }) {
   const [open, setOpen] = useState(false);
   const [schedule, setSchedule] = useState(false);
+  const [progress, setProgress] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [copied, setCopied] = useState(false);
   const scope = parseScopeKey(g.scopeKey);
@@ -153,6 +155,22 @@ function GroupCard({ g }: { g: GroupSummary }) {
       {schedule && (
         <div className="mt-2">
           <GroupSessions groupId={g.id} canEdit />
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setProgress((v) => !v)}
+        aria-expanded={progress}
+        className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground"
+      >
+        <ChevronDown className={cn("h-4 w-4 transition-transform", progress && "rotate-180")} />
+        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+        Progres anggota
+      </button>
+      {progress && (
+        <div className="mb-2">
+          <GroupProgress groupId={g.id} />
         </div>
       )}
 
