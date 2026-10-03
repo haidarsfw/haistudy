@@ -94,6 +94,15 @@ export async function POST(
           },
           { status: 409 }
         );
+      // Removed by the mentor: asking again would only fill their inbox.
+      case "removed":
+        return NextResponse.json(
+          {
+            state: "removed",
+            error: "Mentor grup ini sudah mengeluarkanmu. Hubungi mentornya kalau kamu ingin kembali.",
+          },
+          { status: 409 }
+        );
       case "invited": {
         // The mentor already asked for this person; asking back is a yes.
         if (group.max_members !== null && (await activeMemberCount(supabase, id)) >= group.max_members) {

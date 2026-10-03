@@ -85,6 +85,15 @@ export async function POST(req: Request) {
         group: toMentorGroup(group as GroupRow),
       });
     }
+    // Dikeluarkan mentor: link dan kode tidak membawanya masuk lagi (temuan
+    // F37: dulu setiap baris lama diaktifkan ulang). Hanya mentornya yang
+    // bisa mengizinkan lagi.
+    if (existing?.status === "removed") {
+      return NextResponse.json(
+        { error: "Mentor grup ini sudah mengeluarkanmu. Hubungi mentornya kalau kamu ingin kembali." },
+        { status: 403 }
+      );
+    }
 
     // Batas anggota diperiksa SEBELUM menulis, dan hanya menghitung yang
     // benar-benar di dalam. Yang pernah keluar lalu masuk lagi tidak menambah

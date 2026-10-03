@@ -228,13 +228,6 @@ function GroupCard({ g }: { g: GroupSummary }) {
         {archived ? "Anggota" : <>Anggota &amp; undangan</>}
       </button>
 
-      <Link
-        href={`/partner/laporan/${g.id}`}
-        className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground underline-offset-4 hover:underline"
-      >
-        <FileText className="h-4 w-4 text-muted-foreground" />
-        Laporan program
-      </Link>
 
       {open && (
         <div className="mt-2 space-y-5">
@@ -244,12 +237,19 @@ function GroupCard({ g }: { g: GroupSummary }) {
             </p>
           ) : (
             <>
-              <Members members={detail.members} />
+              <Members groupId={g.id} members={detail.members} archived={archived} onChange={load} />
               {!archived && <Invites groupId={g.id} invites={detail.invites} onChange={load} />}
             </>
           )}
         </div>
       )}
+      <Link
+        href={`/partner/laporan/${g.id}`}
+        className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+      >
+        <FileText className="h-4 w-4 text-muted-foreground" />
+        Laporan program
+      </Link>
     </article>
   );
 }
@@ -327,28 +327,118 @@ function Requests({
   );
 }
 
-function Members({ members }: { members: Detail["members"] }) {
+function Members({
+  groupId,
+  members,
+  archived,
+  onChange,
+}: {
+  groupId: string;
+  members: Detail["members"];
+  archived: boolean;
+  onChange: () => Promise<void>;
+}) {
   const label: Record<string, string> = { active: "", invited: "diundang" };
   // Requests have their own box above; this list is who is in or invited.
-  const listed = members.filter((m) => m.status !== "pending");
+  const listed = members.filter((m) => m.status !== "pending" && m.status !== "removed");
+  const removed = members.filter((m) => m.status === "removed");
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const act = async (memberId: string, action: "remove" | "allow", done: string) => {
+    setBusy(memberId);
+    try {
+      const res = await fetch(`/api/mentor/groups/${groupId}/members`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ memberId, action }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) toast.error(body.error ?? "Belum tersimpan. Coba lagi.");
+      else toast.success(done);
+      setConfirm(null);
+      await onChange();
+    } catch {
+      toast.error("Koneksi terputus. Coba lagi.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <div>
       <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
         <Users className="h-4 w-4 text-muted-foreground" /> Anggota
       </h4>
       <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
-        {listed.map((m, i) => (
-          <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-            <span className="min-w-0 truncate text-foreground">
-              {m.name}
-              {m.isYou ? " (kamu)" : ""}
-            </span>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {m.role === "mentor" ? "mentor" : label[m.status] ?? ""}
-            </span>
+        {listed.map((m) => (
+          <li key={m.memberId} className="px-3 py-2 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 truncate text-foreground">
+                {m.name}
+                {m.isYou ? " (kamu)" : ""}
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {m.role === "mentor" ? "mentor" : label[m.status] ?? ""}
+                </span>
+                {!archived && m.role === "member" && !m.isYou && confirm !== m.memberId && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirm(m.memberId)}
+                    className="min-h-9 rounded-md px-1.5 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Keluarkan
+                  </button>
+                )}
+              </span>
+            </div>
+            {confirm === m.memberId && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-destructive/5 px-2 py-1.5">
+                <p className="flex-1 text-xs text-foreground">
+                  Keluarkan {m.name}? Link dan kode grup tidak bisa dipakainya masuk lagi sampai kamu mengizinkannya.
+                </p>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={busy === m.memberId}
+                  onClick={() => void act(m.memberId, "remove", `${m.name} dikeluarkan.`)}
+                >
+                  Keluarkan
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setConfirm(null)}>
+                  Batal
+                </Button>
+              </div>
+            )}
           </li>
         ))}
       </ul>
+      {removed.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs font-medium text-muted-foreground">Dikeluarkan</p>
+          <ul className="mt-1 divide-y divide-border rounded-lg border border-border">
+            {removed.map((m) => (
+              <li key={m.memberId} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                <span className="min-w-0 truncate text-muted-foreground">{m.name}</span>
+                {!archived && (
+                  <button
+                    type="button"
+                    disabled={busy === m.memberId}
+                    onClick={() =>
+                      void act(m.memberId, "allow", `${m.name} bisa masuk lagi lewat link atau kode grup.`)
+                    }
+                    className="min-h-9 shrink-0 rounded-md px-1.5 text-xs font-medium text-primary hover:underline disabled:opacity-60"
+                  >
+                    Izinkan masuk lagi
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
