@@ -126,7 +126,7 @@ export async function applyInvitesForNewAccount(
   }
   if (!wanted.length) return;
 
-  const hits: { id: string; group_id: string; invited_by: string | null }[] = [];
+  const hits: { id: string; group_id: string; invited_by: string | null; created_at: string }[] = [];
   for (const c of wanted) {
     const { data } = await supabase
       .from("group_invites")
@@ -136,10 +136,19 @@ export async function applyInvitesForNewAccount(
       .is("account_id", null)
       .order("created_at", { ascending: true });
     for (const r of data ?? []) {
-      hits.push({ id: r.id as string, group_id: r.group_id as string, invited_by: (r.invited_by as string) ?? null });
+      hits.push({
+        id: r.id as string,
+        group_id: r.group_id as string,
+        invited_by: (r.invited_by as string) ?? null,
+        created_at: r.created_at as string,
+      });
     }
   }
   if (!hits.length) return;
+  // Oldest invite first, across e-mail AND WhatsApp. Each lookup above is
+  // ordered on its own, so without this the e-mail match always came first even
+  // when a different mentor had listed this person's number earlier.
+  hits.sort((a, b) => a.created_at.localeCompare(b.created_at));
 
   const now = new Date().toISOString();
   for (const h of hits) {
