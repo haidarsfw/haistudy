@@ -1,7 +1,7 @@
 /** A mentoring session (table group_sessions, migration 086). */
 export interface AgendaItem {
   text: string;
-  /** Reserved for phase 2 (module markers feeding the agenda). */
+  /** Set when the point is a module (from "Usulan anggota" or the module list). */
   subjectId?: string;
   module?: string;
 }

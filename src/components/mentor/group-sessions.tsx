@@ -3,12 +3,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { Bookmark, CalendarClock, CalendarPlus, Check, ChevronDown, Loader2, MapPin, Users } from "lucide-react";
+import { Bookmark, CalendarClock, CalendarPlus, Check, ChevronDown, ListPlus, Loader2, MapPin, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
-import type { GroupSession } from "@/lib/mentor/sessions";
+import type { AgendaItem, GroupSession } from "@/lib/mentor/sessions";
+import type { ScopeTuple } from "@/types/scope";
 import { cn } from "@/lib/utils";
+import { AgendaFromModules, type ModuleState } from "./agenda-from-modules";
+
+/** For the agenda template: the period the group teaches and what it covered. */
+interface AgendaPlan {
+  scope: ScopeTuple;
+  states: Map<string, ModuleState>;
+}
 
 /** "Sab, 11 Okt · 19.00–20.30" */
 export function sessionWhen(s: Pick<GroupSession, "startsAt" | "durationMinutes">): string {
@@ -26,7 +34,16 @@ const DURATIONS = [60, 90, 120, 180];
  * Upcoming first, then what already happened, newest first, because a member
  * opens this to know when the next one is and a mentor to write up the last.
  */
-export function GroupSessions({ groupId, canEdit }: { groupId: string; canEdit: boolean }) {
+export function GroupSessions({
+  groupId,
+  canEdit,
+  scope,
+}: {
+  groupId: string;
+  canEdit: boolean;
+  /** The period the group teaches; gives the mentor the agenda template. */
+  scope?: ScopeTuple;
+}) {
   const [sessions, setSessions] = useState<GroupSession[] | null>(null);
   const [adding, setAdding] = useState(false);
   // Read once when the list mounts: which sessions are still ahead is a
@@ -65,6 +82,19 @@ export function GroupSessions({ groupId, canEdit }: { groupId: string; canEdit: 
     .filter((s) => !upcoming.includes(s))
     .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
 
+  // What the group already did with each module, for the agenda template.
+  const states = new Map<string, ModuleState>();
+  for (const s of sessions) {
+    if (s.status === "cancelled") continue;
+    for (const a of s.agenda) {
+      if (!a.subjectId || !a.module) continue;
+      const key = `${a.subjectId}/${a.module}`;
+      if (s.status === "done") states.set(key, "done");
+      else if (!states.has(key)) states.set(key, "scheduled");
+    }
+  }
+  const plan: AgendaPlan | null = canEdit && scope ? { scope, states } : null;
+
   return (
     <div className="space-y-4">
       {canEdit && <ModuleRequests groupId={groupId} upcoming={upcoming} onAdded={load} />}
@@ -72,6 +102,7 @@ export function GroupSessions({ groupId, canEdit }: { groupId: string; canEdit: 
         (adding ? (
           <SessionForm
             groupId={groupId}
+            plan={plan}
             onDone={async (saved) => {
               setAdding(false);
               if (saved) await load();
@@ -95,7 +126,7 @@ export function GroupSessions({ groupId, canEdit }: { groupId: string; canEdit: 
           {upcoming.length > 0 && (
             <ul className="space-y-2">
               {upcoming.map((s) => (
-                <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} onChange={load} now={now} />
+                <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} onChange={load} now={now} plan={plan} />
               ))}
             </ul>
           )}
@@ -106,7 +137,7 @@ export function GroupSessions({ groupId, canEdit }: { groupId: string; canEdit: 
               <p className="mb-2 text-xs font-medium text-muted-foreground">Riwayat</p>
               <ul className="space-y-2">
                 {past.map((s) => (
-                  <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} onChange={load} now={now} />
+                  <SessionRow key={s.id} s={s} groupId={groupId} canEdit={canEdit} onChange={load} now={now} plan={plan} />
                 ))}
               </ul>
             </div>
@@ -123,11 +154,13 @@ function SessionRow({
   canEdit,
   onChange,
   now,
+  plan,
 }: {
   s: GroupSession;
   groupId: string;
   canEdit: boolean;
   onChange: () => Promise<void>;
+  plan: AgendaPlan | null;
   now: number;
 }) {
   const [closing, setClosing] = useState(false);
@@ -250,6 +283,7 @@ function SessionRow({
             <SessionForm
               groupId={groupId}
               initial={s}
+              plan={plan}
               onDone={async (saved) => {
                 setEditing(false);
                 if (saved) await onChange();
@@ -321,10 +355,12 @@ function toLocalInput(iso: string): string {
 function SessionForm({
   groupId,
   initial,
+  plan,
   onDone,
 }: {
   groupId: string;
   initial?: GroupSession;
+  plan: AgendaPlan | null;
   onDone: (saved: boolean) => void;
 }) {
   const editing = Boolean(initial);
@@ -336,6 +372,21 @@ function SessionForm({
   const [prep, setPrep] = useState(initial?.prep ?? "");
   const [repeat, setRepeat] = useState(1);
   const [busy, setBusy] = useState(false);
+  // Points added from the module list, by their text: saving matches lines to
+  // these the same way it keeps the links of points already on the agenda.
+  const [links, setLinks] = useState<Map<string, AgendaItem>>(() => new Map());
+  const [fromModules, setFromModules] = useState(false);
+
+  const known = [...(initial?.agenda ?? []), ...links.values()];
+  const taken = new Set(
+    agenda
+      .split("\n")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .map((t) => known.find((a) => a.text === t))
+      .filter((a): a is AgendaItem => Boolean(a?.subjectId && a?.module))
+      .map((a) => `${a.subjectId}/${a.module}`)
+  );
 
   const save = async () => {
     if (!title.trim() || !when) {
@@ -347,7 +398,7 @@ function SessionForm({
       .split("\n")
       .map((t) => t.trim())
       .filter(Boolean)
-      .map((text) => before.find((a) => a.text === text) ?? { text });
+      .map((text) => before.find((a) => a.text === text) ?? links.get(text) ?? { text });
     setBusy(true);
     try {
       const r = await fetch(
@@ -452,6 +503,33 @@ function SessionForm({
           className={cn(field, "mt-1 py-2")}
         />
       </label>
+      {plan &&
+        (fromModules ? (
+          <AgendaFromModules
+            semester={plan.scope.semester}
+            examPeriod={plan.scope.examPeriod}
+            jurusan={plan.scope.jurusan}
+            taken={taken}
+            states={plan.states}
+            onAdd={(items) => {
+              setLinks((prev) => {
+                const next = new Map(prev);
+                for (const it of items) next.set(it.text, it);
+                return next;
+              });
+              setAgenda((prev) => [prev.trim(), ...items.map((it) => it.text)].filter(Boolean).join("\n"));
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setFromModules(true)}
+            className="flex min-h-11 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+          >
+            <ListPlus className="h-4 w-4" />
+            Ambil dari daftar modul
+          </button>
+        ))}
       <label className="block text-xs font-medium text-foreground">
         Persiapan untuk anggota (opsional)
         <textarea

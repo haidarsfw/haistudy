@@ -154,7 +154,7 @@ function GroupCard({ g }: { g: GroupSummary }) {
       </button>
       {schedule && (
         <div className="mt-2">
-          <GroupSessions groupId={g.id} canEdit />
+          <GroupSessions groupId={g.id} canEdit scope={scope ?? undefined} />
         </div>
       )}
 
