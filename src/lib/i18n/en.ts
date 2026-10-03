@@ -105,6 +105,7 @@ const en: Record<string, string> = {
   "notification.exam_quota": "Practice quota added",
   "notification.group_request": "asked to join your group",
   "notification.group_approved": "Your request to join the group was approved",
+  "notification.package_upgraded": "Your package was upgraded",
   "notification.announcement": "New announcement",
   "notification.new_thread": "created a new thread",
   "notification.voted_poll": "voted on a poll",

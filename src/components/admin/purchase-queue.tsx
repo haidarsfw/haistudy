@@ -80,7 +80,10 @@ const PACKAGE_LABELS: Record<string, string> = {
   discount: "Diskon (legacy)",
   free: "Free",
   exam_quota: "Top-up Kuota",
+  upgrade: "Naik paket",
 };
+
+const TIER_NAMES: Record<string, string> = { share: "Share", normal: "Normal", vip: "VIP", diamond: "Diamond" };
 
 // The package → tier map, the scope helper and the login-method resolver all
 // moved to /api/admin/purchase/approve along with the approval itself.
@@ -201,6 +204,28 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
     overrideUnverified = false
   ) => {
     setProcessingId(purchase.id);
+
+    // Package upgrade: the buyer's EXISTING access goes up a tier. No key is
+    // minted; the server raises the tier and tells the buyer in the app.
+    if (purchase.package === "upgrade") {
+      try {
+        const res = await fetch(`/api/admin/purchase${scopeQuery()}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: purchase.id, status: "approved" }),
+        });
+        const body = (await res.json().catch(() => ({}))) as { purchase?: PurchaseRequest; error?: string };
+        if (!res.ok || !body.purchase) throw new Error(body.error || "Gagal menyetujui naik paket");
+        setPurchases((prev) => prev.map((p) => (p.id === purchase.id ? body.purchase! : p)));
+        const from = TIER_NAMES[purchase.meta?.fromTier ?? ""] ?? "?";
+        const to = TIER_NAMES[purchase.meta?.toTier ?? ""] ?? "?";
+        toast.success(`Naik paket disetujui: ${from} → ${to}. Pembeli dapat kabar di aplikasi.`);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Gagal approve");
+      }
+      setProcessingId(null);
+      return;
+    }
 
     // Exam-quota top-up: the buyer already has a key — no new key minted. Just
     // approve; the server adds the bonus credits + sends the in-app confirmation.
@@ -627,6 +652,12 @@ export function PurchaseQueue({ reloadToken = 0 }: { reloadToken?: number }) {
                             </div>
                             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                               <span>{PACKAGE_LABELS[purchase.package] || purchase.package}</span>
+                              {purchase.package === "upgrade" && (
+                                <span>
+                                  · {TIER_NAMES[purchase.meta?.fromTier ?? ""] ?? "?"} →{" "}
+                                  {TIER_NAMES[purchase.meta?.toTier ?? ""] ?? "?"}
+                                </span>
+                              )}
                               {purchase.package === "exam_quota" && (
                                 <>
                                   <span>· {purchase.meta?.quotaQty ?? "?"}× kuota</span>

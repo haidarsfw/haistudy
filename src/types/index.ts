@@ -424,7 +424,8 @@ export interface Notification {
     | "dm_message"
     | "exam_quota"
     | "group_request"
-    | "group_approved";
+    | "group_approved"
+    | "package_upgraded";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";
@@ -514,7 +515,7 @@ export interface PurchaseMeta {
   nickname?: string;
   // ─── In-app exam-quota top-up orders (package = 'exam_quota') ───
   // Marks this as a quota top-up rather than an access purchase.
-  kind?: "exam_quota";
+  kind?: "exam_quota" | "upgrade";
   // Number of extra attempts being bought (1 / 3 / 7).
   quotaQty?: number;
   // Subject the top-up applies to (quota is per-matkul).
@@ -522,8 +523,12 @@ export interface PurchaseMeta {
   // Human-readable subject name (shown in the admin queue).
   subjectName?: string;
   // Idempotency guard: set true once the quota bonus has been granted, so a
-  // re-approve can never double-credit.
+  // re-approve can never double-credit. Upgrades use it the same way.
   granted?: boolean;
+  // ─── Self-serve package upgrades (package = 'upgrade', kind = 'upgrade') ───
+  // license_key on the row is the access being raised; these say from and to.
+  fromTier?: "share" | "normal" | "vip" | "diamond";
+  toTier?: "share" | "normal" | "vip" | "diamond";
 }
 
 export interface PurchaseRequest {
@@ -533,7 +538,8 @@ export interface PurchaseRequest {
   email: string | null;
   // 'share'|'normal'|'vip'|'diamond' = on-site form tiers; 'discount'|'free' = legacy rows;
   // 'exam_quota' = in-app exam-quota top-up (meta.kind === 'exam_quota').
-  package: "share" | "normal" | "vip" | "diamond" | "discount" | "free" | "exam_quota";
+  // 'upgrade' = self-serve package upgrade of an existing access (migration 084).
+  package: "share" | "normal" | "vip" | "diamond" | "discount" | "free" | "exam_quota" | "upgrade";
   status: "pending" | "approved" | "rejected";
   licenseKey: string | null;
   approvedAt: string | null;

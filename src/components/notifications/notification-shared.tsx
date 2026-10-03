@@ -11,6 +11,7 @@ import {
   Ticket,
   UserPlus,
   Users,
+  ArrowUpCircle,
   type LucideIcon,
 } from "lucide-react";
 import { openChatToMessage, openDmTo } from "@/lib/events";
@@ -69,6 +70,8 @@ export function notificationIcon(n: Notification): LucideIcon {
       return UserPlus;
     case "group_approved":
       return Users;
+    case "package_upgraded":
+      return ArrowUpCircle;
     default:
       return Bell;
   }
@@ -116,6 +119,8 @@ export function notificationLabel(
       return `${n.senderName ?? "Seseorang"} ${t("notification.group_request")}`;
     case "group_approved":
       return t("notification.group_approved");
+    case "package_upgraded":
+      return n.threadTitle || t("notification.package_upgraded");
     default:
       return t("notification.default");
   }

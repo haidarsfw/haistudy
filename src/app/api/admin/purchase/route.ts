@@ -8,6 +8,10 @@ import { resolveAdminScope } from "@/lib/auth/admin-scope";
 import { ScopeError } from "@/lib/auth/scope-check";
 import type { PurchaseRequest, PurchaseMeta } from "@/types";
 import { accountColumns } from "@/lib/auth/account-link";
+import { PACKAGE_LABELS, packageMaxDevices, type PurchasablePackageId } from "@/lib/payments";
+import { TIER_RANK } from "@/lib/upgrade";
+import { recordActivity } from "@/lib/admin/activity";
+import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
 
 function scopeErrorResponse(error: unknown) {
   if (error instanceof ScopeError) {
@@ -357,6 +361,69 @@ export async function PATCH(request: Request) {
           exam_period: data.exam_period,
           jurusan: data.jurusan,
         });
+      }
+      return NextResponse.json({
+        purchase: mapRow({ ...data, meta: { ...meta0, granted: true } }),
+      });
+    }
+
+    // ── Package upgrade (package='upgrade'): the SAME licence goes up a tier.
+    // No new key, no invoice number (like a top-up, it is a change to an
+    // access already sold), expiry untouched. VIP and Diamond come with three
+    // devices, so the device allowance rises with the tier and never falls.
+    if (status === "approved" && data && meta0.kind === "upgrade") {
+      const lk = (data.license_key as string) || "";
+      const to = meta0.toTier as PurchasablePackageId | undefined;
+      if (!meta0.granted && lk && to) {
+        const { data: lic, error: licErr } = await supabase
+          .from("license_keys")
+          .select("package_tier, max_devices, account_id")
+          .eq("key", lk)
+          .maybeSingle();
+        if (licErr) throw licErr;
+        if (!lic) throw new Error(`Lisensi ${lk} untuk naik paket tidak ditemukan`);
+        // The order and the licence must belong to the same person. The order
+        // route checks this when it is placed; this is the copy at payout.
+        if (data.account_id && lic.account_id && lic.account_id !== data.account_id) {
+          throw new Error("Lisensi ini bukan milik pemesan naik paket");
+        }
+        const from = (lic.package_tier as PurchasablePackageId) ?? "normal";
+        // Already there (an admin raised it by hand meanwhile): nothing to do,
+        // and certainly nothing to LOWER.
+        if (TIER_RANK[from] < TIER_RANK[to]) {
+          const { error: upErr } = await supabase
+            .from("license_keys")
+            .update({
+              package_tier: to,
+              max_devices: Math.max((lic.max_devices as number | null) ?? 1, packageMaxDevices(to)),
+            })
+            .eq("key", lk);
+          if (upErr) throw upErr;
+        }
+        await supabase
+          .from("purchase_requests")
+          .update({ meta: { ...meta0, granted: true } })
+          .eq("id", id);
+        await supabase.from("notifications").insert({
+          license_key: lk,
+          type: "package_upgraded",
+          sender_name: "HaiStudy",
+          preview: `Paketmu sekarang ${PACKAGE_LABELS[to]}. Fitur barunya langsung bisa dipakai, muat ulang aplikasinya kalau belum terlihat.`,
+          context: "system",
+          thread_title: `Paket naik ke ${PACKAGE_LABELS[to]}`,
+          semester: data.semester,
+          exam_period: data.exam_period,
+          jurusan: data.jurusan,
+        });
+        const scope = parseScopeKey(`s${data.semester}-${data.exam_period}-${data.jurusan}`);
+        if (scope) {
+          await recordActivity(supabase, {
+            action: "purchase_approved",
+            userName: (data.name as string) ?? "",
+            details: `Naik paket ${PACKAGE_LABELS[from]} → ${PACKAGE_LABELS[to]} • ${scopeFullLabel(scope)}`,
+            scope,
+          });
+        }
       }
       return NextResponse.json({
         purchase: mapRow({ ...data, meta: { ...meta0, granted: true } }),

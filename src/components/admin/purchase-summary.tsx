@@ -19,6 +19,7 @@ import {
 import type { PurchaseRequest } from "@/types";
 import {
   effectiveBasePrice,
+  PACKAGE_PRICES,
   formatIDR,
   type PurchasablePackageId,
 } from "@/lib/payments";
@@ -31,6 +32,8 @@ const PACKAGE_LABELS: Record<string, string> = {
   diamond: "Diamond",
   discount: "Diskon (legacy)",
   free: "Free",
+  exam_quota: "Top-up Kuota",
+  upgrade: "Naik paket",
 };
 
 const LOGIN_LABELS: Record<string, string> = {
@@ -113,6 +116,10 @@ export function PurchaseSummary({
     const discounted = approved.reduce((sum, p) => {
       const paid = p.meta?.basePrice;
       if (typeof paid !== "number") return sum;
+      // Only an access purchase has a list price to be discounted from. A
+      // top-up or an upgrade has none, and counting one turned the whole total
+      // into NaN.
+      if (!(p.package in PACKAGE_PRICES)) return sum;
       // List price, full stop. The class promo used to live inside this call as
       // a cheaper LE86 price; it is a discount now, so it shows up in
       // `list - paid` like every other discount instead of hiding in the list.

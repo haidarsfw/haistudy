@@ -97,6 +97,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Not every order is a new access. A top-up or an upgrade carries the
+    // buyer's EXISTING key and is granted by the queue's PATCH; minting a new
+    // licence for one would hand out a second access for the price of a few
+    // attempts or a tier step.
+    if (purchase.package === "exam_quota" || purchase.package === "upgrade") {
+      return NextResponse.json(
+        {
+          error: "Ini bukan pembelian akses baru. Setujui dari antrean (bukan lewat pembuatan lisensi).",
+          code: "NOT_AN_ACCESS",
+        },
+        { status: 409 }
+      );
+    }
+
     const scope: ScopeTuple | null = parseScopeKey(
       `s${purchase.semester}-${purchase.exam_period}-${purchase.jurusan}`
     );

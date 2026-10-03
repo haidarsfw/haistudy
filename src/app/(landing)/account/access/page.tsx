@@ -9,6 +9,7 @@ import { listAccountAccesses } from "@/lib/auth/account-access";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { PACKAGE_LABELS } from "@/lib/payments";
 import { ACCESS_STATUS, scopeLabel } from "@/lib/account/labels";
+import { upgradeOptions } from "@/lib/upgrade";
 
 export const metadata: Metadata = {
   title: "Akses saya",
@@ -94,10 +95,22 @@ export default async function AccountAccessPage({
                     may need to spend a device slot, which the user has to see
                     before it happens. */}
                 {a.status === "active" && (
-                  <EnterAccessButton
-                    licenseKey={a.licenseKey}
-                    autoEnter={autoEnterKey === a.licenseKey}
-                  />
+                  <div className="flex shrink-0 items-center gap-2">
+                    {/* Below Diamond, and never on an admin key: the step up is
+                        right where the tier is read. */}
+                    {!a.isAdmin && upgradeOptions(a.packageTier).length > 0 && (
+                      <Link
+                        href={`/account/upgrade?key=${a.licenseKey}`}
+                        className="inline-flex h-11 items-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        Naik paket
+                      </Link>
+                    )}
+                    <EnterAccessButton
+                      licenseKey={a.licenseKey}
+                      autoEnter={autoEnterKey === a.licenseKey}
+                    />
+                  </div>
                 )}
               </li>
             );
