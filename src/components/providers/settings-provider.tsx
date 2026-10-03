@@ -34,9 +34,12 @@ function getLocalSettings(): UserSettings | null {
   }
 }
 
-function saveLocalSettings(settings: UserSettings) {
+// `bump` = this is a change the server should treat as newer than its copy.
+// Writes made before the first server load are not: stamping them would make
+// a brand-new device look newer than the account's real settings.
+function saveLocalSettings(settings: UserSettings, bump = true) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  localStorage.setItem("hs-settings-updated", new Date().toISOString());
+  if (bump) localStorage.setItem("hs-settings-updated", new Date().toISOString());
 }
 
 interface SettingsContextValue {
@@ -61,6 +64,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const updatedAtRef = useRef<string | null>(null);
   const isInitializedRef = useRef(false);
   const selfTriggeredRef = useRef(false);
+  // Changes made before the first server load answered, applied on top of the
+  // server's settings once they arrive (see updateSettings).
+  const pendingRef = useRef<Partial<UserSettings> | null>(null);
 
   // Apply ALL settings to ThemeProvider
   const applyToTheme = useCallback(
@@ -85,7 +91,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           prev.customAccent.l === customAccent.l);
       if (prev.darkMode === dark && prev.theme === theme && prev.font === font && accentEq) return prev;
       const next = { ...prev, darkMode: dark, theme, font, customAccent: customAccent ?? null };
-      saveLocalSettings(next);
+      saveLocalSettings(next, isInitializedRef.current);
       return next;
     });
   }, [dark, theme, font, customAccent]);
@@ -95,13 +101,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     async (s: UserSettings) => {
       if (!session) return;
       setIsSaving(true);
+      // Progress and notes have their own writers (use-progress, the notes
+      // screens), which save one period at a time. This save never carries
+      // them: its copy is whatever this tab loaded, possibly nothing.
+      const payload: Partial<UserSettings> = { ...s };
+      delete payload.progress;
+      delete payload.notes;
       try {
         const res = await fetch("/api/settings", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             licenseKey: session.licenseKey,
-            settings: s,
+            settings: payload,
             updatedAt: updatedAtRef.current,
           }),
         });
@@ -122,10 +134,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // Fetch settings from server
   const fetchSettings = useCallback(async () => {
     if (!session) {
+      // Not "loaded": the session may simply not be here yet. Marking this as
+      // initialized let the very first change of a page save this device's
+      // defaults before the account's settings ever arrived. Nothing is saved
+      // without a session anyway (saveToServer), so waiting costs nothing.
       setIsLoading(false);
-      isInitializedRef.current = true;
       return;
     }
+    let loaded = false;
     try {
       // Flush any pending debounced save first so server has latest data
       if (debounceRef.current) {
@@ -151,24 +167,42 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           (!localUpdatedAt ||
             new Date(data.updatedAt) > new Date(localUpdatedAt));
 
+        // A theme picked while the load was on its way stays picked.
+        const shown = { ...data.settings, ...(pendingRef.current ?? {}) };
         if (serverIsNewer) {
           // Server has newer data (cross-device sync) - apply everything
           setSettingsState(data.settings);
           saveLocalSettings(data.settings);
-          setTimeout(() => applyToTheme(data.settings), 0);
+          setTimeout(() => applyToTheme(shown), 0);
         } else if (!localSettings && serverHasData) {
           // No local settings at all and server has real data - first load
           setSettingsState(data.settings);
           saveLocalSettings(data.settings);
-          setTimeout(() => applyToTheme(data.settings), 0);
+          setTimeout(() => applyToTheme(shown), 0);
         }
         updatedAtRef.current = data.updatedAt;
       }
+      loaded = res.ok;
     } catch (error) {
       console.error("Failed to fetch settings:", error);
     } finally {
       setIsLoading(false);
       isInitializedRef.current = true;
+      // Changes made while the load was on its way (a subject page records
+      // the visit as it opens), now on top of what the server had, and only
+      // then saved. If the load failed they stay on this device only: there
+      // is no server copy to build on.
+      const pending = pendingRef.current;
+      pendingRef.current = null;
+      if (pending && loaded) {
+        setSettingsState((prev) => {
+          const next = { ...prev, ...pending };
+          saveLocalSettings(next);
+          if (debounceRef.current) clearTimeout(debounceRef.current);
+          debounceRef.current = setTimeout(() => saveToServer(next), DEBOUNCE_MS);
+          return next;
+        });
+      }
     }
   }, [session, applyToTheme, saveToServer]);
 
@@ -182,11 +216,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     (updates: Partial<UserSettings>) => {
       setSettingsState((prev) => {
         const next = { ...prev, ...updates };
-        saveLocalSettings(next);
-
-        // Schedule debounced save
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => saveToServer(next), DEBOUNCE_MS);
+        if (!isInitializedRef.current) {
+          // The server's settings have not arrived yet. Saved now, this
+          // device's defaults would go out as the account's settings (a
+          // subject page opened first on a new browser did exactly that), so
+          // the change waits and is applied on top of them in fetchSettings.
+          pendingRef.current = { ...(pendingRef.current ?? {}), ...updates };
+          saveLocalSettings(next, false);
+        } else {
+          saveLocalSettings(next);
+          // Schedule debounced save
+          if (debounceRef.current) clearTimeout(debounceRef.current);
+          debounceRef.current = setTimeout(() => saveToServer(next), DEBOUNCE_MS);
+        }
 
         // Broadcast to other tabs
         selfTriggeredRef.current = true;

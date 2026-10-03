@@ -177,7 +177,14 @@ export async function PUT(request: Request) {
     if ("darkModeSchedule" in settings) row.dark_mode_schedule = settings.darkModeSchedule;
     // Progress & notes are nested by scope-key. With a scopeKey, merge ONLY that
     // scope's subtree into the existing JSONB so other scopes (and other devices)
-    // are never clobbered. Without one (legacy callers), keep the old replace.
+    // are never clobbered.
+    //
+    // Without one, progress and notes are NOT written at all. Their writers
+    // (use-progress, the notes screens) always send a scopeKey; the only caller
+    // without one is the general settings save, which carries whatever copy of
+    // progress it happened to hold. On a new device whose first page was a
+    // subject page and whose settings load was slow, that copy was the empty
+    // default, and this branch replaced every period's progress with it.
     let mergedProgressNested: Record<string, unknown> | null = null;
     if (scopeKey && (("progress" in settings) || ("notes" in settings))) {
       const { data: cur } = await supabase
@@ -196,9 +203,6 @@ export async function PUT(request: Request) {
         existingNotes[scopeKey] = settings.notes ?? {};
         row.notes = existingNotes;
       }
-    } else {
-      if ("progress" in settings) row.progress = settings.progress;
-      if ("notes" in settings) row.notes = settings.notes ?? {};
     }
     if ("recentSubjects" in settings) row.recent_subjects = settings.recentSubjects ?? [];
     if ("countdownDetailed" in settings) row.countdown_detailed = settings.countdownDetailed ?? true;
@@ -217,13 +221,11 @@ export async function PUT(request: Request) {
 
     if (error) throw error;
 
-    // Recalculate total_quiz_score (sum of best per subject). With a scopeKey we
-    // sum across ALL scopes (nested object); legacy flat shape sums the one map.
+    // Recalculate total_quiz_score (sum of best per subject) after a scoped
+    // progress save, summing across ALL scopes of the merged object.
     const scoreMaps: Record<string, SubjectProgress>[] = mergedProgressNested
       ? (Object.values(mergedProgressNested) as Record<string, SubjectProgress>[])
-      : settings.progress
-        ? [settings.progress]
-        : [];
+      : [];
     if (scoreMaps.length > 0) {
       let totalScore = 0;
       for (const scopeMap of scoreMaps) {
