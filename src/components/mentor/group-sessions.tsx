@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { CalendarClock, CalendarPlus, Check, Loader2, MapPin } from "lucide-react";
+import { Bookmark, CalendarClock, CalendarPlus, Check, Loader2, MapPin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -67,6 +67,7 @@ export function GroupSessions({ groupId, canEdit }: { groupId: string; canEdit: 
 
   return (
     <div className="space-y-4">
+      {canEdit && <ModuleRequests groupId={groupId} upcoming={upcoming} onAdded={load} />}
       {canEdit &&
         (adding ? (
           <NewSession
@@ -377,6 +378,139 @@ function NewSession({ groupId, onDone }: { groupId: string; onDone: (saved: bool
           Batal
         </Button>
       </div>
+    </div>
+  );
+}
+
+interface ModuleRequest {
+  subjectId: string;
+  subjectName: string;
+  moduleId: string;
+  moduleTitle: string;
+  names: string[];
+  count: number;
+  scheduled: boolean;
+}
+
+/**
+ * "Usulan anggota": the modules members marked "mau dibahas", most asked
+ * first, each one tap away from an upcoming session's agenda. Putting it on an
+ * agenda is what turns it into "dijadwalkan" for the members, and closing that
+ * session turns it into "dibahas".
+ */
+function ModuleRequests({
+  groupId,
+  upcoming,
+  onAdded,
+}: {
+  groupId: string;
+  upcoming: GroupSession[];
+  onAdded: () => Promise<void>;
+}) {
+  const [requests, setRequests] = useState<ModuleRequest[] | null>(null);
+  const [picking, setPicking] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const r = await fetch(`/api/mentor/groups/${groupId}/module-requests`, { credentials: "same-origin" });
+    const b = await r.json().catch(() => ({}));
+    setRequests(r.ok ? (b.requests ?? []) : []);
+  }, [groupId]);
+
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/mentor/groups/${groupId}/module-requests`, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : { requests: [] }))
+      .then((b) => alive && setRequests(b.requests ?? []))
+      .catch(() => alive && setRequests([]));
+    return () => {
+      alive = false;
+    };
+  }, [groupId]);
+
+  if (!requests || requests.length === 0) return null;
+
+  const addTo = async (req: ModuleRequest, session: GroupSession) => {
+    setBusy(true);
+    try {
+      const agenda = [
+        ...session.agenda,
+        { text: `${req.subjectName} · ${req.moduleTitle}`, subjectId: req.subjectId, module: req.moduleId },
+      ];
+      const r = await fetch(`/api/mentor/groups/${groupId}/sessions/${session.id}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ agenda }),
+      });
+      const b = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        toast.error(b.error ?? "Agenda belum tersimpan.");
+        return;
+      }
+      toast.success(`Masuk agenda “${session.title}”.`);
+      setPicking(null);
+      await Promise.all([load(), onAdded()]);
+    } catch {
+      toast.error("Koneksi terputus. Coba lagi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-border p-3">
+      <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+        <Bookmark className="h-4 w-4 text-primary" /> Usulan anggota
+      </h4>
+      <p className="mt-0.5 text-xs text-muted-foreground">Modul yang ditandai “mau dibahas” oleh anggota grup.</p>
+      <ul className="mt-2 space-y-2">
+        {requests.map((req) => {
+          const key = `${req.subjectId}/${req.moduleId}`;
+          return (
+            <li key={key} className="text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">
+                    {req.subjectName} · {req.moduleTitle}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {req.count} orang: {req.names.join(", ")}
+                  </p>
+                </div>
+                {req.scheduled ? (
+                  <span className="text-xs font-medium text-primary">Sudah di agenda</span>
+                ) : upcoming.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">Jadwalkan sesi dulu</span>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="h-11"
+                    onClick={() => setPicking(picking === key ? null : key)}
+                  >
+                    Masukkan ke agenda
+                  </Button>
+                )}
+              </div>
+              {picking === key && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {upcoming.map((s) => (
+                    <Button
+                      key={s.id}
+                      variant="secondary"
+                      className="h-11"
+                      disabled={busy}
+                      onClick={() => void addTo(req, s)}
+                    >
+                      {s.title} · {sessionWhen(s)}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

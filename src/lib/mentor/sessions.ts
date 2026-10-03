@@ -39,13 +39,21 @@ export function toGroupSession(row: Record<string, unknown>): GroupSession {
   };
 }
 
-/** Agenda from untrusted input: at most 20 points of at most 200 characters. */
+/**
+ * Agenda from untrusted input: at most 20 points of at most 200 characters.
+ * A point may name the module it covers (subjectId + module id), which is how
+ * a module becomes "dijadwalkan" and later "dibahas" for the group.
+ */
 export function cleanAgenda(raw: unknown): AgendaItem[] {
   if (!Array.isArray(raw)) return [];
   const out: AgendaItem[] = [];
   for (const item of raw.slice(0, 20)) {
-    const text = String((item as { text?: unknown })?.text ?? item ?? "").trim().slice(0, 200);
-    if (text) out.push({ text });
+    const o = (item ?? {}) as { text?: unknown; subjectId?: unknown; module?: unknown };
+    const text = String(typeof item === "string" ? item : o.text ?? "").trim().slice(0, 200);
+    if (!text) continue;
+    const subjectId = typeof o.subjectId === "string" ? o.subjectId.trim().slice(0, 60) : "";
+    const moduleKey = typeof o.module === "string" ? o.module.trim().slice(0, 80) : "";
+    out.push(subjectId && moduleKey ? { text, subjectId, module: moduleKey } : { text });
   }
   return out;
 }

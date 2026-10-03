@@ -33,6 +33,9 @@ import {
 import { TTSController } from "./tts-controller";
 import { toast } from "@/components/ui/toast";
 import { askMentor, openAiWithReference } from "@/lib/events";
+import { ChipMark, ModuleMarker } from "@/components/subject/module-marker";
+import { useModuleMarks } from "@/hooks/use-module-marks";
+import { moduleIdOf } from "@/lib/mentor/modules";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import type { HighlightColor, SnippetLibraryItem } from "@/types";
 
@@ -366,6 +369,9 @@ export function RangkumanTab({
     window.getSelection()?.removeAllRanges();
   }, [pendingAnchor, subjectId]);
 
+  // Module markers (B phase 2): belum / mau dibahas / sudah, per module.
+  const moduleMarks = useModuleMarks(subjectId);
+
   // "Tanya mentor": the same selection, sent to the group chat as a quote,
   // labelled with where it came from so the mentor can find it.
   const { subjects } = useScopedData();
@@ -590,12 +596,16 @@ export function RangkumanTab({
               <button
                 key={mod}
                 onClick={() => setSelectedModule(mod)}
-                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                   selectedModule === mod
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >
+                <ChipMark
+                  status={moduleMarks.marks.get(moduleIdOf(mod)) ?? null}
+                  group={moduleMarks.group.get(moduleIdOf(mod))}
+                />
                 <span className="sm:hidden">{shortLabel}</span>
                 <span className="hidden sm:inline">{mod}</span>
               </button>
@@ -659,6 +669,17 @@ export function RangkumanTab({
           )}
         </div>
       </div>
+
+      {selectedModule && rangkumanData[selectedModule] && (
+        <ModuleMarker
+          moduleTitle={selectedModule}
+          status={moduleMarks.marks.get(moduleIdOf(selectedModule)) ?? null}
+          group={moduleMarks.group.get(moduleIdOf(selectedModule))}
+          inGroup={moduleMarks.inGroup}
+          loaded={moduleMarks.loaded}
+          onChange={(next) => moduleMarks.setMark(moduleIdOf(selectedModule), selectedModule, next)}
+        />
+      )}
 
       {/* First-open hint: highlight & Tanya AI from selected text */}
       {showHint && selectedModule && rangkumanData[selectedModule] && (
