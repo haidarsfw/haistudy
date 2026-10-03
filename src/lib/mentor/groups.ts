@@ -259,6 +259,28 @@ export async function activateMentorPartner(
   return "active";
 }
 
+/**
+ * Every account that is a mentor right now: owners of running groups, and
+ * co-mentors active in one. The audience of the owner's broadcast.
+ */
+export async function allMentorAccounts(supabase: SupabaseClient): Promise<string[]> {
+  const [{ data: owners }, { data: co }] = await Promise.all([
+    supabase.from("mentor_groups").select("owner_account_id").eq("status", "active"),
+    supabase
+      .from("group_members")
+      .select("account_id, mentor_groups!inner(status)")
+      .eq("role", "mentor")
+      .eq("status", "active")
+      .eq("mentor_groups.status", "active"),
+  ]);
+  return [
+    ...new Set([
+      ...(owners ?? []).map((r) => r.owner_account_id as string),
+      ...(co ?? []).map((r) => r.account_id as string),
+    ]),
+  ];
+}
+
 /** What every write to an archived group answers. */
 export const ARCHIVED_ERROR = "Grup ini sudah diarsipkan, jadi isinya hanya bisa dibaca.";
 

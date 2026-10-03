@@ -7,6 +7,7 @@ import { BarChart3, CalendarClock, Check, ChevronDown, Copy, FileText, Loader2, 
 import { Button } from "@/components/ui/button";
 import { GroupSessions } from "@/components/mentor/group-sessions";
 import { GroupSlots } from "@/components/mentor/group-slots";
+import { MentorBroadcasts } from "@/components/mentor/mentor-broadcasts";
 import { GroupProgress } from "@/components/mentor/group-progress";
 import { toast } from "@/components/ui/toast";
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
@@ -69,6 +70,7 @@ export function MentorGroups() {
   return (
     <section className="mt-8">
       <h2 className="font-display text-lg font-bold tracking-tight text-foreground">Grup kamu</h2>
+      <MentorBroadcasts />
       {running.length > 0 && (
         <div className="mt-3 space-y-3">
           {running.map((g) => (
