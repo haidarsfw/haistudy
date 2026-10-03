@@ -33,8 +33,31 @@ export async function PATCH(
         : null;
     if (role !== "mentor") return NextResponse.json({ error: "Sesi tidak ditemukan" }, { status: 404 });
 
-    const parsed = parseSessionInput((await req.json().catch(() => ({}))) as Record<string, unknown>, true);
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const parsed = parseSessionInput(body, true);
     if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+
+    // "Batalkan seri ini": this session and every later one of its series that
+    // is still scheduled. Earlier ones, done or not, are history and stay.
+    if (body.series === true && parsed.values.status === "cancelled") {
+      const { data: me } = await supabase
+        .from("group_sessions")
+        .select("series_id, starts_at")
+        .eq("id", sessionId)
+        .eq("group_id", id)
+        .maybeSingle();
+      if (me?.series_id) {
+        const { error: sErr } = await supabase
+          .from("group_sessions")
+          .update({ status: "cancelled", updated_at: new Date().toISOString() })
+          .eq("group_id", id)
+          .eq("series_id", me.series_id as string)
+          .eq("status", "scheduled")
+          .gte("starts_at", me.starts_at as string);
+        if (sErr) throw sErr;
+        return NextResponse.json({ ok: true, series: true });
+      }
+    }
     if (!Object.keys(parsed.values).length) {
       return NextResponse.json({ error: "Tidak ada yang diubah." }, { status: 400 });
     }

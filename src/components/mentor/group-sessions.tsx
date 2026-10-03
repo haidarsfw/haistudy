@@ -70,7 +70,7 @@ export function GroupSessions({ groupId, canEdit }: { groupId: string; canEdit: 
       {canEdit && <ModuleRequests groupId={groupId} upcoming={upcoming} onAdded={load} />}
       {canEdit &&
         (adding ? (
-          <NewSession
+          <SessionForm
             groupId={groupId}
             onDone={async (saved) => {
               setAdding(false);
@@ -131,6 +131,7 @@ function SessionRow({
   now: number;
 }) {
   const [closing, setClosing] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [notes, setNotes] = useState(s.notes ?? "");
   const [busy, setBusy] = useState(false);
@@ -171,6 +172,7 @@ function SessionRow({
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <p className="text-sm font-semibold text-foreground">
           {s.title}
+          {s.seriesId && <span className="ml-2 text-xs font-normal text-muted-foreground">Mingguan</span>}
           {s.status === "cancelled" && <span className="ml-2 text-xs font-medium text-destructive">Batal</span>}
           {s.status === "done" && <span className="ml-2 text-xs font-medium text-primary">Selesai</span>}
         </p>
@@ -197,6 +199,12 @@ function SessionRow({
             <li key={i}>{a.text}</li>
           ))}
         </ul>
+      )}
+      {s.prep && s.status === "scheduled" && (
+        <div className="mt-2 rounded-md border border-border px-2.5 py-2">
+          <p className="text-[10px] font-medium text-muted-foreground">Siapkan sebelum sesi</p>
+          <p className="whitespace-pre-wrap text-sm text-foreground">{s.prep}</p>
+        </div>
       )}
       {s.notes && !closing && (
         <div className="mt-2 rounded-md bg-muted/60 px-2.5 py-2">
@@ -238,6 +246,15 @@ function SessionRow({
                 </Button>
               </div>
             </div>
+          ) : editing ? (
+            <SessionForm
+              groupId={groupId}
+              initial={s}
+              onDone={async (saved) => {
+                setEditing(false);
+                if (saved) await onChange();
+              }}
+            />
           ) : confirmCancel ? (
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm text-foreground">Batalkan sesi ini? Anggota akan melihatnya sebagai batal.</p>
@@ -247,8 +264,18 @@ function SessionRow({
                 disabled={busy}
                 onClick={() => void patch({ status: "cancelled" }, "Sesi dibatalkan.")}
               >
-                Ya, batalkan
+                {s.seriesId ? "Sesi ini saja" : "Ya, batalkan"}
               </Button>
+              {s.seriesId && (
+                <Button
+                  variant="destructive"
+                  className="h-11"
+                  disabled={busy}
+                  onClick={() => void patch({ status: "cancelled", series: true }, "Seri ini dibatalkan.")}
+                >
+                  Seri ini dan sesudahnya
+                </Button>
+              )}
               <Button variant="ghost" className="h-11" onClick={() => setConfirmCancel(false)}>
                 Tidak
               </Button>
@@ -258,6 +285,11 @@ function SessionRow({
               {(ended || s.status === "done") && (
                 <Button variant="outline" className="h-11" onClick={() => setClosing(true)}>
                   {s.notes ? "Ubah catatan" : "Tulis catatan sesi"}
+                </Button>
+              )}
+              {s.status === "scheduled" && !ended && (
+                <Button variant="outline" className="h-11" onClick={() => setEditing(true)}>
+                  Ubah
                 </Button>
               )}
               {s.status === "scheduled" && (
@@ -273,12 +305,36 @@ function SessionRow({
   );
 }
 
-function NewSession({ groupId, onDone }: { groupId: string; onDone: (saved: boolean) => void }) {
-  const [title, setTitle] = useState("");
-  const [when, setWhen] = useState("");
-  const [duration, setDuration] = useState(90);
-  const [place, setPlace] = useState("");
-  const [agenda, setAgenda] = useState("");
+/** datetime-local value in the browser's own clock. */
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const z = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+}
+
+/**
+ * Schedule a session, or change one. Editing keeps the module links of agenda
+ * points whose text did not change: a point that came from "Usulan anggota"
+ * carries subjectId + module, and losing it on a reschedule would quietly
+ * drop the module from "dijadwalkan".
+ */
+function SessionForm({
+  groupId,
+  initial,
+  onDone,
+}: {
+  groupId: string;
+  initial?: GroupSession;
+  onDone: (saved: boolean) => void;
+}) {
+  const editing = Boolean(initial);
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [when, setWhen] = useState(initial ? toLocalInput(initial.startsAt) : "");
+  const [duration, setDuration] = useState(initial?.durationMinutes ?? 90);
+  const [place, setPlace] = useState(initial?.place ?? "");
+  const [agenda, setAgenda] = useState((initial?.agenda ?? []).map((a) => a.text).join("\n"));
+  const [prep, setPrep] = useState(initial?.prep ?? "");
+  const [repeat, setRepeat] = useState(1);
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
@@ -286,31 +342,40 @@ function NewSession({ groupId, onDone }: { groupId: string; onDone: (saved: bool
       toast.error("Isi judul dan waktu sesinya dulu.");
       return;
     }
+    const before = initial?.agenda ?? [];
+    const items = agenda
+      .split("\n")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .map((text) => before.find((a) => a.text === text) ?? { text });
     setBusy(true);
     try {
-      const r = await fetch(`/api/mentor/groups/${groupId}/sessions`, {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          title,
-          // datetime-local is the mentor's own clock; the server stores UTC.
-          startsAt: new Date(when).toISOString(),
-          durationMinutes: duration,
-          place,
-          agenda: agenda
-            .split("\n")
-            .map((t) => t.trim())
-            .filter(Boolean)
-            .map((text) => ({ text })),
-        }),
-      });
+      const r = await fetch(
+        editing ? `/api/mentor/groups/${groupId}/sessions/${initial!.id}` : `/api/mentor/groups/${groupId}/sessions`,
+        {
+          method: editing ? "PATCH" : "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            title,
+            // datetime-local is the mentor's own clock; the server stores UTC.
+            startsAt: new Date(when).toISOString(),
+            durationMinutes: duration,
+            place,
+            agenda: items,
+            prep,
+            ...(editing ? {} : { repeatWeeks: repeat }),
+          }),
+        }
+      );
       const b = await r.json().catch(() => ({}));
       if (!r.ok) {
         toast.error(b.error ?? "Sesi belum tersimpan.");
         return;
       }
-      toast.success("Sesi dijadwalkan.");
+      toast.success(
+        editing ? "Sesi diperbarui." : repeat > 1 ? `${repeat} sesi mingguan dijadwalkan.` : "Sesi dijadwalkan."
+      );
       onDone(true);
     } catch {
       toast.error("Koneksi terputus. Coba lagi.");
@@ -357,6 +422,17 @@ function NewSession({ groupId, onDone }: { groupId: string; onDone: (saved: bool
           </select>
         </label>
       </div>
+      {!editing && (
+        <label className="block text-xs font-medium text-foreground">
+          Ulangi
+          <select value={repeat} onChange={(e) => setRepeat(Number(e.target.value))} className={cn(field, "mt-1 h-11")}>
+            <option value={1}>Sekali saja</option>
+            <option value={4}>Tiap minggu, 4 kali</option>
+            <option value={8}>Tiap minggu, 8 kali</option>
+            <option value={12}>Tiap minggu, 12 kali</option>
+          </select>
+        </label>
+      )}
       <label className="block text-xs font-medium text-foreground">
         Tempat atau link (opsional)
         <input
@@ -376,10 +452,20 @@ function NewSession({ groupId, onDone }: { groupId: string; onDone: (saved: bool
           className={cn(field, "mt-1 py-2")}
         />
       </label>
+      <label className="block text-xs font-medium text-foreground">
+        Persiapan untuk anggota (opsional)
+        <textarea
+          value={prep}
+          onChange={(e) => setPrep(e.target.value.slice(0, 1000))}
+          rows={2}
+          placeholder="Baca rangkuman modul 3 dan coba Latihan Soal-nya sekali"
+          className={cn(field, "mt-1 py-2")}
+        />
+      </label>
       <div className="flex flex-wrap gap-2">
         <Button className="h-11 gap-2" onClick={() => void save()} disabled={busy}>
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-          Simpan sesi
+          {editing ? "Simpan perubahan" : "Simpan sesi"}
         </Button>
         <Button variant="ghost" className="h-11" onClick={() => onDone(false)}>
           Batal

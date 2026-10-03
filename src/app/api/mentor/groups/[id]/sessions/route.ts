@@ -97,16 +97,28 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       return NextResponse.json({ error: "Grup ini sudah diarsipkan." }, { status: 409 });
     }
 
-    const parsed = parseSessionInput((await req.json().catch(() => ({}))) as Record<string, unknown>, false);
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const parsed = parseSessionInput(body, false);
     if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
-    const { data, error } = await supabase
-      .from("group_sessions")
-      .insert({ group_id: id, created_by: accountId, ...parsed.values })
-      .select(SESSION_COLUMNS)
-      .single();
+    // A weekly series: the same session N weeks running, one row each, tied
+    // by series_id so they can be cancelled together. Twelve weeks covers a
+    // semester; anything more is a typo.
+    const weeks = Math.min(12, Math.max(1, Math.round(Number(body.repeatWeeks ?? 1)) || 1));
+    const seriesId = weeks > 1 ? crypto.randomUUID() : null;
+    const start = Date.parse(parsed.values.starts_at as string);
+    const rows = Array.from({ length: weeks }, (_, i) => ({
+      group_id: id,
+      created_by: accountId,
+      ...parsed.values,
+      starts_at: new Date(start + i * 7 * 24 * 3600_000).toISOString(),
+      series_id: seriesId,
+    }));
+
+    const { data, error } = await supabase.from("group_sessions").insert(rows).select(SESSION_COLUMNS);
     if (error) throw error;
-    return NextResponse.json({ session: toGroupSession(data as Record<string, unknown>) });
+    const sessions = (data ?? []).map((r) => toGroupSession(r as Record<string, unknown>));
+    return NextResponse.json({ session: sessions[0], sessions });
   } catch (error) {
     if (error instanceof Response) return error;
     console.error("[group/sessions] POST gagal:", error);

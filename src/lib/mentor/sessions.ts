@@ -19,6 +19,10 @@ export interface GroupSession {
   notes: string | null;
   status: SessionStatus;
   createdAt: string;
+  /** Shared by the sessions of one weekly series. */
+  seriesId: string | null;
+  /** What members should prepare before the session. */
+  prep: string | null;
   /** The caller's own answer (members). */
   myRsvp?: { rsvp: "going" | "not_going" | null; reason: string | null } | null;
   /** Everyone's answers and attendance (mentors only). */
@@ -32,7 +36,7 @@ export interface GroupSession {
 }
 
 export const SESSION_COLUMNS =
-  "id, group_id, title, starts_at, duration_minutes, place, agenda, notes, status, created_at";
+  "id, group_id, title, starts_at, duration_minutes, place, agenda, notes, status, created_at, series_id, prep";
 
 export function toGroupSession(row: Record<string, unknown>): GroupSession {
   return {
@@ -46,6 +50,8 @@ export function toGroupSession(row: Record<string, unknown>): GroupSession {
     notes: (row.notes as string | null) ?? null,
     status: (row.status as SessionStatus) ?? "scheduled",
     createdAt: row.created_at as string,
+    seriesId: (row.series_id as string | null) ?? null,
+    prep: (row.prep as string | null) ?? null,
   };
 }
 
@@ -101,6 +107,7 @@ export function parseSessionInput(
   if (body.place !== undefined) v.place = String(body.place ?? "").trim().slice(0, 200) || null;
   if (body.agenda !== undefined) v.agenda = cleanAgenda(body.agenda);
   if (body.notes !== undefined) v.notes = String(body.notes ?? "").trim().slice(0, 4000) || null;
+  if (body.prep !== undefined) v.prep = String(body.prep ?? "").trim().slice(0, 1000) || null;
   if (body.status !== undefined) {
     const s = String(body.status);
     if (s !== "scheduled" && s !== "done" && s !== "cancelled") {
