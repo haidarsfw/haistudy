@@ -78,6 +78,11 @@ export const INTERRUPTION_PRIORITY = {
    * atau ia tidak pernah mendapat giliran sama sekali.
    */
   inviteNudge: 35,
+  /**
+   * A mentoring session within 24 hours: time-bound, so it outranks every
+   * standing nudge, but a warning announcement still goes first.
+   */
+  sessionReminder: 60,
   install: 30,
   /** A standing welcome notice is wallpaper; it yields to a live nudge. */
   announcementInfo: 20,

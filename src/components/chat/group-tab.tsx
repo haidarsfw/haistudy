@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
 import { GraduationCap, Loader2, Send, Trash2, Users, X } from "lucide-react";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { useGroupChat } from "@/hooks/use-group-chat";
+import { GroupSessions } from "@/components/mentor/group-sessions";
 import { GROUP_MESSAGE_MAX } from "@/lib/mentor/chat";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +44,13 @@ export function GroupTab({
   onQuoteConsumed: () => void;
 }) {
   const [groupId, setGroupId] = useState<string | null>(groups[0]?.id ?? null);
+  // A question from the material lands in the chat, whatever was open before.
+  const [view, setView] = useState<"chat" | "jadwal">("chat");
+  const [seenQuote, setSeenQuote] = useState<PendingQuote | null>(null);
+  if (pendingQuote !== seenQuote) {
+    setSeenQuote(pendingQuote);
+    if (pendingQuote) setView("chat");
+  }
   const { messages, loading, hasMore, role, me, error, loadMore, send, remove } = useGroupChat(groupId);
   const [text, setText] = useState("");
   // Owned by the app-shell until sent or dismissed, so it survives switching
@@ -74,28 +83,51 @@ export function GroupTab({
     if (quote) onQuoteConsumed();
   };
 
+  const viewSwitch = (
+    <div className="flex gap-1 border-b border-border px-3 py-1.5" role="tablist">
+      {(["chat", "jadwal"] as const).map((v) => (
+        <button
+          key={v}
+          type="button"
+          role="tab"
+          aria-selected={view === v}
+          onClick={() => setView(v)}
+          className={cn(
+            "min-h-9 rounded-md px-3 text-xs font-medium transition-colors",
+            view === v ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {v === "chat" ? "Chat" : "Jadwal"}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (view === "jadwal" && groupId) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        {groups.length > 1 && <GroupPicker groups={groups} groupId={groupId} onPick={setGroupId} />}
+        {viewSwitch}
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          {role === "mentor" && (
+            <p className="mb-3 text-xs text-muted-foreground">
+              Jadwal diatur dari{" "}
+              <Link href="/partner" className="font-medium text-primary underline-offset-4 hover:underline">
+                halaman Partner
+              </Link>
+              .
+            </p>
+          )}
+          <GroupSessions key={groupId} groupId={groupId} canEdit={false} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {groups.length > 1 && (
-        <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
-          {groups.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              onClick={() => setGroupId(g.id)}
-              className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
-                g.id === groupId
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {g.name}
-            </button>
-          ))}
-        </div>
-      )}
-
+      {groups.length > 1 && <GroupPicker groups={groups} groupId={groupId} onPick={setGroupId} />}
+      {viewSwitch}
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {loading ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -230,6 +262,36 @@ export function GroupTab({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function GroupPicker({
+  groups,
+  groupId,
+  onPick,
+}: {
+  groups: MyGroup[];
+  groupId: string | null;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
+      {groups.map((g) => (
+        <button
+          key={g.id}
+          type="button"
+          onClick={() => onPick(g.id)}
+          className={cn(
+            "shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+            g.id === groupId
+              ? "bg-foreground text-background"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {g.name}
+        </button>
+      ))}
     </div>
   );
 }

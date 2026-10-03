@@ -12,6 +12,7 @@ import { ChatTrigger } from "@/components/chat/chat-trigger";
 import { AiTrigger } from "@/components/ai/ai-trigger";
 import { useVoice } from "@/components/providers/voice-provider";
 import { ReminderAlarm } from "@/components/shared/reminder-alarm";
+import { SessionReminder } from "@/components/mentor/session-reminder";
 import { PreviewWatermark } from "@/components/shared/preview-watermark";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
 
@@ -392,6 +393,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <Header onSettingsOpen={handleSettingsOpen} onVoiceToggle={handleVoiceToggle} activeVoiceRoom={voiceRoom.activeRoom ? { id: voiceRoom.activeRoom.id, name: voiceRoom.activeRoom.name } : null} />
         <AnnouncementBanner />
         <EnableNotificationsBanner />
+        <SessionReminder />
         <SWRegister />
         {/* Mobile: no inner overflow — the document/window scrolls so iOS
             Safari retracts its bottom toolbar (reclaims vertical space). The

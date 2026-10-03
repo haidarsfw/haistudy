@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, ChevronDown, Copy, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
+import { CalendarClock, Check, ChevronDown, Copy, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { GroupSessions } from "@/components/mentor/group-sessions";
 import { toast } from "@/components/ui/toast";
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,7 @@ export function MentorGroups() {
 
 function GroupCard({ g }: { g: GroupSummary }) {
   const [open, setOpen] = useState(false);
+  const [schedule, setSchedule] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [copied, setCopied] = useState(false);
   const scope = parseScopeKey(g.scopeKey);
@@ -140,9 +142,25 @@ function GroupCard({ g }: { g: GroupSummary }) {
 
       <button
         type="button"
+        onClick={() => setSchedule((v) => !v)}
+        aria-expanded={schedule}
+        className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground"
+      >
+        <ChevronDown className={cn("h-4 w-4 transition-transform", schedule && "rotate-180")} />
+        <CalendarClock className="h-4 w-4 text-muted-foreground" />
+        Jadwal sesi
+      </button>
+      {schedule && (
+        <div className="mt-2">
+          <GroupSessions groupId={g.id} canEdit />
+        </div>
+      )}
+
+      <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground"
+        className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground"
       >
         <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
         Anggota &amp; undangan
