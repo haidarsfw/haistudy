@@ -19,26 +19,27 @@ function normalizeChannel(raw: unknown): ChatChannel {
 }
 
 // Resolve the requester's tier from cookies. hs-session holds the license key
-// (same lookup admin-guard uses); hs-admin gates admin. Used to gate vip-lounge.
+// (same lookup admin-guard uses); hs-admin gates admin. Used to gate vip-lounge
+// AND as the badge stamped on the message: the body's copy is not trusted.
 async function resolveSessionTier(
   bodyTier?: PackageTier | null
-): Promise<{ isAdmin: boolean; tier: PackageTier }> {
+): Promise<{ isAdmin: boolean; tier: PackageTier; isTester: boolean }> {
   const isAdmin = await isAdminFromSession();
   if (!isSupabaseServerConfigured) {
-    return { isAdmin, tier: (bodyTier ?? "normal") as PackageTier };
+    return { isAdmin, tier: (bodyTier ?? "normal") as PackageTier, isTester: false };
   }
   const jar = await cookies();
   const lk = jar.get("hs-session")?.value ?? "";
-  if (!lk) return { isAdmin, tier: "normal" };
+  if (!lk) return { isAdmin, tier: "normal", isTester: false };
   const supabase = createServerClient()!;
   const { data } = await supabase
     .from("license_keys")
-    .select("package_tier")
+    .select("package_tier, is_tester")
     .eq("key", lk)
     .single();
-  const tier = ((data as { package_tier?: PackageTier } | null)?.package_tier ??
-    "normal") as PackageTier;
-  return { isAdmin, tier };
+  const row = data as { package_tier?: PackageTier; is_tester?: boolean } | null;
+  const tier = (row?.package_tier ?? "normal") as PackageTier;
+  return { isAdmin, tier, isTester: Boolean(row?.is_tester) };
 }
 
 // ─── Mock store for development without Supabase ───
@@ -212,7 +213,7 @@ export async function POST(request: Request) {
 
     // Trust cookies, not client-provided flags. Resolve real tier for the
     // vip-lounge write gate (don't trust the body's packageTier).
-    const { isAdmin, tier } = await resolveSessionTier(packageTier);
+    const { isAdmin, tier, isTester: licenceIsTester } = await resolveSessionTier(packageTier);
 
     // Denormalize the author's license key from the session cookie (server-
     // trusted; same value resolveSessionTier reads) so the profile popover can
@@ -298,8 +299,9 @@ export async function POST(request: Request) {
         // account does not.
         ...(await accountColumns(supabase, authorLicenseKey)),
         is_admin: isAdmin || false,
-        is_tester: isTester || false,
-        package_tier: packageTier || null,
+        // From the licence, never the body: everyone sees these badges.
+        is_tester: licenceIsTester,
+        package_tier: tier,
         reply_to_id: replyToId || null,
         reply_to_name: replyToName || null,
         reply_to_content: replyToContent || null,

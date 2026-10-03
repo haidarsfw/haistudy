@@ -8,6 +8,7 @@ import { isAdminFromSession } from "@/lib/auth/admin-guard";
 import { requireScope, scopeEq, scopeColumns, ScopeError, assertNotPreview } from "@/lib/auth/scope-check";
 import { checkCooldown } from "@/lib/auth/cooldown";
 import { capitalizeFirst } from "@/lib/name";
+import { authorFlags } from "@/lib/auth/author-flags";
 import type { ForumThread, Attachment } from "@/types";
 
 // Bound stored attachment data. Anything outside this shape is dropped rather
@@ -214,6 +215,8 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServerClient()!;
+    // Badges from the licence, never the body: everyone sees them.
+    const flags = await authorFlags(supabase, _lk);
     const { data, error } = await supabase
       .from("forum_threads")
       .insert({
@@ -224,8 +227,8 @@ export async function POST(request: Request) {
         author_name: authorName,
         author_class: authorClass || "",
         is_admin: isAdmin || false,
-        is_tester: isTester || false,
-        package_tier: packageTier || null,
+        is_tester: flags.isTester,
+        package_tier: flags.packageTier,
         image_url: imageUrl || null,
         media_url: mediaUrl || null,
         ...(validAttachments ? { attachments: validAttachments } : {}),
