@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { validateAdmin } from "@/lib/auth/admin-guard";
 import { partnerSummary } from "@/lib/mentor/commission";
+import { mintAccountReferralCode } from "@/lib/referral/codes";
 
 const STATUSES = new Set(["pending", "active", "paused", "rejected"]);
 
@@ -148,6 +149,17 @@ export async function PATCH(req: Request) {
   if (error) {
     console.error("Gagal memperbarui partner:", error.message);
     return NextResponse.json({ error: "Gagal memperbarui" }, { status: 500 });
+  }
+
+  // An approved partner needs a code to be paid through at all. Accounts from
+  // before codes existed have none; mint it at the moment it starts to matter.
+  if (status === "active") {
+    const { data: row } = await supabase.from("partners").select("account_id").eq("id", id).maybeSingle();
+    if (row?.account_id) {
+      await mintAccountReferralCode(supabase, row.account_id as string).catch((e) =>
+        console.error("Kode referral partner gagal dibuat:", e)
+      );
+    }
   }
 
   return NextResponse.json({ ok: true, status });

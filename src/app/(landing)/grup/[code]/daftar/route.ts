@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
-import { getAccountReferralCode } from "@/lib/referral/codes";
+import { mintAccountReferralCode } from "@/lib/referral/codes";
 import { setInviteCookies } from "@/lib/referral/partner-link";
 
 const CODE_RE = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/;
@@ -41,7 +41,9 @@ export async function GET(
   if (!group || group.status !== "active" || !group.invite_open) return res;
 
   const ownerId = group.owner_account_id as string;
-  const referral = await getAccountReferralCode(supabase, ownerId);
+  // Minted if missing: a mentor whose account predates codes must still be
+  // credited for the mentee who joins by the class code.
+  const referral = await mintAccountReferralCode(supabase, ownerId).catch(() => null);
   if (!referral) return res;
 
   const { data: owner } = await supabase

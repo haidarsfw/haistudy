@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/payments";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { MentorGroups } from "@/components/mentor/mentor-groups";
 
 /**
  * Halaman partner.
@@ -126,6 +127,9 @@ export function PartnerPanel() {
           Ajak teman pakai kodemu, dapat bagian dari pembelian pertama tiap orang yang kamu ajak.
         </p>
       </header>
+
+      {/* Mentors only; renders nothing for anyone without a group. */}
+      <MentorGroups />
 
       {(data.status === "active" || data.status === "paused") && (
         <PartnerAktif data={data} onTersimpan={() => void muat()} />

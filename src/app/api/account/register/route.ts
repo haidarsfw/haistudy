@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { applyInvitesForNewAccount } from "@/lib/mentor/invites";
 import { waitUntil } from "@vercel/functions";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
@@ -149,6 +150,9 @@ export async function POST(req: Request) {
       try {
         await mintAccountReferralCode(supabase, account.id);
         if (resolvedReferral) await attachReferral(supabase, account.id, resolvedReferral);
+        // After the typed code, never before: a mentor's invite list is net #3
+        // and only decides the referrer when nets 1 and 2 left it empty.
+        await applyInvitesForNewAccount(supabase, account.id, { email, whatsapp });
       } catch (e) {
         console.error("[account/register] referral setup failed", e);
       }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { applyInvitesForNewAccount } from "@/lib/mentor/invites";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
@@ -176,6 +177,8 @@ export async function GET(request: Request) {
     try {
       await mintAccountReferralCode(supabase, account.id);
       if (typedReferral) await attachReferral(supabase, account.id, typedReferral);
+      // Net #3, after nets 1 and 2: a mentor's invite list for this address.
+      await applyInvitesForNewAccount(supabase, account.id, { email });
     } catch (e) {
       console.error("[auth/callback] referral setup failed", e);
     }

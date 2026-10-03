@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { validateAdmin } from "@/lib/auth/admin-guard";
+import { mintAccountReferralCode } from "@/lib/referral/codes";
 import { parseScopeKey, isAvailableScope } from "@/lib/scope";
 import {
   GROUP_COLUMNS,
@@ -177,6 +178,14 @@ export async function POST(req: Request) {
   if (memberError) {
     console.error("Grup dibuat tapi baris mentor gagal:", memberError.message);
   }
+
+  // A mentor with no referral code earns nothing: no /@CODE/grup link, nothing
+  // for an invite or the class code to attach. Accounts created before codes
+  // existed have none, so one is minted here, now, not "later when /account
+  // asks" — a mentor may share the group link long before opening /account.
+  await mintAccountReferralCode(supabase, owner.id as string).catch((e) =>
+    console.error("Kode referral mentor gagal dibuat:", e)
+  );
 
   // Menjadi mentor = menjadi partner, otomatis (keputusan pemilik, 3 Okt 2026):
   // satu langkah untuk mentor, bukan dua persetujuan terpisah.
