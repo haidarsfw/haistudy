@@ -14,6 +14,7 @@ import {
   ArrowUpCircle,
   NotebookText,
   MessageSquareText,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 import { openChatToMessage, openDmTo } from "@/lib/events";
@@ -38,6 +39,9 @@ export function isInteractiveNotification(n: Notification): boolean {
   if (n.type === "group_request") return true;
   // A material comment opens its module with the thread showing.
   if (n.type === "material_comment" && n.messageId) return true;
+  // Mentor-facing: a booking, a cancelled booking, the owner's message.
+  if (n.type === "mentor_broadcast") return true;
+  if ((n.type === "slot_booked" || n.type === "slot_cancelled") && n.messageId === "/partner") return true;
   // Forum-context notifications navigate to the thread/subject.
   if (n.context === "forum" && (n.subjectId || n.threadId)) {
     return (
@@ -80,6 +84,11 @@ export function notificationIcon(n: Notification): LucideIcon {
       return NotebookText;
     case "material_comment":
       return MessageSquareText;
+    case "slot_booked":
+    case "slot_cancelled":
+      return CalendarClock;
+    case "mentor_broadcast":
+      return Megaphone;
     default:
       return Bell;
   }
@@ -133,6 +142,12 @@ export function notificationLabel(
       return `${t("notification.session_summary")}${n.threadTitle ? ` · ${n.threadTitle}` : ""}`;
     case "material_comment":
       return `${n.senderName ?? "Seseorang"} ${t("notification.material_comment")}`;
+    case "slot_booked":
+      return `${n.senderName ?? "Anggota"} ${t("notification.slot_booked")}`;
+    case "slot_cancelled":
+      return `${n.senderName ?? "Seseorang"} ${t("notification.slot_cancelled")}`;
+    case "mentor_broadcast":
+      return t("notification.mentor_broadcast");
     default:
       return t("notification.default");
   }
@@ -209,6 +224,13 @@ export function routeToNotification(
   }
   if (n.type === "group_request") {
     // Outside the scoped app: "Grup kamu" lives on /partner.
+    window.location.assign("/partner");
+    return true;
+  }
+  if (
+    n.type === "mentor_broadcast" ||
+    ((n.type === "slot_booked" || n.type === "slot_cancelled") && n.messageId === "/partner")
+  ) {
     window.location.assign("/partner");
     return true;
   }

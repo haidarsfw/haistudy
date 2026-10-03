@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, CalendarClock, Check, ChevronDown, Copy, FileText, Loader2, MessageCircle, Trash2, UserPlus, Users } from "lucide-react";
+import { BarChart3, CalendarClock, Check, ChevronDown, Copy, FileText, Loader2, MessageCircle, Trash2, UserPlus, UserRound, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GroupSessions } from "@/components/mentor/group-sessions";
+import { GroupSlots } from "@/components/mentor/group-slots";
 import { GroupProgress } from "@/components/mentor/group-progress";
 import { toast } from "@/components/ui/toast";
 import { parseScopeKey, scopeFullLabel } from "@/lib/scope";
@@ -103,6 +104,7 @@ function GroupCard({ g }: { g: GroupSummary }) {
   const archived = g.status === "archived";
   const [open, setOpen] = useState(false);
   const [schedule, setSchedule] = useState(false);
+  const [oneOnOne, setOneOnOne] = useState(false);
   const [progress, setProgress] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [copied, setCopied] = useState(false);
@@ -199,6 +201,22 @@ function GroupCard({ g }: { g: GroupSummary }) {
       {schedule && (
         <div className="mt-2">
           <GroupSessions groupId={g.id} canEdit={!archived} readOnly={archived} scope={scope ?? undefined} />
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setOneOnOne((v) => !v)}
+        aria-expanded={oneOnOne}
+        className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-foreground"
+      >
+        <ChevronDown className={cn("h-4 w-4 transition-transform", oneOnOne && "rotate-180")} />
+        <UserRound className="h-4 w-4 text-muted-foreground" />
+        1-on-1
+      </button>
+      {oneOnOne && (
+        <div className="mb-2">
+          <GroupSlots groupId={g.id} canEdit readOnly={archived} />
         </div>
       )}
 

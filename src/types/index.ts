@@ -429,7 +429,10 @@ export interface Notification {
     | "group_approved"
     | "package_upgraded"
     | "session_summary"
-    | "material_comment";
+    | "material_comment"
+    | "slot_booked"
+    | "slot_cancelled"
+    | "mentor_broadcast";
   senderName: string | null;
   preview: string | null;
   context: "chat" | "forum" | "system";

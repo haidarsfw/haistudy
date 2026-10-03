@@ -36,9 +36,11 @@ export async function notify(
   supabase: SupabaseClient,
   accountId: string,
   g: Pick<GroupRow, "id" | "name">,
-  type: "group_request" | "group_approved" | "session_summary",
+  type: "group_request" | "group_approved" | "session_summary" | "slot_booked" | "slot_cancelled" | "mentor_broadcast",
   senderName: string | null,
-  preview: string
+  preview: string,
+  /** Where a tap goes, when it is not decided by the type alone (e.g. "/partner"). */
+  link?: string
 ): Promise<void> {
   const { data } = await supabase
     .from("license_keys")
@@ -57,6 +59,7 @@ export async function notify(
       context: "system",
       thread_id: g.id,
       thread_title: g.name,
+      ...(link ? { message_id: link } : {}),
       semester: lic.semester,
       exam_period: lic.exam_period,
       jurusan: lic.jurusan,

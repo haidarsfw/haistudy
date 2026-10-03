@@ -12,6 +12,7 @@ import { toast } from "@/components/ui/toast";
 import { useGroupChat } from "@/hooks/use-group-chat";
 import { GroupSessions } from "@/components/mentor/group-sessions";
 import { GroupRanking } from "@/components/mentor/group-ranking";
+import { GroupSlots } from "@/components/mentor/group-slots";
 import { GROUP_MESSAGE_MAX } from "@/lib/mentor/chat";
 import { cn } from "@/lib/utils";
 
@@ -270,6 +271,12 @@ export function GroupTab({
             </p>
           )}
           <GroupSessions key={groupId} groupId={groupId} canEdit={false} readOnly={archived} />
+          {role === "member" && (
+            <div className="mt-5">
+              <h4 className="mb-2 text-sm font-semibold text-foreground">1-on-1 dengan mentor</h4>
+              <GroupSlots key={`slots-${groupId}`} groupId={groupId} canEdit={false} readOnly={archived} />
+            </div>
+          )}
         </div>
       </div>
     );
