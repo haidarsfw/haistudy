@@ -40,12 +40,18 @@ export function GroupTab({
   groups,
   pendingQuote,
   onQuoteConsumed,
+  onLeft,
 }: {
   groups: MyGroup[];
   pendingQuote: PendingQuote | null;
   onQuoteConsumed: () => void;
+  /** After leaving a group: the panel drops it from the list. */
+  onLeft: (groupId: string) => void;
 }) {
   const [groupId, setGroupId] = useState<string | null>(groups[0]?.id ?? null);
+  // The open group left the list (the person left it): open the next one.
+  if (groupId && !groups.some((g) => g.id === groupId)) setGroupId(groups[0]?.id ?? null);
+  const [leaving, setLeaving] = useState<"ask" | "busy" | null>(null);
   // A question from the material lands in the chat, whatever was open before.
   const [view, setView] = useState<"chat" | "pertanyaan" | "jadwal">("chat");
   const [asQuestion, setAsQuestion] = useState(false);
@@ -92,24 +98,69 @@ export function GroupTab({
     if (quote) onQuoteConsumed();
   };
 
+  const leave = async () => {
+    if (!groupId) return;
+    setLeaving("busy");
+    try {
+      const r = await fetch(`/api/mentor/groups/${groupId}/leave`, { method: "POST", credentials: "same-origin" });
+      const b = (await r.json().catch(() => ({}))) as { error?: string };
+      if (!r.ok) {
+        toast.error(b.error ?? "Belum berhasil keluar. Coba lagi.");
+        setLeaving(null);
+        return;
+      }
+      toast.success(`Kamu sudah keluar dari ${groups.find((g) => g.id === groupId)?.name ?? "grup ini"}.`);
+      setLeaving(null);
+      onLeft(groupId);
+    } catch {
+      toast.error("Koneksi terputus. Coba lagi.");
+      setLeaving(null);
+    }
+  };
+
   const viewSwitch = (
-    <div className="flex gap-1 border-b border-border px-3 py-1.5" role="tablist">
-      {(["chat", "pertanyaan", "jadwal"] as const).map((v) => (
-        <button
-          key={v}
-          type="button"
-          role="tab"
-          aria-selected={view === v}
-          onClick={() => setView(v)}
-          className={cn(
-            "min-h-9 rounded-md px-3 text-xs font-medium transition-colors",
-            view === v ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {v === "chat" ? "Chat" : v === "pertanyaan" ? "Pertanyaan" : "Jadwal"}
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="flex items-center gap-1 border-b border-border px-3 py-1.5" role="tablist">
+        {(["chat", "pertanyaan", "jadwal"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            aria-selected={view === v}
+            onClick={() => setView(v)}
+            className={cn(
+              "min-h-9 rounded-md px-3 text-xs font-medium transition-colors",
+              view === v ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {v === "chat" ? "Chat" : v === "pertanyaan" ? "Pertanyaan" : "Jadwal"}
+          </button>
+        ))}
+        {role === "member" && !archived && leaving === null && (
+          <button
+            type="button"
+            onClick={() => setLeaving("ask")}
+            className="ml-auto min-h-9 rounded-md px-2 text-xs text-muted-foreground hover:text-destructive"
+          >
+            Keluar grup
+          </button>
+        )}
+      </div>
+      {leaving !== null && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-destructive/5 px-3 py-2">
+          <p className="flex-1 text-xs text-foreground">
+            Keluar dari {groups.find((g) => g.id === groupId)?.name ?? "grup ini"}? Kamu bisa masuk lagi lewat link atau
+            kode grupnya selama masih dibuka.
+          </p>
+          <Button size="sm" variant="destructive" disabled={leaving === "busy"} onClick={() => void leave()}>
+            {leaving === "busy" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Keluar"}
+          </Button>
+          <Button size="sm" variant="ghost" disabled={leaving === "busy"} onClick={() => setLeaving(null)}>
+            Batal
+          </Button>
+        </div>
+      )}
+    </>
   );
 
   if (view === "pertanyaan" && groupId) {

@@ -513,6 +513,7 @@ export function ChatPanel({
                   groups={myGroups}
                   pendingQuote={pendingMentorQuote}
                   onQuoteConsumed={() => onMentorQuoteConsumed?.()}
+                  onLeft={(id) => setMyGroups((prev) => prev?.filter((g) => g.id !== id) ?? prev)}
                 />
               ) : (
                 <div className="flex flex-1 items-center justify-center p-6 text-center">
