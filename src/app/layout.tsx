@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Inter, Geist_Mono, Poppins } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { SettingsProvider } from "@/components/providers/settings-provider";
@@ -15,34 +15,43 @@ import { GlobalErrorHandler } from "@/components/system/global-error-handler";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
-const jakartaSans = Plus_Jakarta_Sans({
+// Self-hosted (src/app/fonts, SIL Open Font License). next/font/google fetched
+// these from Google at BUILD time, so a slow or failed download failed the
+// whole Vercel build (701350b). Same families, same latin subset, same CSS
+// variables; variable-weight files where Google serves one.
+
+const jakartaSans = localFont({
+  src: [{ path: "./fonts/plus-jakarta-sans-latin-wght.woff2", weight: "500 700", style: "normal" }],
   variable: "--font-heading",
-  subsets: ["latin"],
   display: "swap",
-  weight: ["500", "600", "700"],
 });
 
-const inter = Inter({
+const inter = localFont({
+  src: [{ path: "./fonts/inter-latin-wght.woff2", weight: "400 700", style: "normal" }],
   variable: "--font-body",
-  subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
 });
 
-const poppins = Poppins({
+const poppins = localFont({
+  src: [
+    { path: "./fonts/poppins-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/poppins-latin-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/poppins-latin-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-poppins",
-  subsets: ["latin"],
   display: "swap",
-  weight: ["400", "600", "700"],
   // Only users who explicitly pick Poppins trigger the font fetch via CSS
   preload: false,
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: [{ path: "./fonts/geist-mono-latin-wght.woff2", weight: "400 600", style: "normal" }],
   variable: "--font-geist-mono",
-  subsets: ["latin"],
   display: "swap",
-  weight: ["400", "600"],
+  // Arial metrics would size a monospace face wrongly; fall back to the
+  // system's own monospace instead.
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
 });
 
 export const viewport: Viewport = {
