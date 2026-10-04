@@ -53,7 +53,7 @@ export function CalcCard({ card, response, onAnswer }: KilatCardProps) {
         {parseInline(c.question)}
       </h2>
       {c.formula && (
-        <div className="mt-3 flex items-start gap-2 rounded-lg border-l-[3px] border-primary/50 bg-primary/5 px-3 py-2">
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
           <span className="mt-0.5 shrink-0 text-[10px] font-bold uppercase tracking-wider text-primary/70">
             Rumus
           </span>

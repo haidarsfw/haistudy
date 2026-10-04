@@ -400,7 +400,7 @@ export function parseRangkuman(content: string): React.ReactNode {
           <div
             key={i}
             data-tts-line={i}
-            className="my-4 flex gap-2 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-4 py-3 transition-colors duration-300 dark:bg-amber-950/30"
+            className="my-4 flex gap-2 rounded-lg border border-amber-500/45 bg-amber-50 px-4 py-3 transition-colors duration-300 dark:bg-amber-950/30"
           >
             <span className="text-base leading-7 text-amber-900 dark:text-amber-200">
               {parsed.content}
@@ -446,7 +446,7 @@ export function parseRangkuman(content: string): React.ReactNode {
             <details
               key={i}
               data-tts-line={i}
-              className="group my-4 overflow-hidden rounded-lg border-l-4 border-primary/40 bg-muted/40 transition-colors duration-300"
+              className="group my-4 overflow-hidden rounded-lg border border-primary/30 bg-muted/40 transition-colors duration-300"
             >
               <summary className="flex cursor-pointer select-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-foreground/90">
                 <svg
