@@ -41,6 +41,7 @@ function aggregate(
   return { online, lastSeen };
 }
 
+// scope-exempt: one support thread per licence; a non-admin only sees their own thread or the admins' presence.
 export async function GET(req: NextRequest) {
   const target = req.nextUrl.searchParams.get("licenseKey");
 

@@ -20,6 +20,7 @@ async function getRow(supabase: ReturnType<typeof createServerClient>) {
 }
 
 // ─── GET /api/admin/invoice - Get current counter ───
+// scope-exempt: admin-only; admins work across every period.
 export async function GET() {
   try {
     const { authorized } = await validateAdmin();

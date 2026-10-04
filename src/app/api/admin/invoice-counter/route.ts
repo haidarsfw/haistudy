@@ -12,6 +12,7 @@ import { ScopeError } from "@/lib/auth/scope-check";
 // restarts at #001. Per-scope only (refuses "All periods"). Order rows are left
 // untouched — only the numbering sequence resets. (The separate, unrelated
 // global invoice_counter behind /api/admin/invoice is not affected.)
+// scope-exempt: admin-only; admins work across every period.
 export async function POST(request: Request) {
   try {
     const { authorized } = await validateAdmin();

@@ -113,6 +113,7 @@ function mapErrorRow(row: Record<string, unknown>): ScopedErrorLog {
 }
 
 // ─── GET /api/admin/logs?type=activity|error&limit=50&scope=...|allPeriods=1 ───
+// scope-exempt: admin-only; admins work across every period.
 export async function GET(request: Request) {
   try {
     const { authorized } = await validateAdmin();

@@ -17,6 +17,7 @@ import { notifyAdminsOnPurchase } from "@/lib/notifications/purchase-alert";
 // TODO(google-script): forward the scope picked by the user from the order form.
 const ALLOWED_PACKAGES = new Set(["share", "normal", "vip", "diamond"]);
 
+// scope-exempt: server-to-server webhook guarded by X-Webhook-Secret.
 export async function POST(request: Request) {
   try {
     // Verify webhook signature (secure default: 401 if secret env missing)

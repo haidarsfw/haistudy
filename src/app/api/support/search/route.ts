@@ -14,6 +14,7 @@ function escapeLikeQuery(q: string): string {
   return q.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
 }
 
+// scope-exempt: one support thread per licence; a non-admin can only read their own.
 /**
  * GET /api/support/search?licenseKey=K&q=Q
  * Full-text-ish search via ILIKE (trigram-indexed).

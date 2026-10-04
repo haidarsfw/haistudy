@@ -32,6 +32,7 @@ function mapRow(data: Record<string, unknown>): UserProfile {
 }
 
 // ─── GET /api/profile?licenseKey=xxx ───
+// scope-exempt: the caller's own licence profile, keyed by the hs-session licence key.
 export async function GET() {
   try {
     // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).

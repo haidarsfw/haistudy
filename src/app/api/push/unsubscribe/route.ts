@@ -7,6 +7,7 @@ import {
 
 export const runtime = "nodejs";
 
+// scope-exempt: the caller's own push subscription, keyed by licence key and endpoint.
 export async function POST(req: NextRequest) {
   try {
     const cookieStore = await cookies();

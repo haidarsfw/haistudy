@@ -12,6 +12,7 @@ import { ScopeError } from "@/lib/auth/scope-check";
 // exact same sequence (scope_invoice_counter / next_scope_invoice RPC) that real
 // purchases use, so admin-generated and self-checkout invoices never collide and
 // the number always matches the scope's real invoice sequence.
+// scope-exempt: admin-only; admins work across every period.
 export async function POST(request: Request) {
   try {
     const { authorized } = await validateAdmin();

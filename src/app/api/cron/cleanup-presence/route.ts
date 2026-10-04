@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { archiveEndedGroups } from "@/lib/mentor/archive";
 
+// scope-exempt: Vercel cron guarded by CRON_SECRET; it sweeps every period on purpose.
 /**
  * GET /api/cron/cleanup-presence
  *

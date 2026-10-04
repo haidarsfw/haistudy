@@ -180,6 +180,7 @@ function mapDeviceRow(row: Record<string, unknown>): Device {
 }
 
 // ─── GET /api/admin/licenses?scope=KEY|allPeriods=1 ───
+// scope-exempt: admin-only; admins work across every period.
 export async function GET(request: Request) {
   try {
     const { authorized } = await validateAdmin();

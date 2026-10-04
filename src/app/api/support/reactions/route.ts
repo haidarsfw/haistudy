@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { resolveSupportSender, rowToSupportReaction } from "@/lib/support/server";
 
+// scope-exempt: one support thread per licence; a non-admin can only read their own.
 /**
  * GET /api/support/reactions?licenseKey=...
  * Returns all reactions in a conversation (initial load).

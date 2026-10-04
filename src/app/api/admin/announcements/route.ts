@@ -52,6 +52,7 @@ function mapRow(row: Record<string, unknown>): ScopedAnnouncement {
 }
 
 // ─── GET /api/admin/announcements?scope=...|allPeriods=1 ───
+// scope-exempt: admin-only; admins work across every period.
 export async function GET(request: Request) {
   try {
     const { authorized } = await validateAdmin();

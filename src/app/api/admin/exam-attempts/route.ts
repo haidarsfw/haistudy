@@ -84,6 +84,7 @@ function resolveName(
   );
 }
 
+// scope-exempt: admin-only; admins work across every period.
 export async function GET(request: Request) {
   try {
     const { authorized } = await validateAdmin();

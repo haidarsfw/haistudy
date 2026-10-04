@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { validateAdmin } from "@/lib/auth/admin-guard";
 
+// scope-exempt: admin-only; admins work across every period.
 /**
  * POST /api/admin/exam-quota
  *

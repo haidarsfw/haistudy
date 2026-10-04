@@ -44,6 +44,7 @@ interface PerQuestion {
 const mean = (xs: number[]) =>
   xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null;
 
+// scope-exempt: admin-only; admins work across every period.
 export async function POST(request: Request) {
   try {
     const { authorized } = await validateAdmin();

@@ -8,6 +8,7 @@ import { sendWebPush } from "@/lib/push/send";
 
 export const runtime = "nodejs";
 
+// scope-exempt: the caller's own push subscription, keyed by licence key and endpoint.
 /** Send a test push to all of the current user's subscriptions. */
 export async function POST() {
   const cookieStore = await cookies();

@@ -11,6 +11,7 @@ import { isMentorAccount } from "@/lib/mentor/groups";
 import type { ScopeTuple, ExamPeriod } from "@/types/scope";
 import type { PackageTier } from "@/lib/tier";
 
+// scope-exempt: admin-only; admins work across every period.
 /**
  * GET /api/admin/exam-summary?key=LICENSEKEY
  *

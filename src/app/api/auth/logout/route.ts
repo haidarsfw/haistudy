@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin/activity";
 import type { ScopeTuple } from "@/types/scope";
 
+// scope-exempt: clears the caller's own session and cookies; nothing period-shared is read.
 /**
  * POST /api/auth/logout
  * Clears session cookies and cleans up presence.

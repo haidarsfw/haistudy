@@ -37,6 +37,7 @@ function mapRowToSettings(data: Record<string, unknown>): UserSettings {
 const mockSettings = new Map<string, UserSettings & { updatedAt: string }>();
 
 // ─── GET /api/settings?licenseKey=xxx ───
+// scope-exempt: the caller's own settings row, keyed by licence key; progress and notes nest per period inside it.
 export async function GET() {
   try {
     // Identity from the hs-session cookie, NOT a client-supplied param (IDOR fix).

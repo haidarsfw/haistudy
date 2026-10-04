@@ -34,6 +34,7 @@ interface ValidateBody {
   referralCode?: string;
 }
 
+// scope-exempt: this is where the period cookie is set, from the licence row itself.
 /**
  * POST /api/auth/validate
  * Validates a license key + device fingerprint.

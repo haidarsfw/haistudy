@@ -16,6 +16,7 @@ import { normalizeLoginMethod } from "@/lib/auth/login-method";
 import { readDeviceIdentity } from "@/lib/auth/device-id";
 import { hasActiveGroup, isMentorAccount } from "@/lib/mentor/groups";
 
+// scope-exempt: reports the caller's own licence and session, keyed by hs-session.
 /**
  * GET /api/auth/me
  * Returns the client-shaped session payload from the hs-session cookie.
