@@ -307,7 +307,7 @@ export function ExamResults({
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
+              transition={{ type: "spring", stiffness: 300, damping: 35, delay: 0.2 }}
               className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full ${grade.bg}/10`}
             >
               <GradeIcon className={`h-12 w-12 ${grade.color}`} />

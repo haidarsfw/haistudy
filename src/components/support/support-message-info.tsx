@@ -91,7 +91,7 @@ export function SupportMessageInfo({
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 360, damping: 30 }}
+            transition={{ type: "spring", stiffness: 360, damping: 38 }}
             className="fixed inset-x-0 bottom-0 z-[121] mx-auto flex max-h-[85vh] w-full max-w-md flex-col rounded-t-2xl border border-border bg-background shadow-2xl sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl"
           >
             {/* Header */}

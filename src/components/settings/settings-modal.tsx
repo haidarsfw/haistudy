@@ -110,7 +110,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   <motion.div
                     className="absolute inset-0 rounded-lg border border-primary/20"
                     layoutId="settings-tab-indicator"
-                    transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+                    transition={{ type: "spring", duration: 0.4, bounce: 0 }}
                   />
                 )}
               </button>

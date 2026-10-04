@@ -127,7 +127,7 @@ export function EnableNotificationsBanner() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -20, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        transition={{ type: "spring", stiffness: 320, damping: 36 }}
         className="mx-auto flex w-full max-w-3xl items-center gap-3 border-b border-primary/20 bg-primary/5 px-3 py-2 text-xs sm:rounded-lg sm:border sm:px-4 sm:py-2.5"
       >
         {iosNeedsInstall ? (

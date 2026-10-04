@@ -20,7 +20,7 @@ export function VoiceMiniBar({ activeRoom, isMuted, onToggleMute, onLeave }: Voi
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
-        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+        transition={{ type: "spring", damping: 35, stiffness: 300 }}
         className="fixed bottom-[calc(var(--hs-mobile-nav)+env(safe-area-inset-bottom))] right-4 sm:bottom-4 z-50 flex items-center gap-2 rounded-full border border-border bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg"
       >
         {/* Green pulse + room name */}

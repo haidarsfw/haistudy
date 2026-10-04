@@ -118,7 +118,7 @@ export function ExamNavPanel({ slots, statuses, currentIndex, onJump }: Props) {
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 400, damping: 35 }}
+              transition={{ type: "spring", stiffness: 400, damping: 40 }}
               className="fixed inset-x-0 bottom-0 z-[97] max-h-[60vh] overflow-y-auto rounded-t-2xl border-t border-border bg-card p-4 md:hidden"
             >
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted" />

@@ -103,7 +103,7 @@ export default function AvatarCropper({ src, onCancel, onApply }: AvatarCropperP
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        transition={{ type: "spring", damping: 26, stiffness: 320 }}
+        transition={{ type: "spring", damping: 36, stiffness: 320 }}
         className="relative z-10 flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
       >
         {/* Header */}

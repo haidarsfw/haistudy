@@ -80,7 +80,7 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
             initial={isMobile ? { y: "100%" } : { x: "100%" }}
             animate={isMobile ? { y: 0 } : { x: 0 }}
             exit={isMobile ? { y: "100%" } : { x: "100%" }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            transition={{ type: "spring", stiffness: 400, damping: 40 }}
             drag={isMobile ? "y" : false}
             dragControls={dragControls}
             dragListener={false}

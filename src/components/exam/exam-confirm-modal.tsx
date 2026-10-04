@@ -37,7 +37,7 @@ export function ExamConfirmModal({
         initial={{ scale: 0.94, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.94, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 420, damping: 28 }}
+        transition={{ type: "spring", stiffness: 420, damping: 41 }}
         className="mx-4 w-full max-w-md overflow-hidden rounded-[22px] border border-border bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >

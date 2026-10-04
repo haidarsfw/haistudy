@@ -1,12 +1,14 @@
 import type { Transition, Variants } from "framer-motion";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// WATAK GERAK — "Pegas"
+// WATAK GERAK: "halus tanpa pantul"
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Dipilih pemilik dari tiga peraga di /gerak, 2026-08-12. Wataknya: benda
-// datang cepat lalu MENETAP — melewati tujuannya sedikit, balik, diam. Bukan
-// berhenti mendadak, dan bukan memantul-mantul.
+// Pilihan pemilik 4 Oktober 2026, menggantikan watak "Pegas" (dipilih di
+// /gerak, 12 Agustus) yang melewati tujuannya ~5% lalu balik. Wataknya kini:
+// benda datang cepat, melambat, dan berhenti TEPAT di tujuan. Tidak ada yang
+// melewati tujuannya, termasuk pegas: semua pegas di sini teredam kritis
+// (damping >= 2 * sqrt(stiffness * mass)), jadi tetap terasa hidup tanpa goyang.
 //
 // Padanan CSS-nya ada di blok WATAK GERAK di `src/app/globals.css`
 // (`--ease-pop`, `--ease-pop-out`, 260ms masuk / 130ms keluar). Dua-duanya
@@ -21,7 +23,7 @@ import type { Transition, Variants } from "framer-motion";
 export const springPop: Transition = {
   type: "spring",
   stiffness: 420,
-  damping: 30,
+  damping: 39,
   mass: 0.9,
 };
 
@@ -29,7 +31,7 @@ export const springPop: Transition = {
 export const springPopSnappy: Transition = {
   type: "spring",
   stiffness: 500,
-  damping: 28,
+  damping: 38,
   mass: 0.7,
 };
 
@@ -37,7 +39,7 @@ export const springPopSnappy: Transition = {
 export const springPopHeavy: Transition = {
   type: "spring",
   stiffness: 340,
-  damping: 34,
+  damping: 37,
   mass: 1,
 };
 
@@ -55,12 +57,12 @@ export const springGentle: Transition = springPopHeavy;
 // langkah tak berguna. Kurvanya tetap kurva rumah supaya rasanya menyambung.
 export const durationFast: Transition = {
   duration: 0.13,
-  ease: [0.34, 1.4, 0.5, 1],
+  ease: [0.16, 1, 0.3, 1],
 };
 
 export const durationSmooth: Transition = {
   duration: 0.26,
-  ease: [0.34, 1.4, 0.5, 1],
+  ease: [0.16, 1, 0.3, 1],
 };
 
 // ─── Entrance variants ───
@@ -182,11 +184,11 @@ export const hoverButton = {
 //      exactly what makes a transition feel slow.
 
 /**
- * The house curve for anything arriving. Overshoots its target by about 5% and
- * settles — the CSS twin of `springPop`, and the same numbers as `--ease-pop`
- * in globals.css. Used where a real spring cannot go.
+ * The house curve for anything arriving: fast start, long soft landing, and it
+ * stops exactly on its target. The CSS twin of `springPop`, and the same
+ * numbers as `--ease-pop` in globals.css. Used where a real spring cannot go.
  */
-export const easeEnter = [0.34, 1.4, 0.5, 1] as const;
+export const easeEnter = [0.16, 1, 0.3, 1] as const;
 /** Anything leaving. Gets out of the way instead of lingering, and never
  *  overshoots: a thing on its way out has no target to settle onto. */
 export const easeExit = [0.4, 0, 1, 1] as const;
@@ -195,11 +197,11 @@ export const easeExit = [0.4, 0, 1, 1] as const;
  * For the few things that must animate SIZE — a disclosure opening, a panel
  * growing. Fast start, soft landing, and **never overshoots**.
  *
- * `easeEnter` must not be used here. Overshoot on a transform is what makes the
- * house character feel alive; overshoot on a HEIGHT means the box grows taller
- * than the content it is revealing and then snaps back, so the text inside jumps
- * — which reads as broken rather than lively. That is exactly what happened to
- * the "Hapus akun" card the moment the spring character landed.
+ * Kept apart from `easeEnter` on purpose: when the house curve still overshot
+ * (the "Pegas" character, August to October 2026), a HEIGHT that overshot grew
+ * the box taller than its content and snapped back, so the text inside jumped.
+ * That happened to the "Hapus akun" card. Size keeps its own curve so a future
+ * change to the house curve can never do that again.
  *
  * Height is layout, not transform, so every frame reflows everything below it.
  * Use this sparingly and only where there is no honest alternative.

@@ -145,7 +145,7 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
             initial={{ opacity: 0, scale: 0.92, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, x: dir * 240, rotate: dir * 12 }}
-            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            transition={{ type: "spring", stiffness: 320, damping: 36 }}
             className="absolute inset-0 flex items-center justify-center rounded-2xl border border-border bg-card p-6 text-center shadow-warm"
           >
             <p className="text-lg font-semibold leading-snug">{parseInline(stmt.text)}</p>

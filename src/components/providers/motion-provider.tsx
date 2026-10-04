@@ -2,11 +2,18 @@
 
 import { useEffect } from "react";
 import { MotionConfig } from "framer-motion";
+import { springPop } from "@/lib/motion";
 
 // Respect the OS-level "Reduce motion" accessibility preference.
 // With reducedMotion="user", Framer Motion automatically replaces
 // transform/position animations with instant state changes while preserving
 // opacity fades - matches the WCAG 2.3.3 guidance.
+//
+// `transition` is the default for every motion element that names none.
+// Framer's own default for x/y/scale is an underdamped spring (stiffness 500,
+// damping 25) that overshoots; the house character since 2026-10-04 never
+// overshoots, so un-configured animations use the house spring instead:
+// critically damped, so taps stay as quick as before but never wobble.
 export function MotionProvider({ children }: { children: React.ReactNode }) {
   // base-ui ScrollArea (≤1.3.0) calls `thumb.releasePointerCapture(id)`
   // unconditionally on the scrollbar thumb's pointerup (ScrollAreaRoot). On a
@@ -32,5 +39,9 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
+  return (
+    <MotionConfig reducedMotion="user" transition={springPop}>
+      {children}
+    </MotionConfig>
+  );
 }

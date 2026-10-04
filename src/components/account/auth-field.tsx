@@ -203,7 +203,7 @@ function PasswordRule({ label, ok }: { label: string; ok: boolean }) {
           animate={{ opacity: ok ? 1 : 0, scale: ok ? 1 : 0.4 }}
           // Slight overshoot: the tick lands with a small pop, which is the
           // only motion in the component and the only one it needs.
-          transition={{ duration: 0.24, ease: [0.34, 1.56, 0.64, 1] }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         >
           <Check className="h-3 w-3" strokeWidth={3} />
         </motion.span>

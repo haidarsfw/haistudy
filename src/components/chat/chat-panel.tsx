@@ -322,7 +322,7 @@ export function ChatPanel({
             initial={isMobile ? { y: "100%" } : { x: "100%" }}
             animate={isMobile ? { y: 0 } : { x: 0 }}
             exit={isMobile ? { y: "100%" } : { x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 250 }}
+            transition={{ type: "spring", damping: 32, stiffness: 250 }}
             drag={isMobile ? "y" : false}
             dragControls={dragControls}
             dragListener={false}

@@ -120,7 +120,7 @@ export function PackageCard({
       {selected && (
         <motion.span
           layoutId={layoutId}
-          transition={{ type: "spring", stiffness: 420, damping: 36 }}
+          transition={{ type: "spring", stiffness: 420, damping: 41 }}
           className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-white/45"
           aria-hidden="true"
         />

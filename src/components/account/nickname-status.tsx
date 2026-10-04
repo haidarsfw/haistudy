@@ -130,7 +130,7 @@ export function NicknameAdornment({ state }: { state: NicknameState }) {
       <motion.span
         initial={{ scale: 0.4, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.26, ease: [0.34, 1.5, 0.64, 1] }}
+        transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
         className="flex text-primary"
       >
         <Check className="h-4 w-4" strokeWidth={3} />

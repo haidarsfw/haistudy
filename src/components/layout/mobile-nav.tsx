@@ -194,7 +194,7 @@ export function MobileNav({
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ type: "spring", stiffness: 300, damping: 35 }}
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.4 }}
@@ -270,7 +270,7 @@ export function MobileNav({
       <motion.nav
         initial={{ y: 120, opacity: 0 }}
         animate={{ y: navHidden ? 170 : 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 28 }}
+        transition={{ type: "spring", stiffness: 260, damping: 33 }}
         aria-label={t("mobile_nav.more_title")}
         className="fixed inset-x-0 bottom-0 z-40 sm:hidden"
       >
@@ -303,7 +303,7 @@ export function MobileNav({
                     <motion.span
                       whileTap={{ scale: 0.9 }}
                       animate={{ scale: isAiOpen ? 1.05 : 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 40 }}
                       className={`relative flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40 ring-2 ring-background ${
                         isAiOpen ? "hs-nav-fab-glow" : ""
                       }`}
@@ -343,14 +343,14 @@ export function MobileNav({
                 {active && (
                   <motion.span
                     layoutId="hs-nav-pill"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 39 }}
                     className="absolute inset-x-1.5 inset-y-2 rounded-2xl bg-primary/12"
                     aria-hidden="true"
                   />
                 )}
                 <motion.span
                   animate={{ scale: active ? 1.12 : 1, y: active ? -1 : 0 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 20 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 41 }}
                   className={`relative z-10 ${active ? "text-primary" : "text-muted-foreground"}`}
                 >
                   <item.icon className="h-5 w-5" aria-hidden="true" />

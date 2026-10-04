@@ -82,7 +82,7 @@ export function ExamBriefing({
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 1.5, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 35 }}
           className="text-8xl font-black text-primary"
         >
           {count}

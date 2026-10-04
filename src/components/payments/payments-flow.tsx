@@ -748,7 +748,7 @@ export function PaymentsFlow({
         <motion.div
           initial={{ scale: 0, rotate: -20 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 18 }}
+          transition={{ type: "spring", stiffness: 300, damping: 35 }}
           className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10"
         >
           <CheckCircle2 className="h-11 w-11 text-primary" />

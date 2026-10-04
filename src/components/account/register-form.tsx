@@ -258,7 +258,7 @@ export function RegisterForm({ next }: { next?: string }) {
         <motion.div
           initial={{ scale: 0.4, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.06, duration: 0.34, ease: [0.34, 1.4, 0.64, 1] }}
+          transition={{ delay: 0.06, duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10"
         >
           <CheckCircle2 className="h-7 w-7 text-primary" strokeWidth={2.2} />
@@ -397,14 +397,14 @@ export function RegisterForm({ next }: { next?: string }) {
                   // simply gone away.
                   initial={{ opacity: 0, scale: 0.94 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.28, ease: [0.34, 1.4, 0.64, 1] }}
+                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                   className="flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-2.5"
                 >
                   <span className="flex min-w-0 items-center gap-2 text-sm text-primary">
                     <motion.span
                       initial={{ scale: 0.3, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.06, duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                      transition={{ delay: 0.06, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                       className="flex shrink-0"
                     >
                       <Check className="h-4 w-4" strokeWidth={3} />
