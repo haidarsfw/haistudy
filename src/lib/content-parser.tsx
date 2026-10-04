@@ -41,6 +41,12 @@ function renderMath(latex: string, key: number): React.ReactNode {
 
 /**
  * Render forum/chat content: preserves newlines, parses $$...$$ (display) and $...$ (inline) math.
+ *
+ * Users write this text, so KaTeX runs with `trust: false` here (and in
+ * parseInlineMath, which only this function calls). With `trust: true` a post
+ * containing $\href{javascript:...}{...}$ became a script link, and
+ * $\htmlStyle{position:fixed;...}{...}$ could lay a fake screen over the forum
+ * for everyone in the period. Material written in-repo keeps `trust: true`.
  */
 export function parseForumContent(text: string): React.ReactNode {
   // Split on display math first ($$...$$), then handle inline within each segment
@@ -56,7 +62,7 @@ export function parseForumContent(text: string): React.ReactNode {
         const html = katex.renderToString(latex, {
           throwOnError: false,
           displayMode: true,
-          trust: true,
+          trust: false,
         });
         parts.push(
           <div
@@ -85,7 +91,7 @@ export function parseForumContent(text: string): React.ReactNode {
   return <>{parts}</>;
 }
 
-/** Parse only $...$ inline math within a text string */
+/** Parse only $...$ inline math within a text string (user-written: untrusted) */
 function parseInlineMath(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
   const regex = /\$([^$\n]+?)\$/g;
@@ -101,7 +107,7 @@ function parseInlineMath(text: string): React.ReactNode {
       const html = katex.renderToString(match[1], {
         throwOnError: false,
         displayMode: false,
-        trust: true,
+        trust: false,
       });
       parts.push(
         <span key={key++} className="katex-inline" dangerouslySetInnerHTML={{ __html: html }} />
