@@ -137,12 +137,16 @@ export function ExamBriefing({
 
           {/* Header */}
           <motion.div variants={staggerItem} className="text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5">
-              <PenLine className="h-7 w-7 text-primary" />
+            {/* Icon beside the title, the same tile as the subject header
+                (audit no. 27): one title pattern across the app. */}
+            <div className="flex items-center justify-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <PenLine className="h-5 w-5 text-primary" />
+              </div>
+              <h1 className="text-2xl font-black text-foreground">
+                {t("exam.briefing_title")}
+              </h1>
             </div>
-            <h1 className="text-2xl font-black text-foreground">
-              {t("exam.briefing_title")}
-            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {exam.meta.courseName}
             </p>

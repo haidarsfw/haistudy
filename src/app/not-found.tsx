@@ -5,14 +5,13 @@ import { parseScopeKey, scopePath, DEFAULT_SCOPE } from "@/lib/scope";
 import { scopeKeyFromCookie } from "@/lib/auth/scope-cookie";
 
 /**
- * Root 404 — handles both `notFound()` calls inside the app and any URL that
+ * Root 404: handles both `notFound()` calls inside the app and any URL that
  * matches no route at all.
  *
- * Shape follows the landing (font-display, pill buttons, casual copy) but every
- * colour comes from theme tokens: this file renders OUTSIDE `.landing-root`, so
- * the landing's `--brand-gradient` doesn't exist here and `brand-gradient-bg`
- * would paint nothing. Tokens also let the page sit correctly inside the app,
- * whose accent the user can change.
+ * Dressed exactly like the public pages (audit no. 32, owner's pick of
+ * 2026-10-04): the same `.landing-root theme-dark` scope LandingShell opens, so
+ * the background, brand gradient and button glow are the public ones, and
+ * whoever lands on a wrong address still feels they are on haistudy.
  */
 export default async function NotFound() {
   // Whoever is signed in almost certainly wants their dashboard, not the
@@ -32,18 +31,21 @@ export default async function NotFound() {
     : { href: "/", label: "Ke beranda" };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+    <div className="landing-root theme-dark flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card">
-          <Compass className="h-6 w-6 text-muted-foreground" />
-        </div>
-
-        <p className="font-display text-4xl font-bold leading-none text-muted-foreground/40">
+        <p className="font-display text-4xl font-bold leading-none text-muted-foreground/70">
           404
         </p>
-        <h1 className="font-display text-xl font-bold text-foreground">
-          Halaman ini gak ada
-        </h1>
+        {/* Icon beside the title, the same tile as the subject header
+            (audit no. 27). */}
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Compass className="h-5 w-5 text-primary" />
+          </div>
+          <h1 className="font-display text-xl font-bold text-foreground">
+            Halaman ini gak ada
+          </h1>
+        </div>
         <p className="text-sm leading-relaxed text-muted-foreground">
           Mungkin salah ketik, atau halamannya udah pindah. Gak ada yang rusak
           kok.
@@ -52,7 +54,7 @@ export default async function NotFound() {
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
           <Link
             href={primary.href}
-            className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="brand-gradient-bg inline-flex h-10 items-center justify-center rounded-full px-5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {primary.label}
           </Link>

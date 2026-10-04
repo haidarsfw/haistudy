@@ -99,16 +99,22 @@ export function GroupJoin({ state }: { state: GroupJoinState }) {
 
   return (
     <section className="mt-10 max-w-lg">
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-        <Users className="h-5 w-5 text-primary" />
+      {/* Icon beside the title, the same tile as the subject header
+          (audit no. 27): one title pattern across the app. */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <Users className="h-5 w-5 text-primary" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+            {state.name}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Dipandu {state.mentor}
+            {state.period ? ` · ${state.period}` : ""}
+          </p>
+        </div>
       </div>
-      <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-        {state.name}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Dipandu {state.mentor}
-        {state.period ? ` · ${state.period}` : ""}
-      </p>
 
       <div className="mt-6">
         {joined ? (
