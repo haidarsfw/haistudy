@@ -6,7 +6,6 @@ import {
   TESTIMONIAL_RATING,
   type Testimonial,
 } from "@/data/landing/testimonials";
-import { cn } from "@/lib/utils";
 
 /**
  * Social-proof marquee — two rows of real student testimonials scrolling in
@@ -48,7 +47,11 @@ function Card({ t }: { t: Testimonial }) {
   );
 }
 
-function Row({ items, dir }: { items: Testimonial[]; dir: "left" | "right" }) {
+// One row since 2026-10-04 (owner's pick, audit no. 26: one marquee per page).
+// The old two rows ran 7 cards per 25 s; the single row keeps that speed.
+const SECONDS_PER_CARD = 25 / 7;
+
+function Row({ items }: { items: Testimonial[] }) {
   return (
     <div
       className="group flex overflow-hidden motion-reduce:overflow-x-auto"
@@ -61,10 +64,8 @@ function Row({ items, dir }: { items: Testimonial[]; dir: "left" | "right" }) {
       }}
     >
       <div
-        className={cn(
-          "flex shrink-0 gap-4 pr-4",
-          dir === "left" ? "hs-marquee" : "hs-marquee-rev"
-        )}
+        className="hs-marquee flex shrink-0 gap-4 pr-4"
+        style={{ animationDuration: `${Math.round(items.length * SECONDS_PER_CARD)}s` }}
       >
         {items.map((t) => (
           <Card key={t.name} t={t} />
@@ -79,10 +80,6 @@ function Row({ items, dir }: { items: Testimonial[]; dir: "left" | "right" }) {
 }
 
 export function TestimonialMarquee() {
-  const mid = Math.ceil(TESTIMONIALS.length / 2);
-  const rowA = TESTIMONIALS.slice(0, mid);
-  const rowB = TESTIMONIALS.slice(mid);
-
   return (
     <section id="testimoni" className="relative scroll-mt-24 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl px-4 text-center">
@@ -100,9 +97,8 @@ export function TestimonialMarquee() {
         </div>
       </div>
 
-      <div className="mt-10 flex flex-col gap-4">
-        <Row items={rowA} dir="left" />
-        <Row items={rowB} dir="right" />
+      <div className="mt-10">
+        <Row items={TESTIMONIALS} />
       </div>
     </section>
   );

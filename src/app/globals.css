@@ -1682,7 +1682,6 @@ html.tts-bar-open .tts-shift-target {
   --ring: #10b981;
   --section-bg: #e6ece8;
   --radius: 0.75rem;
-  --hs-glow: 0.4;
   --hs-wash1: 16%;
   --hs-wash2: 13%;
   --binus-text: #101a15;
@@ -1715,16 +1714,11 @@ html.tts-bar-open .tts-shift-target {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-@keyframes hs-marquee-right {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
-}
 /* Real classes (not Tailwind arbitrary) so Lightning CSS can't drop the
-   animation. Each track holds two copies of its row → -50% loops seamlessly. */
+   animation. The track holds two copies of its row, so -50% loops seamlessly.
+   The testimonial row sets its own duration from its card count. */
 .hs-marquee { animation: hs-marquee-left 25s linear infinite; }
-.hs-marquee-rev { animation: hs-marquee-right 25s linear infinite; }
-.group:hover > .hs-marquee,
-.group:hover > .hs-marquee-rev { animation-play-state: paused; }
+.group:hover > .hs-marquee { animation-play-state: paused; }
 
 /* CTA shine — sweeps once when the selected buy button mounts (i.e. on select),
    not only on hover. */
@@ -1738,7 +1732,7 @@ html.tts-bar-open .tts-shift-target {
 .hs-cta-shine { animation: hs-cta-shine 3.2s ease-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .hs-marquee, .hs-marquee-rev, .hs-cta-shine { animation: none; }
+  .hs-marquee, .hs-cta-shine { animation: none; }
 }
 
 /* Landing is dark-only: LandingShell always pins `.theme-dark`, so the token
@@ -1768,7 +1762,6 @@ html.tts-bar-open .tts-shift-target {
      which fails AA for anything under 18.66px bold (countdowns, logout). */
   --destructive: #f87171;
   --section-bg: #0b120f;
-  --hs-glow: 0.28;
   --hs-wash1: 15%;
   --hs-wash2: 13%;
   --binus-text: #ffffff;

@@ -5,7 +5,7 @@ import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useAccount } from "@/hooks/use-account";
 import { HeroTour } from "@/components/landing/hero-tour";
-import { TESTIMONIAL_RATING, USER_COUNT } from "@/data/landing/claims";
+import { TESTIMONIAL_RATING } from "@/data/landing/claims";
 
 export function Hero() {
   const { t } = useTranslation();
@@ -19,30 +19,10 @@ export function Hero() {
       id="beranda"
       className="relative overflow-hidden px-4 pb-10 pt-32 sm:pt-40"
     >
-      {/* Layered background depth: grid + soft brand glows + bottom fade.
-          Static + subtle (masked), not animated aurora. */}
+      {/* Bottom fade into the next section. The three blurred brand halos that
+          sat here went on 2026-10-04 (owner's pick, audit no. 23): the glow
+          stays on the main button only. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div
-          className="absolute left-1/2 top-[-16%] h-[560px] w-[min(950px,94vw)] -translate-x-1/2 rounded-full blur-[64px] sm:blur-[120px]"
-          style={{
-            background: "radial-gradient(circle, var(--brand-1), transparent 66%)",
-            opacity: "calc(var(--hs-glow) * 2.6)",
-          }}
-        />
-        <div
-          className="absolute left-[2%] top-[18%] h-[340px] w-[340px] rounded-full blur-[52px] sm:blur-[90px]"
-          style={{
-            background: "radial-gradient(circle, var(--brand-2), transparent 68%)",
-            opacity: "calc(var(--hs-glow) * 1.7)",
-          }}
-        />
-        <div
-          className="absolute right-[2%] top-[24%] h-[380px] w-[380px] rounded-full blur-[52px] sm:blur-[90px]"
-          style={{
-            background: "radial-gradient(circle, var(--brand-1), transparent 68%)",
-            opacity: "calc(var(--hs-glow) * 1.5)",
-          }}
-        />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
       </div>
 
@@ -126,28 +106,29 @@ export function Hero() {
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </a>
         </div>
+      </div>
 
-        {/* Harga mulai, DI BAWAH SELURUH BARIS — bukan di dalam tombolnya.
-            Ditaruh di dalam, dia memaksa tombol jadi blok yang lebih tinggi
-            daripada tautan di sebelahnya: dua ajakan yang sebaris jadi terasa
-            terpisah, dan barisnya sendiri jadi tidak di tengah karena teks
-            harganya lebih lebar daripada tombol. Sebagai saudara di bawah, dia
-            ikut sumbu tengah yang sama dengan semua isi hero lain. */}
-        {!loggedIn && (
-          <p
-            data-reveal
-            className="mt-3 text-[11px] leading-none text-muted-foreground/80"
-            style={{ transitionDelay: "150ms" }}
-          >
-            {t("landing.cta.mulai_dari")}
-          </p>
-        )}
+      {/* product preview — live, self-playing dashboard tour */}
+      <div
+        data-reveal
+        className="mx-auto mt-14 max-w-4xl sm:mt-16"
+        style={{ transitionDelay: "240ms" }}
+      >
+        <HeroTour />
+      </div>
 
+      {/* Bukti dan harga sesudah gambar aplikasi, bukan di dalam hero (audit
+          no. 22, pilihan pemilik 4 Oktober 2026). Hero cukup judul, satu
+          kalimat, dan ajakan; di ponsel gambar aplikasinya jadi terlihat lebih
+          cepat, dan harga tetap terbaca tepat sesudahnya. */}
+      <div
+        data-reveal
+        className="mx-auto mt-10 flex max-w-4xl flex-col items-center gap-3 text-center"
+        style={{ transitionDelay: "280ms" }}
+      >
         <a
           href="#testimoni"
-          data-reveal
-          className="group mt-8 inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-muted-foreground"
-          style={{ transitionDelay: "180ms" }}
+          className="group inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-muted-foreground"
         >
           <span className="flex">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -160,27 +141,19 @@ export function Hero() {
             </strong>
             /{TESTIMONIAL_RATING.outOf}
           </span>
-          <span className="h-4 w-px bg-border" />
-          {/* Interpolated, not baked into the string: the count used to be typed
-              into the Indonesian copy as well as into social-proof.tsx, so
-              bumping one left the same screen quoting two different totals. */}
-          <span className="text-foreground">
-            {t("landing.hero.count").replace("{n}", String(USER_COUNT))}
-          </span>
+          {/* No user count here: the social-proof row right below already says
+              "312+ mahasiswa ... percaya haistudy", and the same number twice in
+              a row read like a typo (owner, 2026-10-04). */}
           <span className="h-4 w-px bg-border" />
           <span className="border-b border-transparent transition-colors group-hover:border-foreground/40 group-hover:text-foreground">
             {t("landing.hero.trusted")}
           </span>
         </a>
-      </div>
-
-      {/* product preview — live, self-playing dashboard tour */}
-      <div
-        data-reveal
-        className="mx-auto mt-14 max-w-4xl sm:mt-16"
-        style={{ transitionDelay: "240ms" }}
-      >
-        <HeroTour />
+        {!loggedIn && (
+          <p className="text-xs leading-none text-muted-foreground/80">
+            {t("landing.cta.mulai_dari")}
+          </p>
+        )}
       </div>
     </section>
   );

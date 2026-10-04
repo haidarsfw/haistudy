@@ -49,7 +49,6 @@ const id: Record<string, string> = {
     "Rangkuman yang to the point, latihan soal plus koreksi AI, Belajar Kilat, dan komunitas kelas. Semua kebutuhan belajarmu ada di satu tempat, tiap periode ujian.",
   "landing.hero.see_action": "Lihat cara kerjanya",
   "landing.hero.trusted": "apa kata mereka?",
-  "landing.hero.count": "{n}+ mahasiswa",
 
   // ── Social proof strip (single line) ──
   "landing.social.students": "mahasiswa",
