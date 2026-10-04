@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings,
@@ -312,12 +313,12 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                           Kode dan link ajakanmu ada di halaman akun, lengkap
                           dengan siapa saja yang sudah pakai.
                         </p>
-                        <a
+                        <Link
                           href="/account/activity"
                           className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
                         >
                           Buka Riwayat &amp; referral
-                        </a>
+                        </Link>
                       </div>
                     </motion.div>
 
