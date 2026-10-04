@@ -25,7 +25,7 @@ export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCa
     >
       <Link
         href={`${base}/subject/${subject.id}`}
-        className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-colors duration-200 hover:border-primary/30 hover:shadow-warm-lg"
+        className="surface surface-hover group relative flex flex-col rounded-xl bg-card overflow-hidden"
       >
         {hasForumUnread && (
           <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-destructive z-10" />
@@ -55,7 +55,7 @@ export function SubjectCard({ subject, progress = 0, hasForumUnread }: SubjectCa
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
+                <span className="text-xs font-semibold text-muted-foreground tabular-nums">
                   {progress}%
                 </span>
               </div>

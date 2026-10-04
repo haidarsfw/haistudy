@@ -28,7 +28,7 @@ export function QuickStudyCard() {
   if (quickSubjects.length === 0) return null;
 
   return (
-    <div data-onboarding="subjects" className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/20 light-card-shadow">
+    <div data-onboarding="subjects" className="surface rounded-xl bg-card p-5 transition-colors">
       <div className="flex items-center gap-2 mb-4">
         <Play className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">{t("dashboard.continue_studying")}</h3>
@@ -47,7 +47,7 @@ export function QuickStudyCard() {
             />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium truncate">{subject.name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {subject.description}
               </p>
             </div>

@@ -74,8 +74,8 @@ export function ExamCountdownMini() {
 
   return (
     <div
-      className={`rounded-xl border bg-card p-4 transition-colors light-card-shadow ${
-        isUrgent ? "border-destructive/30" : "border-border"
+      className={`surface rounded-xl p-4 transition-colors ${
+        isUrgent ? "bg-destructive/5" : "bg-card"
       } flex flex-col`}
     >
       <div className="flex items-center gap-2 mb-2">
@@ -84,7 +84,7 @@ export function ExamCountdownMini() {
         ) : (
           <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
         )}
-        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex-1 truncate">
+        <span className="text-[13px] font-semibold text-muted-foreground flex-1 truncate">
           {t("dashboard.exam_countdown")}
         </span>
         <ExamTypeSwitch

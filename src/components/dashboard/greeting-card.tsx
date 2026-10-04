@@ -149,7 +149,7 @@ export function GreetingCard() {
   return (
     <div
       data-onboarding="dashboard"
-      className="rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-8 light-card-shadow"
+      className="surface rounded-2xl bg-card p-4 sm:p-6 lg:p-8"
     >
       <div className="flex items-center gap-6">
         {/* Left: text */}
@@ -157,31 +157,31 @@ export function GreetingCard() {
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-xs text-muted-foreground">{dateStr}</p>
             {session?.isAdmin && (
-              <Badge variant="admin-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
+              <Badge variant="admin-outline" className="gap-0.5 text-xs h-5 px-1.5">
                 <Shield className="h-2.5 w-2.5" />
                 {t("badge.admin")}
               </Badge>
             )}
             {(session?.packageTier === "diamond") && (
-              <Badge variant="diamond-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
+              <Badge variant="diamond-outline" className="gap-0.5 text-xs h-5 px-1.5">
                 <Gem className="h-2.5 w-2.5" />
                 Diamond
               </Badge>
             )}
             {session?.packageTier === "vip" && (
-              <Badge variant="vip-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
+              <Badge variant="vip-outline" className="gap-0.5 text-xs h-5 px-1.5">
                 <Crown className="h-2.5 w-2.5" />
                 {t("badge.vip")}
               </Badge>
             )}
             {session?.isMentor && (
-              <Badge variant="mentor-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
+              <Badge variant="mentor-outline" className="gap-0.5 text-xs h-5 px-1.5">
                 <GraduationCap className="h-2.5 w-2.5" />
                 {t("badge.mentor")}
               </Badge>
             )}
             {session?.isTester && (
-              <Badge variant="tester-outline" className="gap-0.5 text-[10px] h-4 px-1.5">
+              <Badge variant="tester-outline" className="gap-0.5 text-xs h-5 px-1.5">
                 <FlaskConical className="h-2.5 w-2.5" />
                 {t("badge.tester")}
               </Badge>
@@ -216,7 +216,7 @@ export function GreetingCard() {
       <div className="my-5 flex items-center gap-3">
         <div className="flex-1 border-t border-border" />
         {scopeCtx && (
-          <span className="text-[10px] text-muted-foreground/80 whitespace-nowrap">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
             {scopeFullLabel(scopeCtx.scope)}
           </span>
         )}
@@ -229,7 +229,7 @@ export function GreetingCard() {
             <Lightbulb className="h-4 w-4 text-warning" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
+            <h3 className="text-[13px] font-semibold text-muted-foreground mb-0.5">
               {t("dashboard.study_tip")}
             </h3>
             <p className="text-sm text-foreground leading-relaxed break-words">
@@ -242,7 +242,7 @@ export function GreetingCard() {
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
+            <h3 className="text-[13px] font-semibold text-muted-foreground mb-0.5">
               {t("dashboard.fun_fact")}
             </h3>
             <p className="text-sm text-foreground leading-relaxed break-words">

@@ -87,10 +87,8 @@ export function ExamCountdown() {
 
   return (
     <div
-      className={`rounded-xl border p-4 fade-in-css ${
-        isUrgent
-          ? "border-destructive/30 bg-destructive/5 animate-pulse-glow"
-          : "border-border bg-card"
+      className={`surface rounded-xl p-4 fade-in-css ${
+        isUrgent ? "bg-destructive/5 animate-pulse-glow" : "bg-card"
       }`}
     >
       {/* Header: title + onsite/assignment switch */}
@@ -118,7 +116,7 @@ export function ExamCountdown() {
             {exam.subject}
           </p>
           {(typeText || exam.examFormat) && (
-            <p className="mt-0.5 text-[10px] text-muted-foreground/80 truncate">
+            <p className="mt-0.5 text-xs text-muted-foreground/80 truncate">
               {[typeText, exam.examFormat].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -172,7 +170,7 @@ function TimeUnit({
           {pad(value)}
         </span>
       </div>
-      <span className="text-[9px] md:text-[10px] lg:text-xs text-muted-foreground uppercase tracking-wider">
+      <span className="text-xs text-muted-foreground">
         {label}
       </span>
     </div>

@@ -472,14 +472,6 @@ html:has(.landing-root) {
     -webkit-touch-callout: none;
   }
 
-  .light-card-shadow {
-    box-shadow: 0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04);
-  }
-
-  .dark .light-card-shadow {
-    box-shadow: none;
-  }
-
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--muted-foreground) transparent;
@@ -959,6 +951,33 @@ details.faq-smooth[open] {
 
 .rotate-y-180 {
   transform: rotateY(180deg);
+}
+
+/* ============================================
+   Kartu: bayangan saja, tanpa garis tepi (pilihan pemilik 4 Oktober 2026,
+   audit no. 24). `surface` dipakai WADAH saja: kartu dan panel. Kontrol
+   (tombol, input, chip, tab) tetap bergaris, dan kotak kosong bergaris putus
+   tetap bergaris putus. Bayangan gelap sama persis dengan contoh yang dipilih.
+   ============================================ */
+:root {
+  --surface-shadow: 0 1px 2px oklch(0.25 0.02 150 / 0.1), 0 8px 24px -12px oklch(0.25 0.02 150 / 0.24);
+  --surface-shadow-hover: 0 2px 4px oklch(0.25 0.02 150 / 0.12), 0 14px 30px -12px oklch(0.25 0.02 150 / 0.32);
+}
+.dark {
+  --surface-shadow: 0 1px 2px rgb(0 0 0 / 0.28), 0 10px 26px -14px rgb(0 0 0 / 0.7);
+  --surface-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.32), 0 16px 32px -14px rgb(0 0 0 / 0.82);
+}
+@utility surface {
+  box-shadow: var(--surface-shadow);
+}
+/* Kartu yang bisa diklik: bayangan menebal saat hover, menggantikan warna
+   garis tepi yang dulu berubah. Hanya hover, satu elemen, 200ms. */
+@utility surface-hover {
+  transition-property: box-shadow;
+  transition-duration: 200ms;
+  &:hover {
+    box-shadow: var(--surface-shadow-hover);
+  }
 }
 
 /* ============================================

@@ -21,13 +21,13 @@ export function StudyTipsCard() {
   const tip = TIPS[tipIndex];
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="surface rounded-xl bg-card p-5">
       <div className="flex items-start gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10">
           <Lightbulb className="h-4 w-4 text-warning" />
         </div>
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+          <h3 className="text-[13px] font-semibold text-muted-foreground mb-1">
             Tips Belajar Hari Ini
           </h3>
           <p className="text-sm text-foreground leading-relaxed">{tip}</p>

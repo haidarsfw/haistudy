@@ -138,7 +138,7 @@ function UserRow({
       )}
       {/* Location badge - only visible to admin */}
       {isAdmin && locationText && (
-        <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/40 truncate max-w-[85px]" title={locationText}>
+        <span className="text-xs text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/40 truncate max-w-[85px]" title={locationText}>
           {locationText}
         </span>
       )}
@@ -232,7 +232,7 @@ export function OnlineUsersMini() {
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-card p-4 transition-colors light-card-shadow">
+      <div className="surface rounded-xl bg-card p-4 transition-colors">
         {/* Header + count - clickable to expand */}
         <button
           onClick={() => setExpanded((prev) => !prev)}
@@ -242,7 +242,7 @@ export function OnlineUsersMini() {
         >
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <span className="text-[13px] font-semibold text-muted-foreground">
               {t("dashboard.online")}
             </span>
           </div>
@@ -268,7 +268,7 @@ export function OnlineUsersMini() {
                 const avatarUrl = !masked && user.licenseKey
                   ? avatarMap.get(user.licenseKey.toUpperCase()) ?? null
                   : null;
-                const avatarClass = `h-6 w-6 overflow-hidden rounded-full border-2 border-card flex items-center justify-center text-[9px] font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`;
+                const avatarClass = `h-6 w-6 overflow-hidden rounded-full border-2 border-card flex items-center justify-center text-xs font-bold text-white ${masked ? "bg-zinc-500" : DOT_COLORS[i % DOT_COLORS.length]}`;
                 const title = masked ? "Hidden User" : `${displayName}${user.deviceCount > 1 ? ` (${user.deviceCount})` : ""}`;
                 const inner = avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -305,7 +305,7 @@ export function OnlineUsersMini() {
                 );
               })}
               {visibleUsers.length > 5 && (
-                <div className="h-6 w-6 rounded-full border-2 border-card bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground">
+                <div className="h-6 w-6 rounded-full border-2 border-card bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
                   +{visibleUsers.length - 5}
                 </div>
               )}
@@ -314,7 +314,7 @@ export function OnlineUsersMini() {
         )}
 
         {visibleUsers.length === 0 && (
-          <p className="text-[11px] text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             {t("dashboard.nobody_online")}
           </p>
         )}
@@ -350,7 +350,7 @@ export function OnlineUsersMini() {
                 {visibleUsers.length > MAX_VISIBLE_EXPANDED && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowAll(true); }}
-                    className="w-full mt-1 py-1.5 text-[11px] font-medium text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer"
+                    className="w-full mt-1 py-1.5 text-xs font-medium text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer"
                   >
                     Lihat Semuanya ({visibleUsers.length})
                   </button>
