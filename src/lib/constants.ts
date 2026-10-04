@@ -23,18 +23,17 @@ export const THEMES: ThemeOption[] = [
   { id: "rose", name: "Rose", color: "#e0699f" },
 ];
 
-// Font options. Free fonts ship in the bundle via next/font (layout.tsx).
-// VIP fonts are lazy-injected from Google Fonts only when selected
-// (see src/lib/lazy-fonts.ts) so the free-user bundle stays unchanged.
+// Font picks in Settings. Every face is self-hosted via next/font (layout.tsx)
+// and downloaded only when used; stacks live in src/lib/fonts.ts.
 export const FONTS: FontOption[] = [
-  { id: "jakarta", name: "Jakarta Sans" },
+  { id: "default", name: "Golos Text" },
+  { id: "plusjakarta", name: "Jakarta Sans" },
   { id: "inter", name: "Inter" },
   { id: "poppins", name: "Poppins" },
-  { id: "lora", name: "Lora", vip: true, googleFamily: "Lora:wght@400;500;600;700", cssVar: "--font-lora" },
-  { id: "jetbrains", name: "JetBrains Mono", vip: true, googleFamily: "JetBrains+Mono:wght@400;500;700", cssVar: "--font-jetbrains" },
-  { id: "quicksand", name: "Quicksand", vip: true, googleFamily: "Quicksand:wght@400;500;600;700", cssVar: "--font-quicksand" },
-  { id: "merriweather", name: "Merriweather", vip: true, googleFamily: "Merriweather:wght@400;700", cssVar: "--font-merriweather" },
-  // Times New Roman ships with every OS - no webfont needed, so no googleFamily.
+  { id: "lora", name: "Lora", vip: true },
+  { id: "jetbrains", name: "JetBrains Mono", vip: true },
+  { id: "quicksand", name: "Quicksand", vip: true },
+  { id: "merriweather", name: "Merriweather", vip: true },
   { id: "times", name: "Times New Roman", vip: true },
 ];
 
@@ -93,7 +92,7 @@ export const SOUNDCLOUD_PLAYLIST_URL =
 export const DEFAULT_SETTINGS = {
   darkMode: true,
   theme: "forest" as const,
-  font: "jakarta" as const,
+  font: "default" as const,
   language: "id" as const,
   selectedClass: "",
   reminder: null,

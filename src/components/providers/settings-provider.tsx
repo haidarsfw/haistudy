@@ -4,6 +4,7 @@ import { createContext, useState, useEffect, useCallback, useRef, type ReactNode
 import { useSession } from "@/components/providers/session-provider";
 import { useTheme } from "@/components/providers/theme-provider";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
+import { normalizeFontId } from "@/lib/fonts";
 import type { UserSettings } from "@/types";
 
 const SETTINGS_KEY = "hs-settings";
@@ -14,7 +15,10 @@ function getLocalSettings(): UserSettings | null {
   if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(SETTINGS_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const s = JSON.parse(stored) as UserSettings;
+      return { ...s, font: normalizeFontId(s.font) };
+    }
 
     const dark = localStorage.getItem("dark");
     const theme = localStorage.getItem("theme");
@@ -24,7 +28,7 @@ function getLocalSettings(): UserSettings | null {
         ...DEFAULT_SETTINGS,
         darkMode: dark !== null ? JSON.parse(dark) : DEFAULT_SETTINGS.darkMode,
         theme: theme !== null ? JSON.parse(theme) : DEFAULT_SETTINGS.theme,
-        font: font !== null ? JSON.parse(font) : DEFAULT_SETTINGS.font,
+        font: normalizeFontId(font !== null ? JSON.parse(font) : DEFAULT_SETTINGS.font),
       };
     }
 

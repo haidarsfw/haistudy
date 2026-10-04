@@ -761,7 +761,7 @@ export interface PublicProfile {
 // Theme & font type unions
 export type ThemeId = "ocean" | "scholarly" | "espresso" | "forest" | "midnight" | "rosewood" | "stone" | "rose";
 // VIP fonts (lora/jetbrains/quicksand/merriweather) lazy-loaded on selection.
-export type FontId = "jakarta" | "inter" | "poppins" | "lora" | "jetbrains" | "quicksand" | "merriweather" | "times";
+export type FontId = "default" | "plusjakarta" | "inter" | "poppins" | "lora" | "jetbrains" | "quicksand" | "merriweather" | "times";
 
 export interface ThemeOption {
   id: ThemeId;
@@ -773,9 +773,6 @@ export interface FontOption {
   id: FontId;
   name: string;
   vip?: boolean; // requires VIP/admin tier
-  // Google Fonts family + CSS var for lazy injection (VIP fonts only)
-  googleFamily?: string;
-  cssVar?: string;
 }
 
 // ============================================

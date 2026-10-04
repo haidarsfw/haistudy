@@ -3,8 +3,9 @@ import {
   createServerClient,
   isSupabaseServerConfigured,
 } from "@/lib/supabase/server";
-import type { UserSettings, SubjectProgress, ThemeId, FontId, CustomAccent, UserHighlight } from "@/types";
+import type { UserSettings, SubjectProgress, ThemeId, CustomAccent, UserHighlight } from "@/types";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
+import { normalizeFontId } from "@/lib/fonts";
 import { getCaller } from "@/lib/auth/session-license";
 import { accountColumns } from "@/lib/auth/account-link";
 
@@ -12,7 +13,8 @@ function mapRowToSettings(data: Record<string, unknown>): UserSettings {
   return {
     darkMode: (data.dark_mode as boolean) ?? DEFAULT_SETTINGS.darkMode,
     theme: (data.theme as ThemeId) ?? DEFAULT_SETTINGS.theme,
-    font: (data.font as FontId) ?? DEFAULT_SETTINGS.font,
+    // Rows from before October 2026 say "jakarta", the old default.
+    font: normalizeFontId(data.font),
     language: (data.language as "id" | "en") ?? DEFAULT_SETTINGS.language,
     selectedClass: (data.selected_class as string) ?? "",
     reminder: (data.reminder as UserSettings["reminder"]) ?? null,

@@ -96,7 +96,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-jetbrains);
   --font-heading: var(--font-heading);
   --font-serif: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -960,67 +960,98 @@ details.faq-smooth[open] {
 }
 
 /* ============================================
-   Font data-attribute selectors (CSS fallback)
+   Font picks from Settings. Stacks mirror FONT_STACK in src/lib/fonts.ts, and
+   theme-init sets the same --font-sans before first paint. "default" needs no
+   rule: it is the body face itself. Headings stay Onest whatever the pick.
    ============================================ */
 
-html[data-font="jakarta"] {
-  --font-sans: var(--font-heading), sans-serif !important;
+html[data-font="plusjakarta"] {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif !important;
 }
-html[data-font="jakarta"] body {
-  font-family: var(--font-heading), sans-serif !important;
+html[data-font="plusjakarta"] body {
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif !important;
 }
 
 html[data-font="inter"] {
-  --font-sans: var(--font-body), sans-serif !important;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif !important;
 }
 html[data-font="inter"] body {
-  font-family: var(--font-body), sans-serif !important;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif !important;
 }
 
 html[data-font="poppins"] {
-  --font-sans: var(--font-poppins), sans-serif !important;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif !important;
 }
 html[data-font="poppins"] body {
-  font-family: var(--font-poppins), sans-serif !important;
-}
-
-/* VIP fonts - lazy-loaded from Google Fonts via lazy-fonts.ts. Family stacks
-   must match FAMILY_STACK in src/lib/lazy-fonts.ts. Without these rules the
-   <link> injects but nothing applies the family. */
-html[data-font="lora"] {
-  --font-sans: "Lora", Georgia, serif !important;
-}
-html[data-font="lora"] body {
-  font-family: "Lora", Georgia, serif !important;
-}
-
-html[data-font="jetbrains"] {
-  --font-sans: "JetBrains Mono", ui-monospace, monospace !important;
-}
-html[data-font="jetbrains"] body {
-  font-family: "JetBrains Mono", ui-monospace, monospace !important;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif !important;
 }
 
 html[data-font="quicksand"] {
-  --font-sans: "Quicksand", system-ui, sans-serif !important;
+  --font-sans: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif !important;
 }
 html[data-font="quicksand"] body {
-  font-family: "Quicksand", system-ui, sans-serif !important;
+  font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif !important;
+}
+
+html[data-font="lora"] {
+  --font-sans: var(--font-lora), Georgia, serif !important;
+}
+html[data-font="lora"] body {
+  font-family: var(--font-lora), Georgia, serif !important;
 }
 
 html[data-font="merriweather"] {
-  --font-sans: "Merriweather", Georgia, serif !important;
+  --font-sans: var(--font-merriweather), Georgia, serif !important;
 }
 html[data-font="merriweather"] body {
-  font-family: "Merriweather", Georgia, serif !important;
+  font-family: var(--font-merriweather), Georgia, serif !important;
 }
 
-/* Times New Roman - system serif, no webfont. */
+html[data-font="jetbrains"] {
+  --font-sans: var(--font-jetbrains), ui-monospace, monospace !important;
+}
+html[data-font="jetbrains"] body {
+  font-family: var(--font-jetbrains), ui-monospace, monospace !important;
+}
+
 html[data-font="times"] {
-  --font-sans: "Times New Roman", Times, serif !important;
+  --font-sans: "HS Times", "Times New Roman", Times, serif !important;
 }
 html[data-font="times"] body {
-  font-family: "Times New Roman", Times, serif !important;
+  font-family: "HS Times", "Times New Roman", Times, serif !important;
+}
+
+/* Times New Roman is a system font, so next/font cannot size it. "HS Times" is
+   the same local file with the size-adjust every other pick gets in
+   layout.tsx (x-height 0.447 em up to 0.546 em). Real bold and italic faces
+   are named so the browser does not fake them. */
+@font-face {
+  font-family: "HS Times";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT");
+  font-weight: 400;
+  font-style: normal;
+  size-adjust: 122.1%;
+}
+@font-face {
+  font-family: "HS Times";
+  src: local("Times New Roman Bold"), local("TimesNewRomanPS-BoldMT");
+  font-weight: 700;
+  font-style: normal;
+  size-adjust: 122.1%;
+}
+@font-face {
+  font-family: "HS Times";
+  src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT");
+  font-weight: 400;
+  font-style: italic;
+  size-adjust: 122.1%;
+}
+@font-face {
+  font-family: "HS Times";
+  src: local("Times New Roman Bold Italic"), local("TimesNewRomanPS-BoldItalicMT");
+  font-weight: 700;
+  font-style: italic;
+  size-adjust: 122.1%;
 }
 
 /* ============================================
@@ -1592,7 +1623,7 @@ html.tts-bar-open .tts-shift-target {
   color-scheme: light;
   /* (overflow-anchor is set inline in landing-shell — Lightning CSS strips it
      from here.) */
-  --font-display: var(--font-heading); /* Plus Jakarta Sans — General Sans was tried and rejected (read wrong on the wordmark) */
+  --font-display: var(--font-heading); /* Onest, the owner's pick of 2026-10-04. General Sans was tried in July and rejected: it read wrong on the wordmark. */
 
   --brand-1: #10b981;
   --brand-2: #047857;

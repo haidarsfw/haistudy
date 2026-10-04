@@ -17,19 +17,58 @@ import "./globals.css";
 
 // Self-hosted (src/app/fonts, SIL Open Font License). next/font/google fetched
 // these from Google at BUILD time, so a slow or failed download failed the
-// whole Vercel build (701350b). Same families, same latin subset, same CSS
-// variables; variable-weight files where Google serves one.
+// whole Vercel build (701350b). Latin subset, variable-weight files where
+// Google serves one.
+//
+// Every face carries a size-adjust that makes its lowercase letters as tall as
+// Inter's (0.546 em; headings: Plus Jakarta Sans's 0.536 em), so text keeps the
+// size it had and a font picked in Settings changes letter shapes, not size.
+// Measured from these exact files on 2026-10-04: recompute if a file changes.
+// The font-family stack per pick lives in src/lib/fonts.ts.
 
-const jakartaSans = localFont({
-  src: [{ path: "./fonts/plus-jakarta-sans-latin-wght.woff2", weight: "500 700", style: "normal" }],
+// haistudy's own pair: Onest for headings, Golos Text for everything else.
+const onest = localFont({
+  src: [{ path: "./fonts/onest-latin-wght.woff2", weight: "400 800", style: "normal" }],
   variable: "--font-heading",
   display: "swap",
+  declarations: [{ prop: "size-adjust", value: "101.7%" }],
+});
+
+const golosText = localFont({
+  src: [{ path: "./fonts/golos-text-latin-wght.woff2", weight: "400 800", style: "normal" }],
+  variable: "--font-body",
+  display: "swap",
+  declarations: [{ prop: "size-adjust", value: "103%" }],
+});
+
+// Timers, keys and links; also the "JetBrains Mono" pick in Settings.
+const jetbrainsMono = localFont({
+  src: [{ path: "./fonts/jetbrains-mono-latin-wght.woff2", weight: "400 700", style: "normal" }],
+  variable: "--font-jetbrains",
+  display: "swap",
+  preload: false,
+  // Arial metrics would size a monospace face wrongly; fall back to the
+  // system's own monospace instead.
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+  declarations: [{ prop: "size-adjust", value: "99.3%" }],
+});
+
+// Faces a user can pick in Settings. preload: false, so nobody downloads a
+// face they did not choose.
+const plusJakarta = localFont({
+  src: [{ path: "./fonts/plus-jakarta-sans-latin-wght.woff2", weight: "500 700", style: "normal" }],
+  variable: "--font-jakarta",
+  display: "swap",
+  preload: false,
+  declarations: [{ prop: "size-adjust", value: "101.9%" }],
 });
 
 const inter = localFont({
   src: [{ path: "./fonts/inter-latin-wght.woff2", weight: "400 700", style: "normal" }],
-  variable: "--font-body",
+  variable: "--font-inter",
   display: "swap",
+  preload: false,
 });
 
 const poppins = localFont({
@@ -40,18 +79,44 @@ const poppins = localFont({
   ],
   variable: "--font-poppins",
   display: "swap",
-  // Only users who explicitly pick Poppins trigger the font fetch via CSS
   preload: false,
+  declarations: [{ prop: "size-adjust", value: "99.6%" }],
 });
 
-const geistMono = localFont({
-  src: [{ path: "./fonts/geist-mono-latin-wght.woff2", weight: "400 600", style: "normal" }],
-  variable: "--font-geist-mono",
+const quicksand = localFont({
+  src: [{ path: "./fonts/quicksand-latin-wght.woff2", weight: "400 700", style: "normal" }],
+  variable: "--font-quicksand",
   display: "swap",
-  // Arial metrics would size a monospace face wrongly; fall back to the
-  // system's own monospace instead.
-  adjustFontFallback: false,
-  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+  preload: false,
+  declarations: [{ prop: "size-adjust", value: "105.8%" }],
+});
+
+// The two serif picks ship real italics: summaries lean on italic text, and a
+// slanted serif roman reads as broken.
+const lora = localFont({
+  src: [
+    { path: "./fonts/lora-latin-wght.woff2", weight: "400 700", style: "normal" },
+    { path: "./fonts/lora-latin-wght-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  variable: "--font-lora",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Times New Roman",
+  fallback: ["Georgia", "serif"],
+  declarations: [{ prop: "size-adjust", value: "109.2%" }],
+});
+
+const merriweather = localFont({
+  src: [
+    { path: "./fonts/merriweather-latin-wght.woff2", weight: "400 700", style: "normal" },
+    { path: "./fonts/merriweather-latin-wght-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  variable: "--font-merriweather",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Times New Roman",
+  fallback: ["Georgia", "serif"],
+  declarations: [{ prop: "size-adjust", value: "98.3%" }],
 });
 
 export const viewport: Viewport = {
@@ -150,7 +215,7 @@ export default function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${jakartaSans.variable} ${inter.variable} ${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${onest.variable} ${golosText.variable} ${jetbrainsMono.variable} ${plusJakarta.variable} ${inter.variable} ${poppins.variable} ${quicksand.variable} ${lora.variable} ${merriweather.variable} h-full antialiased`}
     >
       <head>
         <link rel="preconnect" href="https://gvjwxccwuyuhgexypgbn.supabase.co" />

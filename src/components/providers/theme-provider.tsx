@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { ThemeId, FontId, CustomAccent } from "@/types";
 import { DEFAULT_SETTINGS, THEMES, FONTS } from "@/lib/constants";
-import { ensureFontLoaded, fontFamilyStack } from "@/lib/lazy-fonts";
+import { fontFamilyStack, normalizeFontId } from "@/lib/fonts";
 import { accentToCss } from "@/lib/theme-init";
 
 interface ThemeContextValue {
@@ -76,7 +76,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setDarkState(getStoredValue("dark", DEFAULT_SETTINGS.darkMode));
     setThemeState(getStoredValue("theme", DEFAULT_SETTINGS.theme));
-    setFontState(getStoredValue("font", DEFAULT_SETTINGS.font));
+    setFontState(normalizeFontId(getStoredValue<unknown>("font", DEFAULT_SETTINGS.font)));
     setCustomAccentState(getStoredValue<CustomAccent | null>("customAccent", null));
     setDarkModeScheduleState(getStoredValue("darkModeSchedule", DEFAULT_SETTINGS.darkModeSchedule));
   }, []);
@@ -109,7 +109,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute("data-font", font);
-    ensureFontLoaded(font);
     root.style.setProperty("--font-sans", fontFamilyStack(font));
   }, [font]);
 
@@ -143,9 +142,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setFont = useCallback((value: FontId) => {
-    if (!FONTS.some((f) => f.id === value)) return;
-    setFontState(value);
-    localStorage.setItem("font", JSON.stringify(value));
+    // Server rows can still say "jakarta" (the old default): read it as default.
+    const id = normalizeFontId(value);
+    if (!FONTS.some((f) => f.id === id)) return;
+    setFontState(id);
+    localStorage.setItem("font", JSON.stringify(id));
   }, []);
 
   const setCustomAccent = useCallback((accent: CustomAccent | null) => {

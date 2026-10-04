@@ -2,14 +2,13 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Lock, Crown } from "lucide-react";
-import { useEffect } from "react";
 import { toast } from "@/components/ui/toast";
 import { FONTS } from "@/lib/constants";
 import type { FontId } from "@/types";
 import { tapScale, scaleIn } from "@/lib/motion";
 import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";
-import { ensureFontLoaded } from "@/lib/lazy-fonts";
+import { FONT_STACK } from "@/lib/fonts";
 
 interface FontPickerProps {
   value: FontId;
@@ -17,29 +16,8 @@ interface FontPickerProps {
   onChange: (font: FontId) => void;
 }
 
-// Inline font-family stack so each option's label renders in its own font,
-// even before the data-font global rule applies. VIP fonts use the lazy stack.
-const fontPreviewStyle: Record<FontId, string> = {
-  jakarta: "var(--font-heading), sans-serif",
-  inter: "var(--font-body), sans-serif",
-  poppins: "var(--font-poppins), sans-serif",
-  lora: '"Lora", Georgia, serif',
-  jetbrains: '"JetBrains Mono", ui-monospace, monospace',
-  quicksand: '"Quicksand", system-ui, sans-serif',
-  merriweather: '"Merriweather", Georgia, serif',
-  times: '"Times New Roman", Times, serif',
-};
-
 export function FontPicker({ value, canUseVip, onChange }: FontPickerProps) {
   const { t } = useTranslation();
-
-  // Preload the VIP font stylesheets so the in-picker previews actually render
-  // in-font. Cheap + idempotent; only injects each <link> once.
-  useEffect(() => {
-    for (const font of FONTS) {
-      if (font.vip) ensureFontLoaded(font.id);
-    }
-  }, []);
 
   return (
     <div className="space-y-2">
@@ -60,7 +38,8 @@ export function FontPicker({ value, canUseVip, onChange }: FontPickerProps) {
                 onChange(font.id);
               }}
               whileTap={tapScale}
-              style={{ fontFamily: fontPreviewStyle[font.id] }}
+              // Each name is set in its own face; opening the picker fetches them.
+              style={{ fontFamily: FONT_STACK[font.id] }}
               className={`relative flex items-center justify-center rounded-lg border px-6 py-2 text-sm min-h-[40px] transition-colors ${
                 value === font.id
                   ? "border-primary bg-primary/5"
