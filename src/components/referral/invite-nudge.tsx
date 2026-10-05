@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Copy, Users } from "lucide-react";
+import { Check, Copy, Users } from "@/components/ui/icons";
 
 import {
   Dialog,

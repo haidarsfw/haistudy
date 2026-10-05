@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { staggerContainer, staggerItem } from "@/lib/motion";

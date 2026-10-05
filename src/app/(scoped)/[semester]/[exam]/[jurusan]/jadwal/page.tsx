@@ -9,7 +9,7 @@ import {
   BookOpen,
   ExternalLink,
   ClipboardList,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { Schedule, Subject } from "@/types";
 import { ExamCountdown } from "@/components/dashboard/exam-countdown";
 import { useTranslation } from "@/components/providers/language-provider";

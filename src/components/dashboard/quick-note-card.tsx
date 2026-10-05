@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { StickyNote, Cloud, CloudOff } from "lucide-react";
+import { StickyNote, Cloud, CloudOff } from "@/components/ui/icons";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";

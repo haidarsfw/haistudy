@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Table as TableIcon } from "lucide-react";
+import { Table as TableIcon } from "@/components/ui/icons";
 import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";

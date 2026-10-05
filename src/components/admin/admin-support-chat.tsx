@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Bell, BellOff, CheckCircle2, MessageCircle } from "lucide-react";
+import { ArrowLeft, Bell, BellOff, CheckCircle2, MessageCircle } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 import { sounds } from "@/lib/sounds";

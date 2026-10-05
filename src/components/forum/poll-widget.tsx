@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, CheckCircle2, Shield, Crown, Gem } from "lucide-react";
+import { Trash2, CheckCircle2, Shield, Crown, Gem } from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";

@@ -9,7 +9,7 @@ import {
   Timer,
   TimerOff,
   Trophy,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import type { QuizQuestion } from "@/types";
 import { parseInline } from "@/lib/content-parser";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/ui/icons";
 import { SUPPORT_DEFAULT_REACTIONS } from "@/lib/constants";
 import { SupportEmojiPicker } from "./support-emoji-picker";
 

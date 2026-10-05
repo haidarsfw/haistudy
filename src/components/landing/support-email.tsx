@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/ui/icons";
 
 // The public support address isn't provisioned yet. We still SHOW the
 // professional address, but a click opens a small note explaining it's not live

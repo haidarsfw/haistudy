@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Camera, Check, Loader2, Trash2, User } from "lucide-react";
+import { Camera, Check, Loader2, Trash2, User } from "@/components/ui/icons";
 
 // The same circular cropper the in-app profile uses. Lazy so react-easy-crop
 // never reaches anyone who does not open it.

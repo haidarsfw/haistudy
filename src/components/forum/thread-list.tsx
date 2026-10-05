@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { MessageSquare, Lock, Shield, Crown, Gem, Plus, Pin } from "lucide-react";
+import { MessageSquare, Lock, Shield, Crown, Gem, Plus, Pin } from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

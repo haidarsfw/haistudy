@@ -1,6 +1,6 @@
 "use client";
 
-import { Mic } from "lucide-react";
+import { Mic } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useVoiceRoom } from "@/hooks/use-voice-room";
 

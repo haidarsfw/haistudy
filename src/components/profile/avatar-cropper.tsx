@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Cropper from "react-easy-crop";
 import type { Area, Point } from "react-easy-crop";
 import { motion } from "framer-motion";
-import { Loader2, X, ZoomIn } from "lucide-react";
+import { Loader2, X, ZoomIn } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/components/providers/language-provider";

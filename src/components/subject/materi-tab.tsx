@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ExternalLink, FileText, Presentation, X, Loader2, BookOpenCheck } from "lucide-react";
+import { ExternalLink, FileText, Presentation, X, Loader2, BookOpenCheck } from "@/components/ui/icons";
 import type { MateriItem } from "@/types";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Loader2, Send, Pencil, GraduationCap } from "lucide-react";
+import { Loader2, Send, Pencil, GraduationCap } from "@/components/ui/icons";
 import {
   Popover,
   PopoverContent,

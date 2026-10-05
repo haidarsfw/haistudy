@@ -9,13 +9,14 @@ import {
   Factory, Truck, Calculator, Gauge, Wrench, ClipboardList, Table, Receipt,
   DollarSign, FileSpreadsheet, Bot, Cpu, Network, MessageSquare, Image, Lightbulb,
   Target, Layers, Clock, ShoppingCart, BadgeCheck,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { fadeInUp, tapScale } from "@/lib/motion";
 
-// Content carries lucide icon names; resolve to a component (fallback Sparkles).
-const ICONS: Record<string, LucideIcon> = {
+// Content names its icons by component name ("Brain", "Shield"); resolve to a
+// component from the app's icon set (fallback Sparkles).
+const ICONS: Record<string, IconComponent> = {
   Shield, Lock, Scale, Gavel, Eye, Wifi, Globe, FlaskConical, Dna, Users,
   ListChecks, Home, Megaphone, ShieldAlert, AlertTriangle, Brain, HeartCrack,
   EyeOff, Leaf, TrendingUp, TrendingDown, Recycle, Sprout, Handshake, ShieldCheck,
@@ -25,7 +26,7 @@ const ICONS: Record<string, LucideIcon> = {
   BadgeCheck, Sparkles, Flag,
 };
 
-export function iconFor(name?: string): LucideIcon {
+export function iconFor(name?: string): IconComponent {
   return (name && ICONS[name]) || Sparkles;
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { toast } from "@/components/ui/toast";
-import { Crown } from "lucide-react";
+import { Crown } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 
 // Listens for the `hs:vip-online` event dispatched by useOnlineUsers when a

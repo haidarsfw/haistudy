@@ -16,7 +16,7 @@ import {
   RefreshCw,
   Loader2,
   CheckCircle2,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { ExamData, ExamGradingResult } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";

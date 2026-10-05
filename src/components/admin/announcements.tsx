@@ -27,14 +27,14 @@ import {
   AlertTriangle,
   Wrench,
   Bell,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 import type { Announcement } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeCompact } from "@/components/admin/scope-dropdown-content";
-import { Lock } from "lucide-react";
+import { Lock } from "@/components/ui/icons";
 
 type ScopedAnnouncement = Announcement & {
   semester?: number;

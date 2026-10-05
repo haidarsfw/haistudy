@@ -22,7 +22,7 @@ import {
   Pencil,
   Loader2,
   Lock,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { scopeKey, scopeFullLabel } from "@/lib/scope";

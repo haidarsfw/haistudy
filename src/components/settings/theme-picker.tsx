@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check } from "@/components/ui/icons";
 import { THEMES } from "@/lib/constants";
 import type { ThemeId } from "@/types";
 import { tapScale, scaleIn } from "@/lib/motion";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, ArrowRight } from "lucide-react";
+import { Star, ArrowRight } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useAccount } from "@/hooks/use-account";

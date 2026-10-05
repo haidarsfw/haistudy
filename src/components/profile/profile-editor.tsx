@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
-import { Camera, Loader2, Save, Trash2 } from "lucide-react";
+import { Camera, Loader2, Save, Trash2 } from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

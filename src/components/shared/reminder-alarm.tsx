@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X } from "lucide-react";
+import { Bell, X } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 
 interface ReminderAlarmProps {

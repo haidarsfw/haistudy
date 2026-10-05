@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import {
   ALL_EMOJIS,

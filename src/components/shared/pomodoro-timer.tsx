@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Play, Pause, RotateCcw, Timer } from "lucide-react";
+import { Play, Pause, RotateCcw, Timer } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { sounds } from "@/lib/sounds";
 

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { popupOverlay, popupPanel } from "@/lib/motion";
-import { X, Check, Upload, Loader2, Copy, Sparkles, Ticket, Download } from "lucide-react";
+import { X, Check, Upload, Loader2, Copy, Sparkles, Ticket, Download } from "@/components/ui/icons";
 import { QUOTA_PACKS } from "@/lib/exam/quota";
 import { PAYMENT_ACCOUNTS, WA_ADMIN } from "@/lib/payments";
 import { compressImageToBudget } from "@/lib/image";

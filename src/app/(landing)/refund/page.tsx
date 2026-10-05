@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "@/components/ui/icons";
 import { Faq } from "@/components/landing/faq";
 import { SupportEmail } from "@/components/landing/support-email";
 import { REFUND_FAQ } from "@/data/landing/refund";

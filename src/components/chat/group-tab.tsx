@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { CircleHelp, GraduationCap, Loader2, Send, Trash2, Users, X } from "lucide-react";
+import { CircleHelp, GraduationCap, Loader2, Send, Trash2, Users, X } from "@/components/ui/icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

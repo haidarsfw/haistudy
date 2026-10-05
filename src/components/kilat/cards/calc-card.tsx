@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calculator, ChevronRight } from "lucide-react";
+import { Calculator, ChevronRight } from "@/components/ui/icons";
 import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";

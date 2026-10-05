@@ -15,8 +15,8 @@ import {
   NotebookText,
   MessageSquareText,
   CalendarClock,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/ui/icons";
 import { openChatToMessage, openDmTo } from "@/lib/events";
 import type { Notification } from "@/types";
 
@@ -55,7 +55,7 @@ export function isInteractiveNotification(n: Notification): boolean {
   return false;
 }
 
-export function notificationIcon(n: Notification): LucideIcon {
+export function notificationIcon(n: Notification): IconComponent {
   switch (n.type) {
     case "mention":
     case "mention_all":
@@ -94,7 +94,7 @@ export function notificationIcon(n: Notification): LucideIcon {
   }
 }
 
-export function contextIcon(n: Notification): LucideIcon | null {
+export function contextIcon(n: Notification): IconComponent | null {
   switch (n.context) {
     case "chat":
       return MessageCircle;

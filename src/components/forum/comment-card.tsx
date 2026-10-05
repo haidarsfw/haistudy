@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import { Reply, Trash2, Shield, Crown, Gem } from "lucide-react";
+import { Reply, Trash2, Shield, Crown, Gem } from "@/components/ui/icons";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";

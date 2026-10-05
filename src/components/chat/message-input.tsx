@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, type ClipboardEvent } from "react";
-import { Send, ImagePlus, X, Mic, Loader2 } from "lucide-react";
+import { Send, ImagePlus, X, Mic, Loader2 } from "@/components/ui/icons";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

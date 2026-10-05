@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Lock, Crown } from "lucide-react";
+import { Check, Lock, Crown } from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import { FONTS } from "@/lib/constants";
 import type { FontId } from "@/types";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Music, Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Volume2, VolumeX } from "lucide-react";
+import { Music, Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Volume2, VolumeX } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMusic } from "@/components/providers/music-provider";

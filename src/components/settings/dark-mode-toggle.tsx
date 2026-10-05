@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun, Clock } from "lucide-react";
+import { Moon, Sun, Clock } from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";

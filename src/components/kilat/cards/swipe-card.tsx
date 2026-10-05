@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Check, X, ThumbsUp, ThumbsDown } from "@/components/ui/icons";
 import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";

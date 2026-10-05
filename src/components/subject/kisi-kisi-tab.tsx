@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState, useEffect, useCallback } from "react";
-import { ChevronDown, ChevronRight, CheckCircle2, Monitor, FileText, ExternalLink, X, Loader2, ClipboardList } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle2, Monitor, FileText, ExternalLink, X, Loader2, ClipboardList } from "@/components/ui/icons";
 import type { KisiKisiItem, KisiKisiAttachment } from "@/types";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { SupportSearchHit } from "@/types";

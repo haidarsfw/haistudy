@@ -29,7 +29,7 @@ import {
   ChevronDown,
   MailWarning,
   Clock,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import type { PurchaseRequest } from "@/types";
 import { formatDistanceToNow } from "date-fns";

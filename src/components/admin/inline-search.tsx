@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, X } from "lucide-react";
+import { Search, X } from "@/components/ui/icons";
 
 /**
  * Small search icon that expands into an inline text field. Used in each

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { StickyNote, BookOpen, Save, Loader2, Cloud, CloudOff, Eye, Pencil } from "lucide-react";
+import { StickyNote, BookOpen, Save, Loader2, Cloud, CloudOff, Eye, Pencil } from "@/components/ui/icons";
 import Link from "next/link";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { Bookmark, CalendarClock, CalendarPlus, Check, ChevronDown, ListPlus, Loader2, MapPin, Users } from "lucide-react";
+import { Bookmark, CalendarClock, CalendarPlus, Check, ChevronDown, ListPlus, Loader2, MapPin, Users } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";

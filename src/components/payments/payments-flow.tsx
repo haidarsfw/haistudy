@@ -15,7 +15,7 @@ import {
   Wallet,
   Home,
   MessageCircle,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import {
   Dialog,

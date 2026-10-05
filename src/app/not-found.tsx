@@ -1,4 +1,4 @@
-import { Compass } from "lucide-react";
+import { Compass } from "@/components/ui/icons";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { parseScopeKey, scopePath, DEFAULT_SCOPE } from "@/lib/scope";

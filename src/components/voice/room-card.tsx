@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Users, LogIn, Loader2, Lock, Unlock, User, Settings, Trash2, Crown } from "lucide-react";
+import { Users, LogIn, Loader2, Lock, Unlock, User, Settings, Trash2, Crown } from "@/components/ui/icons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";
 import { useSession } from "@/components/providers/session-provider";

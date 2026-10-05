@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pin, ChevronDown, ChevronUp } from "lucide-react";
+import { Pin, ChevronDown, ChevronUp } from "@/components/ui/icons";
 import type { ChatMessage } from "@/types";
 
 interface PinnedMessagesProps {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, List } from "lucide-react";
+import { ChevronRight, List } from "@/components/ui/icons";
 import type { ExamAnswerSlot } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 

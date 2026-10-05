@@ -12,7 +12,7 @@ import {
   BookMarked,
   Calculator,
   AlertTriangle,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type {
   ExamData,
   ExamQuestion,

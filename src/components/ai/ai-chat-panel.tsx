@@ -15,7 +15,7 @@ import {
   FileText,
   FileCode,
   FileType,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { toast } from "@/components/ui/toast";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Clock, MailCheck, MessageCircle, UserPlus } from "lucide-react";
+import { AlertCircle, Clock, MailCheck, MessageCircle, UserPlus } from "@/components/ui/icons";
 
 import { AuthField, AuthSubmit } from "@/components/account/auth-field";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";

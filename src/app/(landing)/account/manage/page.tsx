@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { Download } from "@/components/ui/icons";
 
 import { AccountPane } from "@/components/account/account-chrome";
 import { AccountDeletion } from "@/components/account/account-extras";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, ChevronDown, Loader2, Plus } from "lucide-react";
+import { AlertCircle, ChevronDown, Loader2, Plus } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";

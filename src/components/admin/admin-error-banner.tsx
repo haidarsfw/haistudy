@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, RefreshCw, LogIn } from "lucide-react";
+import { AlertTriangle, RefreshCw, LogIn } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { AdminAuthError, adminErrorMessage } from "@/lib/admin/admin-fetch";
 

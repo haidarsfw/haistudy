@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { ExamData } from "@/types/exam";
 

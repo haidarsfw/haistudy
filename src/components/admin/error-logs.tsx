@@ -11,7 +11,7 @@ import {
   CheckCircle,
   Loader2,
   Trash2,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ErrorLog } from "@/types";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, ArrowLeft, Crown, ShieldCheck, Gem } from "lucide-react";
+import { Search, ArrowLeft, Crown, ShieldCheck, Gem } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useAvatars } from "@/hooks/use-avatars";
 import { UserAvatar } from "@/components/ui/user-avatar";

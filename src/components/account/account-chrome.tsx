@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, MailCheck, ShieldCheck, User } from "lucide-react";
+import { ArrowLeft, ChevronRight, MailCheck, ShieldCheck, User } from "@/components/ui/icons";
 
 import { SignOutButton } from "@/components/account/account-actions";
 import { Wordmark } from "@/components/landing/logo";

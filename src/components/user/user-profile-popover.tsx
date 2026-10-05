@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { getDeviceId } from "@/lib/auth/device";
-import { LogOut, Save, Loader2, Camera } from "lucide-react";
+import { LogOut, Save, Loader2, Camera } from "@/components/ui/icons";
 import { useRouter } from "next/navigation";
 import {
   Popover,

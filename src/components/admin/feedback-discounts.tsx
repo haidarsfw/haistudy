@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
-import { Loader2, MessageSquarePlus, Trash2 } from "lucide-react";
+import { Loader2, MessageSquarePlus, Trash2 } from "@/components/ui/icons";
 
 interface Row {
   email_lower: string;

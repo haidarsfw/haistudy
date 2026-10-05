@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progress";
 import { useScopedData } from "@/components/providers/scoped-data-provider";

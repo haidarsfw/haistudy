@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronUp, ChevronDown, Hand } from "lucide-react";
+import { ChevronUp, ChevronDown, Hand } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 
 export function KilatTutorial({ onDismiss }: { onDismiss: () => void }) {

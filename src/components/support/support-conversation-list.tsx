@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Clock, Loader2, MessageCircle, Search } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, MessageCircle, Search } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { ROLE_COLORS, resolveRole } from "@/lib/role-colors";
 import { sounds } from "@/lib/sounds";

@@ -35,11 +35,11 @@ import {
   Clock,
   Globe,
   List,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { ActivityLog } from "@/types";
-import type { LucideIcon } from "lucide-react";
+import type { IconComponent } from "@/components/ui/icons";
 import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
@@ -54,7 +54,7 @@ type ScopedActivityLog = ActivityLog & {
 interface ActionMeta {
   chip: string;
   bar: string;
-  Icon: LucideIcon;
+  Icon: IconComponent;
   label: string;
 }
 const ACTION_META: Record<string, ActionMeta> = {
@@ -588,7 +588,7 @@ function Field({
   label,
   children,
 }: {
-  icon: LucideIcon;
+  icon: IconComponent;
   label: string;
   children: ReactNode;
 }) {

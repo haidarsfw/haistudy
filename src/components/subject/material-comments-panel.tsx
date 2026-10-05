@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { Check, ChevronDown, Link2, Loader2, MessageSquare, Pencil, RotateCcw, SmilePlus, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, Link2, Loader2, MessageSquare, Pencil, RotateCcw, SmilePlus, Trash2, X } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";

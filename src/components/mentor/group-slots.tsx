@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";

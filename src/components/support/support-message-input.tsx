@@ -19,7 +19,7 @@ import {
   Loader2,
   Trash2,
   Lock,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTranslation } from "@/components/providers/language-provider";

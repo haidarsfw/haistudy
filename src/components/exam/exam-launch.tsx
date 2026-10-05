@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Clock, FileText, Award, History, ChevronRight, Lock, AlertCircle, Trash2, Ticket } from "lucide-react";
+import { PenLine, Clock, FileText, Award, History, ChevronRight, Lock, AlertCircle, Trash2, Ticket } from "@/components/ui/icons";
 import type { ExamData } from "@/types/exam";
 import { useExam } from "@/hooks/use-exam";
 import { useTranslation } from "@/components/providers/language-provider";

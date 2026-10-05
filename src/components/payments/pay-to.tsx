@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Download, Maximize2, QrCode } from "lucide-react";
+import { Copy, Download, Maximize2, QrCode } from "@/components/ui/icons";
 
 import {
   Dialog,

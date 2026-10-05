@@ -7,12 +7,12 @@ import {
   Bookmark,
   Moon,
   Sun,
-  BookOpen,
   Pause,
   SkipBack,
   SkipForward,
   ChevronDown,
-} from "lucide-react";
+  BookOpenReading,
+} from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { DemoCursor } from "@/components/landing/demo-cursor";
 
@@ -41,7 +41,7 @@ const READING: Record<Reading, { bg: string; fg: string }> = {
   paper: { bg: "#f4ecd8", fg: "#5b4636" },
 };
 
-/** Custom summary glyph (no lucide, no background box). */
+/** Custom summary glyph (not from the icon set, no background box). */
 function SummaryGlyph() {
   const id = useId();
   return (
@@ -59,7 +59,7 @@ function SummaryGlyph() {
 }
 
 /** Custom AI sparkle — a sharp 8-point twinkle (4 long + 4 short), thin centre,
- * brand gradient. Not a lucide icon, not the brand logo. */
+ * brand gradient. Not an icon-set glyph, not the brand logo. */
 function AIGlyph({ size = 18 }: { size?: number }) {
   const id = useId();
   return (
@@ -413,7 +413,7 @@ export function DemoRangkumanAI() {
               ) : reading === "light" ? (
                 <Sun className="h-4 w-4" />
               ) : (
-                <BookOpen className="h-4 w-4" />
+                <BookOpenReading className="h-4 w-4" />
               )}
             </button>
             <button

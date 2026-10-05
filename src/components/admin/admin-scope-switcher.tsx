@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRightLeft, ChevronDown, GraduationCap } from "lucide-react";
+import { ArrowRightLeft, ChevronDown, GraduationCap } from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/components/providers/session-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";

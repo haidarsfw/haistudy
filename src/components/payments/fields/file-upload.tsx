@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { UploadCloud, Loader2, X, ImageIcon } from "lucide-react";
+import { UploadCloud, Loader2, X, ImageIcon } from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import { compressImageToBudget } from "@/lib/image";
 import { useTranslation } from "@/components/providers/language-provider";

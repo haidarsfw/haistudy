@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { MessageSquarePlus, Send, CheckCircle2, ImagePlus, X, Loader2 } from "lucide-react";
+import { MessageSquarePlus, Send, CheckCircle2, ImagePlus, X, Loader2 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";

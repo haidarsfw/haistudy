@@ -40,7 +40,8 @@ import {
   Send,
   Timer,
   Music,
-} from "lucide-react";
+  BookOpenReading,
+} from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { BrowserWindow } from "@/components/landing/browser-window";
 import { LogoMark } from "@/components/landing/logo";
@@ -82,7 +83,7 @@ const NAV = [
 
 const SUBJECT_TABS = [
   { key: "materi", label: "Materi", icon: FileText },
-  { key: "rangkuman", label: "Rangkuman", icon: BookOpen },
+  { key: "rangkuman", label: "Rangkuman", icon: BookOpenReading },
   { key: "kilat", label: "Belajar Kilat", icon: Zap },
   { key: "latihan", label: "Latihan Soal", icon: PenLine },
   { key: "drill", label: "Drill", icon: Layers },

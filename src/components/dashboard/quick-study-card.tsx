@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Play, ArrowRight } from "lucide-react";
+import { Play, ArrowRight } from "@/components/ui/icons";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";

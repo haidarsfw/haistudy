@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { Check, Minus, X } from "lucide-react";
+import { Check, Minus, X } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/components/providers/language-provider";
 import { Wordmark } from "@/components/landing/logo";

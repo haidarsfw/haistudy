@@ -12,7 +12,7 @@ import {
   Highlighter,
   Mic,
   ArrowUp,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { LogoMark } from "@/components/landing/logo";
 import { cn } from "@/lib/utils";
 

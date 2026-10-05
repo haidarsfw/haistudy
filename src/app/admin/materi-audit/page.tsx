@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Check, X, Circle, Copy, Filter, Lock } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, X, Circle, Copy, Filter, Lock } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { loadCourses, loadContent } from "@/data";
 import type { MateriItem, Subject, SubjectContent } from "@/types";

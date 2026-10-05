@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { AlertTriangle, Trash2, Loader2 } from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 
 interface DangerAction {

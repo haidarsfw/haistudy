@@ -2,7 +2,7 @@
 
 import { createElement } from "react";
 import { motion } from "framer-motion";
-import { Flag, Quote } from "lucide-react";
+import { Flag, Quote } from "@/components/ui/icons";
 import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { scaleIn, fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
-import { Reply } from "lucide-react";
+import { Reply } from "@/components/ui/icons";
 
 interface Props {
   children: ReactNode;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Loader2, MailWarning } from "lucide-react";
+import { Loader2, MailWarning } from "@/components/ui/icons";
 
 /**
  * "Your e-mail is not confirmed yet", in the three sizes the flow needs.

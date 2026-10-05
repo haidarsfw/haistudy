@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { AlertCircle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, ShieldAlert } from "@/components/ui/icons";
 
 import { easeEnter, NAV } from "@/lib/motion";
 import { Wordmark } from "@/components/landing/logo";

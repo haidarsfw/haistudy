@@ -9,7 +9,7 @@ import {
   Pencil,
   Clock,
   ShieldAlert,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import type {

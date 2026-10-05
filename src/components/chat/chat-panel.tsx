@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, type PointerEvent as ReactPointerEvent } from "react";
-import { X, MessageCircle, Trash2, Crown, Lock, Send, UserCog, Users } from "lucide-react";
+import { X, MessageCircle, Trash2, Crown, Lock, Send, UserCog, Users } from "@/components/ui/icons";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Button } from "@/components/ui/button";

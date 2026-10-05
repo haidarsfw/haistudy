@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Menu, X, Globe, Headset, LogOut } from "lucide-react";
+import { Menu, X, Globe, Headset, LogOut } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useAccount } from "@/hooks/use-account";

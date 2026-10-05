@@ -23,7 +23,7 @@ import { ForumTab } from "@/components/forum/forum-tab";
 import { PreviewLock } from "@/components/shared/preview-lock";
 import { KilatLaunch } from "@/components/kilat/kilat-launch";
 import { ExamLaunch } from "@/components/exam/exam-launch";
-import { ChevronRight, Lightbulb, X } from "lucide-react";
+import { ChevronRight, Lightbulb, X } from "@/components/ui/icons";
 
 // YYYY-MM-DD in WIB (UTC+7). Gates the once-per-day tip dismissal.
 function tipTodayKey(): string {

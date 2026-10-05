@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Square, Play, Pause, Trash2, Send } from "lucide-react";
+import { Square, Play, Pause, Trash2, Send } from "@/components/ui/icons";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 

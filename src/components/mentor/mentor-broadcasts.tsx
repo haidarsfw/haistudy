@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone } from "lucide-react";
+import { Megaphone } from "@/components/ui/icons";
 
 interface Broadcast {
   id: string;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle } from "@/components/ui/icons";
 
 import { AuthCardHeader, AuthDivider } from "@/components/account/auth-shell";
 import {

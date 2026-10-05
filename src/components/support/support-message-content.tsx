@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ShieldAlert } from "lucide-react";
+import { CheckCircle2, ShieldAlert } from "@/components/ui/icons";
 import { AudioPlayer } from "@/components/chat/audio-player";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { SupportMessage } from "@/types";

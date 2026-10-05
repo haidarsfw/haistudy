@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { Bookmark, CalendarClock, CheckCircle2, Circle } from "lucide-react";
+import { Bookmark, CalendarClock, CheckCircle2, Circle } from "@/components/ui/icons";
 
 import { toast } from "@/components/ui/toast";
 import type { GroupModuleState, MarkStatus } from "@/lib/mentor/modules";

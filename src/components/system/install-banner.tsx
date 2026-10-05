@@ -6,12 +6,12 @@ import {
   Share,
   PlusSquare,
   Zap,
-  BookOpen,
   BellRing,
   Sparkles,
   MoreVertical,
   Smartphone,
-} from "lucide-react";
+  BookOpenReading,
+} from "@/components/ui/icons";
 import {
   Dialog,
   DialogContent,
@@ -217,7 +217,7 @@ export function InstallBanner() {
   const benefits = [
     { icon: Zap, text: t("pwa.benefit_fast") },
     { icon: BellRing, text: t("pwa.benefit_notif") },
-    { icon: BookOpen, text: t("pwa.benefit_readability") },
+    { icon: BookOpenReading, text: t("pwa.benefit_readability") },
     { icon: Sparkles, text: t("pwa.benefit_exclusive") },
   ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, X, SkipForward, Lock, Circle, Link2, RotateCcw, ListTree } from "lucide-react";
+import { Check, X, SkipForward, Lock, Circle, Link2, RotateCcw, ListTree } from "@/components/ui/icons";
 import type { KilatCard, KilatChapter } from "@/types";
 import { cn } from "@/lib/utils";
 import { springSmooth } from "@/lib/motion";

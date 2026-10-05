@@ -11,7 +11,7 @@ import {
   FileText,
   BookOpen as BookOpenIcon,
   ClipboardList,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

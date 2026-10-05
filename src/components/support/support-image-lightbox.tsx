@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 
 interface Props {

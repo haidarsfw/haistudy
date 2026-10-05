@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Mic, MicOff, PhoneOff, Monitor, MonitorOff, Headphones, HeadphoneOff } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Monitor, MonitorOff, Headphones, HeadphoneOff } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";
 

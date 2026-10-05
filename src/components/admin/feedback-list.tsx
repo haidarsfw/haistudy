@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquarePlus, CheckCircle2, Eye, Clock, Image as ImageIcon, Trash2 } from "lucide-react";
+import { MessageSquarePlus, CheckCircle2, Eye, Clock, Image as ImageIcon, Trash2 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "@/components/ui/icons";
 
 /**
  * The partner card: a branded, scannable QR a mentor can print, post, or send.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Save, Loader2, Cloud, CloudOff, Eye, Pencil } from "lucide-react";
+import { Save, Loader2, Cloud, CloudOff, Eye, Pencil } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";

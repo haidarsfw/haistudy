@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, LogOut } from "lucide-react";
+import { Lock, LogOut } from "@/components/ui/icons";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { Button } from "@/components/ui/button";

@@ -13,7 +13,7 @@ import {
   Timer,
   CalendarDays,
   Info,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,

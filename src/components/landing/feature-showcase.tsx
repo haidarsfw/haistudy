@@ -15,8 +15,8 @@ import {
   Bot,
   ArrowRight,
   User,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 
 /**
@@ -40,14 +40,14 @@ type Kind =
   | "focus"
   | "bookmark";
 
-const RECAP: { icon: LucideIcon; key: string }[] = [
+const RECAP: { icon: IconComponent; key: string }[] = [
   { icon: FileText, key: "landing.features.recap.rangkuman" },
   { icon: Zap, key: "landing.features.recap.kilat" },
   { icon: ListChecks, key: "landing.features.recap.latihan" },
   { icon: Bot, key: "landing.features.recap.ai" },
 ];
 
-const CARDS: { icon: LucideIcon; kind: Kind; titleKey: string; descKey: string }[] = [
+const CARDS: { icon: IconComponent; kind: Kind; titleKey: string; descKey: string }[] = [
   { icon: Megaphone, kind: "announce", titleKey: "landing.features.announce.title", descKey: "landing.features.announce.desc" },
   { icon: MessagesSquare, kind: "community", titleKey: "landing.features.community.title", descKey: "landing.features.community.desc" },
   { icon: Music, kind: "music", titleKey: "landing.features.music.title", descKey: "landing.features.music.desc" },

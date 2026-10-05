@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   Sun,
   Moon,
-  BookOpen,
   Maximize2,
   X,
   ChevronLeft,
@@ -16,7 +15,8 @@ import {
   Eraser,
   Sparkles,
   MessageSquare,
-} from "lucide-react";
+  BookOpenReading,
+} from "@/components/ui/icons";
 import { parseRangkuman } from "@/lib/content-parser";
 import { loadRangkuman } from "@/data";
 import { useScope } from "@/components/providers/scope-provider";
@@ -742,7 +742,7 @@ export function RangkumanTab({
             onClick={() => handleModeChange("sepia")}
             className={`rounded-md p-1.5 ${mode === "sepia" ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
           >
-            <BookOpen className="h-3.5 w-3.5" />
+            <BookOpenReading className="h-3.5 w-3.5" />
           </button>
           <div className="w-px bg-border mx-0.5" />
 
@@ -987,7 +987,7 @@ export function RangkumanTab({
                   className={`rounded-md p-1.5 transition-colors ${mode === "sepia" ? "bg-primary/15 text-primary" : "opacity-60 hover:opacity-100"}`}
                   title="Sepia"
                 >
-                  <BookOpen className="h-3.5 w-3.5" />
+                  <BookOpenReading className="h-3.5 w-3.5" />
                 </button>
 
                 <div className="w-px h-4 bg-current/15 mx-1" />

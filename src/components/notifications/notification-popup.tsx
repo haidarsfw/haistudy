@@ -3,7 +3,7 @@
 import { createElement, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X } from "@/components/ui/icons";
 import { notificationSpring } from "@/lib/motion";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { useTranslation } from "@/components/providers/language-provider";

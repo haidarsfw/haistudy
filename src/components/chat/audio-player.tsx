@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause } from "@/components/ui/icons";
 
 interface AudioPlayerProps {
   src: string;

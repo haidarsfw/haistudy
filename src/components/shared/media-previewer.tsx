@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Download } from "lucide-react";
+import { X, Download } from "@/components/ui/icons";
 
 interface MediaPreviewerProps {
   src: string | null;

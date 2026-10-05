@@ -16,7 +16,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { KeyRound, Loader2, AlertCircle, Gift, Eye, EyeOff } from "lucide-react";
+import { KeyRound, Loader2, AlertCircle, Gift, Eye, EyeOff } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

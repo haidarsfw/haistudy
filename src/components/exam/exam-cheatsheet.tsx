@@ -9,7 +9,7 @@ import {
   BookMarked,
   ZoomIn,
   ZoomOut,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { CheatSheet } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { isDismissedToday, dismissToday } from "@/lib/daily-dismiss";

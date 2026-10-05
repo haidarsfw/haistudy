@@ -11,7 +11,7 @@ import {
   UserCircle,
   Volume2,
   Bell,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import {
   Dialog,
@@ -39,7 +39,7 @@ import { Switch } from "@/components/ui/switch";
 import { APP_VERSION } from "@/lib/constants";
 import { isCropLocked } from "@/lib/crop-lock";
 import { getSoundMuted, setSoundMuted, sounds } from "@/lib/sounds";
-import { Download } from "lucide-react";
+import { Download } from "@/components/ui/icons";
 import { PWA_EVENTS, isStandalone } from "@/lib/pwa-version";
 
 interface SettingsModalProps {

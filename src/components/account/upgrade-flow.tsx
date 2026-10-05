@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Copy, Landmark, Loader2, Wallet } from "lucide-react";
+import { CheckCircle2, Copy, Landmark, Loader2, Wallet } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";

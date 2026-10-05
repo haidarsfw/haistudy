@@ -3,7 +3,6 @@
 import { memo } from "react";
 import {
   FileText,
-  BookOpen,
   List,
   Layers,
   HelpCircle,
@@ -14,7 +13,8 @@ import {
   Zap,
   PenLine,
   ScrollText,
-} from "lucide-react";
+  BookOpenReading,
+} from "@/components/ui/icons";
 import { sounds } from "@/lib/sounds";
 
 // Diktat (7) + Soal Ujian (8) sit right after Materi in display order but keep
@@ -28,7 +28,7 @@ export const SUBJECT_TABS = [
   { id: 10, label: "Latihan Soal", shortLabel: "Latihan", icon: PenLine },
   { id: 7, label: "Diktat", shortLabel: "Diktat", icon: BookMarked },
   { id: 8, label: "Soal Ujian", shortLabel: "Soal", icon: ClipboardList },
-  { id: 1, label: "Rangkuman", shortLabel: "Rangkum", icon: BookOpen },
+  { id: 1, label: "Rangkuman", shortLabel: "Rangkum", icon: BookOpenReading },
   { id: 2, label: "Kisi-Kisi", shortLabel: "Kisi", icon: List },
   // Protected cheat sheet (view-only, watermarked). Only shows for subjects
   // that ship a `cheatsheetFull` (currently opsmgmt). High id keeps existing

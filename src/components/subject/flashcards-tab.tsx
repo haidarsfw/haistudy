@@ -9,7 +9,7 @@ import {
   Check,
   PartyPopper,
   Monitor,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import type { FlashcardItem } from "@/types";
 import { parseInline } from "@/lib/content-parser";

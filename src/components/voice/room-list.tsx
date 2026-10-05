@@ -1,7 +1,7 @@
 "use client";
 
 import { RoomCard } from "./room-card";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/ui/icons";
 import type { VoiceRoom } from "@/types";
 
 interface RoomListProps {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Smartphone } from "lucide-react";
+import { Bell, X, Smartphone } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useWebPush } from "@/hooks/use-web-push";
 import { useSession } from "@/components/providers/session-provider";

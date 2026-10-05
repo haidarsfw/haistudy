@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, CheckCheck, Clock, AlertCircle } from "lucide-react";
+import { Check, CheckCheck, Clock, AlertCircle } from "@/components/ui/icons";
 import {
   Popover,
   PopoverContent,

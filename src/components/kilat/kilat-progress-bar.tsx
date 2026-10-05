@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, X, ListTree, RotateCcw, Bot } from "lucide-react";
+import { Star, X, ListTree, RotateCcw, Bot } from "@/components/ui/icons";
 import type { KilatCard, KilatChapter } from "@/types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/components/providers/language-provider";

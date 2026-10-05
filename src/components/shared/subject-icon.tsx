@@ -12,10 +12,10 @@ import {
   Users,
   Monitor,
   Briefcase,
-  type LucideProps,
-} from "lucide-react";
+  type IconProps,
+} from "@/components/ui/icons";
 
-const iconMap: Record<string, React.ComponentType<LucideProps>> = {
+const iconMap: Record<string, React.ComponentType<IconProps>> = {
   BarChart3,
   TrendingUp,
   Shield,
@@ -29,7 +29,7 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   Briefcase,
 };
 
-interface SubjectIconProps extends LucideProps {
+interface SubjectIconProps extends IconProps {
   icon: string;
 }
 

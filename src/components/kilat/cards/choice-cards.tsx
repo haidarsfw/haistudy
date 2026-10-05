@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Flag, Sparkles, ListChecks } from "lucide-react";
+import { Flag, Sparkles, ListChecks } from "@/components/ui/icons";
 import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";

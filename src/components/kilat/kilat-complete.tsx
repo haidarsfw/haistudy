@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { PartyPopper, RotateCcw, ArrowLeft, Star, Target, RefreshCw } from "lucide-react";
+import { PartyPopper, RotateCcw, ArrowLeft, Star, Target, RefreshCw } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { scaleIn, fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";

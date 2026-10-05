@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, X } from "lucide-react";
+import { RefreshCw, X } from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";

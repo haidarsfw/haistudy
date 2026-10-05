@@ -41,7 +41,7 @@ import {
   ChevronDown,
   ChevronRight,
   RotateCcw,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/components/ui/toast";
 import { LicenseForm } from "./license-form";

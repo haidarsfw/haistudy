@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Play, Timer, Shuffle, Monitor, Layers } from "lucide-react";
+import { Play, Timer, Shuffle, Monitor, Layers } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import type { QuizQuestion } from "@/types";
 import {

@@ -25,7 +25,7 @@ import {
   PanelRight,
   Maximize2,
   Info,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { isDismissedToday, dismissToday } from "@/lib/daily-dismiss";
 

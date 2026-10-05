@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Send, ImagePlus, X, Square, Brain } from "lucide-react";
+import { Send, ImagePlus, X, Square, Brain } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { usePreviewGuard } from "@/hooks/use-preview-guard";

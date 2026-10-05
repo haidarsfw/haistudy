@@ -9,8 +9,8 @@ import {
   Gem,
   GraduationCap,
   Share2,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/ui/icons";
 import { PACKAGES, formatIDR } from "@/lib/payments";
 import { useTranslation } from "@/components/providers/language-provider";
 import { ALL_FEATURES } from "@/data/landing/all-features";
@@ -82,7 +82,7 @@ const TIER: Record<
 };
 
 // Rank logo (keyed by PackageDef.icon).
-const ICON: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
+const ICON: Record<string, IconComponent> = { Share2, GraduationCap, Crown, Gem };
 
 // Exam-simulation quota per tier, read from the function that ENFORCES it.
 // The old comment claimed this was "display only — not wired to a backend

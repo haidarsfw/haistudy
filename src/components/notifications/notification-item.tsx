@@ -4,7 +4,7 @@ import { useCallback, createElement } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNowStrict } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { X } from "lucide-react";
+import { X } from "@/components/ui/icons";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import {

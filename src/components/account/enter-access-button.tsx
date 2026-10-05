@@ -11,7 +11,7 @@ import {
   MonitorSmartphone,
   Smartphone,
   Tablet,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 import { looksLikePrivateTab } from "@/lib/incognito";
 import { toast } from "@/components/ui/toast";

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Gift, X } from "lucide-react";
+import { Gift, X } from "@/components/ui/icons";
 import { useAccount } from "@/hooks/use-account";
 
 /**

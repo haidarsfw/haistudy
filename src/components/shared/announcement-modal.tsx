@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { popupOverlay, popupPanel } from "@/lib/motion";
-import { Megaphone, ArrowRight, X } from "lucide-react";
+import { Megaphone, ArrowRight, X } from "@/components/ui/icons";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { parseAnnouncementCta } from "@/lib/announcement-cta";
 import { useAnnouncements } from "@/hooks/use-announcements";

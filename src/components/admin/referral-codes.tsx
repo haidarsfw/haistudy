@@ -16,7 +16,7 @@ import {
   Trash2,
   Trophy,
   Wallet,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 interface Campaign {
   code: string;

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 
 interface Props {

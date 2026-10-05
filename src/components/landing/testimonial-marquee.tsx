@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Star } from "@/components/ui/icons";
 import {
   TESTIMONIALS,
   TESTIMONIAL_RATING,

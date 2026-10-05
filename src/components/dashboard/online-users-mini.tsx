@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Users, ChevronDown, Monitor, Smartphone, Tablet, Lock, X } from "lucide-react";
+import { Users, ChevronDown, Monitor, Smartphone, Tablet, Lock, X } from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnlineUsers } from "@/hooks/use-online-users";
 import { useSession } from "@/components/providers/session-provider";

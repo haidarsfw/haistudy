@@ -10,7 +10,7 @@ import {
   Volume2,
   ChevronDown,
   X,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { UseTTSReturn } from "@/hooks/use-tts";
 
 const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];

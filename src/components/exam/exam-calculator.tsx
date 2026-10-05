@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { motion, useDragControls } from "framer-motion";
-import { X, Calculator as CalcIcon, GripHorizontal } from "lucide-react";
+import { X, Calculator as CalcIcon, GripHorizontal } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { evaluate, formatResult } from "@/lib/exam/calc";
 

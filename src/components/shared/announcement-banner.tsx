@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { X, Info, AlertTriangle, Wrench, ArrowRight } from "lucide-react";
+import { X, Info, AlertTriangle, Wrench, ArrowRight } from "@/components/ui/icons";
 import { parseAnnouncementCta } from "@/lib/announcement-cta";
 import { useAnnouncements } from "@/hooks/use-announcements";
 import {

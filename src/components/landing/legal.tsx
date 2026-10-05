@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Instagram, Mail, MessageCircle } from "lucide-react";
+import { ArrowLeft, Instagram, Mail, MessageCircle } from "@/components/ui/icons";
 import { SupportEmail } from "@/components/landing/support-email";
 
 // Shared shell for the legal pages (/privacy, /terms). Standalone like /refund:

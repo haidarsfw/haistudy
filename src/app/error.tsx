@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { RotateCw, TriangleAlert } from "lucide-react";
+import { RotateCw, TriangleAlert } from "@/components/ui/icons";
 import { logError } from "@/lib/error-logging";
 
 /**

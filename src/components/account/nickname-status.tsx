@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "@/components/ui/icons";
 
 import { normalizeNickname, validateNickname } from "@/lib/account/nickname";
 import { easeEnter } from "@/lib/motion";

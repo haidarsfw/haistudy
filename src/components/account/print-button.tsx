@@ -1,6 +1,6 @@
 "use client";
 
-import { Printer } from "lucide-react";
+import { Printer } from "@/components/ui/icons";
 
 /**
  * Hands the page to the browser's print dialog, which is also where "Save as

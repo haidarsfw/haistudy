@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X } from "@/components/ui/icons";
 import type { ExamQuestion, ExamSubQuestion } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { ExamMarkdown } from "./exam-markdown";

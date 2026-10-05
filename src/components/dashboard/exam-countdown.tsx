@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle } from "@/components/ui/icons";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import {

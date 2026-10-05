@@ -7,7 +7,7 @@ import {
   Copy,
   Loader2,
   Wallet,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/payments";
@@ -24,9 +24,9 @@ import { MentorGroups } from "@/components/mentor/mentor-groups";
  * aktif datang untuk satu angka: berapa yang belum dibayar. Tiga pertanyaan
  * berbeda, tiga halaman berbeda.
  *
- * Ikon dari set yang sama dengan seluruh aplikasi (lucide): konsistensi di
- * dalam satu produk lebih berarti daripada menghindari pustaka yang populer,
- * dan tiap ikon di sini menandai hal yang nyata, bukan hiasan.
+ * Ikon dari set yang sama dengan seluruh aplikasi (Hugeicons, lewat
+ * @/components/ui/icons): satu keluarga di seluruh produk, dan tiap ikon di
+ * sini menandai hal yang nyata, bukan hiasan.
  */
 
 interface Band {

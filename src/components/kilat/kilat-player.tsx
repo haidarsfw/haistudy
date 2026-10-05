@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUp, ChevronUp, Trophy, SkipForward } from "lucide-react";
+import { ArrowUp, ChevronUp, Trophy, SkipForward } from "@/components/ui/icons";
 import type { KilatProgress, SubjectKilat } from "@/types";
 import { useKilat } from "./use-kilat";
 import { isGated } from "./kilat-types";

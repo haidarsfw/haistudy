@@ -7,8 +7,8 @@ import {
   Gem,
   Check,
   AlertTriangle,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import { formatIDR, MAX_DEVICES_ITEM, type PackageDef } from "@/lib/payments";
 import {
@@ -18,7 +18,7 @@ import {
 import { useTranslation } from "@/components/providers/language-provider";
 import { cn } from "@/lib/utils";
 
-const ICONS: Record<string, LucideIcon> = { Share2, GraduationCap, Crown, Gem };
+const ICONS: Record<string, IconComponent> = { Share2, GraduationCap, Crown, Gem };
 
 /**
  * Per-tier look — the SAME treatment the landing pricing settled on (see the

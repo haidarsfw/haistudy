@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check } from "@/components/ui/icons";
 import { tapScale, scaleIn } from "@/lib/motion";
 import { useTranslation } from "@/components/providers/language-provider";
 import { sounds } from "@/lib/sounds";

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ParticipantList } from "./participant-list";
 import { AudioControls } from "./audio-controls";
-import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2, X, Maximize2, Volume2, Clock } from "lucide-react";
+import { Headphones, HeadphoneOff, WifiOff, Monitor, Settings, Lock, Unlock, Trash2, X, Maximize2, Volume2, Clock } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "@/components/providers/language-provider";

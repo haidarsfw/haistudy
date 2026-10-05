@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pin, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Pin, ChevronDown, ChevronUp, X } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { SupportMessage, SupportPinnedMessage } from "@/types";

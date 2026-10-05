@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, BookmarkX, Trash2, Lock, Sparkles, GraduationCap, MessageSquarePlus } from "lucide-react";
+import { Bookmark, BookmarkX, Trash2, Lock, Sparkles, GraduationCap, MessageSquarePlus } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import type { HighlightColor, UserHighlight } from "@/types";
 

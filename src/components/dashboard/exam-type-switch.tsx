@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MapPin, ClipboardList } from "lucide-react";
+import { MapPin, ClipboardList } from "@/components/ui/icons";
 import type { ExamCategory } from "@/lib/countdown";
 
 interface ExamTypeSwitchProps {

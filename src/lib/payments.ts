@@ -1,7 +1,7 @@
 // ============================================
 // Payments config - single source of truth for /payments + pricing + admin
 // ============================================
-// Pure data + helpers only (no React / lucide) so the public API route
+// Pure data + helpers only (no React / icons) so the public API route
 // (/api/payments) and the client flow can both import it cheaply.
 
 import { AVAILABLE_SCOPES, PURCHASABLE_SCOPES } from "@/lib/scope";

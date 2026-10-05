@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import {

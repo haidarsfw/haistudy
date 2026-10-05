@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Maximize2, Download, FileCode2 } from "lucide-react";
+import { ExternalLink, Maximize2, Download, FileCode2 } from "@/components/ui/icons";
 import {
   detectMediaType,
   getYouTubeEmbedUrl,

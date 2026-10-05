@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LayoutDashboard, Loader2, User, LogOut } from "lucide-react";
+import { ChevronDown, LayoutDashboard, Loader2, User, LogOut } from "@/components/ui/icons";
 
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";

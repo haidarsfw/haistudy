@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/ui/icons";
 
 import { AccountPane } from "@/components/account/account-chrome";
 import { EnterAccessButton } from "@/components/account/enter-access-button";

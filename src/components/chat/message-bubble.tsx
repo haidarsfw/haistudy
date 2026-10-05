@@ -16,7 +16,7 @@ import {
   GraduationCap,
   CheckCheck,
   Volume2,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AudioPlayer } from "./audio-player";

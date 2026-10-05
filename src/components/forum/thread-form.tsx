@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { ImagePlus, Link2, X, Loader2, Paperclip, Youtube, FileText, Presentation, Globe } from "lucide-react";
+import { ImagePlus, Link2, X, Loader2, Paperclip, Youtube, FileText, Presentation, Globe } from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

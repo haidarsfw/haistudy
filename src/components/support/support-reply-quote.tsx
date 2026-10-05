@@ -1,6 +1,6 @@
 "use client";
 
-import { Reply } from "lucide-react";
+import { Reply } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 
 interface Props {

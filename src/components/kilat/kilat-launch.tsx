@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Zap, Star, Target, Play, RotateCcw, Check, Sparkles, Layers, Hand, BadgeCheck,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useScope } from "@/components/providers/scope-provider";

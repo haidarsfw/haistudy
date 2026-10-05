@@ -38,7 +38,7 @@ import {
   Headphones,
   Gift,
   Handshake,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 export const TABS = [
   { label: "Quick", icon: Zap, value: 0 },

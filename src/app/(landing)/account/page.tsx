@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle } from "@/components/ui/icons";
 
 import { AccountIndexList, AccountSidebar } from "@/components/account/account-chrome";
 import { WelcomeStrip } from "@/components/account/welcome-strip";

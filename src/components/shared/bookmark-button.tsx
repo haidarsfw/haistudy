@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark } from "lucide-react";
+import { Bookmark } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useBookmarks, type BookmarkItem } from "@/hooks/use-bookmarks";
 import { useTranslation } from "@/components/providers/language-provider";

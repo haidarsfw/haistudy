@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Copy, Gift, Loader2, MailWarning, ShieldAlert } from "lucide-react";
+import { Check, Copy, Gift, Loader2, MailWarning, ShieldAlert } from "@/components/ui/icons";
 import { ReferralQr } from "./referral-qr";
 
 import { easeSize } from "@/lib/motion";

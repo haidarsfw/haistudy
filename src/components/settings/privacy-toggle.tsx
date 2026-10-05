@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { EyeOff, Eye } from "lucide-react";
+import { EyeOff, Eye } from "@/components/ui/icons";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {

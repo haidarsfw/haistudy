@@ -1,6 +1,6 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
+import { Lightbulb } from "@/components/ui/icons";
 
 const TIPS = [
   "Gunakan teknik Pomodoro: belajar 25 menit, istirahat 5 menit. Ulangi 4x lalu istirahat panjang.",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/ui/icons";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
 import { FAQ, type FaqItem } from "@/data/landing/faq";
 

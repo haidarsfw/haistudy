@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, CalendarClock, Check, ChevronDown, Copy, FileText, Loader2, MessageCircle, Trash2, UserPlus, UserRound, Users } from "lucide-react";
+import { BarChart3, CalendarClock, Check, ChevronDown, Copy, FileText, Loader2, MessageCircle, Trash2, UserPlus, UserRound, Users } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { GroupSessions } from "@/components/mentor/group-sessions";

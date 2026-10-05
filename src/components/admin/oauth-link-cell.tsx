@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Pencil, Check, X, Loader2, Unlink } from "lucide-react";
+import { Mail, Pencil, Check, X, Loader2, Unlink } from "@/components/ui/icons";
 import { toast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { format, isToday, isTomorrow } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { CalendarClock, X } from "lucide-react";
+import { CalendarClock, X } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/components/providers/session-provider";

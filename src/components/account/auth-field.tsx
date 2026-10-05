@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, Check, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Check, Eye, EyeOff } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 import { passwordChecks } from "@/lib/auth/password-rules";

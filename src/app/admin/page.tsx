@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { AdminTabs, MAX_TAB } from "@/components/admin/admin-tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileSearch } from "lucide-react";
+import { ArrowLeft, FileSearch } from "@/components/ui/icons";
 
 export default function AdminPage() {
   const router = useRouter();

@@ -37,7 +37,7 @@ import {
   Bot,
   Copy,
   X,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { adminFetch } from "@/lib/admin/admin-fetch";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";

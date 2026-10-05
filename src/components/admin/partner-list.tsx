@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, Banknote, Loader2, Pause, Play, X } from "lucide-react";
+import { AlertCircle, Banknote, Loader2, Pause, Play, X } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/payments";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Clock, FileText, Award, AlertTriangle, Languages, ArrowLeft, Ban, Pen, BookMarked } from "lucide-react";
+import { PenLine, Clock, FileText, Award, AlertTriangle, Languages, ArrowLeft, Ban, Pen, BookMarked } from "@/components/ui/icons";
 import type { ExamData } from "@/types/exam";
 import { useTranslation } from "@/components/providers/language-provider";
 import { staggerContainer, staggerItem } from "@/lib/motion";

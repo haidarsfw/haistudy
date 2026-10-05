@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
-import { Loader2, Printer } from "lucide-react";
+import { Loader2, Printer } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 

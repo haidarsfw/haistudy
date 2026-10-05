@@ -18,7 +18,7 @@ import {
   ChevronDown,
   Clock,
   X,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { ReviewCard } from "@/components/exam/exam-results";
 import { loadExamData } from "@/data";

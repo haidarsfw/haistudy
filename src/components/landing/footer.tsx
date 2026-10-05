@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Instagram, Linkedin, MessageCircle } from "lucide-react";
+import { ArrowRight, Instagram, Linkedin, MessageCircle } from "@/components/ui/icons";
 import { Logo } from "@/components/landing/logo";
 import { SupportEmail } from "@/components/landing/support-email";
 

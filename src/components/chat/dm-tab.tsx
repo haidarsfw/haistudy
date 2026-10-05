@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
-import { Plus, ArrowLeft, Crown, ShieldCheck, Pin } from "lucide-react";
+import { Plus, ArrowLeft, Crown, ShieldCheck, Pin } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSession } from "@/components/providers/session-provider";
 import { useDmChat } from "@/hooks/use-dm-chat";

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Wallet, Search, Trash2 } from "lucide-react";
+import { BarChart3, Wallet, Search, Trash2 } from "@/components/ui/icons";
 import {
   ResponsiveContainer,
   PieChart,

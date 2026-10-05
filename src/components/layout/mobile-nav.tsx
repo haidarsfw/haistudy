@@ -20,7 +20,7 @@ import {
   LogOut,
   RefreshCw,
   X,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useNotifications } from "@/hooks/use-notifications";

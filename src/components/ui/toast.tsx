@@ -9,7 +9,7 @@ import {
   OctagonXIcon,
   XIcon,
   BellIcon,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 // ─────────────────────────────────────────────────────────────
 // In-app toast system (replaces sonner). Fully website-sided.

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb } from "@/components/ui/icons";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 

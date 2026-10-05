@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Lightbulb, Sparkles, Shield, FlaskConical, Crown, Gem, GraduationCap } from "lucide-react";
+import { Lightbulb, Sparkles, Shield, FlaskConical, Crown, Gem, GraduationCap } from "@/components/ui/icons";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";

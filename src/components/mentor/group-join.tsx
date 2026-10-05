@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Loader2, Users } from "lucide-react";
+import { Check, Loader2, Users } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 

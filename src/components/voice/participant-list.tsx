@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, Shield, Crown, Gem } from "lucide-react";
+import { Mic, MicOff, Shield, Crown, Gem } from "@/components/ui/icons";
 import type { VoiceParticipant } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";

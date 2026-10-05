@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/ui/icons";
 
 import { AccountFrame } from "@/components/account/account-chrome";
 import { GroupReport } from "@/components/mentor/group-report";

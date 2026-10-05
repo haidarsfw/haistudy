@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "@/components/ui/icons";
 
 import { easeEnter, NAV } from "@/lib/motion";
 

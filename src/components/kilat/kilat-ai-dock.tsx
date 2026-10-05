@@ -8,7 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { motion, useDragControls } from "framer-motion";
-import { Bot, X, Minus, Sparkles, GripHorizontal, SquarePen, ChevronDown } from "lucide-react";
+import { Bot, X, Minus, Sparkles, GripHorizontal, SquarePen, ChevronDown } from "@/components/ui/icons";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";

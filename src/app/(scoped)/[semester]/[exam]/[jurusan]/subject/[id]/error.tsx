@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
+import { AlertTriangle, RefreshCw, ArrowLeft } from "@/components/ui/icons";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { logError } from "@/lib/error-logging";

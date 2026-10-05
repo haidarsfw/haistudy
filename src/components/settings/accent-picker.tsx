@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Lock, Crown, Check } from "lucide-react";
+import { Lock, Crown, Check } from "@/components/ui/icons";
 import type { CustomAccent } from "@/types";
 import { useTranslation } from "@/components/providers/language-provider";
 import { Switch } from "@/components/ui/switch";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Mic, MicOff, PhoneOff, Headphones } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Headphones } from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { sounds } from "@/lib/sounds";

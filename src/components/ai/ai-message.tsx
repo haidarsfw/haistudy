@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef, useState, type ReactNode } from "react";
-import { Bot, User, X, Sparkles } from "lucide-react";
+import { Bot, User, X, Sparkles } from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import type { AiMessage } from "@/hooks/use-ai-chat";
 import { useTranslation } from "@/components/providers/language-provider";

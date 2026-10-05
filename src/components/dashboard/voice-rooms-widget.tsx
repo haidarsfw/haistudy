@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Mic, ArrowRight } from "lucide-react";
+import { Mic, ArrowRight } from "@/components/ui/icons";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 
 export function VoiceRoomsWidget() {

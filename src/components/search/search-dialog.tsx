@@ -9,7 +9,7 @@ import {
   ListChecks,
   Search,
   X,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { searchContent, type SearchResult } from "@/lib/search";
 import { useTranslation } from "@/components/providers/language-provider";

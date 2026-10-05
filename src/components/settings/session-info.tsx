@@ -1,6 +1,6 @@
 "use client";
 
-import { Key, Monitor, GraduationCap } from "lucide-react";
+import { Key, Monitor, GraduationCap } from "@/components/ui/icons";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";

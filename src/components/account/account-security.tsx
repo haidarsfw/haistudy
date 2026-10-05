@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Laptop, Loader2, Smartphone, Tablet } from "lucide-react";
+import { Check, Laptop, Loader2, Smartphone, Tablet } from "@/components/ui/icons";
 
 import { AuthField, PasswordChecklist } from "@/components/account/auth-field";
 import { DisclosureCard } from "@/components/account/disclosure-card";

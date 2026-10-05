@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Globe, ArrowRightLeft } from "lucide-react";
+import { ChevronDown, Globe, ArrowRightLeft } from "@/components/ui/icons";
 import { sounds } from "@/lib/sounds";
 import { useAdminScope, type AdminScopeValue } from "@/components/providers/admin-scope-provider";
 import { scopeKey } from "@/lib/scope";

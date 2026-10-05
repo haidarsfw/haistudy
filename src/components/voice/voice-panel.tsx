@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { X, Mic, RefreshCw, Plus } from "lucide-react";
+import { X, Mic, RefreshCw, Plus } from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/components/providers/session-provider";

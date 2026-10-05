@@ -16,7 +16,7 @@ import {
   Info,
   EyeOff,
   Lock,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
