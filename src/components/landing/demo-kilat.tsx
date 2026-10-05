@@ -514,9 +514,7 @@ export function DemoKilat() {
             {step === STEP.materi && (
               <div>
                 <div className="mb-3 flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                    <MateriGlyph />
-                  </span>
+                  <MateriGlyph />
                   <Tag>{t("landing.how.kilat.c1_tag")}</Tag>
                 </div>
                 <h3 className="font-display text-lg font-bold leading-snug text-foreground sm:text-xl">
@@ -531,9 +529,7 @@ export function DemoKilat() {
             {step === STEP.skenario && (
               <div>
                 <div className="mb-3 flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                    <SkenarioGlyph />
-                  </span>
+                  <SkenarioGlyph />
                   <Tag>{t("landing.how.kilat.c2_tag")}</Tag>
                 </div>
                 <p className="text-[15px] font-semibold leading-relaxed text-foreground">

@@ -32,7 +32,6 @@ import {
   Calculator,
   Bot,
   MoreHorizontal,
-  Lightbulb,
   FileText,
   Zap,
   PenLine,
@@ -169,24 +168,14 @@ function DashboardSurface({ mobile }: { mobile?: boolean }) {
           <span className="text-[9px] text-muted-foreground/80">Semester 2: UAS Business Management</span>
         </div>
         <div className={`grid gap-3 ${mobile ? "grid-cols-1" : "grid-cols-2"}`}>
-          <div className="flex items-start gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-              <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Tips Belajar</p>
-              <p className="text-[11px] leading-snug">Ulang flashcard tiap pagi biar nempel lebih lama.</p>
-            </div>
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Tips Belajar</p>
+            <p className="text-[11px] leading-snug">Ulang flashcard tiap pagi biar nempel lebih lama.</p>
           </div>
           {!mobile && (
-            <div className="flex items-start gap-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Tahukah Kamu</p>
-                <p className="text-[11px] leading-snug">Otak lebih inget materi kalau diselingi istirahat pendek.</p>
-              </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Tahukah Kamu</p>
+              <p className="text-[11px] leading-snug">Otak lebih inget materi kalau diselingi istirahat pendek.</p>
             </div>
           )}
         </div>
@@ -268,9 +257,7 @@ function SubjectsSurface({
                 isTarget ? "border-primary/30" : "border-border"
               }`}
             >
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted ${s.tone}`}>
-                <s.icon className="h-5 w-5" />
-              </span>
+              <s.icon className={`h-5 w-5 shrink-0 ${s.tone}`} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-bold">{s.name}</p>
                 <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{s.desc}</p>
@@ -316,9 +303,7 @@ function SubjectDetailSurface({
   return (
     <div className="flex h-full flex-col">
       <div className={`flex items-center gap-3 border-b border-border ${mobile ? "px-3 py-2.5" : "px-4 py-3"}`}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-rose-500">
-          <Bot className="h-5 w-5" />
-        </span>
+        <Bot className="h-5 w-5 shrink-0 text-rose-500" />
         <div className="min-w-0">
           <p className="truncate text-sm font-bold">Foundations of AI</p>
           <p className="text-[10px] text-muted-foreground">Pengantar kecerdasan buatan</p>
