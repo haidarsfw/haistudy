@@ -41,7 +41,10 @@ const golosText = localFont({
   declarations: [{ prop: "size-adjust", value: "103%" }],
 });
 
-// Timers, keys and links; also the "JetBrains Mono" pick in Settings.
+// Timers, keys and links; also the "JetBrains Mono" pick in Settings. Kept for
+// what it does here, not as a default (antislop R-06 lists it among the fonts
+// AI tools reach for): its digits are tabular, so a running countdown does not
+// shift, and 0/O and 1/l stay distinct in referral codes and account numbers.
 const jetbrainsMono = localFont({
   src: [{ path: "./fonts/jetbrains-mono-latin-wght.woff2", weight: "400 700", style: "normal" }],
   variable: "--font-jetbrains",
