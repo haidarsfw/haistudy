@@ -28,9 +28,11 @@ export function ChoiceCard({
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {isCheckpoint ? <Flag className="h-4 w-4" /> : <HelpCircle className="h-4 w-4" />}
-        </span>
+        {isCheckpoint ? (
+          <Flag className="h-4 w-4 shrink-0 text-primary" />
+        ) : (
+          <HelpCircle className="h-4 w-4 shrink-0 text-primary" />
+        )}
         <Tag>{isCheckpoint ? (c as { title?: string }).title || t("kilat.tag_checkpoint") : t("kilat.tag_check")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">
@@ -160,9 +162,7 @@ export function MultiCard({ card, response, onAnswer }: KilatCardProps) {
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <ListChecks className="h-4 w-4" />
-        </span>
+        <ListChecks className="h-4 w-4 shrink-0 text-primary" />
         <Tag>{t("kilat.tag_multi")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">

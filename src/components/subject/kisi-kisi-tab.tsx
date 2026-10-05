@@ -276,9 +276,7 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
                           onClick={() => openPreview(att)}
                           className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-left transition-all hover:border-primary/40 hover:bg-primary/10 hover:shadow-sm active:scale-[0.99] cursor-pointer w-full"
                         >
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                            <FileText className="h-4 w-4 text-primary" />
-                          </div>
+                          <FileText className="h-4 w-4 shrink-0 text-primary" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
                               {att.title}
@@ -314,9 +312,7 @@ export function KisiKisiTab({ items, note, info, attachments, subjectId }: KisiK
                 onClick={() => openPreview(att)}
                 className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-left transition-all hover:border-primary/40 hover:bg-primary/10 hover:shadow-sm active:scale-[0.99] cursor-pointer w-full"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                  <FileText className="h-4 w-4 text-primary" />
-                </div>
+                <FileText className="h-4 w-4 shrink-0 text-primary" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
                     {att.title}

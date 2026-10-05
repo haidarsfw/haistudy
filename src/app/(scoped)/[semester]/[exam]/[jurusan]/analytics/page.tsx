@@ -213,9 +213,7 @@ export default function AnalyticsPage() {
     >
       {/* Header */}
       <motion.div variants={staggerItem} className="mb-6 flex items-center gap-3">
-        <div className="rounded-lg bg-primary/10 p-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
-        </div>
+        <BarChart3 className="h-5 w-5 shrink-0 text-primary" />
         <div>
           <h1 className="text-xl font-bold">{t("analytics.title")}</h1>
           <p className="text-sm text-muted-foreground">

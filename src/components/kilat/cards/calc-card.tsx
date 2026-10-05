@@ -44,9 +44,7 @@ export function CalcCard({ card, response, onAnswer }: KilatCardProps) {
   const header = (
     <>
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Calculator className="h-4 w-4" />
-        </span>
+        <Calculator className="h-4 w-4 shrink-0 text-primary" />
         <Tag>{c.tag || t("kilat.tag_calc")}</Tag>
       </div>
       <h2 className="font-heading text-xl font-bold leading-tight sm:text-2xl">

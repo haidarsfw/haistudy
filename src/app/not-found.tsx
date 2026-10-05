@@ -36,12 +36,10 @@ export default async function NotFound() {
         <p className="font-display text-4xl font-bold leading-none text-muted-foreground/70">
           404
         </p>
-        {/* Icon beside the title, the same tile as the subject header
-            (audit no. 27). */}
+        {/* Icon beside the title (audit no. 27), without a box: boxes mark
+            icon buttons only. */}
         <div className="flex items-center justify-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Compass className="h-5 w-5 text-primary" />
-          </div>
+          <Compass className="h-5 w-5 shrink-0 text-primary" />
           <h1 className="font-display text-xl font-bold text-foreground">
             Halaman ini gak ada
           </h1>

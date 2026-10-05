@@ -101,9 +101,7 @@ export function QrisCard({
             "hover:border-primary/30 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
         )}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <QrCode className="h-4 w-4" />
-        </span>
+        <QrCode className="h-4 w-4 shrink-0 text-primary" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground">QRIS</p>
           <p className="text-[11px] text-muted-foreground">{broken ? label : expandHint}</p>

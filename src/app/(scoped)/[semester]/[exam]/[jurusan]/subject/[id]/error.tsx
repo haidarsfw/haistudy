@@ -24,11 +24,9 @@ export default function SubjectErrorBoundary({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-8 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
-          <AlertTriangle className="h-7 w-7 text-destructive" />
-        </div>
         <div>
-          <h2 className="font-heading text-lg font-semibold">
+          <h2 className="flex items-center justify-center gap-2 font-heading text-lg font-semibold">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
             Materi subject gagal dimuat
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">

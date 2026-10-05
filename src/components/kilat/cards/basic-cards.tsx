@@ -16,13 +16,13 @@ export function IntroCard({ card }: { card: Extract<KilatCard, { kind: "intro" }
       animate="visible"
       className="flex flex-col items-center text-center"
     >
-      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-warm">
-        <Flag className="h-8 w-8" />
-      </div>
       <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
         Bab {card.chapter}
       </p>
-      <h2 className="font-heading text-2xl font-bold sm:text-3xl">{card.title}</h2>
+      <h2 className="flex items-center justify-center gap-2 font-heading text-2xl font-bold sm:text-3xl">
+        <Flag className="h-6 w-6 shrink-0 text-primary sm:h-7 sm:w-7" />
+        {card.title}
+      </h2>
       {card.subtitle && (
         <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
           {card.subtitle}
@@ -35,12 +35,6 @@ export function IntroCard({ card }: { card: Extract<KilatCard, { kind: "intro" }
 export function ExplainCard({ card }: { card: Extract<KilatCard, { kind: "explain" }> }) {
   return (
     <motion.div variants={staggerContainer(0.08)} initial="hidden" animate="visible">
-      <motion.div
-        variants={staggerItem}
-        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-warm"
-      >
-        {createElement(iconFor(card.icon), { className: "h-7 w-7" })}
-      </motion.div>
       {card.tag && (
         <motion.div variants={staggerItem} className="mb-3">
           <Tag>{card.tag}</Tag>
@@ -48,9 +42,10 @@ export function ExplainCard({ card }: { card: Extract<KilatCard, { kind: "explai
       )}
       <motion.h2
         variants={staggerItem}
-        className="font-heading text-xl font-bold leading-tight sm:text-2xl"
+        className="flex items-start gap-2.5 font-heading text-xl font-bold leading-tight sm:text-2xl"
       >
-        {parseInline(card.heading)}
+        {createElement(iconFor(card.icon), { className: "mt-0.5 h-5 w-5 shrink-0 text-primary sm:h-6 sm:w-6" })}
+        <span className="min-w-0">{parseInline(card.heading)}</span>
       </motion.h2>
       <motion.p
         variants={staggerItem}

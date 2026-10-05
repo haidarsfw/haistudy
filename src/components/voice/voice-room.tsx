@@ -598,9 +598,7 @@ export function VoiceRoom({
             onClick={handleEnableAudio}
             className="w-full rounded-xl border-2 border-dashed border-green-500/40 bg-green-500/5 hover:bg-green-500/15 p-4 flex items-center justify-center gap-3 transition-all cursor-pointer active:scale-[0.98] animate-pulse"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
-              <Volume2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
+            <Volume2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
             <div className="text-left">
               <p className="text-sm font-semibold text-green-700 dark:text-green-300">
                 {t("voice.enable_audio") || "Tap untuk Aktifkan Audio"}
@@ -705,11 +703,9 @@ export function VoiceRoom({
     {idleWarning && isConnected && typeof document !== "undefined" && createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="mx-4 flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-yellow-500/30 bg-background p-6 shadow-2xl">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-500/15">
-            <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-          </div>
           <div className="text-center">
-            <p className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
+            <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-yellow-700 dark:text-yellow-300">
+              <Clock className="h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-400" />
               Kamu sudah idle 8+ menit
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

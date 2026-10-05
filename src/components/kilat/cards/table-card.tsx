@@ -23,9 +23,7 @@ export function TableCard({ card, response, onAnswer }: KilatCardProps) {
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <TableIcon className="h-4 w-4" />
-        </span>
+        <TableIcon className="h-4 w-4 shrink-0 text-primary" />
         <Tag>{fill ? "Isi tabel" : "Baca tabel"}</Tag>
       </div>
       {c.title && (

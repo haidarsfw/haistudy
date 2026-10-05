@@ -557,10 +557,8 @@ export function ExamPlayer({ exam, subjectId, onClose }: Props) {
       return (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background px-6">
           <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-xl">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-              <AlertTriangle className="h-6 w-6 text-amber-500" />
-            </div>
-            <h3 className="text-base font-bold text-foreground">
+            <h3 className="flex items-center justify-center gap-2 text-base font-bold text-foreground">
+              <AlertTriangle className="h-[18px] w-[18px] shrink-0 text-amber-500" />
               {t("exam.submit_error_title")}
             </h3>
             <p className="mt-1.5 text-sm text-muted-foreground">

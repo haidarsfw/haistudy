@@ -52,9 +52,7 @@ export function PatchNotesPopup() {
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-              <Newspaper className="h-4 w-4 text-primary" />
-            </span>
+            <Newspaper className="h-4 w-4 shrink-0 text-primary" />
             Ada yang baru
           </DialogTitle>
         </DialogHeader>

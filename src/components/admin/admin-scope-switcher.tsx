@@ -190,9 +190,7 @@ export function MobileScopeSwitcher() {
               : "cursor-default"
           }`}
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <GraduationCap className="h-[18px] w-[18px]" />
-          </span>
+          <GraduationCap className="h-[18px] w-[18px] shrink-0 text-primary" />
           <span className="min-w-0 flex-1">
             <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Scope Aktif

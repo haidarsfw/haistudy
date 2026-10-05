@@ -476,18 +476,12 @@ export const AiMessageBubble = memo(function AiMessageBubble({
       transition={springGentle}
       className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
     >
-      {/* Avatar */}
-      <div
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-          isUser
-            ? "bg-primary text-primary-foreground"
-            : "bg-accent text-accent-foreground"
-        }`}
-      >
+      {/* Avatar: a plain mark without a circle (boxes mark icon buttons only). */}
+      <div className="flex h-7 w-5 shrink-0 items-center justify-center">
         {isUser ? (
-          <User className="h-3.5 w-3.5" />
+          <User className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <Sparkles className="h-3.5 w-3.5" />
+          <Sparkles className="h-4 w-4 text-primary" />
         )}
       </div>
 

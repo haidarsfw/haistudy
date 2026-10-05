@@ -90,9 +90,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
         className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 shadow-warm"
       >
         <motion.div variants={staggerItem} className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <Zap className="h-5 w-5 fill-primary" />
-          </span>
+          <Zap className="h-5 w-5 shrink-0 fill-primary text-primary" />
           <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
             {t("kilat.badge_new")}
           </span>

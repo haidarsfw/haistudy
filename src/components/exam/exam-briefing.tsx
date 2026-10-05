@@ -137,12 +137,10 @@ export function ExamBriefing({
 
           {/* Header */}
           <motion.div variants={staggerItem} className="text-center">
-            {/* Icon beside the title, the same tile as the subject header
-                (audit no. 27): one title pattern across the app. */}
+            {/* Icon beside the title (audit no. 27), without a box: one title
+                pattern across the app, and boxes mark icon buttons only. */}
             <div className="flex items-center justify-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <PenLine className="h-5 w-5 text-primary" />
-              </div>
+              <PenLine className="h-5 w-5 shrink-0 text-primary" />
               <h1 className="text-2xl font-black text-foreground">
                 {t("exam.briefing_title")}
               </h1>

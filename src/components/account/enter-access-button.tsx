@@ -186,22 +186,17 @@ export function EnterAccessButton({
             className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* An icon and a centred heading, so the dialog reads as a decision
-                rather than as a paragraph that happens to float. */}
+            {/* An icon beside a centred heading, so the dialog reads as a
+                decision rather than as a paragraph that happens to float. No
+                box behind the icon: boxes mark icon buttons only. */}
             <div className="flex flex-col items-center px-6 pt-6 text-center">
-              <span
-                className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                  confirm.full
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-primary/10 text-primary"
-                }`}
-              >
-                <MonitorSmartphone className="h-5 w-5" />
-              </span>
               <h2
                 id="device-confirm-title"
-                className="mt-3 font-display text-lg font-bold tracking-tight text-foreground"
+                className="flex items-center justify-center gap-2 font-display text-lg font-bold tracking-tight text-foreground"
               >
+                <MonitorSmartphone
+                  className={`h-5 w-5 shrink-0 ${confirm.full ? "text-destructive" : "text-primary"}`}
+                />
                 {confirm.full ? "Jatah perangkat penuh" : "Perangkat baru"}
               </h2>
             </div>

@@ -249,9 +249,7 @@ export function InstallBanner() {
         <ul className="space-y-2.5">
           {benefits.map((b, i) => (
             <li key={i} className="flex items-center gap-3 text-sm font-medium text-foreground">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
-                <b.icon className="h-4 w-4" />
-              </span>
+              <b.icon className="h-4 w-4 shrink-0 text-primary" />
               <span className="leading-snug">{b.text}</span>
             </li>
           ))}

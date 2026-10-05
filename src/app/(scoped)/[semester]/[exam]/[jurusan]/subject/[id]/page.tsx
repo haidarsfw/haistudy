@@ -298,11 +298,7 @@ export default function SubjectPage() {
 
       {/* Subject header with progress ring */}
       <div className="flex items-center gap-3 border-b border-border px-4 py-4">
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ${subject.color}`}
-        >
-          <SubjectIcon icon={subject.icon} className="h-5 w-5" />
-        </div>
+        <SubjectIcon icon={subject.icon} className={`h-5 w-5 shrink-0 ${subject.color}`} />
         <div className="flex-1 min-w-0">
           <h1 className="font-heading text-lg font-bold">{subject.name}</h1>
           <p className="text-xs text-muted-foreground">

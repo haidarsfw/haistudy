@@ -126,9 +126,7 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
         {/* Header */}
         <div className="mb-3 flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Ticket className="h-5 w-5" />
-            </span>
+            <Ticket className="h-5 w-5 shrink-0 text-primary" />
             <div>
               <h3 id="exam-topup-title" className="text-base font-black text-foreground">Top-up Kuota Latihan</h3>
               <p className="text-xs text-muted-foreground">{subjectName}</p>
@@ -146,10 +144,10 @@ export function ExamTopupModal({ subjectId, subjectName, onClose, onSubmitted }:
 
         {done ? (
           <div className="py-6 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
-              <Check className="h-7 w-7 text-emerald-500" />
-            </div>
-            <h4 className="text-base font-bold text-foreground">Top-up terkirim!</h4>
+            <h4 className="flex items-center justify-center gap-2 text-base font-bold text-foreground">
+              <Check className="h-[18px] w-[18px] shrink-0 text-emerald-500" />
+              Top-up terkirim!
+            </h4>
             <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted-foreground">
               Admin bakal verifikasi pembayaranmu. Kuota otomatis ditambah ke{" "}
               <span className="font-semibold text-foreground">{subjectName}</span> + kamu dapat

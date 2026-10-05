@@ -99,12 +99,10 @@ export function GroupJoin({ state }: { state: GroupJoinState }) {
 
   return (
     <section className="mt-10 max-w-lg">
-      {/* Icon beside the title, the same tile as the subject header
-          (audit no. 27): one title pattern across the app. */}
+      {/* Icon beside the title (audit no. 27), without a box: one title
+          pattern across the app, and boxes mark icon buttons only. */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Users className="h-5 w-5 text-primary" />
-        </div>
+        <Users className="h-5 w-5 shrink-0 text-primary" />
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
             {state.name}

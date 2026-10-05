@@ -133,23 +133,22 @@ export function ReminderAlarm({ reminderTime }: ReminderAlarmProps) {
             exit={{ scale: 0.8, opacity: 0 }}
             className="mx-4 flex max-w-sm flex-col items-center gap-6 rounded-2xl border border-border bg-card p-8 text-center shadow-2xl"
           >
-            {/* Animated bell */}
-            <motion.div
-              animate={{
-                rotate: [0, -15, 15, -10, 10, -5, 5, 0],
-              }}
-              transition={{
-                duration: 0.5,
-                repeat: Infinity,
-                repeatDelay: 0.2,
-              }}
-              className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive/15"
-            >
-              <Bell className="h-10 w-10 text-destructive" />
-            </motion.div>
-
             <div>
-              <h2 className="font-heading text-xl font-bold">
+              <h2 className="flex items-center justify-center gap-2 font-heading text-xl font-bold">
+                {/* The bell keeps ringing: this is an alarm. */}
+                <motion.span
+                  animate={{
+                    rotate: [0, -15, 15, -10, 10, -5, 5, 0],
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    repeat: Infinity,
+                    repeatDelay: 0.2,
+                  }}
+                  className="inline-flex shrink-0"
+                >
+                  <Bell className="h-5 w-5 text-destructive" />
+                </motion.span>
                 Waktunya Belajar!
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">

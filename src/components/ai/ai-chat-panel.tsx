@@ -539,11 +539,11 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
               >
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center gap-4 pt-8">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                      <Sparkles className="h-7 w-7 text-primary" />
-                    </div>
                     <div className="text-center">
-                      <h3 className="text-sm font-semibold">Halo! 👋</h3>
+                      <h3 className="flex items-center justify-center gap-1.5 text-sm font-semibold">
+                        <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                        Halo! 👋
+                      </h3>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Aku haistudy AI, siap bantu kamu belajar.
                         <br />

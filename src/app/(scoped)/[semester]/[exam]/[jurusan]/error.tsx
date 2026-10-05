@@ -19,10 +19,8 @@ export default function AppErrorBoundary({
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-16">
       <div className="flex flex-col items-center gap-4 text-center max-w-sm">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
-          <AlertTriangle className="h-7 w-7 text-destructive" />
-        </div>
-        <h2 className="font-heading text-lg font-semibold">
+        <h2 className="flex items-center justify-center gap-2 font-heading text-lg font-semibold">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
           Halaman gagal dimuat
         </h2>
         <p className="text-sm text-muted-foreground">

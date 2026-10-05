@@ -255,17 +255,16 @@ export function RegisterForm({ next }: { next?: string }) {
         transition={{ duration: NAV.enter, ease: easeEnter }}
         className="flex flex-col items-center gap-5 text-center"
       >
-        <motion.div
-          initial={{ scale: 0.4, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.06, duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10"
-        >
-          <CheckCircle2 className="h-7 w-7 text-primary" strokeWidth={2.2} />
-        </motion.div>
-
         <div>
-          <h2 className="font-display text-lg font-bold tracking-tight text-foreground">
+          <h2 className="flex items-center justify-center gap-2 font-display text-lg font-bold tracking-tight text-foreground">
+            <motion.span
+              initial={{ scale: 0.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.06, duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex shrink-0"
+            >
+              <CheckCircle2 className="h-5 w-5 text-primary" strokeWidth={2.2} />
+            </motion.span>
             Akunmu sudah jadi
           </h2>
           <p className="mt-1 break-all text-[13px] text-muted-foreground">{registered}</p>

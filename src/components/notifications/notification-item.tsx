@@ -109,19 +109,16 @@ export function NotificationItem({
         clickable ? "cursor-pointer" : ""
       } ${notification.read && variant === "center" ? "opacity-60" : ""}`}
     >
-      {/* Type icon + context corner badge */}
-      <div className="relative mt-0.5 shrink-0">
-        <div
-          className={`flex h-7 w-7 items-center justify-center rounded-full ${
-            notification.read && variant === "center"
-              ? "bg-muted text-muted-foreground"
-              : "bg-primary/10 text-primary"
-          }`}
-        >
-          {createElement(icon, { className: "h-3.5 w-3.5" })}
-        </div>
+      {/* Type icon + context corner badge. No circle behind the icon (boxes
+          mark icon buttons only); the small badge still says where it came from. */}
+      <div className="relative shrink-0 p-0.5">
+        {createElement(icon, {
+          className: `h-4 w-4 ${
+            notification.read && variant === "center" ? "text-muted-foreground" : "text-primary"
+          }`,
+        })}
         {ctxIcon && (
-          <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border">
+          <span className="absolute -bottom-1 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border">
             {createElement(ctxIcon, { className: "h-2 w-2" })}
           </span>
         )}

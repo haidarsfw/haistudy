@@ -119,13 +119,11 @@ export default function JadwalPage() {
 
               const cardHeader = (
                 <>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0 bg-muted">
-                    {subject ? (
-                      <SubjectIcon icon={subject.icon} className={`h-5 w-5 ${iconColor}`} />
-                    ) : (
-                      <BookOpen className="h-5 w-5 text-primary" />
-                    )}
-                  </div>
+                  {subject ? (
+                    <SubjectIcon icon={subject.icon} className={`h-5 w-5 shrink-0 ${iconColor}`} />
+                  ) : (
+                    <BookOpen className="h-5 w-5 shrink-0 text-primary" />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
                       {exam.subject}

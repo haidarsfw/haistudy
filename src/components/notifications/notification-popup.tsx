@@ -114,9 +114,7 @@ export function NotificationPopup({
           </button>
 
           {/* Type icon */}
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            {createElement(notificationIcon(notification), { className: "h-3.5 w-3.5" })}
-          </div>
+          {createElement(notificationIcon(notification), { className: "h-4 w-4 shrink-0 text-primary" })}
 
           {/* Title + preview */}
           <div className="min-w-0 flex-1">

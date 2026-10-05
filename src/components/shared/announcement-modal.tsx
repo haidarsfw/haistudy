@@ -105,9 +105,7 @@ export function AnnouncementModal() {
             </button>
 
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Megaphone className="h-5 w-5" />
-              </div>
+              <Megaphone className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
                 <h2
                   id="announcement-modal-title"

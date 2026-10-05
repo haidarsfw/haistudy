@@ -745,15 +745,17 @@ export function PaymentsFlow({
     );
     return (
       <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center px-4 py-12 text-center">
-        <motion.div
-          initial={{ scale: 0, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 35 }}
-          className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10"
-        >
-          <CheckCircle2 className="h-11 w-11 text-primary" />
-        </motion.div>
-        <h1 className="font-heading text-2xl font-bold">{t("payments.success_title")}</h1>
+        <h1 className="flex items-center justify-center gap-2 font-heading text-2xl font-bold">
+          <motion.span
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 35 }}
+            className="inline-flex shrink-0"
+          >
+            <CheckCircle2 className="h-6 w-6 text-primary" />
+          </motion.span>
+          {t("payments.success_title")}
+        </h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {t("payments.success_desc")}
         </p>

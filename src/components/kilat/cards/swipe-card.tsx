@@ -53,9 +53,7 @@ export function SwipeCard({ card, response, onAnswer }: KilatCardProps) {
         {/* Distinct, celebratory header when every guess was right */}
         {allCorrect && (
           <div className="mb-3 flex items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
-              <Check className="h-5 w-5 text-emerald-600" />
-            </span>
+            <Check className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>
               <span className="block text-sm font-bold text-emerald-700 dark:text-emerald-300">
                 {t("kilat.swipe_all_correct")}

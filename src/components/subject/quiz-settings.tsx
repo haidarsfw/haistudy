@@ -117,14 +117,13 @@ export function QuizSettingsScreen({
         className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center"
         variants={staggerItem}
       >
-        <motion.div
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10"
-          variants={scaleIn}
-        >
-          <Play className="h-7 w-7 text-primary" />
-        </motion.div>
         <div>
-          <h3 className="font-heading text-lg font-semibold">Quiz Time!</h3>
+          <h3 className="flex items-center justify-center gap-2 font-heading text-lg font-semibold">
+            <motion.span className="inline-flex shrink-0" variants={scaleIn}>
+              <Play className="h-5 w-5 text-primary" />
+            </motion.span>
+            Quiz Time!
+          </h3>
           <p className="mt-1 text-xs text-muted-foreground">
             Pilih modul, atur preferensi, lalu mulai.
           </p>

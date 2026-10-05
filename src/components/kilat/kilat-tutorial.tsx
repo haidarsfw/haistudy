@@ -23,9 +23,7 @@ export function KilatTutorial({ onDismiss }: { onDismiss: () => void }) {
         <span className="text-sm font-semibold">{t("kilat.tut_up")}</span>
       </motion.div>
 
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 text-white">
-        <Hand className="h-8 w-8" />
-      </div>
+      <Hand className="h-8 w-8 text-white" />
 
       <motion.div
         animate={{ y: [6, -6, 6] }}

@@ -13,9 +13,7 @@ export function VoiceRoomsWidget() {
       href={href}
       className="surface surface-hover flex items-center gap-3 rounded-xl bg-card p-4 group"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-        <Mic className="h-5 w-5 text-primary" />
-      </div>
+      <Mic className="h-5 w-5 shrink-0 text-primary" />
       <div className="flex-1 min-w-0">
         <h3 className="text-sm font-semibold">Voice Rooms</h3>
         <p className="text-xs text-muted-foreground">

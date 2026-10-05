@@ -188,9 +188,7 @@ export function SupportPanel({ isOpen, onClose }: SupportPanelProps) {
                       }
                       className="flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2.5 text-left transition-colors hover:bg-emerald-500/10"
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                        <MessageCircle className="h-4 w-4" />
-                      </div>
+                      <MessageCircle className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                       <div>
                         <p className="text-xs font-medium">WhatsApp</p>
                         <p className="text-[10px] text-muted-foreground">

@@ -250,9 +250,8 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto overscroll-contain p-3">
         {!hasMsgs ? (
           <div className="flex flex-col items-center gap-3 px-2 pt-6 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
+            {/* No big icon: the AI mark already sits on the label above the
+                title, and boxes mark icon buttons only. */}
             <div>
               <p className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-primary">
                 <Sparkles className="h-3 w-3" /> {t("kilat.now_discussing")}

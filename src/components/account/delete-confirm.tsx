@@ -81,11 +81,9 @@ export function DeleteConfirm({ token }: { token: string }) {
     return (
       <Frame>
         <div className="flex flex-col items-center gap-4 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <CheckCircle2 className="h-6 w-6 text-muted-foreground" />
-          </span>
           <div>
-            <h1 className="font-display text-lg font-bold text-foreground">
+            <h1 className="flex items-center justify-center gap-2 font-display text-lg font-bold text-foreground">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-muted-foreground" />
               Penghapusan dijadwalkan
             </h1>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
@@ -113,11 +111,9 @@ export function DeleteConfirm({ token }: { token: string }) {
   return (
     <Frame>
       <div className="flex flex-col gap-4">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-destructive/10">
-          <ShieldAlert className="h-5 w-5 text-destructive" />
-        </span>
         <div>
-          <h1 className="font-display text-lg font-bold text-foreground">
+          <h1 className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
+            <ShieldAlert className="h-5 w-5 shrink-0 text-destructive" />
             Hapus akun haistudy kamu?
           </h1>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
@@ -188,11 +184,9 @@ export function DeleteCancel({ token }: { token: string }) {
     return (
       <Frame>
         <div className="flex flex-col items-center gap-4 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <CheckCircle2 className="h-6 w-6 text-primary" />
-          </span>
           <div>
-            <h1 className="font-display text-lg font-bold text-foreground">
+            <h1 className="flex items-center justify-center gap-2 font-display text-lg font-bold text-foreground">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
               Penghapusan dibatalkan
             </h1>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">

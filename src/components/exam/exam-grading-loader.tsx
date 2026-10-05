@@ -104,17 +104,16 @@ export function ExamGradingLoader({
       animate={{ opacity: 1 }}
       className={containerClass}
     >
-      {/* Animated icon */}
-      <motion.div
-        animate={{ scale: [1, 1.12, 1], rotate: [0, 5, -5, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5"
-      >
-        <Sparkles className="h-10 w-10 text-primary" />
-      </motion.div>
-
       <div className="text-center">
-        <h2 className="mb-1 text-xl font-bold text-foreground">
+        <h2 className="mb-1 flex items-center justify-center gap-2 text-xl font-bold text-foreground">
+          {/* AI is grading: the mark keeps moving while it works. */}
+          <motion.span
+            animate={{ scale: [1, 1.12, 1], rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="inline-flex shrink-0"
+          >
+            <Sparkles className="h-5 w-5 text-primary" />
+          </motion.span>
           {title ?? t("exam.grading_title")}
         </h2>
         <p className="text-sm text-muted-foreground">

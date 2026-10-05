@@ -149,9 +149,7 @@ export default function LibraryPage() {
     <div className="mx-auto max-w-3xl px-4 py-6">
       {/* Header */}
       <div className="mb-5 flex items-center gap-3">
-        <div className="rounded-lg bg-primary/10 p-2">
-          <LibraryIcon className="h-5 w-5 text-primary" />
-        </div>
+        <LibraryIcon className="h-5 w-5 shrink-0 text-primary" />
         <div>
           <h1 className="text-xl font-bold">{t("library.title")}</h1>
         </div>

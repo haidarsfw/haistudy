@@ -96,9 +96,7 @@ export function ExamLaunch({ exam, subjectId, onStartExam, onViewAttempt, onDele
         className="rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-primary/[0.02] p-5"
       >
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <PenLine className="h-6 w-6 text-primary" />
-          </div>
+          <PenLine className="h-6 w-6 shrink-0 text-primary" />
           <div className="flex-1">
             <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
               {t("exam.badge")}

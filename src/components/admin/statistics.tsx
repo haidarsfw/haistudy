@@ -136,9 +136,7 @@ export function Statistics() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 pt-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
+            <Users className="h-5 w-5 shrink-0 text-primary" />
             <div>
               <p className="text-2xl font-bold">{totalKeys}</p>
               <p className="text-xs text-muted-foreground">Total Users</p>
@@ -147,9 +145,7 @@ export function Statistics() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 pt-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <KeyRound className="h-5 w-5 text-primary" />
-            </div>
+            <KeyRound className="h-5 w-5 shrink-0 text-primary" />
             <div>
               <p className="text-2xl font-bold">{regularUsers.length}</p>
               <p className="text-xs text-muted-foreground">Active Students</p>
@@ -158,9 +154,7 @@ export function Statistics() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 pt-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Trophy className="h-5 w-5 text-primary" />
-            </div>
+            <Trophy className="h-5 w-5 shrink-0 text-primary" />
             <div>
               <p className="text-2xl font-bold">{avgScore}</p>
               <p className="text-xs text-muted-foreground">Avg Quiz Score</p>
@@ -169,9 +163,7 @@ export function Statistics() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 pt-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Clock className="h-5 w-5 text-primary" />
-            </div>
+            <Clock className="h-5 w-5 shrink-0 text-primary" />
             <div>
               <p className="text-2xl font-bold">
                 {avgMinutes >= 60

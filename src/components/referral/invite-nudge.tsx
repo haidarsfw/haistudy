@@ -140,9 +140,7 @@ export function InviteNudge() {
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-              <Users className="h-4 w-4 text-primary" />
-            </span>
+            <Users className="h-4 w-4 shrink-0 text-primary" />
             {sudah === 0
               ? `Ajak ${target} teman, periode berikutnya gratis`
               : `Kurang ${kurang} teman lagi`}

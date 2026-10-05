@@ -28,11 +28,13 @@ export function PreviewLock({ children, title }: PreviewLockProps) {
       {/* Lock overlay */}
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-xl">
         <div className="flex flex-col items-center gap-3 text-center px-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          {title ? (
+            <p className="flex items-center justify-center gap-1.5 text-sm font-medium">
+              <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+              {title}
+            </p>
+          ) : (
             <Lock className="h-5 w-5 text-muted-foreground" />
-          </div>
-          {title && (
-            <p className="text-sm font-medium">{title}</p>
           )}
           <p className="text-xs text-muted-foreground max-w-[240px]">
             Beli akses untuk melihat konten lengkap

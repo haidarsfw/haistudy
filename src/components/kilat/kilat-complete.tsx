@@ -64,14 +64,14 @@ export function KilatComplete({ scorePct, points, gradedTotal, passed, onRestart
       )}
 
       <motion.div variants={scaleIn} initial="hidden" animate="visible" className="relative">
-        <div
-          className={`mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl shadow-warm-lg ${
-            passed ? "bg-emerald-500/15 text-emerald-500" : "bg-amber-500/15 text-amber-500"
-          }`}
-        >
-          {passed ? <PartyPopper className="h-10 w-10" /> : <RefreshCw className="h-10 w-10" />}
-        </div>
-        <h2 className="font-heading text-3xl font-bold">{passed ? t("kilat.pass_title") : t("kilat.fail_title")}</h2>
+        <h2 className="flex items-center justify-center gap-2.5 font-heading text-3xl font-bold">
+          {passed ? (
+            <PartyPopper className="h-7 w-7 shrink-0 text-emerald-500" />
+          ) : (
+            <RefreshCw className="h-7 w-7 shrink-0 text-amber-500" />
+          )}
+          {passed ? t("kilat.pass_title") : t("kilat.fail_title")}
+        </h2>
         <p
           className={`mt-3 font-heading text-5xl font-extrabold tabular-nums ${
             passed ? "text-emerald-500" : "text-amber-500"
