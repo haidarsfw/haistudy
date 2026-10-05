@@ -2,6 +2,8 @@
 // LICENSE.md in this folder), the owner's pick that replaced lucide-react. Rendered
 // here rather than through @hugeicons/react: the stroke attributes every element
 // shares are set once on the <svg>, which makes each icon's data about 30% smaller.
+// Default stroke 1.75, not Hugeicons' 1.5: at 16px a 1.5 stroke draws 1px lines next to
+// text whose stems are ~1.3px, so icons looked lighter than their labels.
 
 import { forwardRef, type ForwardRefExoticComponent, type RefAttributes, type SVGProps } from "react";
 
@@ -28,7 +30,7 @@ export function icon(name: string, node: IconNode): IconComponent {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={strokeWidth ?? 1.5}
+      strokeWidth={strokeWidth ?? 1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden={hasA11yProp(props) ? undefined : true}
