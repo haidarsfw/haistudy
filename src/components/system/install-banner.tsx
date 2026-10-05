@@ -7,7 +7,6 @@ import {
   PlusSquare,
   Zap,
   BellRing,
-  Sparkles,
   MoreVertical,
   Smartphone,
   BookOpenReading,
@@ -218,7 +217,7 @@ export function InstallBanner() {
     { icon: Zap, text: t("pwa.benefit_fast") },
     { icon: BellRing, text: t("pwa.benefit_notif") },
     { icon: BookOpenReading, text: t("pwa.benefit_readability") },
-    { icon: Sparkles, text: t("pwa.benefit_exclusive") },
+    { icon: Smartphone, text: t("pwa.benefit_exclusive") },
   ];
 
   // Android steps appear after the user taps "Pasang" with no native prompt.

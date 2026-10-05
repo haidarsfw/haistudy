@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Crosshair, Wand2 } from "@/components/ui/icons";
+import { Crosshair, MessageSquarePen } from "@/components/ui/icons";
 import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
@@ -95,7 +95,7 @@ export function PromptCard({ card, response, onAnswer }: KilatCardProps) {
     <div>
       <div className="mb-3 flex items-center gap-2">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Wand2 className="h-4 w-4" />
+          <MessageSquarePen className="h-4 w-4" />
         </span>
         <Tag>{c.tag || t("kilat.tag_prompt")}</Tag>
       </div>

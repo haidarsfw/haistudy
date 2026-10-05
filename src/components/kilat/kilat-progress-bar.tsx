@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, X, ListTree, RotateCcw, Bot } from "@/components/ui/icons";
+import { Star, X, ListTree, RotateCcw, Sparkles } from "@/components/ui/icons";
 import type { KilatCard, KilatChapter } from "@/types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -119,7 +119,7 @@ export function KilatProgressBar({
             : "border-border bg-card text-muted-foreground hover:text-foreground"
         )}
       >
-        <Bot className="h-3.5 w-3.5" />
+        <Sparkles className="h-3.5 w-3.5" />
         <span className="hidden text-[11px] font-semibold sm:inline">{t("kilat.ask_ai")}</span>
       </button>
 

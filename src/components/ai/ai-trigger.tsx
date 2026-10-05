@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot } from "@/components/ui/icons";
+import { Sparkles } from "@/components/ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
@@ -19,7 +19,7 @@ export function AiTrigger({ onClick, unreadCount = 0 }: AiTriggerProps) {
       aria-label="Buka AI Assistant"
       className="tts-shift-target fixed bottom-20 right-18 z-40 h-12 w-12 rounded-full border-primary/30 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground sm:bottom-20 sm:right-6"
     >
-      <Bot className="h-5 w-5" aria-hidden="true" />
+      <Sparkles className="h-5 w-5" aria-hidden="true" />
 
       {/* Unread badge */}
       <AnimatePresence>

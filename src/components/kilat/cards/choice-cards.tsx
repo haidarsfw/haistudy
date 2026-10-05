@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Flag, Sparkles, ListChecks } from "@/components/ui/icons";
+import { Flag, ListChecks, HelpCircle } from "@/components/ui/icons";
 import type { KilatCard } from "@/types";
 import { parseInline } from "@/lib/content-parser";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ export function ChoiceCard({
     <div>
       <div className="mb-3 flex items-center gap-2">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {isCheckpoint ? <Flag className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+          {isCheckpoint ? <Flag className="h-4 w-4" /> : <HelpCircle className="h-4 w-4" />}
         </span>
         <Tag>{isCheckpoint ? (c as { title?: string }).title || t("kilat.tag_checkpoint") : t("kilat.tag_check")}</Tag>
       </div>

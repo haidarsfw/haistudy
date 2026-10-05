@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, type PointerEvent as ReactPointerEvent } from "react";
 import {
   X,
-  Bot,
   Trash2,
   Plus,
   RotateCcw,
@@ -15,6 +14,7 @@ import {
   FileText,
   FileCode,
   FileType,
+  Sparkles,
 } from "@/components/ui/icons";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-is-mobile";
@@ -419,7 +419,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
               onPointerDown={startSheetDrag}
               className="flex touch-none items-center gap-3 border-b border-border px-4 py-3 sm:touch-auto"
             >
-              <Bot className="h-5 w-5 text-primary" />
+              <Sparkles className="h-5 w-5 text-primary" />
               <div className="flex-1 min-w-0">
                 <h2 className="text-sm font-semibold">haistudy AI</h2>
                 <p className="text-[10px] text-muted-foreground">
@@ -540,7 +540,7 @@ export function AiChatPanel({ isOpen, onClose, subjectId, reference, onReference
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center gap-4 pt-8">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                      <Bot className="h-7 w-7 text-primary" />
+                      <Sparkles className="h-7 w-7 text-primary" />
                     </div>
                     <div className="text-center">
                       <h3 className="text-sm font-semibold">Halo! 👋</h3>

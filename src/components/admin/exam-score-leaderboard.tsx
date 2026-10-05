@@ -34,9 +34,9 @@ import {
   ChevronUp,
   ChevronDown,
   ShieldCheck,
-  Bot,
   Copy,
   X,
+  Sparkles,
 } from "@/components/ui/icons";
 import { useAdminScope } from "@/components/providers/admin-scope-provider";
 import { adminFetch } from "@/lib/admin/admin-fetch";
@@ -708,7 +708,7 @@ function AttemptDetailDialog({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-lg border border-border bg-background p-2.5">
                       <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                        <Bot className="h-3 w-3" /> Indikasi AI
+                        <Sparkles className="h-3 w-3" /> Indikasi AI
                       </p>
                       <p
                         className={`text-xl font-bold tabular-nums ${pctTone(check.overall.aiPct)}`}
@@ -774,7 +774,7 @@ function AttemptDetailDialog({
                                 : "")
                             }
                           >
-                            <Bot className="h-3 w-3" />
+                            <Sparkles className="h-3 w-3" />
                             AI {fmtPct(pq.aiLikelihood)}
                             {!pq.aiLlmUsed ? "*" : ""}
                           </span>

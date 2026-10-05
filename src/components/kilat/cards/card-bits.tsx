@@ -5,7 +5,7 @@ import {
   Shield, Lock, Scale, Gavel, Eye, Wifi, Globe, FlaskConical, Dna, Users,
   ListChecks, Home, Megaphone, ShieldAlert, AlertTriangle, Brain, HeartCrack,
   EyeOff, Leaf, TrendingUp, TrendingDown, Recycle, Sprout, Handshake, ShieldCheck,
-  FileCheck, Building2, Sparkles, Check, X, Flag, MapPin, Boxes, Package,
+  FileCheck, Building2, BookOpen, Check, X, Flag, MapPin, Boxes, Package, Info,
   Factory, Truck, Calculator, Gauge, Wrench, ClipboardList, Table, Receipt,
   DollarSign, FileSpreadsheet, Bot, Cpu, Network, MessageSquare, Image, Lightbulb,
   Target, Layers, Clock, ShoppingCart, BadgeCheck,
@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 import { fadeInUp, tapScale } from "@/lib/motion";
 
 // Content names its icons by component name ("Brain", "Shield"); resolve to a
-// component from the app's icon set (fallback Sparkles).
+// component from the app's icon set (fallback BookOpen). Sparkles is not in the
+// map: it marks haistudy's AI features only.
 const ICONS: Record<string, IconComponent> = {
   Shield, Lock, Scale, Gavel, Eye, Wifi, Globe, FlaskConical, Dna, Users,
   ListChecks, Home, Megaphone, ShieldAlert, AlertTriangle, Brain, HeartCrack,
@@ -23,11 +24,11 @@ const ICONS: Record<string, IconComponent> = {
   FileCheck, Building2, MapPin, Boxes, Package, Factory, Truck, Calculator, Gauge,
   Wrench, ClipboardList, Table, Receipt, DollarSign, FileSpreadsheet, Bot, Cpu,
   Network, MessageSquare, Image, Lightbulb, Target, Layers, Clock, ShoppingCart,
-  BadgeCheck, Sparkles, Flag,
+  BadgeCheck, Flag,
 };
 
 export function iconFor(name?: string): IconComponent {
-  return (name && ICONS[name]) || Sparkles;
+  return (name && ICONS[name]) || BookOpen;
 }
 
 export function Tag({ children }: { children: React.ReactNode }) {
@@ -66,7 +67,7 @@ export function Feedback({
         ) : tone === "wrong" ? (
           <AlertTriangle className="h-4 w-4" />
         ) : (
-          <Sparkles className="h-4 w-4" />
+          <Info className="h-4 w-4" />
         )}
       </span>
       <span>{children}</span>

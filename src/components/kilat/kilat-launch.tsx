@@ -4,7 +4,16 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  Zap, Star, Target, Play, RotateCcw, Check, Sparkles, Layers, Hand, BadgeCheck,
+  Zap,
+  Star,
+  Target,
+  Play,
+  RotateCcw,
+  Check,
+  Layers,
+  Hand,
+  BadgeCheck,
+  HelpCircle,
 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -98,7 +107,7 @@ export function KilatLaunch({ subjectId }: { subjectId: string }) {
         {/* Mini feature row */}
         <motion.div variants={staggerItem} className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5"><Hand className="h-3.5 w-3.5 text-primary" /> {t("kilat.feat_swipe")}</span>
-          <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> {t("kilat.feat_quiz")}</span>
+          <span className="inline-flex items-center gap-1.5"><HelpCircle className="h-3.5 w-3.5 text-primary" /> {t("kilat.feat_quiz")}</span>
           <span className="inline-flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-primary" /> {total} {t("kilat.cards")}, {feed.chapters.length} {t("kilat.chapters")}</span>
         </motion.div>
       </motion.div>

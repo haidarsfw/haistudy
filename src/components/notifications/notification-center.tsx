@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale/id";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, CheckCheck, Megaphone, Sparkles } from "@/components/ui/icons";
+import { Bell, CheckCheck, Megaphone, Newspaper } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -225,7 +225,7 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
                     className={`flex w-full items-center gap-3 rounded-xl border border-border/40 bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/40 ${patchIsRead(item.note.version) ? "opacity-60" : ""}`}
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      <Newspaper className="h-3.5 w-3.5 text-primary" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5">
@@ -285,7 +285,7 @@ export function NotificationCenter({ hoverExpand }: NotificationCenterProps = {}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <Newspaper className="h-4 w-4 text-primary" />
             {selectedPatch?.title}
             {selectedPatch && (
               <span className="rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">

@@ -51,7 +51,7 @@ import { DemoCursor } from "@/components/landing/demo-cursor";
  * Hero product tour. A single self-playing, cursor-driven walkthrough of the
  * real haistudy app — rebuilt faithfully in the landing theme (not a screenshot).
  * The fake cursor drives the real chrome: sidebar nav, header Mic (voice), the
- * two bottom-right FABs (AI = Bot, Chat). It opens the community trio (voice /
+ * two bottom-right FABs (AI, Chat). It opens the community trio (voice /
  * chat / AI) from the dashboard, then opens a subject (its tabs are skeletons —
  * the full feature demos live further down the page) and glances Jadwal /
  * Statistik / Catatan / Library. Desktop + a true mobile mirror. Reduced-motion
@@ -636,7 +636,7 @@ function ChatPanel({ msgs, mobile, exiting }: { msgs: Msg[]; mobile?: boolean; e
 
 function AiPanel({ msgs, thinking, input, mobile, exiting }: { msgs: Msg[]; thinking: boolean; input: string; mobile?: boolean; exiting?: boolean }) {
   return (
-    <PanelShell title="haistudy AI" icon={Bot} mobile={mobile} exiting={exiting}>
+    <PanelShell title="haistudy AI" icon={Sparkles} mobile={mobile} exiting={exiting}>
       <div className="flex flex-1 flex-col gap-2.5 overflow-hidden p-3">
         {msgs.length === 0 && !thinking && (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
@@ -1274,7 +1274,7 @@ export function HeroTour() {
                 {panel && <div className="absolute inset-0 z-10 bg-black/20" style={{ animation: panelExiting ? "hs-fade-out 0.28s ease forwards" : "fade-in-css 0.28s ease" }} />}
                 {renderPanel(false)}
 
-                {/* bottom-right FABs (AI = Bot upper, Chat = lower) */}
+                {/* bottom-right FABs (AI upper, Chat lower) */}
                 <button
                   ref={aiFabRef}
                   type="button"
@@ -1284,7 +1284,7 @@ export function HeroTour() {
                     panel === "ai" ? "border-primary bg-primary text-white" : "border-border bg-background text-muted-foreground"
                   }`}
                 >
-                  <Bot className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4" />
                 </button>
                 <button
                   ref={chatFabRef}

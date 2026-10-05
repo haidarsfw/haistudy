@@ -12,9 +12,9 @@ import {
   FileText,
   Zap,
   ListChecks,
-  Bot,
   ArrowRight,
   User,
+  Sparkles,
   type IconComponent,
 } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -44,7 +44,7 @@ const RECAP: { icon: IconComponent; key: string }[] = [
   { icon: FileText, key: "landing.features.recap.rangkuman" },
   { icon: Zap, key: "landing.features.recap.kilat" },
   { icon: ListChecks, key: "landing.features.recap.latihan" },
-  { icon: Bot, key: "landing.features.recap.ai" },
+  { icon: Sparkles, key: "landing.features.recap.ai" },
 ];
 
 const CARDS: { icon: IconComponent; kind: Kind; titleKey: string; descKey: string }[] = [

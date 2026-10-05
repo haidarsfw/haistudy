@@ -8,7 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { motion, useDragControls } from "framer-motion";
-import { Bot, X, Minus, Sparkles, GripHorizontal, SquarePen, ChevronDown } from "@/components/ui/icons";
+import { X, Minus, Sparkles, GripHorizontal, SquarePen, ChevronDown } from "@/components/ui/icons";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -251,7 +251,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         {!hasMsgs ? (
           <div className="flex flex-col items-center gap-3 px-2 pt-6 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
-              <Bot className="h-6 w-6 text-primary" />
+              <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-primary">
@@ -354,7 +354,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
           <span className="h-1.5 w-10 rounded-full bg-muted-foreground/30" aria-hidden="true" />
         </div>
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 pb-2">
-          <Bot className="h-4 w-4 text-primary" />
+          <Sparkles className="h-4 w-4 text-primary" />
           <span className="flex-1 text-sm font-semibold">haistudy AI</span>
           <button
             type="button"
@@ -396,7 +396,7 @@ export function KilatAiDock({ open, card, subjectId, geom, onGeom, onMinimize, o
         className="flex shrink-0 cursor-grab touch-none items-center gap-2 border-b border-border px-3 py-2.5 active:cursor-grabbing"
       >
         <GripHorizontal className="h-4 w-4 text-muted-foreground/60" />
-        <Bot className="h-4 w-4 text-primary" />
+        <Sparkles className="h-4 w-4 text-primary" />
         <span className="flex-1 text-sm font-semibold">haistudy AI</span>
         <button
           type="button"

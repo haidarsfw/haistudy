@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef, useState, type ReactNode } from "react";
-import { Bot, User, X, Sparkles } from "@/components/ui/icons";
+import { User, X, Sparkles } from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import type { AiMessage } from "@/hooks/use-ai-chat";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -487,7 +487,7 @@ export const AiMessageBubble = memo(function AiMessageBubble({
         {isUser ? (
           <User className="h-3.5 w-3.5" />
         ) : (
-          <Bot className="h-3.5 w-3.5" />
+          <Sparkles className="h-3.5 w-3.5" />
         )}
       </div>
 

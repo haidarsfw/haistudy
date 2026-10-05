@@ -37,10 +37,10 @@ import {
   Copy,
   CheckCircle,
   MessageSquare,
-  Bot,
   ChevronDown,
   ChevronRight,
   RotateCcw,
+  Sparkles,
 } from "@/components/ui/icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/components/ui/toast";
@@ -109,7 +109,7 @@ function AiConversationsDialog({
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
+            <Sparkles className="h-5 w-5 text-primary" />
             AI Conversations
           </DialogTitle>
           <DialogDescription>
@@ -171,7 +171,7 @@ function AiConversationsDialog({
                                 {msg.role === "user" ? (
                                   <User className="h-3 w-3 text-primary" />
                                 ) : (
-                                  <Bot className="h-3 w-3 text-muted-foreground" />
+                                  <Sparkles className="h-3 w-3 text-muted-foreground" />
                                 )}
                                 <span className="text-[10px] font-semibold text-muted-foreground uppercase">
                                   {msg.role === "user" ? "User" : "AI"}
