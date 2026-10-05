@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Play, ArrowRight } from "@/components/ui/icons";
+import { ArrowRight } from "@/components/ui/icons";
 import { SubjectIcon } from "@/components/shared/subject-icon";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useSettings } from "@/hooks/use-settings";
@@ -29,10 +29,7 @@ export function QuickStudyCard() {
 
   return (
     <div data-onboarding="subjects" className="surface rounded-xl bg-card p-5 transition-colors">
-      <div className="flex items-center gap-2 mb-4">
-        <Play className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-semibold">{t("dashboard.continue_studying")}</h3>
-      </div>
+      <h3 className="mb-4 text-sm font-semibold">{t("dashboard.continue_studying")}</h3>
 
       <div className="space-y-2">
         {quickSubjects.map((subject) => (

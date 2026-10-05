@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { StickyNote, Cloud, CloudOff } from "@/components/ui/icons";
+import { Cloud, CloudOff } from "@/components/ui/icons";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
@@ -90,7 +90,6 @@ export function QuickNoteCard() {
   return (
     <div className="surface rounded-xl bg-card p-4 transition-colors flex flex-col">
       <div className="flex items-center gap-2 mb-2">
-        <StickyNote className="h-4 w-4 text-amber-500" />
         <span className="text-[13px] font-semibold text-muted-foreground flex-1">
           {t("dashboard.quick_note")}
         </span>

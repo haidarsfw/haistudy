@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Clock, AlertTriangle } from "@/components/ui/icons";
+import { AlertTriangle } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import {
@@ -79,11 +79,8 @@ export function ExamCountdownMini() {
       } flex flex-col`}
     >
       <div className="flex items-center gap-2 mb-2">
-        {isUrgent ? (
-          <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
-        ) : (
-          <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
+        {/* Status only: the label needs no icon (owner, 2026-10-04). */}
+        {isUrgent && <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />}
         <span className="text-[13px] font-semibold text-muted-foreground flex-1 truncate">
           {t("dashboard.exam_countdown")}
         </span>

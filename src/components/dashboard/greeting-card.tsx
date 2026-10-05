@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Lightbulb, Sparkles, Shield, FlaskConical, Crown, Gem, GraduationCap } from "@/components/ui/icons";
+import { Shield, FlaskConical, Crown, Gem, GraduationCap } from "@/components/ui/icons";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/components/providers/session-provider";
 import { useTranslation } from "@/components/providers/language-provider";
@@ -224,31 +224,21 @@ export function GreetingCard() {
 
       {/* Study tip + fun fact */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10">
-            <Lightbulb className="h-4 w-4 text-warning" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-[13px] font-semibold text-muted-foreground mb-0.5">
-              {t("dashboard.study_tip")}
-            </h3>
-            <p className="text-sm text-foreground leading-relaxed break-words">
-              {tip}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h3 className="text-[13px] font-semibold text-muted-foreground mb-0.5">
+            {t("dashboard.study_tip")}
+          </h3>
+          <p className="text-sm text-foreground leading-relaxed break-words">
+            {tip}
+          </p>
         </div>
-        <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Sparkles className="h-4 w-4 text-primary" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-[13px] font-semibold text-muted-foreground mb-0.5">
-              {t("dashboard.fun_fact")}
-            </h3>
-            <p className="text-sm text-foreground leading-relaxed break-words">
-              {funFact}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h3 className="text-[13px] font-semibold text-muted-foreground mb-0.5">
+            {t("dashboard.fun_fact")}
+          </h3>
+          <p className="text-sm text-foreground leading-relaxed break-words">
+            {funFact}
+          </p>
         </div>
       </div>
     </div>

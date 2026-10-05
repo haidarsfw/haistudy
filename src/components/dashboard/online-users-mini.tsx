@@ -241,7 +241,6 @@ export function OnlineUsersMini() {
           className="flex w-full items-center justify-between text-left cursor-pointer"
         >
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
             <span className="text-[13px] font-semibold text-muted-foreground">
               {t("dashboard.online")}
             </span>

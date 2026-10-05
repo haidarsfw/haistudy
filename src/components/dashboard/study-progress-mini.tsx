@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp } from "@/components/ui/icons";
 import { useTranslation } from "@/components/providers/language-provider";
 import { getAllProgress, calcOverallProgress as calcOverall } from "@/lib/progress";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
@@ -72,7 +71,6 @@ export function StudyProgressMini() {
   return (
     <div className="surface rounded-xl bg-card p-4 transition-colors flex flex-col">
       <div className="flex items-center gap-2 mb-2">
-        <TrendingUp className="h-4 w-4 text-primary" />
         <span className="text-[13px] font-semibold text-muted-foreground">
           {t("dashboard.progress")}
         </span>

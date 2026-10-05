@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Clock, AlertTriangle } from "@/components/ui/icons";
+import { AlertTriangle } from "@/components/ui/icons";
 import { useScopedData } from "@/components/providers/scoped-data-provider";
 import { useOptionalScope } from "@/components/providers/scope-provider";
 import {
@@ -94,11 +94,7 @@ export function ExamCountdown() {
       {/* Header: title + onsite/assignment switch */}
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-          {isUrgent ? (
-            <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
-          ) : (
-            <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
+          {isUrgent && <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />}
           <span className="font-heading font-semibold truncate">
             {periodLabel} Countdown
           </span>
